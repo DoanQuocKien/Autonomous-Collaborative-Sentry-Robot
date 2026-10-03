@@ -25,11 +25,16 @@ sentry/                 # laptop package, runs in science_env (Python 3.14)
   perception/           # obstacle.py, entrance.py, face.py, reid.py, tracker.py, pose.py
   nav/                  # localization.py, vantage.py, controllers.py
   app/                  # state_machine.py, target_queue.py, audio.py, main.py
-tools/                  # record.py, replay.py, calibrate_fisheye.py, calibrate_motion.py,
+common/                 # Python 3.6-compatible, stdlib only; used by BOTH laptop and Jetson
+  protocol.py           # ports, packet encode/decode with validation, SeqFilter, video header, clock echo
+  mixing.py             # (v, w) -> wheel values: rescale-not-clip, dead zone
+tools/                  # DONE: check_env.py, send_cmd.py, make_markers.py
+                        # TODO: record.py, replay.py, calibrate_fisheye.py, calibrate_motion.py,
                         # enroll_whitelist.py, label_events.py, sim_robot.py
-jetson/                 # Python 3.6, Ubuntu 18.04; own requirements.txt
-  camera_pub.py         # CSI -> JPEG q60 -> ZeroMQ PUB
-  robot_udp.py          # UDP (v, omega) + audio commands -> motors / speaker, watchdog, gamepad e-stop
+jetson/                 # Python 3.6, Ubuntu 18.04; own requirements.txt (see docs/Setup.md)
+  camera_pub.py         # CSI -> JPEG q60 -> ZeroMQ PUB; `--source synthetic` works without the robot (DRAFT, camera untested)
+  robot_udp.py          # UDP (v, omega) + audio commands -> motors / speaker, watchdog (DRAFT, motors untested; gamepad e-stop TODO)
+assets/print/           # ArUco markers (ids 0-5, 10 cm) and 9x6 checkerboard PDFs, from tools/make_markers.py
 esp32/sentry_cam/       # Arduino sketch: MJPEG VGA @ 15 FPS
 assets/audio/           # pre-generated WAV prompts (committed, small)
 calib/                  # calibration outputs (camera.json, motion.json); committed

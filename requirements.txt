@@ -1,13 +1,9 @@
-# Install torch FIRST from the CUDA index (PyPI's Windows wheel is CPU-only):
-#   pip install torch torchvision --index-url https://download.pytorch.org/whl/cu128
-opencv-python
-pyzmq
-pytest
-ultralytics
-insightface
-# Pinned: 1.30+ needs CUDA 13 and silently falls back to CPU with torch cu128.
-# Never install plain `onnxruntime` next to it. Import torch BEFORE onnxruntime so torch's CUDA DLLs are used.
-# If pip pulls plain onnxruntime in (insightface/ultralytics may), uninstall both and reinstall this one.
+# GPU laptop (DoanQuocKien, HuynhNguyenHoaiLoc). Full order of steps: docs/Setup.md
+#   1. pip install torch==2.9.1 torchvision==0.24.1 --index-url https://download.pytorch.org/whl/cu128
+#   2. pip install -r requirements.txt
+#   3. pip uninstall -y onnxruntime onnxruntime-gpu ; pip install onnxruntime-gpu==1.23.2   (step 2 can pull in plain onnxruntime)
+#   4. python tools/check_env.py
+-r requirements-base.txt
+# Pinned: 1.30+ needs CUDA 13 and silently falls back to CPU next to torch cu128.
+# Never keep plain `onnxruntime` installed beside it. Import torch BEFORE onnxruntime so torch's CUDA DLLs are used.
 onnxruntime-gpu==1.23.2
-coloredlogs
-torchreid

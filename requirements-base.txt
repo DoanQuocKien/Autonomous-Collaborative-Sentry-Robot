@@ -1,0 +1,10 @@
+# Laptop packages shared by the GPU and CPU setups. Install torch FIRST (see docs/Setup.md); do not list it here,
+# because PyPI's Windows torch wheel is CPU-only and would silently replace a CUDA build.
+opencv-python
+pyzmq
+pillow
+pytest
+ultralytics
+insightface
+torchreid
+tensorboard        # torchreid imports it but does not declare it
