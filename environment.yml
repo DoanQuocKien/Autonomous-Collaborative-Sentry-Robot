@@ -1,0 +1,17 @@
+name: sentry
+channels: [conda-forge]
+dependencies:
+  - python=3.10
+  - pip
+  - numpy
+  - opencv
+  - pyzmq
+  - pyyaml
+  - pip:
+    - --extra-index-url https://download.pytorch.org/whl/cu121
+    - torch
+    - torchvision
+    - ultralytics        # YOLOv8, YOLOv8-pose, ByteTrack
+    - insightface
+    - onnxruntime-gpu
+    - torchreid          # OSNet; may need git install if PyPI build fails

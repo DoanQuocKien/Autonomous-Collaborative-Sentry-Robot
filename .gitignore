@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+graphify-out/
+.serena/
+*.pt
+*.onnx
+data/
+runs/
