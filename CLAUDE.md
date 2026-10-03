@@ -1,10 +1,10 @@
-# Autonomous Collaborative Sentry Robot (CS532)
+﻿# Autonomous Collaborative Sentry Robot (CS532)
 
 Spec: `docs/Project Specification.md` (source of truth). 8-week capstone; Mid-Term Report due Week 4.
 
 ## Environment
-- Conda env `sentry` (Python 3.10, torch cu121). Run without activating: `C:\Users\admin\miniconda3\envs\sentry\python.exe`. Spec in `environment.yml`.
-- Laptop: Windows 11, RTX 4050 6GB. Jetson Nano: Ubuntu 18.04, Python 3.6, so Jetson code lives in `jetson/` with its own minimal requirements; never share the `sentry` env with it.
+- Conda env `science_env` (Python 3.14, torch cu128; shared with other work, so never uninstall packages from it). Run without activating: `C:\Users\admin\miniconda3\envs\science_env\python.exe`. Extra deps in `requirements.txt`.
+- Laptop: Windows 11, RTX 4050 6GB. Jetson Nano: Ubuntu 18.04, Python 3.6, so Jetson code lives in `jetson/` with its own minimal requirements; never share `science_env` with it.
 
 ## Architecture
 - Laptop runs ALL models (YOLOv8, YOLOv8-pose, InsightFace, OSNet) and the state machine. Jetson only captures frames and drives motors.

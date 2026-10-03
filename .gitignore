@@ -6,3 +6,4 @@ graphify-out/
 *.onnx
 data/
 runs/
+pip_install.log
