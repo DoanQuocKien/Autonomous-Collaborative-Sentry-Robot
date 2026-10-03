@@ -5,5 +5,9 @@ pyzmq
 pytest
 ultralytics
 insightface
-onnxruntime-gpu
+# Pinned: 1.30+ needs CUDA 13 and silently falls back to CPU with torch cu128.
+# Never install plain `onnxruntime` next to it. Import torch BEFORE onnxruntime so torch's CUDA DLLs are used.
+# If pip pulls plain onnxruntime in (insightface/ultralytics may), uninstall both and reinstall this one.
+onnxruntime-gpu==1.23.2
+coloredlogs
 torchreid
