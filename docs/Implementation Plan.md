@@ -56,6 +56,11 @@ Laptop-internal contract:
 - Every module can be fed from `replay.py` exactly as from a live stream.
 - The state machine only consumes **events** (e.g. `ENTRANCE_FOUND`, `INTRUDER_QUEUED`, `TARGET_STATIONARY`, `STRIKE`, `TARGET_EXITED`) and emits **commands**. It never touches sockets or models directly, so it is unit-testable on CPU.
 
+**Motion convention** (details and reasons in `JetBot Notes.md`):
+- `v, w` are normalized to [-1, 1]; positive `w` turns left. The Jetson mixes `left = v - K*w`, `right = v + K*w`.
+- If either wheel value exceeds 1 in magnitude, **rescale both** by the larger one (never clip), so the turn ratio is kept.
+- Jetson code must run on Python 3.6.
+
 **Safety (non-negotiable):**
 - The Jetson stops the motors if no control packet arrives for 300 ms.
 - The kit gamepad acts as a hardware e-stop that overrides everything.
@@ -118,6 +123,7 @@ Each week ends with a **Sunday integration session** hosted by DQK (in person or
 ### Week 1 (Oct 5-11): Networking & Telemetry
 
 - **DQK**
+  - First, run the "Verify on the robot" checks in `JetBot Notes.md` (jetbot version, motor driver address, Python version, camera modes) and record the outputs.
   - Bring up the JetBot (flash image, Wi-Fi on 5 GHz) and configure the Windows dual-band hotspot (ESP32 on 2.4 GHz).
   - `jetson/camera_pub.py`: GStreamer `nvarguscamerasrc` -> JPEG q60 -> ZMQ with the header from section 3.
   - `jetson/robot_udp.py`: (v, w) -> left/right motor speeds, 300 ms watchdog, gamepad e-stop, clock-sync echo.
