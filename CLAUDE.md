@@ -1,6 +1,6 @@
 ﻿# Autonomous Collaborative Sentry Robot (CS532)
 
-Spec: `docs/Project Specification.md` (source of truth). 8-week capstone; Mid-Term Report due Week 4.
+Spec: `docs/Project Specification.md` (source of truth). Plan: `docs/Implementation Plan.md` (owners, interfaces, tests, acceptance thresholds). 8 weeks from 2026-10-05; Mid-Term Report due Week 4.
 
 ## Environment
 - Conda env `science_env` (Python 3.14, torch cu128; shared with other work, so never uninstall packages from it). Run without activating: `C:\Users\admin\miniconda3\envs\science_env\python.exe`. Extra deps in `requirements.txt`.
@@ -19,5 +19,7 @@ Spec: `docs/Project Specification.md` (source of truth). 8-week capstone; Mid-Te
 - Strike: bbox area growth dA/A > 0.40 in 100 ms -> v=-1.0, omega=+-0.8 for 400 ms
 
 ## Conventions
+- Team: DoanQuocKien (CUDA, holds all hardware), HuynhNguyenHoaiLoc (CUDA, perception), kouun-rokku (no CUDA, CPU logic/tooling). Branch `<handle>/wNN-topic`, PR + 1 review.
+- Tests: T0 unit (no marker, CPU), `replay`, `gpu`, `hil` markers. Evidence goes to `reports/<handle>/week-NN/`.
 - Keep seeds, logging and calibration knobs in research code. One small `test_*.py` for non-trivial logic.
 - Serena: set `languages: [python]` in `.serena/project.yml` once code exists. `.serena/` and `graphify-out/` are gitignored.

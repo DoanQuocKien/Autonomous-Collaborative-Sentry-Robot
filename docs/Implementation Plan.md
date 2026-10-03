@@ -1,0 +1,287 @@
+# Implementation Plan
+
+Companion to `Project Specification.md` (the spec decides *what*; this file decides *who, how, and how we prove it works*).
+Week 1 starts **Mon 2026-10-05**. The Mid-Term Technical Report is due **Sun 2026-11-01** (end of Week 4); confirm the exact date with the instructor.
+
+## 1. Team & Roles
+
+| Handle | CUDA | Hardware | Primary ownership |
+| :-- | :-: | :-: | :-- |
+| **DoanQuocKien** (DQK) | Yes | Holds JetBot, ESP32-CAM, FTDI, speaker | Jetson side, motor control, calibration, controllers on the robot, hardware-in-the-loop (HIL) testing, integration host |
+| **HuynhNguyenHoaiLoc** (HNHL) | Yes | – | Laptop perception: YOLOv8, ByteTrack, InsightFace, OSNet, YOLOv8-pose, GPU profiling |
+| **kouun-rokku** (KR) | No | – | CPU-side logic: record/replay tooling, ORB entrance matching, localization (ArUco + dead reckoning), state machine, queue/handoff logic, simulation, audio assets, test infrastructure, report editing |
+
+Principles behind the split:
+- KR has no GPU, so KR owns everything that runs on CPU and the tooling that lets others work without the robot.
+- Only DQK has the hardware, so every task must be developable **offline on recorded data** first. HIL time on DQK's setup is for validation, not development.
+- Each member carries roughly equal weekly load (about 3 work items per week).
+
+## 2. Repository Layout (target)
+
+```
+sentry/                 # laptop package, runs in science_env (Python 3.14)
+  config.toml           # ALL tunables (thresholds, gains, ports); read with stdlib tomllib
+  net/                  # zmq_rx.py, udp_tx.py, mjpeg_rx.py, clock_sync.py
+  perception/           # obstacle.py, entrance.py, face.py, reid.py, tracker.py, pose.py
+  nav/                  # localization.py, vantage.py, controllers.py
+  app/                  # state_machine.py, target_queue.py, audio.py, main.py
+tools/                  # record.py, replay.py, calibrate_fisheye.py, calibrate_motion.py,
+                        # enroll_whitelist.py, label_events.py, sim_robot.py
+jetson/                 # Python 3.6, Ubuntu 18.04; own requirements.txt
+  camera_pub.py         # CSI -> JPEG q60 -> ZeroMQ PUB
+  robot_udp.py          # UDP (v, omega) + audio commands -> motors / speaker, watchdog, gamepad e-stop
+esp32/sentry_cam/       # Arduino sketch: MJPEG VGA @ 15 FPS
+assets/audio/           # pre-generated WAV prompts (committed, small)
+calib/                  # calibration outputs (camera.json, motion.json); committed
+tests/                  # pytest; markers below
+data/                   # recordings, face photos (GITIGNORED; shared via team Drive)
+reports/<handle>/       # weekly reports + test evidence (section 6)
+```
+
+Keep it flat. A module gets split only when it passes about 400 lines.
+
+## 3. Interfaces (frozen by end of Week 1)
+
+Freezing these lets the three members work in parallel against the same contracts. Any change needs a PR that all three approve.
+
+| Link | Transport | Format |
+| :-- | :-- | :-- |
+| JetBot -> laptop video | ZeroMQ PUB/SUB, port 5555, `CONFLATE=1` on SUB (latest frame only) | multipart `[header_json, jpeg_bytes]`; header `{"seq": int, "t_cap": float (Jetson monotonic s), "w": int, "h": int}` |
+| Laptop -> JetBot control | UDP, port 5556, non-blocking | JSON `{"seq": int, "v": float, "w": float}` with v, w normalized to [-1, 1]; or `{"seq": int, "play": "<clip_name>"}` |
+| Clock sync | UDP echo, port 5557 | laptop sends `t0`, Jetson replies `{t0, t_jetson}`; offset by Cristian's algorithm (min-RTT of 20 samples) |
+| ESP32-CAM -> laptop | HTTP MJPEG, `http://<esp32-ip>:81/stream` | VGA 640x480, 15 FPS, static IP on hotspot |
+
+Laptop-internal contract:
+- Every perception module is a class with a `__call__(frame_bgr, t) -> dataclass` method and no global state.
+- Every module can be fed from `replay.py` exactly as from a live stream.
+- The state machine only consumes **events** (e.g. `ENTRANCE_FOUND`, `INTRUDER_QUEUED`, `TARGET_STATIONARY`, `STRIKE`, `TARGET_EXITED`) and emits **commands**. It never touches sockets or models directly, so it is unit-testable on CPU.
+
+**Safety (non-negotiable):**
+- The Jetson stops the motors if no control packet arrives for 300 ms.
+- The kit gamepad acts as a hardware e-stop that overrides everything.
+- Speed is capped in `config.toml` during all HIL tests.
+
+## 4. Testing Policy
+
+### 4.1 Tiers
+
+| Tier | Marker | Runs where | Content |
+| :-- | :-- | :-- | :-- |
+| T0 Unit | (none) | Any machine, CPU, no network, whole suite < 60 s | Pure logic: geometry, formulas, state transitions, queue, packet encode/decode, controllers against `sim_robot` |
+| T1 Replay | `replay` (+ `gpu` if it needs models) | Machine with `data/` synced | Run a module on a recorded dataset, assert metric thresholds, write a metrics JSON |
+| T2 HIL | `hil` | DQK's setup | Scripted protocol on the real robot, N trials, results table |
+
+- KR's machine runs `pytest -m "not gpu and not hil"`. CUDA members run `pytest -m "not hil"`. DQK also runs `-m hil`.
+- `gpu` tests skip themselves when `torch.cuda.is_available()` is false.
+- Every non-trivial function has at least one T0 test that fails if its logic breaks. Every perception module has a T1 test with a numeric threshold.
+- Metrics are written as JSON to `reports/<handle>/week-NN/` so results are comparable across weeks.
+
+### 4.2 Datasets (recorded with `tools/record.py`, stored in `data/`, never committed)
+
+| ID | When | Recorded by | Content |
+| :-- | :-- | :-- | :-- |
+| D1 | End of W1 | DQK (all present) | Room sweeps with the JetBot; doorway seen from 10+ positions and distances (1-4 m); 20 obstacles at tape-measured distances 0.3-2.0 m (ground truth in a CSV); 30+ checkerboard images; ESP32 view of the door |
+| D2 | End of W3 | DQK + HNHL | ESP32 entries: each team member x 10 entries; 3+ consenting non-enrolled volunteers x 5 entries; logged walk direction (L/C/R) per entry for sector tests |
+| D3 | End of W5 | DQK | JetBot following one or two people: walking, stopping, occlusions, crossing paths |
+| D4 | End of W6 | DQK + KR labels | 20+ padded "lunges" (pillow on a stick, never a real strike) + 10 min of normal walking; onset timestamps labelled with `label_events.py` |
+
+Privacy: face photos and recordings of volunteers stay in `data/` and the team Drive, are used only with consent, and are deleted after grading.
+
+### 4.3 Acceptance criteria per feature
+
+| Feature | Metric | Pass threshold | Tier |
+| :-- | :-- | :-- | :-- |
+| Video uplink | Capture-to-laptop latency (clock-synced), FPS | p95 < 50 ms, >= 20 FPS at 640x480 | T2 |
+| Control link | Packet loss; watchdog stop | < 1 % at 30 Hz; motors stop <= 350 ms after link loss | T2 |
+| Fisheye calibration | RMS reprojection error | < 1.0 px | T1 |
+| Obstacle distance | Relative error vs tape on D1 | median <= 10 %, p90 <= 20 % over 0.3-2.0 m | T1 |
+| Obstacle repulsion | Collisions in exploration runs | 0 collisions in 5 x 3-min runs | T2 |
+| ORB entrance | Frame-level TPR / FPR on D1 | TPR >= 90 %, FPR <= 5 % | T1 |
+| Motion calibration + dead reckoning | Position error after 3 m path | <= 15 cm with ArUco correction, <= 40 cm without | T2 |
+| Sweet-spot selection | Chosen spot satisfies the 3 spec conditions | 5/5 runs | T2 |
+| ESP32 handshake | I_ref detection when camera faces door / is turned away | 10/10 correct accepts, 10/10 correct rejects | T2 |
+| Face verification | TAR @ FAR on D2 | TAR >= 95 % at FAR <= 1 %; report ROC and justify 0.45 or a replacement | T1 |
+| OSNet re-ID | Rank-1 on D2/D3 gallery (>= 5 people) | >= 85 %; threshold picked from ROC | T1 |
+| Sector logging | L/C/R accuracy on D2 | >= 90 % | T1 |
+| Tracking | ID switches on D3 | <= 1 per minute (2-person scenes) | T1 |
+| Pursuit PD | Steady-state distance; centering | 1.2 +/- 0.2 m; bbox centre within +/- 10 % of frame width, 80 % of the time | T2 |
+| Circling | Trigger delay; orbit radius | triggers 2.0-3.0 s after stop; R = 1.0 +/- 0.25 m | T2 |
+| Strike detection | Recall; false triggers; latency (frame to command) | recall >= 90 % on D4; <= 1 false trigger / 5 min of walking; <= 150 ms | T1 + T2 |
+| Handoff | T2 re-acquired after T1 exits | within 20 s in >= 4/5 trials | T2 |
+| Full loop | Two consecutive intruders, start to standby | >= 4/5 runs without manual help | T2 |
+| GPU budget | All models running together | peak VRAM <= 5.5 GB; pipeline >= 15 FPS | T1 (gpu) |
+
+## 5. Weekly Plan
+
+Each week ends with a **Sunday integration session** hosted by DQK (in person or screen-share): merge PRs, run T0/T1 on main, run that week's T2 protocols, record any dataset due.
+
+### Week 1 (Oct 5-11): Networking & Telemetry
+
+- **DQK**
+  - Bring up the JetBot (flash image, Wi-Fi on 5 GHz) and configure the Windows dual-band hotspot (ESP32 on 2.4 GHz).
+  - `jetson/camera_pub.py`: GStreamer `nvarguscamerasrc` -> JPEG q60 -> ZMQ with the header from section 3.
+  - `jetson/robot_udp.py`: (v, w) -> left/right motor speeds, 300 ms watchdog, gamepad e-stop, clock-sync echo.
+  - Tests: T0 for packet decode and v/w-to-wheel mixing; T2 latency, FPS, packet loss and watchdog.
+- **HNHL**
+  - `sentry/net/zmq_rx.py`: latest-frame receiver thread with JPEG decode.
+  - `udp_tx.py`: rate-limited 30 Hz sender.
+  - `clock_sync.py` and a latency logger that writes CSVs.
+  - GPU baseline: YOLOv8n/s FPS and VRAM at 640 on the RTX 4050; confirm torch, insightface and onnxruntime-gpu run in `science_env`, and record versions.
+  - Tests: T0 for clock-sync math with synthetic delays.
+- **KR**
+  - `tools/record.py` + `tools/replay.py`: record both streams with timestamps; replay through the same interface as the live receivers.
+  - `tools/sim_robot.py`: UDP sink that integrates (v, w) with unicycle kinematics and logs pose.
+  - `esp32/sentry_cam` sketch (based on CameraWebServer, VGA, 15 FPS, static IP). DQK flashes it at the integration session, or lends the ESP32 kit, which is independent of the robot.
+  - pytest skeleton: `conftest.py`, markers, `config.toml` loader.
+  - Tests: T0 record-then-replay round trip gives identical frames and timestamps.
+- **Session:** freeze the section 3 interfaces; record **D1**.
+
+### Week 2 (Oct 12-18): Pre-Scanning & Setup
+
+- **DQK**
+  - `tools/calibrate_fisheye.py`: `cv2.fisheye` calibration on D1 checkerboards, writing `calib/camera.json`; measure `H_cam`.
+  - `tools/calibrate_motion.py`: command fixed (v, w) for set durations, tape-measure the results, fit gains to `calib/motion.json`.
+  - Tests: T1 reprojection error; T2 motion repeatability (5 runs each of straight 1 m and 90° turn).
+- **HNHL**
+  - `perception/obstacle.py`: YOLOv8 on undistorted frames, COCO furniture classes (chair, couch, bed, dining table, potted plant, tv, refrigerator, suitcase), bottom-centre ground distance `d = f*H/(y_max - c_y)`, repulsive angular term.
+  - `nav/vantage.py`: score candidate stops for line of sight, 1.5-3.0 m from the door, and nearness to a boundary.
+  - Tests: T0 for the distance formula and repulsion sign; T1 distance error on D1.
+- **KR**
+  - `perception/entrance.py`: ORB (2000 features) + Hamming BF matching + Lowe ratio + RANSAC homography; match when inliers > threshold (tuned on D1); entrance bearing from the homography centroid through the camera model.
+  - `nav/localization.py`: dead reckoning from `motion.json`, corrected by ArUco pose (`cv2.aruco`, 10 cm markers).
+  - Tests: T0 for pose integration (closed square path returns to the origin in sim) and ArUco pose on synthetic renders; T1 entrance TPR/FPR on D1.
+- **Session:** T2 exploration with obstacle repulsion, connected end to end.
+
+### Week 3 (Oct 19-25): HCI Deployment & Biometrics
+
+- **DQK**
+  - USB speaker playback on the Jetson (`aplay` on `play` packets).
+  - Deployment behaviour on the robot: stop at the sweet spot, face the room centre, prompt, wait for validation, reverse to standby.
+  - Tests: T2 deployment sequence, 5 runs.
+- **HNHL**
+  - `perception/face.py`: InsightFace detection + 512-d embedding. Check the insightface 2.0 API first; the spec names MobileFaceNet, so prefer the `buffalo_s` pack.
+  - `tools/enroll_whitelist.py`: 3-5 photos per person, stored as **all** normalized embeddings (the spec uses max similarity, so no averaging).
+  - Verification with a configurable threshold.
+  - Tests: T0 for cosine and max-similarity logic; T1 ROC on D2, recording the chosen threshold and evidence.
+- **KR**
+  - `sentry/net/mjpeg_rx.py`: ESP32 stream with auto-reconnect.
+  - ESP32 handshake check (reuses `entrance.py` on the ESP32 frames).
+  - Generate audio prompts offline (Windows SAPI via `pyttsx3`, or another offline TTS) into `assets/audio/`.
+  - `app/state_machine.py` skeleton with all phase 1-3 states, transitions and timeouts.
+  - Tests: T0 scripted event sequences for every transition, including invalid events, which are ignored and logged.
+- **Session:** record **D2**; T2 ESP32 handshake accept/reject.
+
+### Week 4 (Oct 26-Nov 1): Re-ID Handoff & Mid-Term Report
+
+- **DQK**
+  - Phase 1 end-to-end HIL: explore -> find entrance -> sweet spot -> prompt -> camera placed -> verified -> standby.
+  - Tests: T2, 5 runs.
+  - Report: architecture, networking, robot platform, calibration and safety sections (about 5 pages).
+- **HNHL**
+  - `perception/reid.py`: person crop from YOLO on ESP32 frames -> OSNet (`osnet_x0_25` via torchreid; if it does not install on Python 3.14, export to ONNX and run with onnxruntime-gpu).
+  - Tests: T1 rank-1 and ROC on D2.
+  - Report: perception and biometrics sections with ROC figures (about 5 pages).
+- **KR**
+  - `app/target_queue.py`: FIFO of intruder records (id, face embedding, appearance vector, sector, snapshot path, timestamps).
+  - Sector logging: bounding-box horizontal drift over 2 s -> L/C/R.
+  - Phase 2 replay pipeline on D2, connected end to end.
+  - Tests: T0 for the queue and sector classification; T1 sector accuracy on D2.
+  - Report: localization, entrance matching, state machine and test methodology sections, plus editing and merging the full 15-20 pages.
+- **Milestone:** submit the Mid-Term Report by Sun 2026-11-01.
+
+### Week 5 (Nov 2-8): Pursuit & Obstacle Handling
+
+- **DQK**
+  - `nav/controllers.py` PD pursuit (heading from bbox centre, distance from the foot-point ground distance, target 1.2 m) and obstacle override when `d_obs < 0.5 m`.
+  - Tune gains from logged step responses.
+  - Tests: T2 standoff and centering metrics; record **D3**.
+- **HNHL**
+  - `perception/tracker.py`: YOLOv8 + ByteTrack (ultralytics tracker) on the JetBot stream; target lock filtered by the OSNet vector, with re-lock after occlusion.
+  - GPU profiling of all models together.
+  - Tests: T1 ID switches on D3; T1 (gpu) VRAM and FPS budget.
+- **KR**
+  - Stationarity detector (ground-projected foot-point speed < 0.1 m/s for > 2.0 s).
+  - Tangential circling controller.
+  - Closed-loop tests of PD and circling against `sim_robot` with a scripted target.
+  - Tests: T0 for detector timing and orbit radius in sim (R = 1.0 +/- 0.1 m in sim).
+- **Session:** T2 pursuit + circling.
+
+### Week 6 (Nov 9-15): Threat Evasion
+
+- **DQK**
+  - Evasion override in the control path with the highest priority: v = -1.0, w = +/-0.8 for 400 ms, yawing away from the nearer obstacle side, then a cooldown.
+  - Measure end-to-end reaction time with a high-FPS phone camera.
+  - Tests: T2 padded-lunge trials; record **D4**.
+- **HNHL**
+  - `perception/pose.py`: YOLOv8-pose and a lunge detector (`dA/A > 0.40` within 100 ms using timestamps, not frame counts; or rapid ankle rise).
+  - Tune on D4.
+  - Tests: T0 for the detector on synthetic bbox series; T1 recall and latency on D4.
+- **KR**
+  - `tools/label_events.py`: keypress labeller for onset timestamps.
+  - False-trigger harness (false triggers per minute on normal walking).
+  - EVADE state + cooldown in the state machine.
+  - Tests: T0 for the state machine preempting PURSUE/CIRCLE with EVADE; T1 false-trigger rate.
+- **Session:** T2 strike evasion.
+
+### Week 7 (Nov 16-22): Next-Target Integration
+
+- **DQK**
+  - Return-to-sweet-spot navigation (localization + ArUco) and the ±30° sector sweep motion on the robot.
+  - Full-loop HIL with two intruders.
+  - Tests: T2 full loop, 5 runs.
+- **HNHL**
+  - Exit-event detection on the ESP32 (re-ID matches T1 at the door and motion is toward the door).
+  - Sweep-time re-ID matching on the JetBot stream, with a lock threshold.
+  - Tests: T1 exit detection on recorded exits; T1 re-acquisition precision.
+- **KR**
+  - Handoff orchestration in the state machine: TARGET_EXITED -> RETURN -> PIVOT(sector) -> SWEEP -> PURSUE.
+  - Map the ESP32-frame sector to a world bearing using the ESP32 placement pose recorded in phase 1.
+  - Tests: T0 for the full two-intruder event script and sector-to-bearing geometry.
+- **Session:** two-intruder rehearsal.
+
+### Week 8 (Nov 23-29): Validation & Defense
+
+- **DQK**
+  - Stress tests: low battery, Wi-Fi drop (watchdog), dim and bright lighting, cluttered room.
+  - Record demo footage.
+  - Presentation: system and robot section.
+- **HNHL**
+  - Perception stress tests (backlight, partial faces, hats and masks, similar clothing).
+  - Final metrics tables against section 4.3.
+  - Presentation: perception section.
+- **KR**
+  - Edge-case state machine tests (empty queue, lost ESP32 stream, T2 never found leading to a timeout and return to standby, intruder leaving during evasion).
+  - README, final test report, presentation assembly.
+- **Final check:** every section 4.3 row has an evidence link in someone's report.
+
+## 6. Workflow & Reports
+
+**Git:**
+- Branch `<handle>/wNN-<topic>` (e.g. `kouun-rokku/w02-orb-entrance`), then a PR to `main` with one approving review and T0 passing.
+- Review rotation: DQK's PRs -> KR, KR's -> HNHL, HNHL's -> DQK (a CUDA reviewer for GPU code).
+- No direct pushes to `main`.
+
+**Definition of done for a work item:**
+1. Code is merged via a reviewed PR.
+2. Tests at the tiers listed for it exist and pass.
+3. Evidence is in the owner's weekly report.
+
+**Report directories:**
+```
+reports/<handle>/week-NN.md     # weekly progress log (template: reports/TEMPLATE.md)
+reports/<handle>/week-NN/       # test evidence: pytest logs, metrics JSON/CSV, plots, T2 trial tables
+```
+- Weekly logs are due Sunday night, before the integration session.
+- Large media (videos) go to the team Drive and are linked from the log, never committed.
+
+## 7. Assumptions & Open Risks
+
+| # | Item | Plan |
+| :-- | :-- | :-- |
+| 1 | Spec's strike window of "100 ms" is only 1.5 frames at 15 FPS | Measure the actual JetBot pipeline FPS in W1; use timestamp-based windows; if FPS < 20, widen the window to 2 frames and re-tune the 0.40 threshold on D4 |
+| 2 | The spec does not say how "T1 exits" is detected | ESP32 re-ID + direction of motion toward the door (W7, HNHL) |
+| 3 | COCO classes miss walls, boxes and bags | Accept for W2; if exploration collisions occur, add a bottom-of-frame floor-edge check or fine-tune on D1 frames |
+| 4 | ESP32 L/C/R sector is in camera coordinates, not world | Record the ESP32 placement pose in phase 1; KR maps it to world bearing (W7) |
+| 5 | Python 3.14 support for torchreid / insightface 2.0 is unverified | Checked in W1 (HNHL); fallback is ONNX models via onnxruntime-gpu |
+| 6 | All HIL depends on DQK's availability | Offline-first development; two scheduled sessions per week from W5 onward |
+| 7 | Mid-term due date assumed to be Nov 1 | Confirm with the instructor in W1 |

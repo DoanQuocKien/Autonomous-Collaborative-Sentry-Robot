@@ -1,6 +1,5 @@
-﻿--extra-index-url https://download.pytorch.org/whl/cu128
-torch
-torchvision
+# Install torch FIRST from the CUDA index (PyPI's Windows wheel is CPU-only):
+#   pip install torch torchvision --index-url https://download.pytorch.org/whl/cu128
 ultralytics
 insightface
 onnxruntime-gpu

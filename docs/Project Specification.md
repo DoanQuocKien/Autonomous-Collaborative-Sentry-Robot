@@ -130,6 +130,8 @@ When the active intruder (\$T\_1\$) exits through the door, the system transitio
 
 ## **6\. 8-Week Implementation Roadmap**
 
+Per-member tasks, interfaces, test tiers and acceptance criteria: see `Implementation Plan.md`.
+
 | Week | Focus Area | Core Deliverables |
 | :---- | :---- | :---- |
 | **1** | Networking & Telemetry | Configure dual-band hotspot; establish ZeroMQ video uplink (\$\< 50\\text{ ms}\$ latency); verify motor UDP commands. |
