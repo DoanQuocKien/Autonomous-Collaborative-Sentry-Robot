@@ -25,13 +25,13 @@ The system operates across three distinct phases:
   * 5V power source (lithium cell with 5V boost circuit or compact USB power bank).  
   * FTDI USB-to-TTL adapter (for initial firmware flashing via Arduino IDE).  
   * Minimal enclosure or stand to position the module on the floor or a shelf.  
-* **Audio Feedback:** USB mini speaker or 5V active buzzer connected to the Jetson Nano GPIO to deliver setup prompts and deterrent alarms.
+* **Audio Feedback:** USB mini speaker connected to the Jetson Nano, playing pre-generated WAV prompts (offline TTS, rendered on the laptop) for setup prompts and deterrent alarms.  
+* **Localization Markers:** Cardstock ArUco markers ($10 \times 10\text{ cm}$) as position anchors (the kit has no encoders or IMU), plus a printed checkerboard for one-time fisheye camera calibration.
 
 ### **Optional External Hardware**
 
 * **Overhead Room Camera:** \$1080\\text{p}\$ wide-angle USB webcam or RTSP IP camera placed high in the room to maintain continuous 2D coordinates of all occupants.  
 * **CSI Camera Down-Tilt Mount:** \$15^\\circ\$ downward angle bracket for the JetBot to improve visibility of feet and floor obstacles at close range.  
-* **Optical Tracking Markers:** Cardstock ArUco markers (\$10 \\times 10\\text{ cm}\$) to simplify robot localization and base recovery.
 
 ## **3\. System Inputs**
 
@@ -69,6 +69,8 @@ JetBot Deploys \-\> Pursue Target (YOLOv8 \+ ByteTrack)
 
 \$\$d\_{\\text{obs}} \= \\frac{f \\cdot H\_{\\text{cam}}}{y\_{\\text{max}} \- c\_y}\$\$
 
+* The IMX219-160 is a fisheye lens: calibrate once with a checkerboard (OpenCV fisheye model) and undistort frames before applying the formula. $f$, $c_y$ and $H_{	ext{cam}}$ come from the calibration config.  
+* Robot pose is tracked by dead reckoning from calibrated $(v, \omega)$ commands, and corrected whenever an ArUco marker is visible.  
 * If any obstacle falls within \$0.6\\text{ m}\$, the base station injects a repulsive angular velocity component to steer the robot into open floor space.
 
 ### **4.2 Entrance Localization & Vantage Selection**
@@ -82,7 +84,7 @@ JetBot Deploys \-\> Pursue Target (YOLOv8 \+ ByteTrack)
 
 ### **4.3 HCI Deployment Protocol**
 
-* The JetBot stops at the sweet spot, turns toward the center of the room, and triggers an audio message via the speaker: *"Guarding position reached. Please place the entrance camera."*  
+* The JetBot stops at the sweet spot, turns toward the center of the room, and plays a pre-generated audio message through the USB speaker: *"Guarding position reached. Please place the entrance camera."*  
 * The user positions the ESP32-CAM at the designated spot facing the door.  
 * The base station ingests the ESP32-CAM stream and checks that \$I\_{\\text{ref}}\$ is visible.  
 * Upon validation, an audio confirmation plays, and the JetBot reverses into a nearby standby position.
@@ -131,12 +133,12 @@ When the active intruder (\$T\_1\$) exits through the door, the system transitio
 | Week | Focus Area | Core Deliverables |
 | :---- | :---- | :---- |
 | **1** | Networking & Telemetry | Configure dual-band hotspot; establish ZeroMQ video uplink (\$\< 50\\text{ ms}\$ latency); verify motor UDP commands. |
-| **2** | Pre-Scanning & Setup | Implement YOLO ground-distance obstacle estimation; write ORB entrance matching and sweet-spot selection logic. |
+| **2** | Pre-Scanning & Setup | Implement YOLO ground-distance obstacle estimation; write ORB entrance matching and sweet-spot selection logic; fisheye calibration and ArUco-assisted dead-reckoning pose. |
 | **3** | HCI Deployment & Biometrics | Implement audio prompts and ESP32-CAM connection handshake; build InsightFace whitelist and verification thresholds. |
-| **4** | Re-ID Handoff & Reporting | Implement OSNet appearance extraction and FIFO queueing. |  
+| **4** | Re-ID Handoff & Mid-Term Report | Implement OSNet appearance extraction and FIFO queueing; write and submit the 15–20 page Mid-Term Technical Report. |  
 | **5** | Pursuit & Obstacle Handling | Implement YOLOv8 \+ ByteTrack pursuit controller; integrate obstacle repulsion; build tangential circling routine. |  
 | **6** | Threat Evasion | Deploy YOLOv8-pose; calibrate bounding box expansion and ankle kinematic triggers; test motor dodge override. |  
 | **7** | Next-Target Integration | Connect ESP32-CAM vector handoff to JetBot search routine; test full loop with two consecutive intruders. |  
 | **8** | Validation & Defense | Stress-test edge cases; record demonstration footage; prepare project presentation and repository. |
 
-**Milestone:** Submit 15–20 page Mid-Term Technical Report. 
+**Milestone:** Submit 15–20 page Mid-Term Technical Report (Week 4).
