@@ -3,8 +3,8 @@
 Spec: `docs/Project Specification.md` (source of truth). Plan: `docs/Implementation Plan.md` (owners, interfaces, tests, acceptance thresholds). 8 weeks from 2026-10-05; Mid-Term Report due Week 4.
 
 ## Environment
-- Conda env `science_env` (Python 3.14, torch cu128; shared with other work, so never uninstall packages from it). Run without activating: `C:\Users\admin\miniconda3\envs\science_env\python.exe`. Extra deps in `requirements.txt`.
-- Laptop: Windows 11, RTX 4050 6GB. Jetson Nano: Ubuntu 18.04, Python 3.6, so Jetson code lives in `jetson/` with its own minimal requirements; never share `science_env` with it.
+- Conda env `sentry` (Python 3.12, torch 2.9.1+cu128; cloned from the UITRacingCar env, so never modify that one). Run without activating: `C:\Users\admin\miniconda3\envs\sentry\python.exe`. Extra deps in `requirements.txt`. Teammates make their own env the same way.
+- Laptop: Windows 11, RTX 4050 6GB. Jetson Nano: Ubuntu 18.04, Python 3.6, so Jetson code lives in `jetson/` with its own minimal requirements; never share `sentry` with it.
 
 ## Architecture
 - Laptop runs ALL models (YOLOv8, YOLOv8-pose, InsightFace, OSNet) and the state machine. Jetson only captures frames and drives motors.
