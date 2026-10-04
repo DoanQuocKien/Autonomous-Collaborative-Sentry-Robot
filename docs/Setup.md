@@ -1,0 +1,89 @@
+# Setup
+
+Three machines, three install paths. Do the one for your machine, then run the check at the end of it.
+Versions below are the ones we actually verified (Windows 11, RTX 4050, driver 581, 2026-10-04).
+
+| Machine | Who | Path |
+| :-- | :-- | :-- |
+| Laptop with NVIDIA GPU | DoanQuocKien, HuynhNguyenHoaiLoc | [A](#a-gpu-laptop) |
+| Laptop without GPU | kouun-rokku | [B](#b-cpu-only-laptop) |
+| JetBot (Jetson Nano) | DoanQuocKien | [C](#c-jetbot) |
+
+## A. GPU laptop
+
+Needs Miniconda and an up-to-date NVIDIA driver (CUDA 12.8 wheels need a driver that supports CUDA 12.8; check `nvidia-smi`).
+
+```powershell
+conda create -n sentry python=3.12 -y
+conda activate sentry
+
+# 1. torch FIRST, from the CUDA index. PyPI's Windows torch is CPU-only.
+pip install torch==2.9.1 torchvision==0.24.1 --index-url https://download.pytorch.org/whl/cu128
+
+# 2. everything else
+pip install -r requirements.txt
+
+# 3. step 2 can pull in plain onnxruntime, which hides the GPU one. Always run this:
+pip uninstall -y onnxruntime onnxruntime-gpu
+pip install onnxruntime-gpu==1.23.2
+
+# 4. verify
+python tools/check_env.py
+pytest
+```
+`check_env.py` must end with `ALL GOOD`. DoanQuocKien's env was made differently (cloned from an existing torch env); the result is the same.
+
+## B. CPU-only laptop
+
+```powershell
+conda create -n sentry python=3.12 -y
+conda activate sentry
+pip install torch==2.9.1 torchvision==0.24.1 --index-url https://download.pytorch.org/whl/cpu
+pip install -r requirements-cpu.txt
+python tools/check_env.py --cpu-ok
+pytest -m "not gpu and not hil"
+```
+You can do everything except GPU speed measurements. The `gpu` tests skip themselves.
+
+## C. JetBot
+
+Ubuntu 18.04 / JetPack 4.5 / **Python 3.6**. Not verified on the device yet: record what you actually see in `reports/DoanQuocKien/week-01/robot_checks.md`.
+
+```bash
+sudo apt update && sudo apt install -y python3-pip libzmq3-dev alsa-utils
+pip3 install -r jetson/requirements.txt
+
+# OpenCV and numpy must be the JetPack ones; the camera needs GStreamer support:
+python3 -c "import cv2; print(cv2.__version__)"
+python3 -c "import cv2; print(cv2.getBuildInformation())" | grep -i gstreamer     # expect: YES
+```
+Deploy by copying `common/`, `jetson/`, `calib/` (once it exists) and `assets/audio/` (WAV clips) to the robot, e.g. `scp -r common jetson jetbot@<ip>:~/sentry/`. Run from inside `~/sentry`.
+
+First runs, wheels off the ground, low speed (default `--max-speed 0.5`):
+
+```bash
+python3 jetson/robot_udp.py --dry-run             # prints motor values, touches no hardware
+python3 jetson/robot_udp.py --allow-ip <laptop-ip> --max-speed 0.3
+python3 jetson/camera_pub.py --source synthetic   # test pattern, same wire format as the camera
+python3 jetson/camera_pub.py                      # real camera
+```
+Laptop-side command sender: `python -m tools.send_cmd --ip <jetbot-ip> --v 0.3 --seconds 2` (add `--silent-end` to test the 300 ms watchdog).
+
+## Running the tests
+
+| Command | Runs | Needs |
+| :-- | :-- | :-- |
+| `pytest` | T0 (+ T1/gpu if present, skipped when impossible) | nothing |
+| `pytest -m "not gpu and not hil"` | CPU-only subset | nothing |
+| `pytest --hil` | adds hardware-in-the-loop tests | the real robot, DoanQuocKien only |
+
+## Known problems
+
+| Symptom | Cause / fix |
+| :-- | :-- |
+| `torch.cuda.is_available()` is False, version has no `+cu128` | CPU wheel got installed. `pip uninstall -y torch torchvision`, redo step 1 |
+| ONNX Runtime silently on CPU; log mentions `cudart64_13.dll` | onnxruntime-gpu 1.30+ wants CUDA 13. Pin 1.23.2 (step 3) |
+| `check_env` says two onnxruntime packages installed | step 3 above |
+| `ModuleNotFoundError: tensorboard` from torchreid | `pip install tensorboard` (already in `requirements-base.txt`) |
+| pip stalls or fails on a slow/unstable connection | download the wheel with `curl.exe -L -C - --retry 30 --retry-all-errors -o x.whl <url>` and `pip install --no-deps x.whl` |
+| `ModuleNotFoundError: common` when running a script from `tools/` | run it as a module from the repo root: `python -m tools.send_cmd` |

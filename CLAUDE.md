@@ -4,6 +4,8 @@ Spec: `docs/Project Specification.md` (source of truth). Plan: `docs/Implementat
 
 ## Environment
 - Conda env `sentry` (Python 3.12, torch 2.9.1+cu128; cloned from the UITRacingCar env, so never modify that one). Run without activating: `C:\Users\admin\miniconda3\envs\sentry\python.exe`. Extra deps in `requirements.txt`. Teammates make their own env the same way.
+- Install steps for every machine (GPU laptop, CPU laptop, Jetson) and known problems: `docs/Setup.md`. Verify with `python tools/check_env.py`. Tests: `pytest`.
+- `common/` and `jetson/` must stay Python 3.6-compatible (no dataclasses, walrus, `capture_output`); `common/` is stdlib-only.
 - Laptop: Windows 11, RTX 4050 6GB. Jetson Nano: Ubuntu 18.04, Python 3.6, so Jetson code lives in `jetson/` with its own minimal requirements; never share `sentry` with it.
 
 ## Architecture

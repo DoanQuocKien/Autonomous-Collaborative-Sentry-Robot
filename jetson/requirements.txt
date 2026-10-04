@@ -1,0 +1,8 @@
+# Jetson Nano, Ubuntu 18.04, Python 3.6. UNVERIFIED on the device: confirm in reports/DoanQuocKien/week-01/robot_checks.md.
+# Install system packages first:  sudo apt update && sudo apt install -y python3-pip libzmq3-dev alsa-utils
+# Then:                           pip3 install -r jetson/requirements.txt
+#
+# Do NOT pip install opencv-python or numpy here: use the ones that ship with JetPack. The pip opencv wheel has no
+# GStreamer/CSI-camera support, so camera_pub.py would fail to open the camera.
+# `jetbot` (Robot class) comes with the JetBot SD image.
+pyzmq<26   # newer pyzmq no longer supports Python 3.6

@@ -1,0 +1,42 @@
+# ALL tunables live here (laptop side). Hardware needs tuning; never hardcode these in modules.
+# Jetson-side motor calibration (k, min_pwm) lives in calib/motion.json instead: Jetson Python 3.6 has no TOML reader.
+
+[net]
+jetbot_ip = "192.168.137.20"     # placeholder, set after the hotspot is up
+esp32_ip = "192.168.137.30"      # placeholder
+video_port = 5555
+control_port = 5556
+clock_port = 5557
+control_rate_hz = 30
+
+[camera]
+width = 640
+height = 480
+fps = 20
+jpeg_quality = 60
+
+[safety]
+watchdog_s = 0.3                 # Jetson stops motors after this much command silence
+max_speed_hil = 0.5              # wheel-value cap used during hardware-in-the-loop tests
+
+[thresholds]                     # from the spec; change only with a documented reason
+obstacle_explore_m = 0.6
+obstacle_pursuit_m = 0.5
+whitelist_cosine = 0.45
+entrance_min_m = 1.5
+entrance_max_m = 3.0
+standoff_m = 1.2
+orbit_radius_m = 1.0
+stationary_speed_mps = 0.1
+stationary_time_s = 2.0
+strike_area_growth = 0.40
+strike_window_s = 0.1
+evade_v = -1.0
+evade_w = 0.8
+evade_duration_s = 0.4
+
+[calibration]
+checkerboard_inner_corners = [9, 6]   # columns, rows (10 x 7 squares)
+checkerboard_square_m = 0.025         # MEASURE the printed board and update this
+aruco_dict = "DICT_4X4_50"
+aruco_marker_m = 0.10                 # MEASURE the printed marker and update this
