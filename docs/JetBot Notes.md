@@ -62,7 +62,7 @@ Record the outputs in `reports/DoanQuocKien/week-01/`.
 | I2C devices | `0x3c` OLED, `0x41` INA219 (battery monitor), `0x60` motor driver (Waveshare/Adafruit, as expected), `0x70` all-call. |
 | Battery | INA219 register read gave about **12.0 V** (3S pack, roughly 80 % charged). Assumes the 0x41 INA219 measures the pack. |
 | Camera | `/dev/video0` present, `nvargus-daemon` active. Host OpenCV 4.1.1 has GStreamer 1.14.5 (YES). Sensor modes not yet read. |
-| Wi-Fi | AC8265 on `wlan0`, joined 2.4 GHz channel 1, -67 dBm, 174 Mbit/s. **Power save is ON** (adds latency spikes; turn off with `sudo iw dev wlan0 set power_save off`, not yet persistent). |
+| Wi-Fi | AC8265 on `wlan0`. **Power save is ON by default and ruins the link** (measured 2026-10-04: with it ON the video lost 48 % of frames with 4 s typical latency; with `sudo iw dev wlan0 set power_save off` it lost 0 % at 22 ms typical, p95 65 ms; full-size pings went from 15 % loss to 0 %). The setting reverts on reboot until we make it persistent, so **run it after every boot**. 2.4 GHz and 5 GHz behaved the same; the band was not the problem. Signal was only -62 to -71 dBm at short range, so check the antennas. |
 | Gamepad / audio | No gamepad receiver or USB speaker plugged in at test time (only `gpio-keys`, HDMI audio and the on-board codec). Plug the gamepad receiver in to learn its device path for the e-stop. |
 | **Disk** | Root is **24 GB, 94 % full (1.6 GB free)**. The card has **36 GB of unallocated space directly after the root partition**, so it can be grown in place (`parted resizepart` + `resize2fs`). Not done yet; needed before recording data or installing anything. |
 
