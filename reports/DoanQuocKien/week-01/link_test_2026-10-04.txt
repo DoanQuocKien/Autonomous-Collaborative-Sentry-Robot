@@ -127,3 +127,35 @@ one-way latency ms (synced via echo; includes JPEG encode): p50 22  p95 65  max 
 gap between frames ms: p50 66  p95 86  max 199   (50 ms = 20 fps)
 frame size: mean 9.0 kB -> 1.5 Mbit/s at 20 fps
 left running: 0
+
+## I. RETEST with Wi-Fi power save turned back ON (confirms the effect; robot at -53 dBm this time)
+=== synthetic video, 5 GHz, power save ON (retest)
+wifi: freq: 5805; signal: -53 dBm; | power_save: Power save: on
+clock echo: answered 60/60; RTT ms min 4  median 8  p95 13  max 47
+video: 300 frames in 27.2 s -> 11.0 fps; missing 115 of 415 (27.7 %)
+one-way latency ms (synced via echo; includes JPEG encode): p50 23  p95 2120  max 5392
+gap between frames ms: p50 64  p95 135  max 3079   (50 ms = 20 fps)
+frame size: mean 9.1 kB -> 1.5 Mbit/s at 20 fps
+left running: 0
+=== A. ICMP laptop -> robot (does a full-size packet get through, unfragmented?)
+payload   32 bytes: Packets: Sent = 20, Received = 20, Lost = 0 (0% loss), | Minimum = 5ms, Maximum = 19ms, Average = 8ms
+payload 1000 bytes: Packets: Sent = 20, Received = 20, Lost = 0 (0% loss), | Minimum = 5ms, Maximum = 32ms, Average = 11ms
+payload 1472 bytes: Packets: Sent = 20, Received = 20, Lost = 0 (0% loss), | Minimum = 5ms, Maximum = 14ms, Average = 8ms
+
+=== B. UDP robot -> laptop, video-like rate (1.5 Mbit/s, 1200-byte datagrams, 10 s)
+udp 1.5 Mbit/s: received 1543/1563 datagrams -> loss 1.3 %; gap between datagrams ms p50 0.0 p99 193 max 1592
+
+=== C. UDP robot -> laptop, 6 Mbit/s
+udp 6 Mbit/s  : received 712/734 datagrams -> loss 3.0 %; gap between datagrams ms p50 0.0 p99 201 max 1687
+
+=== D. TCP robot -> laptop paced like the video (1.5 Mbit/s, 9 kB chunks, 10 s)
+tcp paced  : 0.5 Mbit/s average over 11.1 s; longest silence 2222 ms; p99 gap 971 ms
+   Mbit/s per second: 0.5 0.1 0.4 0.7 1.8 1.1 0.0 0.0 0.6 0.0
+
+=== E. TCP robot -> laptop as fast as possible (raw capacity, 8 s)
+tcp unpaced: 0.2 Mbit/s average over 12.4 s; longest silence 1599 ms; p99 gap 1467 ms
+   Mbit/s per second: 0.0 0.0 0.3 0.1 0.4 0.1 0.4 0.0
+
+cleanup: helper removed from the robot
+
+# After section I, power save was switched OFF again at runtime (reverts on reboot).
