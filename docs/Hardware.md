@@ -10,7 +10,7 @@ Spec section 2 is the source for the original list; where this file disagrees wi
 
 | Item | Budget choice | Cost | What you give up |
 | :-- | :-- | :-: | :-- |
-| ESP32-CAM + MB base | **Buy 1, not 2.** Lend it to kouun-rokku for the W1 firmware work, since DQK does not need it until the W3 handshake. | $8-10 | No spare. If it dies, buy another locally (1-2 days); a W1-W2 failure costs little. |
+| ESP32-CAM + MB base | **Already bought; kouun-rokku holds it** and does the W1 firmware work. Nothing to buy. | $0 | No spare. If it dies, buy another locally ($8-10, 1-2 days); a W1-W2 failure costs little. |
 | ESP32 power | Phone charger (5 V, 1 A or more) + a short, thick cable you own | $0 | Possible reboot loops on a weak charger or thin cable; if so, try another charger before buying anything |
 | Camera stand | Tape it to a shelf, or use a stack of books and double-sided tape | $0 | Less adjustable |
 | Speaker | **A USB sound adapter ($2-3) + any old powered 3.5 mm speaker** (the Nano has no headphone jack). If you own no speaker, the cheapest USB speaker (~$5) | $2-5 | Nothing important; check the volume in the room |

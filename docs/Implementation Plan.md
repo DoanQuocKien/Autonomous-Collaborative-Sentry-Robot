@@ -7,13 +7,13 @@ Week 1 starts **Mon 2026-10-05**. The Mid-Term Technical Report is due **Sun 202
 
 | Handle | CUDA | Hardware | Primary ownership |
 | :-- | :-: | :-: | :-- |
-| **DoanQuocKien** (DQK) | Yes | Holds JetBot, ESP32-CAM, FTDI, speaker | Jetson side, motor control, calibration, controllers on the robot, hardware-in-the-loop (HIL) testing, integration host |
+| **DoanQuocKien** (DQK) | Yes | Holds the JetBot kit (speaker later) | Jetson side, motor control, calibration, controllers on the robot, hardware-in-the-loop (HIL) testing, integration host |
 | **HuynhNguyenHoaiLoc** (HNHL) | Yes | – | Laptop perception: YOLOv8, ByteTrack, InsightFace, OSNet, YOLOv8-pose, GPU profiling |
-| **kouun-rokku** (KR) | No | – | CPU-side logic: record/replay tooling, ORB entrance matching, localization (ArUco + dead reckoning), state machine, queue/handoff logic, simulation, audio assets, test infrastructure, report editing |
+| **kouun-rokku** (KR) | No | Holds the ESP32-CAM + MB base | CPU-side logic: record/replay tooling, ORB entrance matching, localization (ArUco + dead reckoning), state machine, queue/handoff logic, simulation, audio assets, test infrastructure, report editing |
 
 Principles behind the split:
 - KR has no GPU, so KR owns everything that runs on CPU and the tooling that lets others work without the robot.
-- Only DQK has the hardware, so every task must be developable **offline on recorded data** first. HIL time on DQK's setup is for validation, not development.
+- Only DQK has the robot (and only KR has the ESP32 kit), so every task must be developable **offline on recorded data** first. HIL time on DQK's setup is for validation, not development.
 - Each member carries roughly equal weekly load (about 3 work items per week).
 
 ## 2. Repository Layout (target)
@@ -146,7 +146,7 @@ Each week ends with a **Sunday integration session** hosted by DQK (in person or
 - **KR**
   - `tools/record.py` + `tools/replay.py`: record both streams with timestamps; replay through the same interface as the live receivers.
   - `tools/sim_robot.py`: UDP sink that integrates (v, w) with unicycle kinematics and logs pose.
-  - `esp32/sentry_cam` sketch (based on CameraWebServer, VGA, 15 FPS, static IP). DQK flashes it at the integration session, or lends the ESP32 kit, which is independent of the robot.
+  - `esp32/sentry_cam` sketch (based on CameraWebServer, VGA, 15 FPS, static IP). KR holds the ESP32 kit, so KR flashes and tests it directly, and brings it to the Sunday session (needed for the ESP32 door view in D1 and the Week 3 handshake).
   - pytest skeleton: `conftest.py`, markers, `config.toml` loader.
   - Tests: T0 record-then-replay round trip gives identical frames and timestamps.
 - **Session:** freeze the section 3 interfaces; record **D1**.

@@ -22,7 +22,7 @@ Spec: `docs/Project Specification.md` (source of truth). Plan: `docs/Implementat
 - Strike: bbox area growth dA/A > 0.40 in 100 ms -> v=-1.0, omega=+-0.8 for 400 ms
 
 ## Conventions
-- Team: DoanQuocKien (CUDA, holds all hardware), HuynhNguyenHoaiLoc (CUDA, perception), kouun-rokku (no CUDA, CPU logic/tooling). Branch `<handle>/wNN-topic`, PR + 1 review.
+- Team: DoanQuocKien (CUDA, holds the JetBot kit), HuynhNguyenHoaiLoc (CUDA, perception), kouun-rokku (no CUDA, CPU logic/tooling, holds the ESP32-CAM + MB base). Branch `<handle>/wNN-topic`, PR + 1 review.
 - Tests: T0 unit (no marker, CPU), `replay`, `gpu`, `hil` markers. Evidence goes to `reports/<handle>/week-NN/`.
 - Keep seeds, logging and calibration knobs in research code. One small `test_*.py` for non-trivial logic.
 - Serena: set `languages: [python]` in `.serena/project.yml` once code exists. `.serena/` and `graphify-out/` are gitignored.
