@@ -7,3 +7,7 @@ graphify-out/
 data/
 runs/
 pip_install.log
+
+# secrets
+.env
+.env.*
