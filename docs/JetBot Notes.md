@@ -51,8 +51,23 @@ nvgstcapture-1.0                   # or a short nvarguscamerasrc test: does the 
 ```
 Record the outputs in `reports/DoanQuocKien/week-01/`.
 
+## Verified on our robot (2026-10-04; raw output in `reports/DoanQuocKien/week-01/robot_remote_checks.txt`)
+
+| Item | Result |
+| :-- | :-- |
+| Board / OS | Jetson Nano Developer Kit, L4T R32.5.0 (JetPack 4.5), Ubuntu 18.04, hostname `nano-4gb-jp45`, Python 3.6.9 |
+| Where `jetbot` lives | **Inside Docker, not the host.** Containers `jetbot_jupyter` (`jetbot/jetbot:jupyter-0.4.3-32.5.0`) and `jetbot_display` (OLED) run with `--restart always`. Host Python has no `jetbot` and no `zmq`. |
+| Jupyter container | `net=host`, privileged, mounts `/dev/bus/usb`, `/tmp/argus_socket` (camera) and host `/home/jetbot` as `/workspace`. Inside: Python 3.6.9, jetbot 0.4.3, pyzmq 21.0.1, OpenCV 4.1.1, numpy 1.19.4. |
+| **So: how to run our scripts** | Copy `common/`, `jetson/` (and later `calib/`, `assets/audio/`) to `/home/jetbot/sentry/` on the host; run inside the container, e.g. `docker exec -w /workspace/sentry jetbot_jupyter python3 jetson/robot_udp.py --dry-run`. Host networking means UDP 5556 / ZMQ 5555 are on the Jetson's own IP. Anything that opens the Robot in a Jupyter notebook at the same time will conflict. |
+| I2C devices | `0x3c` OLED, `0x41` INA219 (battery monitor), `0x60` motor driver (Waveshare/Adafruit, as expected), `0x70` all-call. |
+| Battery | INA219 register read gave about **12.0 V** (3S pack, roughly 80 % charged). Assumes the 0x41 INA219 measures the pack. |
+| Camera | `/dev/video0` present, `nvargus-daemon` active. Host OpenCV 4.1.1 has GStreamer 1.14.5 (YES). Sensor modes not yet read. |
+| Wi-Fi | AC8265 on `wlan0`, joined 2.4 GHz channel 1, -67 dBm, 174 Mbit/s. **Power save is ON** (adds latency spikes; turn off with `sudo iw dev wlan0 set power_save off`, not yet persistent). |
+| Gamepad / audio | No gamepad receiver or USB speaker plugged in at test time (only `gpio-keys`, HDMI audio and the on-board codec). Plug the gamepad receiver in to learn its device path for the e-stop. |
+| **Disk** | Root is **24 GB, 94 % full (1.6 GB free)**. The card has **36 GB of unallocated space directly after the root partition**, so it can be grown in place (`parted resizepart` + `resize2fs`). Not done yet; needed before recording data or installing anything. |
+
 ## Open questions
 
-- Which `jetbot` version and motor driver does the kit's SD image actually use?
+- ~~Which `jetbot` version and motor driver does the kit's SD image actually use?~~ Answered above: jetbot 0.4.3 in Docker, motor driver at 0x60.
 - What does upstream `zmq_camera.py` do? It may already be a ZeroMQ camera client we can learn from.
 - Does `nvarguscamerasrc` give us 640x480 at 20+ fps on this image, or must we capture larger and downscale?

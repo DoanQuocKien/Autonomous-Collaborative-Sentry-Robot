@@ -57,7 +57,7 @@ pip3 install -r jetson/requirements.txt
 python3 -c "import cv2; print(cv2.__version__)"
 python3 -c "import cv2; print(cv2.getBuildInformation())" | grep -i gstreamer     # expect: YES
 ```
-Deploy by copying `common/`, `jetson/`, `calib/` (once it exists) and `assets/audio/` (WAV clips) to the robot, e.g. `scp -r common jetson jetbot@<ip>:~/sentry/`. Run from inside `~/sentry`.
+On our robot the `jetbot` library, pyzmq 21, OpenCV and numpy are **inside the `jetbot_jupyter` Docker container**, not the host (verified 2026-10-04, see `docs/JetBot Notes.md`), so the pip step above is not needed. Deploy by copying `common/`, `jetson/`, `calib/` (once it exists) and `assets/audio/` (WAV clips) to `/home/jetbot/sentry/` on the robot, e.g. `scp -r common jetson jetbot@<ip>:~/sentry/`. The container sees that folder as `/workspace/sentry`; run scripts there with `docker exec`, e.g. `docker exec -w /workspace/sentry jetbot_jupyter python3 jetson/robot_udp.py --dry-run`.
 
 First runs, wheels off the ground, low speed (default `--max-speed 0.5`):
 
