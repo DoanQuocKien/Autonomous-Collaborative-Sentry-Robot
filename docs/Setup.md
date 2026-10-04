@@ -2,6 +2,9 @@
 
 Three machines, three install paths. Do the one for your machine, then run the check at the end of it.
 Versions below are the ones we actually verified (Windows 11, RTX 4050, driver 581, 2026-10-04).
+HNHL also verified Python 3.12.15 in a local `.venv` on RTX 5060 Laptop GPU
+(8 GB), driver 591.74, with torch 2.9.1+cu128 and ORT GPU 1.23.2; see the
+[W1 report](../reports/HuynhNguyenHoaiLoc/week-01.md) for versions and metrics.
 
 | Machine | Who | Path |
 | :-- | :-- | :-- |
@@ -85,5 +88,6 @@ Laptop-side command sender: `python -m tools.send_cmd --ip <jetbot-ip> --v 0.3 -
 | ONNX Runtime silently on CPU; log mentions `cudart64_13.dll` | onnxruntime-gpu 1.30+ wants CUDA 13. Pin 1.23.2 (step 3) |
 | `check_env` says two onnxruntime packages installed | step 3 above |
 | `ModuleNotFoundError: tensorboard` from torchreid | `pip install tensorboard` (already in `requirements-base.txt`) |
+| `ModuleNotFoundError: gdown` from torchreid | `pip install gdown` (already in `requirements-base.txt`; torchreid's dataset module imports it) |
 | pip stalls or fails on a slow/unstable connection | download the wheel with `curl.exe -L -C - --retry 30 --retry-all-errors -o x.whl <url>` and `pip install --no-deps x.whl` |
 | `ModuleNotFoundError: common` when running a script from `tools/` | run it as a module from the repo root: `python -m tools.send_cmd` |

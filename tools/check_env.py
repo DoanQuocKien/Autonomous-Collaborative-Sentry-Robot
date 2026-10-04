@@ -6,6 +6,8 @@
 import argparse
 import importlib
 import importlib.metadata as md
+import os
+from pathlib import Path
 import sys
 
 problems = []
@@ -39,6 +41,9 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--cpu-ok", action="store_true", help="CPU-only machine: GPU problems are warnings")
     gpu_fatal = not ap.parse_args().cpu_ok
+    cache = Path(__file__).resolve().parents[1] / "data" / "ultralytics"
+    cache.mkdir(parents=True, exist_ok=True)
+    os.environ.setdefault("YOLO_CONFIG_DIR", str(cache))
 
     report(sys.version_info >= (3, 11), "python", sys.version.split()[0] + " (need >= 3.11 for tomllib; 3.12 tested)")
 

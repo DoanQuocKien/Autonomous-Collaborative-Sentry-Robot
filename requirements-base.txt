@@ -8,3 +8,4 @@ ultralytics
 insightface
 torchreid
 tensorboard        # torchreid imports it but does not declare it
+gdown              # torchreid imports its dataset downloader but does not declare it

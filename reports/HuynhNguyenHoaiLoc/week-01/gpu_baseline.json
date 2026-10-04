@@ -1,0 +1,214 @@
+{
+  "timestamp_utc": "2026-10-04T16:01:19.055706+00:00",
+  "configuration": {
+    "models": [
+      "yolov8n.pt",
+      "yolov8s.pt"
+    ],
+    "imgsz": 640,
+    "warmup": 10,
+    "iterations": 100,
+    "seed": 532,
+    "device": 0,
+    "power_source": "unspecified"
+  },
+  "scope": "single-model predict, batch=1 FP32, seeded synthetic BGR; not full pipeline or HIL",
+  "environment": {
+    "python": "3.12.15",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "versions": {
+      "torch": "2.9.1+cu128",
+      "torchvision": "0.24.1+cu128",
+      "numpy": "2.5.3",
+      "opencv-python": "5.0.0.93",
+      "pyzmq": "27.2.0",
+      "ultralytics": "8.4.172",
+      "insightface": "2.1",
+      "onnx": "1.23.1",
+      "onnxruntime": null,
+      "onnxruntime-gpu": "1.23.2",
+      "torchreid": "0.2.5",
+      "pytest": "9.1.1"
+    },
+    "checks": {
+      "torch_cuda": {
+        "available": true,
+        "cuda": "12.8",
+        "pass": true
+      },
+      "cv2": {
+        "pass": true
+      },
+      "zmq": {
+        "pass": true
+      },
+      "ultralytics": {
+        "pass": true
+      },
+      "insightface": {
+        "pass": true
+      },
+      "torchreid": {
+        "pass": true
+      },
+      "onnx_packages": {
+        "pass": true
+      },
+      "onnx_cuda_inference": {
+        "session_providers": [
+          "CUDAExecutionProvider",
+          "CPUExecutionProvider"
+        ],
+        "executed_providers": [
+          "CUDAExecutionProvider"
+        ],
+        "correct_output": true,
+        "pass": true
+      },
+      "insightface_inference": {
+        "pack": "buffalo_s",
+        "detector_executed": true,
+        "synthetic_face_count": 0,
+        "embedding_shape": [
+          1,
+          512
+        ],
+        "providers": {
+          "landmark_3d_68": [
+            "CUDAExecutionProvider",
+            "CPUExecutionProvider"
+          ],
+          "landmark_2d_106": [
+            "CUDAExecutionProvider",
+            "CPUExecutionProvider"
+          ],
+          "detection": [
+            "CUDAExecutionProvider",
+            "CPUExecutionProvider"
+          ],
+          "genderage": [
+            "CUDAExecutionProvider",
+            "CPUExecutionProvider"
+          ],
+          "recognition": [
+            "CUDAExecutionProvider",
+            "CPUExecutionProvider"
+          ]
+        },
+        "pass": true,
+        "note": "Synthetic smoke test only; biometric accuracy needs D2."
+      }
+    },
+    "gpu": {
+      "name": "NVIDIA GeForce RTX 5060 Laptop GPU",
+      "total_vram_bytes": 8546484224,
+      "compute_capability": [
+        12,
+        0
+      ]
+    },
+    "nvidia_smi": {
+      "fields": [
+        "name",
+        "driver_version",
+        "memory.total",
+        "power.limit",
+        "enforced.power.limit",
+        "pstate",
+        "temperature.gpu",
+        "clocks.current.graphics"
+      ],
+      "rows": [
+        "NVIDIA GeForce RTX 5060 Laptop GPU, 591.74, 8151 MiB, [N/A], 20.00 W, P0, 42, 907 MHz"
+      ]
+    },
+    "pass": true
+  },
+  "models": [
+    {
+      "model": "yolov8n.pt",
+      "weights_sha256": "f59b3d833e2ff32e194b5bb8e08d211dc7c5bdf144b90d2c8412c47ccfc83b36",
+      "parameter_dtype": "torch.float32",
+      "status": "measured",
+      "fps": 49.17888233099726,
+      "mean_latency_ms": 20.333931000495795,
+      "p50_latency_ms": 20.91880000079982,
+      "p95_latency_ms": 27.024689998506798,
+      "gpu_runtime_before": {
+        "fields": [
+          "name",
+          "driver_version",
+          "memory.total",
+          "power.limit",
+          "enforced.power.limit",
+          "pstate",
+          "temperature.gpu",
+          "clocks.current.graphics"
+        ],
+        "rows": [
+          "NVIDIA GeForce RTX 5060 Laptop GPU, 591.74, 8151 MiB, [N/A], 20.00 W, P8, 41, 225 MHz"
+        ]
+      },
+      "gpu_runtime_after": {
+        "fields": [
+          "name",
+          "driver_version",
+          "memory.total",
+          "power.limit",
+          "enforced.power.limit",
+          "pstate",
+          "temperature.gpu",
+          "clocks.current.graphics"
+        ],
+        "rows": [
+          "NVIDIA GeForce RTX 5060 Laptop GPU, 591.74, 8151 MiB, [N/A], 20.00 W, P4, 42, 1312 MHz"
+        ]
+      },
+      "peak_allocated_mib": 33.544921875,
+      "peak_reserved_mib": 58.0
+    },
+    {
+      "model": "yolov8s.pt",
+      "weights_sha256": "1f47a78bf100391c2a140b7ac73a1caae18c32779be7d310658112f7ac9aa78a",
+      "parameter_dtype": "torch.float32",
+      "status": "measured",
+      "fps": 26.059959536473343,
+      "mean_latency_ms": 38.37304500033497,
+      "p50_latency_ms": 37.6540999932331,
+      "p95_latency_ms": 40.73996000151964,
+      "gpu_runtime_before": {
+        "fields": [
+          "name",
+          "driver_version",
+          "memory.total",
+          "power.limit",
+          "enforced.power.limit",
+          "pstate",
+          "temperature.gpu",
+          "clocks.current.graphics"
+        ],
+        "rows": [
+          "NVIDIA GeForce RTX 5060 Laptop GPU, 591.74, 8151 MiB, [N/A], 20.00 W, P4, 42, 480 MHz"
+        ]
+      },
+      "gpu_runtime_after": {
+        "fields": [
+          "name",
+          "driver_version",
+          "memory.total",
+          "power.limit",
+          "enforced.power.limit",
+          "pstate",
+          "temperature.gpu",
+          "clocks.current.graphics"
+        ],
+        "rows": [
+          "NVIDIA GeForce RTX 5060 Laptop GPU, 591.74, 8151 MiB, [N/A], 20.00 W, P4, 42, 1057 MHz"
+        ]
+      },
+      "peak_allocated_mib": 78.61572265625,
+      "peak_reserved_mib": 94.0
+    }
+  ],
+  "pass": true
+}

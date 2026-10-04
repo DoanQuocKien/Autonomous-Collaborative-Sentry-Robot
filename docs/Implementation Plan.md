@@ -19,12 +19,12 @@ Principles behind the split:
 ## 2. Repository Layout (target)
 
 ```
-sentry/                 # laptop package, runs in science_env (Python 3.14)
-  config.toml           # ALL tunables (thresholds, gains, ports); read with stdlib tomllib
+sentry/                 # laptop package, Python 3.12 in sentry (see Setup.md)
   net/                  # zmq_rx.py, udp_tx.py, mjpeg_rx.py, clock_sync.py
   perception/           # obstacle.py, entrance.py, face.py, reid.py, tracker.py, pose.py
   nav/                  # localization.py, vantage.py, controllers.py
   app/                  # state_machine.py, target_queue.py, audio.py, main.py
+config.toml             # repo-root tunables (thresholds, gains, ports); stdlib tomllib
 common/                 # Python 3.6-compatible, stdlib only; used by BOTH laptop and Jetson
   protocol.py           # ports, packet encode/decode with validation, SeqFilter, video header, clock echo
   mixing.py             # (v, w) -> wheel values: rescale-not-clip, dead zone
@@ -51,12 +51,14 @@ Freezing these lets the three members work in parallel against the same contract
 
 | Link | Transport | Format |
 | :-- | :-- | :-- |
-| JetBot -> laptop video | ZeroMQ PUB/SUB, port 5555, `CONFLATE=1` on SUB (latest frame only) | multipart `[header_json, jpeg_bytes]`; header `{"seq": int, "t_cap": float (Jetson monotonic s), "w": int, "h": int}` |
+| JetBot -> laptop video | ZeroMQ PUB/SUB, port 5555; bounded SUB queue, drain complete messages and overwrite one latest-frame slot | multipart `[header_json, jpeg_bytes]`; header `{"seq": int, "t_cap": float (Jetson monotonic s), "w": int, "h": int}` |
 | Laptop -> JetBot control | UDP, port 5556, non-blocking | JSON `{"seq": int, "v": float, "w": float}` with v, w normalized to [-1, 1]; or `{"seq": int, "play": "<clip_name>"}` |
 | Clock sync | UDP echo, port 5557 | laptop sends `t0`, Jetson replies `{t0, t_jetson}`; offset by Cristian's algorithm (min-RTT of 20 samples) |
 | ESP32-CAM -> laptop | HTTP MJPEG, `http://<esp32-ip>:81/stream` | VGA 640x480, 15 FPS, static IP on hotspot |
 
 Laptop-internal contract:
+- Video adapters use `read(timeout) -> VideoFrame | None`, single consumer, with `frame_bgr`, original `jpeg`, `seq`, source `t_cap`, laptop `t_rx` and `t_decode` (see `sentry/net/frame.py`). Latest-frame receivers deliberately skip old frames; record/replay preserves source timestamps.
+- Do not use `ZMQ_CONFLATE` on the multipart video link: [libzmq documents that it retains only one part](https://libzmq.readthedocs.io/en/latest/zmq_setsockopt.html#zmq-conflate-keep-only-last-message). The wire format stays unchanged; review this correction with the team before the W1 interface freeze.
 - Every perception module is a class with a `__call__(frame_bgr, t) -> dataclass` method and no global state.
 - Every module can be fed from `replay.py` exactly as from a live stream.
 - The state machine only consumes **events** (e.g. `ENTRANCE_FOUND`, `INTRUDER_QUEUED`, `TARGET_STATIONARY`, `STRIKE`, `TARGET_EXITED`) and emits **commands**. It never touches sockets or models directly, so it is unit-testable on CPU.
@@ -137,7 +139,7 @@ Each week ends with a **Sunday integration session** hosted by DQK (in person or
   - `sentry/net/zmq_rx.py`: latest-frame receiver thread with JPEG decode.
   - `udp_tx.py`: rate-limited 30 Hz sender.
   - `clock_sync.py` and a latency logger that writes CSVs.
-  - GPU baseline: YOLOv8n/s FPS and VRAM at 640 on the RTX 4050; confirm torch, insightface and onnxruntime-gpu run in `science_env`, and record versions.
+  - GPU baseline: YOLOv8n/s FPS and VRAM at 640 on the RTX 4050; confirm torch, insightface and onnxruntime-gpu run in `sentry` (Python 3.12, see Setup.md), and record versions. HNHL's RTX 5060 measurements must be labelled separately; they do not substitute for the RTX 4050 baseline.
   - Tests: T0 for clock-sync math with synthetic delays.
 - **KR**
   - `tools/record.py` + `tools/replay.py`: record both streams with timestamps; replay through the same interface as the live receivers.

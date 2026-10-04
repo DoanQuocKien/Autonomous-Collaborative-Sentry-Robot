@@ -8,6 +8,26 @@ video_port = 5555
 control_port = 5556
 clock_port = 5557
 control_rate_hz = 30
+clock_samples = 20
+clock_timeout_s = 0.5
+video_rcvhwm = 2                 # multipart cannot use ZMQ_CONFLATE; drain complete messages
+video_poll_ms = 20
+video_drain_limit = 64           # bound drain work so shutdown/decode cannot starve
+video_join_timeout_s = 2.0
+
+[telemetry]
+duration_s = 30.0
+frame_timeout_s = 1.0
+latency_p95_limit_ms = 50.0
+min_fps = 20.0
+
+[profiling]
+models = ["yolov8n.pt", "yolov8s.pt"]
+imgsz = 640
+warmup = 10
+iterations = 100
+seed = 532
+device = 0
 
 [camera]
 width = 640

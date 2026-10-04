@@ -1,0 +1,16 @@
+ok    python                 3.12.15 (need >= 3.11 for tomllib; 3.12 tested)
+ok    torch cuda             2.9.1+cu128 cuda=12.8 gpu=NVIDIA GeForce RTX 5060 Laptop GPU
+ok    onnxruntime pkgs       onnxruntime-gpu
+ok    onnxruntime session    first provider: CUDAExecutionProvider
+ok    cv2                    5.0.0
+ok    zmq                    27.2.0
+ok    PIL                    12.3.0
+C:\Users\Hoai Loc\Desktop\ROBOT\Autonomous-Collaborative-Sentry-Robot\.venv\Lib\site-packages\torchreid\reid\metrics\rank.py:11: UserWarning: Cython evaluation (very fast so highly recommended) is unavailable, now use python evaluation.
+  warnings.warn(
+ok    ultralytics            8.4.172
+ok    insightface            2.1
+ok    torchreid              0.2.5
+ok    pytest                 9.1.1
+ok    cv2.aruco              ArucoDetector present
+
+ALL GOOD
