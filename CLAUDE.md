@@ -17,7 +17,8 @@ Spec: `docs/Project Specification.md` (source of truth). Plan: `docs/Implementat
 ## Constants (keep in one config, never hardcode; hardware needs tuning)
 - Obstacle repulsion: 0.6 m (exploration), 0.5 m (pursuit override)
 - Whitelist cosine sim threshold 0.45; entrance distance 1.5-3.0 m
-- Standoff 1.2 m, orbit R ~1.0 m, stationary <0.1 m/s for >2 s -> circling
+- Standoff 1.2 m. Target ground speed <0.1 m/s for >2 s -> HOLD (stop, yaw to re-center, never orbit); exit above 0.2 m/s
+- After T1 exits: coverage-path search on the saved room map (r_det placeholder 3.0 m, 90 % coverage); unfound targets are dropped from the queue
 - Strike: bbox area growth dA/A > 0.40 in 100 ms -> v=-1.0, omega=+-0.8 for 400 ms
 
 ## Conventions

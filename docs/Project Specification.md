@@ -11,7 +11,7 @@ The system operates across three distinct phases:
 
 > 1. **Setup & Mapping:** The JetBot navigates the room, avoids obstacles, matches the entrance against a reference photo, identifies an unobstructed vantage point, and prompts the user to place the ESP32-CAM.  
 > 2. **Access Control:** The ESP32-CAM monitors the entrance, matching entrants against a whitelist of registered occupants. Unregistered entrants are flagged, assigned an appearance embedding, and queued.  
-> 3. **Physical Deterrence & Evasion:** The JetBot shadows the intruder, circles them if they remain stationary, and executes an evasive reverse maneuver if an aggressive forward movement or strike is detected. Once the intruder exits, the JetBot reorients using directional cues from the stationary camera to track the next target in the queue.
+> 3. **Physical Deterrence & Evasion:** The JetBot shadows the intruder, stops and keeps them centered if they remain stationary, and executes an evasive reverse maneuver if an aggressive forward movement or strike is detected. Once the intruder exits, the JetBot searches for the next target in the queue along a coverage path planned on the room map recorded during setup, and drops a target it cannot find.
 
 ## **2\. External Hardware Requirements**
 
@@ -58,9 +58,9 @@ ESP32-CAM Stream \-\> Face Detection (InsightFace)
 \[Phase 3: Interception\]  
 JetBot Deploys \-\> Pursue Target (YOLOv8 \+ ByteTrack)  
   ├── Target Moving   \-\> Distance Maintenance & Obstacle Avoidance  
-  ├── Target Stops    \-\> Tangential Circling  
+  ├── Target Stops    \-\> Hold Position & Re-center (no orbit)  
   ├── Attack Detected \-\> Preemptive Reverse/Yaw Evasion  
-  └── Target Exits    \-\> Receive Exit Event \-\> Pivot to Next-in-Queue Vector
+  └── Target Exits    \-\> Receive Exit Event \-\> Coverage-Path Search on Room Map \-\> Found? Pursue : Drop from Queue
 
 ### **4.1 Exploratory Pre-Scanning & Obstacle Avoidance**
 
@@ -69,8 +69,9 @@ JetBot Deploys \-\> Pursue Target (YOLOv8 \+ ByteTrack)
 
 \$\$d\_{\\text{obs}} \= \\frac{f \\cdot H\_{\\text{cam}}}{y\_{\\text{max}} \- c\_y}\$\$
 
-* The IMX219-160 is a fisheye lens: calibrate once with a checkerboard (OpenCV fisheye model) and undistort frames before applying the formula. $f$, $c_y$ and $H_{	ext{cam}}$ come from the calibration config.  
+* The IMX219-160 is a fisheye lens: calibrate once with a checkerboard (OpenCV fisheye model) and undistort frames before applying the formula. $f$, $c_y$ and $H_{\text{cam}}$ come from the calibration config.  
 * Robot pose is tracked by dead reckoning from calibrated $(v, \omega)$ commands, and corrected whenever an ArUco marker is visible.  
+* **Room map:** while exploring, the base station builds a 2D occupancy grid in world coordinates: robot pose comes from dead reckoning, the ground point of each detected obstacle marks occupied cells, floor the robot has driven over or seen is free, and unseen cells stay unknown. YOLO does not detect walls or unclassified objects, so the map only covers known-free floor. It is saved at the end of Phase 1 (with the guarding position) and used by the search in section 4.6.  
 * If any obstacle falls within \$0.6\\text{ m}\$, the base station injects a repulsive angular velocity component to steer the robot into open floor space.
 
 ### **4.2 Entrance Localization & Vantage Selection**
@@ -100,26 +101,27 @@ JetBot Deploys \-\> Pursue Target (YOLOv8 \+ ByteTrack)
 * A full-body crop is passed to OSNet to generate an appearance feature vector (\$\\vec{a}\_{\\text{target}}\$).  
 * The intruder is pushed to a First-In, First-Out (FIFO) queue \$\\mathcal{Q}\$. The JetBot is signaled to engage.
 
-### **4.5 Pursuit, Standoff Circling & Evasion**
+### **4.5 Pursuit, Standoff Hold & Evasion**
 
 * **Pursuit:** The JetBot uses its onboard camera to track the assigned intruder using YOLOv8 and ByteTrack, filtered by \$\\vec{a}\_{\\text{target}}\$. A Proportional-Derivative (PD) controller adjusts motor speeds to center the bounding box and maintain a \$1.2\\text{ m}\$ separation distance.  
 * **Obstacle Override:** If an obstacle is detected in the foreground (\$d\_{\\text{obs}} \< 0.5\\text{ m}\$) during pursuit, the controller adds an angular offset to bypass the obstacle while maintaining the target in the field of view.  
-* **Standoff Circling:** If the target's bounding box displacement drops below \$0.1\\text{ m/s}\$ for more than \$2.0\\text{ seconds}\$, the JetBot transitions to orbital motion:
-
-\$\$v \= v\_{\\text{orbit}}, \\quad \\omega \= \\frac{v\_{\\text{orbit}}}{R} \\quad (R \\approx 1.0\\text{ m})\$\$
+* **Standoff Hold:** If the target's ground speed stays below 0.1 m/s for more than 2.0 s, the JetBot stops translating, keeps tracking the intruder, and rotates in place (yaw-only PD) to keep the bounding box centered. It does not orbit: a differential-drive robot circling a point always faces along its path, which would put the target 90 degrees to the side, outside the camera's field of view. Target speed is computed in world coordinates (robot pose and yaw compensated), not from image displacement, because the robot itself rotates while holding. Pursuit resumes when the target's ground speed rises above an exit threshold (proposed 0.2 m/s, so the state does not flicker).
 
 * **Kinematic Strike Evasion:** YOLOv8-pose monitors keypoints (hips, knees, ankles) alongside bounding box geometry. If a forward lunge occurs—indicated by a bounding box area growth rate \$\\frac{\\Delta A}{A} \> 0.40\$ within \$100\\text{ ms}\$ or rapid ankle elevation—the pursuit logic is overridden with an immediate high-speed reverse and yaw pulse (\$v \= \-1.0, \\omega \= \\pm 0.8\$ for \$400\\text{ ms}\$) to evade before physical impact.
 
 ### **4.6 Target Handoff & Next-Intruder Acquisition**
 
-When the active intruder (\$T\_1\$) exits through the door, the system transitions to the next target (\$T\_2\$) in \$\\mathcal{Q}\$ using **Stationary Camera Vector Handoff**:
+When the active intruder ($T_1$) exits through the door, the JetBot stops pursuit and searches for the next target ($T_2$) in $\mathcal{Q}$ using a **Map-Based Coverage Search**:
 
-> 1. **Trajectory Logging:** When \$T\_2\$ originally crosses the entrance threshold, the ESP32-CAM tracks the horizontal drift of their bounding box across its frame over 2 seconds, generating a rough departure sector (e.g., *Left Sector*, *Center*, or *Right Sector*).  
-> 2. **Disengagement & Repositioning:** Once \$T\_1\$ leaves through the entrance, the JetBot disengages and returns to the initial sweet-spot coordinate.  
-> 3. **Directional Sector Sweep:** Rather than searching randomly, the JetBot immediately pivots toward the departure sector logged for \$T\_2\$ and sweeps \$\\pm 30^\\circ\$ while advancing slowly.  
-> 4. **Re-ID Matching:** Detected person crops are passed through OSNet. When the cosine distance matches \$\\vec{a}\_{\\text{target2}}\$, the JetBot locks on and initiates the pursuit state.
+> 1. **Room map:** the occupancy grid saved in Phase 1 (section 4.1) provides the known-free floor, the obstacles, and the guarding position.  
+> 2. **Coverage path:** from the map and an assumed effective detection radius $r_{\text{det}}$ (the distance within which a person crop can still be re-identified; placeholder 3.0 m, measured in Week 7), the base station plans a path with maximum floor coverage and minimum length. It picks viewpoints on known-free cells until at least 90 % of the known-free cells are within $r_{\text{det}}$ and line of sight of some viewpoint, orders them into a short tour, and connects them with obstacle-avoiding grid paths starting from the robot's current pose.  
+> 3. **Follow & scan:** the JetBot follows the path and, at each viewpoint, pivots slowly in place for a full turn while the laptop runs detection on every frame.  
+> 4. **Re-ID matching:** detected person crops are passed through OSNet. When the cosine distance matches $\vec{a}_{\text{target2}}$, the JetBot locks on and initiates the pursuit state.  
+> 5. **Not found:** if the path ends without a match, $T_2$ is removed from $\mathcal{Q}$ (the event is logged with timestamp and snapshot) and the JetBot continues with the next target in $\mathcal{Q}$, or returns to standby if $\mathcal{Q}$ is empty.
 
-*Optional Extension:* If a third overhead camera is available, the base station continuously tracks \$(X, Y)\$ ground coordinates across the entire room, allowing the JetBot to drive directly toward \$T\_2\$ without sweeping.
+*Optional prior:* when $T_2$ originally crosses the entrance threshold, the ESP32-CAM may log the horizontal drift of their bounding box over 2 s as a departure sector (Left / Center / Right). If available, the planner visits viewpoints on that side first; the search does not depend on it.
+
+*Optional Extension:* If a third overhead camera is available, the base station continuously tracks $(X, Y)$ ground coordinates across the entire room, allowing the JetBot to drive directly toward $T_2$ without searching.
 
 ## **5\. Network & Processing Architecture**
 
@@ -135,12 +137,12 @@ Per-member tasks, interfaces, test tiers and acceptance criteria: see `Implement
 | Week | Focus Area | Core Deliverables |
 | :---- | :---- | :---- |
 | **1** | Networking & Telemetry | Configure dual-band hotspot; establish ZeroMQ video uplink (\$\< 50\\text{ ms}\$ latency); verify motor UDP commands. |
-| **2** | Pre-Scanning & Setup | Implement YOLO ground-distance obstacle estimation; write ORB entrance matching and sweet-spot selection logic; fisheye calibration and ArUco-assisted dead-reckoning pose. |
+| **2** | Pre-Scanning & Setup | Implement YOLO ground-distance obstacle estimation; write ORB entrance matching and sweet-spot selection logic; fisheye calibration and ArUco-assisted dead-reckoning pose; occupancy-grid room map saved at the end of Phase 1. |
 | **3** | HCI Deployment & Biometrics | Implement audio prompts and ESP32-CAM connection handshake; build InsightFace whitelist and verification thresholds. |
 | **4** | Re-ID Handoff & Mid-Term Report | Implement OSNet appearance extraction and FIFO queueing; write and submit the 15–20 page Mid-Term Technical Report. |  
-| **5** | Pursuit & Obstacle Handling | Implement YOLOv8 \+ ByteTrack pursuit controller; integrate obstacle repulsion; build tangential circling routine. |  
+| **5** | Pursuit & Obstacle Handling | Implement YOLOv8 \+ ByteTrack pursuit controller; integrate obstacle repulsion; build the stationary hold-and-re-center behavior. |  
 | **6** | Threat Evasion | Deploy YOLOv8-pose; calibrate bounding box expansion and ankle kinematic triggers; test motor dodge override. |  
-| **7** | Next-Target Integration | Connect ESP32-CAM vector handoff to JetBot search routine; test full loop with two consecutive intruders. |  
+| **7** | Next-Target Integration | Implement map-based coverage search and connect it to the exit handoff (including dropping targets that are not found); test full loop with two consecutive intruders. |  
 | **8** | Validation & Defense | Stress-test edge cases; record demonstration footage; prepare project presentation and repository. |
 
 **Milestone:** Submit 15–20 page Mid-Term Technical Report (Week 4).
