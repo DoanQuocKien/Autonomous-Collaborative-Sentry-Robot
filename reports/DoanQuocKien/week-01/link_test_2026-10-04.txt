@@ -1,0 +1,65 @@
+# Link test JetBot <-> laptop over the phone hotspot (2.4 GHz ch 1), 2026-10-04
+# Code deployed to /home/jetbot/sentry and run inside the jetbot_jupyter container; robot_udp in --dry-run (motors NOT driven).
+# Windows-side timing: runs 1-2 used time.monotonic() (15.6 ms tick, coarse); run 3+ used perf_counter.
+
+## A. control link, clock echo, junk packets, synthetic video (monotonic timer)
+﻿=== 1. start robot_udp.py --dry-run inside the jetbot_jupyter container
+processes running: 2
+
+=== 2. clock echo (UDP 5557), 30 samples
+answered 30/30; RTT ms: min 15.0  median 23.5  p95 110.0  max 187.0
+
+=== 3. control: 150 packets forward at 30 Hz (5 s), then silence
+sent 150, Jetson applied 150 forward commands -> loss 0.0 %
+last lines: ['motors +0.50 +0.50', 'motors +0.00 +0.00']
+watchdog stop after silence: YES
+
+=== 4. restarted sender (seq starts at 0 again after >1 s silence) + left pivot
+distinct lines: ['motors +0.00 +0.00', 'motors -0.50 +0.50']
+
+=== 5. junk packets must produce NO motor output
+lines produced by 6 junk packets: none (correct)
+
+=== 6. stop robot_udp; processes left: 0
+log tail: ['motors -0.50 +0.50', 'motors +0.00 +0.00', 'motors +0.00 +0.00']
+
+=== 7. synthetic video stream (ZeroMQ 5555), 640x480 @ 20 fps, JPEG q60
+timeout waiting for frames
+camera_pub stopped; processes left: 0
+camera_pub log: empty (ok)
+
+## B. video latency run 1 (monotonic timer, power save ON)
+﻿=== synthetic video, Wi-Fi power save as found (ON)
+wifi: freq: 2412; signal: -62 dBm; | power_save: Power save: on
+clock echo: answered 60/60; RTT ms min 0  median 16  p95 78  max 329
+video: 300 frames in 22.3 s -> 13.4 fps; missing 42 of 342 (12.3 %)
+one-way latency ms (synced via echo; includes JPEG encode): p50 33  p95 871  max 2882
+gap between frames ms: p50 62  p95 125  max 2937   (50 ms = 20 fps)
+frame size: mean 9.0 kB -> 1.5 Mbit/s at 20 fps
+left running: 0
+
+## C. video latency run 2 (perf_counter, power save ON)
+﻿=== synthetic video, high-res timer, Wi-Fi power save ON
+wifi: freq: 2412; signal: -67 dBm; | power_save: Power save: on
+clock echo: answered 60/60; RTT ms min 4  median 16  p95 25  max 30
+video: 300 frames in 52.0 s -> 5.7 fps; missing 413 of 713 (57.9 %)
+one-way latency ms (synced via echo; includes JPEG encode): p50 33  p95 8542  max 12780
+gap between frames ms: p50 63  p95 899  max 3873   (50 ms = 20 fps)
+frame size: mean 9.1 kB -> 1.5 Mbit/s at 20 fps
+left running: 0
+
+## D. while streaming: receive rate and TCP retransmissions on the Jetson (sendQ and wifi columns failed to parse; ignore)
+﻿t(s)  rx_fps  sendQ(bytes)  retrans  wifi: signal  tx_retries  tx_failed  tx_bitrate   load   jetson_cpu_idle
+   4     2.5             ?       11       ? dBm           ?          ?           ?   0.51   85.2
+   8    15.9             ?       12       ? dBm           ?          ?           ?   0.55   85.2
+  12    15.4             ?       22       ? dBm           ?          ?           ?   0.74   85.2
+  16    15.4             ?       29       ? dBm           ?          ?           ?   0.68   85.2
+  20    15.3             ?       47       ? dBm           ?          ?           ?   0.71   85.2
+  24    15.3             ?       62       ? dBm           ?          ?           ?   0.65   85.3
+  28    15.6             ?       70       ? dBm           ?          ?           ?   0.65   85.3
+  32    15.4             ?       80       ? dBm           ?          ?           ?   0.60   85.3
+
+stream summary: 521 frames in the sampled window
+--- last ss detail for the stream:
+Recv-Q     Send-Q            Local Address:Port           Peer Address:Port
+left running: 0

@@ -140,7 +140,7 @@ Each week ends with a **Sunday integration session** hosted by DQK (in person or
 - **HNHL**
   - `sentry/net/zmq_rx.py`: latest-frame receiver thread with JPEG decode.
   - `udp_tx.py`: rate-limited 30 Hz sender.
-  - `clock_sync.py` and a latency logger that writes CSVs.
+  - `clock_sync.py` and a latency logger that writes CSVs. **Use `time.perf_counter()` for Windows-side timestamps: `time.monotonic()` ticks only every 15.6 ms there, which corrupts RTT and offset estimates (measured 2026-10-04).**
   - GPU baseline: YOLOv8n/s FPS and VRAM at 640 on the RTX 4050; confirm torch, insightface and onnxruntime-gpu run in `science_env`, and record versions.
   - Tests: T0 for clock-sync math with synthetic delays.
 - **KR**
