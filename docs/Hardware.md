@@ -4,6 +4,30 @@ The JetBot kit (Jetson Nano 4GB, CSI camera, chassis, motors, board, Wi-Fi card,
 Everything below is what the spec lists as "external", plus gaps we found. **Costs are rough guesses from general knowledge, not quotes; check local shops.**
 Spec section 2 is the source for the original list; where this file disagrees with it, this file is the newer decision.
 
+## 0. Budget version (use this one unless money is not a problem)
+
+**Buy about $12-20 worth (my estimate); everything else is free or borrowed.** Sections 1-3 below are the full-price reference.
+
+| Item | Budget choice | Cost | What you give up |
+| :-- | :-- | :-: | :-- |
+| ESP32-CAM + MB base | **Buy 1, not 2.** Lend it to kouun-rokku for the W1 firmware work, since DQK does not need it until the W3 handshake. | $8-10 | No spare. If it dies, buy another locally (1-2 days); a W1-W2 failure costs little. |
+| ESP32 power | Phone charger (5 V, 1 A or more) + a short, thick cable you own | $0 | Possible reboot loops on a weak charger or thin cable; if so, try another charger before buying anything |
+| Camera stand | Tape it to a shelf, or use a stack of books and double-sided tape | $0 | Less adjustable |
+| Speaker | **A USB sound adapter ($2-3) + any old powered 3.5 mm speaker** (the Nano has no headphone jack). If you own no speaker, the cheapest USB speaker (~$5) | $2-5 | Nothing important; check the volume in the room |
+| Checkerboard backing | Glue the print onto a **flat rigid board you already own** (MDF offcut, cutting board, spare tile). Check flatness with a ruler | $0 | Warped backing ruins the calibration, so reject anything curved. Do not use thin cardboard |
+| Printing | Matte or plain paper at a print shop: the checkerboard + **only the 150 mm ArUco set** (7 pages) | $1-2 | The 10 cm set is skipped. After printing, measure a marker and set `aruco_marker_m = 0.15` in `config.toml` |
+| Tape measure | Borrow one (5 m) or buy | $0-2 | |
+| Lunge prop | A rolled towel or pillow on a cardboard tube | $0 | |
+| Cables, ties, tape | Use what you have; label which USB cables carry data | $0 | |
+| Down-tilt wedge | Folded foam or cardboard, test both ways in W2 | $0 | |
+| Network | **Try the Windows hotspot on 2.4 GHz for both ESP32 and JetBot first.** If it fails, use a phone as a hotspot (check that clients can ping each other). Buy a router only if both fail the 50 ms test | $0 | Single band for everything; video needs only ~5 Mbps so this is fine unless the room is crowded with Wi-Fi |
+| Spare batteries | **Do not buy.** Charge between sessions and plan around the measured runtime | $0 | Shorter test sessions; revisit if runtime is under 60 min |
+| IMU, overhead camera | **Do not buy** | $0 | Same gates as section 2; the IMU costs only $2-3 if the W2 test fails |
+
+**Still worth paying for even on a budget:** the ESP32-CAM + MB base (the project cannot work without it) and the sound adapter or speaker. Everything else has a free substitute that I judge low risk.
+
+**Order of upgrades if something fails** (cheapest first): another phone charger or cable, then a second ESP32-CAM ($8-10), then the router ($20-30), then spare batteries ($12-18).
+
 ## 1. Buy now (required)
 
 | # | Item | Qty | Needed by | Why / decision |
