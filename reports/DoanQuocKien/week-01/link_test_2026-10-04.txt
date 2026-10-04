@@ -63,3 +63,35 @@ stream summary: 521 frames in the sampled window
 --- last ss detail for the stream:
 Recv-Q     Send-Q            Local Address:Port           Peer Address:Port
 left running: 0
+
+## E. phone hotspot switched to 5 GHz (ch 161, robot -71 dBm), power save ON: video run
+﻿=== synthetic video, phone hotspot on 5 GHz (ch 161), Wi-Fi power save ON
+wifi: freq: 5805; signal: -71 dBm; | power_save: Power save: on
+clock echo: answered 60/60; RTT ms min 9  median 19  p95 64  max 72
+video: 300 frames in 57.1 s -> 5.2 fps; missing 274 of 574 (47.7 %)
+one-way latency ms (synced via echo; includes JPEG encode): p50 4237  p95 21488  max 25597
+gap between frames ms: p50 35  p95 496  max 8533   (50 ms = 20 fps)
+frame size: mean 9.0 kB -> 1.5 Mbit/s at 20 fps
+left running: 0
+
+## F. layered network test on 5 GHz (no ZeroMQ): ICMP sizes, UDP and TCP robot -> laptop
+﻿=== A. ICMP laptop -> robot (does a full-size packet get through, unfragmented?)
+payload   32 bytes: Packets: Sent = 20, Received = 20, Lost = 0 (0% loss), | Minimum = 5ms, Maximum = 13ms, Average = 8ms
+payload 1000 bytes: Packets: Sent = 20, Received = 20, Lost = 0 (0% loss), | Minimum = 7ms, Maximum = 265ms, Average = 62ms
+payload 1472 bytes: Packets: Sent = 20, Received = 17, Lost = 3 (15% loss), | Minimum = 11ms, Maximum = 615ms, Average = 149ms
+
+=== B. UDP robot -> laptop, video-like rate (1.5 Mbit/s, 1200-byte datagrams, 10 s)
+udp 1.5 Mbit/s: received 480/493 datagrams -> loss 2.6 %; gap between datagrams ms p50 5.8 p99 719 max 1265
+
+=== C. UDP robot -> laptop, 6 Mbit/s
+udp 6 Mbit/s  : received 561/568 datagrams -> loss 1.2 %; gap between datagrams ms p50 7.4 p99 331 max 1018
+
+=== D. TCP robot -> laptop paced like the video (1.5 Mbit/s, 9 kB chunks, 10 s)
+tcp paced  : 0.1 Mbit/s average over 14.5 s; longest silence 3922 ms; p99 gap 1315 ms
+   Mbit/s per second: 0.0 0.3 0.0 0.2 0.3 0.2 0.3 0.2 0.1 0.2
+
+=== E. TCP robot -> laptop as fast as possible (raw capacity, 8 s)
+tcp unpaced: 0.1 Mbit/s average over 24.0 s; longest silence 6080 ms; p99 gap 2206 ms
+   Mbit/s per second: 0.1 0.2 0.1 0.0 0.0 0.0 0.0 0.0
+
+cleanup: helper removed from the robot
