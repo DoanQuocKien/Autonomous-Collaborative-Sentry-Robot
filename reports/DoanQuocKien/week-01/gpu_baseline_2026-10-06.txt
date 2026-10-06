@@ -1,3 +1,5 @@
+# NOTE (2026-10-06 night): this tool was renamed to tools/gpu_pipeline_check.py and cut down to the pipeline and re-ID sections, because HuynhNguyenHoaiLoc owns the Week 1 GPU baseline (tools/gpu_baseline.py on their branch). The numbers below are DQK second-GPU cross-checks.
+
 # GPU baseline on DoanQuocKien's laptop (RTX 4050 Laptop 6 GB, torch 2.9.1+cu128), 2026-10-06
 # Inputs are random noise images: speeds are valid, detections are meaningless. InsightFace and pretrained OSNet weights are NOT included yet (downloads blocked by a very weak campus connection).
 

@@ -3,7 +3,7 @@
     python -m tools.fetch_models
 
 Re-ID weights go to weights/ (gitignored); the InsightFace face detector + embedder go to ~/.insightface/models/buffalo_s/.
-YOLO weights are downloaded by ultralytics on first use (see tools/gpu_baseline.py). The campus network can be very slow
+YOLO weights are downloaded by ultralytics on first use. The campus network can be very slow
 (10 KB/s on a bad day): each download is retried, and files are renamed only when complete, so just run it again.
 
 NOTE: torchreid's `pretrained=True` gives ImageNet-only weights, NOT re-identification weights. The OSNet files here are

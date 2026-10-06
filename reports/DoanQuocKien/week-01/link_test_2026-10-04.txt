@@ -340,3 +340,34 @@ camera_pub.log: GST_ARGUS: Starting repeat capture requests.
 CONSUMER: Producer has connected; continuing.
 [ WARN:0] global /home/nvidia/host/build_opencv/nv_opencv/modules/videoio/src/cap_gstreamer.cpp (933) open OpenCV | GStreamer warning: Cannot query video position: status=0, value=-1, duration=-1
 left running: 0
+
+## O. 2026-10-06 night: watchdog timing (robot_udp --dry-run --no-estop on the robot itself; a sender on the robot sends v=1.0 at 30 Hz for 1 s, then goes silent; 5 cycles; times from the sender's last packet to the 'motors +0.00' line)
+﻿robot_udp (dry-run) running: yes
+
+robot log:
+16:24:24.572 motors +0.00 +0.00 (dry-run)
+16:24:24.573 e-stop released: motor commands accepted
+16:24:29.923 motors +0.50 +0.50 (dry-run)
+16:24:31.205 motors +0.00 +0.00 (dry-run)
+16:24:32.434 motors +0.50 +0.50 (dry-run)
+16:24:33.714 motors +0.00 +0.00 (dry-run)
+16:24:34.941 motors +0.50 +0.50 (dry-run)
+16:24:36.220 motors +0.00 +0.00 (dry-run)
+16:24:37.446 motors +0.50 +0.50 (dry-run)
+16:24:38.731 motors +0.00 +0.00 (dry-run)
+16:24:39.960 motors +0.50 +0.50 (dry-run)
+16:24:41.243 motors +0.00 +0.00 (dry-run)
+
+sender:
+cycle 1 last packet sent at 16:24:30.892
+cycle 2 last packet sent at 16:24:33.400
+cycle 3 last packet sent at 16:24:35.905
+cycle 4 last packet sent at 16:24:38.421
+cycle 5 last packet sent at 16:24:40.938
+
+watchdog: last packet -> motors stop, per cycle (ms): 313, 314, 315, 310, 305
+min 305  median 313  max 315 ms   (acceptance: <= 350 ms; the watchdog is set to 300 ms)
+
+# Acceptance (plan 4.3 'Control link'): motors stop <= 350 ms after link loss -> MET (305-315 ms; watchdog set to 300 ms).
+# Observation: the robot's uptime was 1 minute when it came back after a drop at about 23:15, so it REBOOTED rather than just losing Wi-Fi (battery 12.10 V before, 11.95 V after; cause unknown: a power dip, or a manual power-cycle by the user). Watch for repeats.
+# Clean shutdown at 23:25 via 'sudo shutdown -h now'; battery word 0x2a5d = 11.92 V.

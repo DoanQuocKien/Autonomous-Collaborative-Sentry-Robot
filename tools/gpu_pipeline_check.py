@@ -1,11 +1,14 @@
-"""GPU baseline: download the pretrained models, check each runs on the GPU, and measure speed and memory.
+"""Extras next to HuynhNguyenHoaiLoc's `tools.gpu_baseline` (the Week 1 GPU baseline): things it does not cover.
 
-    python -m tools.gpu_baseline                       # everything
-    python -m tools.gpu_baseline --only yolo osnet     # just these sections (yolo, insightface, osnet)
+    python -m tools.gpu_pipeline_check                     # both sections
+    python -m tools.gpu_pipeline_check --only pipeline     # or just one (osnet, pipeline)
 
-Each section is tried on its own, so one failure (a download, an API change) does not hide the others.
-Measures: YOLOv8n / YOLOv8s / YOLOv8n-pose at 640 (fp32 and fp16), InsightFace detector+embedder, OSNet (torchreid).
-Ends with the GPU memory with the models of the chosen sections loaded together (plan target: <= 5.5 GB, pipeline >= 15 FPS).
+* pipeline: YOLOv8n detect + YOLOv8n-pose + OSNet on two crops, back to back for 30 s (the plan's real target is the
+  whole pipeline at >= 15 FPS, not one model).
+* osnet: loads the RE-ID-trained OSNet weights from weights/ (python -m tools.fetch_models) and times them.
+* run_unthrottled(): Windows runs background processes (e.g. started from a hidden shell) in a low-power mode: a 35 FPS
+  pipeline measured 5 FPS and the GPU clock sat near 250-450 MHz. This opts the process out and raises its priority;
+  measured 2026-10-06 on an RTX 4050: 5.3 -> 34.9 FPS. Worth calling in any benchmark or live pipeline on Windows.
 Inputs are random noise images, so speeds are valid but detections are meaningless.
 """
 import argparse
@@ -65,65 +68,6 @@ def bench(fn, n=100, warmup=15):
 def section(title):
     print("\n=== " + title)
     sys.stdout.flush()
-
-
-def yolo_section(keep):
-    from ultralytics import YOLO
-    section("YOLOv8 at 640 (weights are downloaded on first use)")
-    img = np.random.randint(0, 255, (640, 640, 3), dtype=np.uint8)
-    for name in ("yolov8n.pt", "yolov8s.pt", "yolov8n-pose.pt"):
-        try:
-            for half in (False, True):
-                m = YOLO(name)  # a fresh model per precision, so one setting cannot leak into the other
-                kw = {"half": True} if half else {}
-                for _ in range(15):
-                    m.predict(img, imgsz=640, verbose=False, device=0, **kw)
-                tot, pre, inf, post = [], [], [], []
-                for _ in range(100):
-                    t = time.perf_counter()
-                    r = m.predict(img, imgsz=640, verbose=False, device=0, **kw)
-                    torch.cuda.synchronize()
-                    tot.append((time.perf_counter() - t) * 1000)
-                    pre.append(r[0].speed["preprocess"])
-                    inf.append(r[0].speed["inference"])
-                    post.append(r[0].speed["postprocess"])
-                tot.sort()
-                print("%-16s %s  whole call median %.1f ms (%.0f FPS) p95 %.1f ms | preprocess %.1f + inference %.1f + postprocess %.1f ms"
-                      % (name, "fp16" if half else "fp32", statistics.median(tot), 1000 / statistics.median(tot), tot[94],
-                         statistics.median(pre), statistics.median(inf), statistics.median(post)))
-                if half:
-                    keep.append(m)
-        except Exception:
-            print("%s FAILED:\n%s" % (name, traceback.format_exc(limit=3)))
-
-
-def insightface_section(keep):
-    section("InsightFace detector + embedder (buffalo_s pack)")
-    try:
-        import onnxruntime as ort
-        from insightface.app import FaceAnalysis
-        app = FaceAnalysis(name="buffalo_s", providers=["CUDAExecutionProvider", "CPUExecutionProvider"],
-                           allowed_modules=["detection", "recognition"])
-        app.prepare(ctx_id=0, det_size=(640, 640))
-        print("onnxruntime providers available:", ort.get_available_providers())
-        print("models loaded:", sorted(app.models.keys()))
-        for k, mdl in app.models.items():
-            sess = getattr(mdl, "session", None)
-            if sess is not None:
-                print("  %-14s runs on: %s" % (k, sess.get_providers()[0]))
-        img = np.random.randint(0, 255, (480, 640, 3), dtype=np.uint8)
-        ts = []
-        for i in range(60):
-            t = time.perf_counter()
-            app.get(img)
-            if i >= 10:
-                ts.append((time.perf_counter() - t) * 1000)
-        ts.sort()
-        print("FaceAnalysis.get on a 640x480 noise image: median %.1f ms  p95 %.1f ms (no face found, so this is detector time)"
-              % (statistics.median(ts), ts[int(0.95 * (len(ts) - 1))]))
-        keep.append(app)
-    except Exception:
-        print("InsightFace FAILED:\n%s" % traceback.format_exc(limit=4))
 
 
 def osnet_section(keep):
@@ -199,14 +143,14 @@ def pipeline_section(keep):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--only", nargs="+", choices=["yolo", "insightface", "osnet", "pipeline"], default=["yolo", "insightface", "osnet", "pipeline"])
+    ap.add_argument("--only", nargs="+", choices=["osnet", "pipeline"], default=["osnet", "pipeline"])
     only = ap.parse_args().only
     section("environment")
     run_unthrottled()
     print("torch", torch.__version__, "cuda", torch.cuda.is_available(), torch.cuda.get_device_name(0))
     print("GPU memory used before anything: %.0f MB of %.0f MB" % (vram_used_mb(), torch.cuda.get_device_properties(0).total_memory / 1e6))
     keep = []
-    for name, fn in (("yolo", yolo_section), ("insightface", insightface_section), ("osnet", osnet_section), ("pipeline", pipeline_section)):
+    for name, fn in (("osnet", osnet_section), ("pipeline", pipeline_section)):
         if name in only:
             fn(keep)
     section("loaded together: %s" % ", ".join(only))
