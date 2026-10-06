@@ -285,3 +285,19 @@ mode 3: Freeing pipeline ...
    saved /tmp/cam_m3_19.jpg -> camera_still_mode3.jpg
 mode 2: Freeing pipeline ...
    saved /tmp/cam_m2_19.jpg -> camera_still_mode2.jpg
+
+## M. 2026-10-06 real camera with the lens cap removed (it was the cap: frames were black). Battery 11.70 V OK.
+# A saved frame shows the room and people, so it is NOT stored in the repo (plan: recordings of people stay in data/).
+﻿=== REAL CAMERA, lens cap removed (sensor mode 3, 640x480, 20 fps requested), laptop hotspot 5 GHz
+wifi: freq: 5745; signal: -36 dBm; | power_save: Power save: on
+clock echo: answered 60/60; RTT ms min 2  median 11  p95 59  max 78
+video: 300 frames in 15.0 s -> 20.0 fps; missing 0 of 300 (0.0 %)
+one-way latency ms (synced via echo; includes JPEG encode): p50 12  p95 62  max 137
+gap between frames ms: p50 49  p95 93  max 152   (50 ms = 20 fps)
+frame size: mean 16.1 kB -> 2.6 Mbit/s at 20 fps
+camera_pub on the Jetson: 0.0       00:29 sh -c python3 -u jetson/camera_pub.py --source camera --fps 20 > /workspace/sentry/camera_pub.log 2>&1
+28.9       00:29 python3 -u jetson/camera_pub.py --source camera --fps 20
+camera_pub.log: GST_ARGUS: Starting repeat capture requests.
+CONSUMER: Producer has connected; continuing.
+[ WARN:0] global /home/nvidia/host/build_opencv/nv_opencv/modules/videoio/src/cap_gstreamer.cpp (933) open OpenCV | GStreamer warning: Cannot query video position: status=0, value=-1, duration=-1
+left running: 0
