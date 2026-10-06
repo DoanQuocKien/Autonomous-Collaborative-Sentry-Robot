@@ -8,3 +8,4 @@ ultralytics
 insightface
 torchreid
 tensorboard        # torchreid imports it but does not declare it
+paramiko          # tools/jetbot_status.py (SSH health check of the robot)

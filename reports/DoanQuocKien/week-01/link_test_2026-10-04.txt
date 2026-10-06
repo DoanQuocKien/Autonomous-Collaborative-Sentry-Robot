@@ -192,3 +192,42 @@ cleanup: helper removed from the robot
 
 ## hotspot monitor during the tests (a line is written only when something changes):
 12:37:09 state=On clients=1 laptop-wifi-Channel                : 149
+
+## K. 2026-10-06: permanent power-save fix (/etc/modprobe.d/8822ce-sentry.conf: options rtl8822ce rtw_power_mgnt=0 rtw_ips_mode=0). First attempt wrote an EMPTY file (my pipe lost the text) so nothing changed; second attempt:
+﻿battery: 11.92 V (rough 74 %, linear 9.9-12.6 V) -> OK
+module:  /lib/modules/4.9.201-tegra/kernel/drivers/net/wireless/realtek/rtl8822ce/rtl8822ce.ko
+parm:           rtw_ips_mode:The default IPS mode (int)
+parm:           rtw_power_mgnt:int
+module inside the initramfs (would ignore /etc/modprobe.d unless rebuilt)?: 0
+0
+0
+what loads it at boot: (only the PCI alias via udev)
+
+write config: written
+-rw-r--r-- 1 root root 245 Oct  5 22:45 /etc/modprobe.d/8822ce-sentry.conf
+# Added by the CS532 sentry project (2026-10-06): the Realtek vendor driver defaults to maximum Wi-Fi power saving,
+# which made video stall for seconds. Delete this file to restore the default.
+options rtl8822ce rtw_power_mgnt=0 rtw_ips_mode=0
+modprobe sees: options rtl8822ce rtw_power_mgnt=0 rtw_ips_mode=0
+
+battery: 11.90 V (rough 74 %, linear 9.9-12.6 V) -> OK
+clean reboot...
+back up after 36 s
+
+=== after reboot
+uptime: up
+rtw_power_mgnt: 0 | rtw_ips_mode: 0 (want 0 and 0)
+iw power_save: Power save: on | iwconfig: Power Management:off
+link: SSID: DoanQuocKien | 	freq: 5745 | 	signal: -42 dBm
+containers: jetbot_jupyter Up 30 seconds ; jetbot_display Up 30 seconds
+battery: 11.91 V (rough 74 %, linear 9.9-12.6 V) -> OK
+
+## driver's own report after the reboot, then video with no manual override
+﻿=== synthetic video, laptop hotspot, after reboot with the persistent modprobe fix, no manual override
+wifi: freq: 5745; signal: -43 dBm; | power_save: Power save: on
+clock echo: answered 60/60; RTT ms min 2  median 6  p95 13  max 28
+video: 300 frames in 19.5 s -> 15.3 fps; missing 0 of 300 (0.0 %)
+one-way latency ms (synced via echo; includes JPEG encode): p50 14  p95 21  max 198
+gap between frames ms: p50 67  p95 73  max 114   (50 ms = 20 fps)
+frame size: mean 9.0 kB -> 1.5 Mbit/s at 20 fps
+left running: 0

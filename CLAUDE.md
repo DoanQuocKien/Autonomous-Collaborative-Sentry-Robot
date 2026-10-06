@@ -24,5 +24,6 @@ Spec: `docs/Project Specification.md` (source of truth). Plan: `docs/Implementat
 ## Conventions
 - Team: DoanQuocKien (CUDA, holds the JetBot kit), HuynhNguyenHoaiLoc (CUDA, perception), kouun-rokku (no CUDA, CPU logic/tooling, holds the ESP32-CAM + MB base). Branch `<handle>/wNN-topic`, PR + 1 review.
 - Tests: T0 unit (no marker, CPU), `replay`, `gpu`, `hil` markers. Evidence goes to `reports/<handle>/week-NN/`.
+- Robot sessions: run `python -m tools.jetbot_status <ip>` at start/end and between long tests; battery >= 11.1 V OK, < 10.5 V stop and charge (see `docs/JetBot Notes.md`). The robot is school property: keep the return checklist there up to date.
 - Keep seeds, logging and calibration knobs in research code. One small `test_*.py` for non-trivial logic.
 - Serena: set `languages: [python]` in `.serena/project.yml` once code exists. `.serena/` and `graphify-out/` are gitignored.
