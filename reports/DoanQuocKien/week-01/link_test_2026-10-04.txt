@@ -159,3 +159,36 @@ tcp unpaced: 0.2 Mbit/s average over 12.4 s; longest silence 1599 ms; p99 gap 14
 cleanup: helper removed from the robot
 
 # After section I, power save was switched OFF again at runtime (reverts on reboot).
+
+## J. 2026-10-06: robot on the LAPTOP hotspot (5 GHz channel 149 = the channel the laptop's own school Wi-Fi 'UIT Public' uses), power save OFF, robot at -45 dBm, both antenna chains strong (-42 / -47 dBm)
+﻿=== synthetic video, laptop hotspot 5 GHz ch149, power save OFF
+wifi: freq: 5745; signal: -45 dBm; | power_save: Power save: off
+clock echo: answered 60/60; RTT ms min 2  median 5  p95 13  max 21
+video: 300 frames in 19.5 s -> 15.4 fps; missing 0 of 300 (0.0 %)
+one-way latency ms (synced via echo; includes JPEG encode): p50 17  p95 22  max 63
+gap between frames ms: p50 67  p95 73  max 114   (50 ms = 20 fps)
+frame size: mean 9.0 kB -> 1.5 Mbit/s at 20 fps
+left running: 0
+﻿=== A. ICMP laptop -> robot (does a full-size packet get through, unfragmented?)
+payload   32 bytes: Packets: Sent = 20, Received = 20, Lost = 0 (0% loss), | Minimum = 2ms, Maximum = 19ms, Average = 5ms
+payload 1000 bytes: Packets: Sent = 20, Received = 20, Lost = 0 (0% loss), | Minimum = 2ms, Maximum = 16ms, Average = 7ms
+payload 1472 bytes: Packets: Sent = 20, Received = 20, Lost = 0 (0% loss), | Minimum = 2ms, Maximum = 17ms, Average = 6ms
+
+=== B. UDP robot -> laptop, video-like rate (1.5 Mbit/s, 1200-byte datagrams, 10 s)
+udp 1.5 Mbit/s: received 1563/1563 datagrams -> loss 0.0 %; gap between datagrams ms p50 6.4 p99 15 max 30
+
+=== C. UDP robot -> laptop, 6 Mbit/s
+udp 6 Mbit/s  : received 6250/6250 datagrams -> loss 0.0 %; gap between datagrams ms p50 1.4 p99 10 max 69
+
+=== D. TCP robot -> laptop paced like the video (1.5 Mbit/s, 9 kB chunks, 10 s)
+tcp paced  : 1.5 Mbit/s average over 10.0 s; longest silence 80 ms; p99 gap 58 ms
+   Mbit/s per second: 1.5 1.5 1.5 1.5 1.5 1.4 1.5 1.5 1.5 1.5
+
+=== E. TCP robot -> laptop as fast as possible (raw capacity, 8 s)
+tcp unpaced: 16.8 Mbit/s average over 8.4 s; longest silence 186 ms; p99 gap 22 ms
+   Mbit/s per second: 15.7 18.3 13.0 19.4 16.9 18.7 13.0 15.1
+
+cleanup: helper removed from the robot
+
+## hotspot monitor during the tests (a line is written only when something changes):
+12:37:09 state=On clients=1 laptop-wifi-Channel                : 149

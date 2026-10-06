@@ -66,6 +66,8 @@ Record the outputs in `reports/DoanQuocKien/week-01/`.
 | Gamepad / audio | No gamepad receiver or USB speaker plugged in at test time (only `gpio-keys`, HDMI audio and the on-board codec). Plug the gamepad receiver in to learn its device path for the e-stop. |
 | **Disk** | Root is **24 GB, 94 % full (1.6 GB free)**. The card has **36 GB of unallocated space directly after the root partition**, so it can be grown in place (`parted resizepart` + `resize2fs`). Not done yet; needed before recording data or installing anything. |
 
+**Best network setup so far (2026-10-06, `reports/DoanQuocKien/week-01/link_test_2026-10-04.txt` section J):** the *laptop's own* Windows hotspot, robot about 1 m away at -45 dBm, both antenna chains strong (-42/-47 dBm), Wi-Fi power save OFF. The hotspot ran on 5 GHz channel 149, the same channel as the laptop's own school Wi-Fi connection (non-DFS), so one radio could serve both. Result: synthetic video 0 % loss, **p95 22 ms, max 63 ms**; UDP 6 Mbit/s 0 % loss; TCP 16.8 Mbit/s with silences under 190 ms; no hotspot restarts in 3 minutes. The earlier laptop-hotspot failures happened with the hotspot on 2.4 GHz while the laptop client sat on a 5 GHz DFS channel (60 / 112), with power save on and an antenna missing. Conditions to reproduce: hotspot band Auto or 5 GHz, laptop client on a non-DFS channel, power save off, robot close, both antennas fitted.
+
 ## Open questions
 
 - ~~Which `jetbot` version and motor driver does the kit's SD image actually use?~~ Answered above: jetbot 0.4.3 in Docker, motor driver at 0x60.
