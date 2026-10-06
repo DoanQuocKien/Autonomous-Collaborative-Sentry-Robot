@@ -369,5 +369,5 @@ watchdog: last packet -> motors stop, per cycle (ms): 313, 314, 315, 310, 305
 min 305  median 313  max 315 ms   (acceptance: <= 350 ms; the watchdog is set to 300 ms)
 
 # Acceptance (plan 4.3 'Control link'): motors stop <= 350 ms after link loss -> MET (305-315 ms; watchdog set to 300 ms).
-# Observation: the robot's uptime was 1 minute when it came back after a drop at about 23:15, so it REBOOTED rather than just losing Wi-Fi (battery 12.10 V before, 11.95 V after; cause unknown: a power dip, or a manual power-cycle by the user). Watch for repeats.
+# Observation: the robot's uptime was 1 minute when it came back after a drop at about 23:15, so it had rebooted rather than just lost Wi-Fi. CONFIRMED by DoanQuocKien: he restarted it manually. No brownout evidence (battery 12.10 V before, 11.95 V after).
 # Clean shutdown at 23:25 via 'sudo shutdown -h now'; battery word 0x2a5d = 11.92 V.
