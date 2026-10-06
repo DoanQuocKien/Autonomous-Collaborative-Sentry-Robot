@@ -127,22 +127,35 @@ def insightface_section(keep):
 
 
 def osnet_section(keep):
-    section("OSNet via torchreid (re-identification embedding), 256x128 person crops")
+    section("OSNet via torchreid, RE-ID-trained weights from weights/ (python -m tools.fetch_models), 256x128 person crops")
     try:
+        from pathlib import Path
         import torchreid
-        try:
-            net = torchreid.models.build_model(name="osnet_x0_25", num_classes=1000, pretrained=True)
-            print("osnet_x0_25 pretrained weights loaded")
-        except Exception as e:  # download problems are common (Google Drive); speed is still measurable
-            print("pretrained download failed (%s); measuring with random weights" % type(e).__name__)
-            net = torchreid.models.build_model(name="osnet_x0_25", num_classes=1000, pretrained=False)
-        net = net.cuda().eval()
-        for bs in (1, 8):
-            x = torch.randn(bs, 3, 256, 128, device="cuda")
+        wdir = Path(__file__).resolve().parent.parent / "weights"
+        for arch, fname in (("osnet_ain_x1_0", "osnet_ain_x1_0_dg.state.pt"), ("osnet_x0_25", "osnet_x0_25_market1501.state.pt")):
+            path = wdir / fname
+            if not path.exists():
+                print("%s: %s missing, run python -m tools.fetch_models" % (arch, fname))
+                continue
+            net = torchreid.models.build_model(name=arch, num_classes=1000, pretrained=False)
+            have, saved = net.state_dict(), torch.load(str(path), map_location="cpu", weights_only=True)
+            usable = {k: v for k, v in saved.items() if k in have and v.shape == have[k].shape}  # the id classifier differs per dataset
+            net.load_state_dict(usable, strict=False)
+            print("%s <- %s: %d of %d weight tensors loaded (%d skipped, e.g. the dataset-specific id classifier)"
+                  % (arch, fname, len(usable), len(have), len(saved) - len(usable)))
+            net = net.cuda().eval()
+            x = torch.randn(1, 3, 256, 128, device="cuda")
             with torch.no_grad():
-                p50, p95 = bench(lambda: net(x), n=100)
-            print("batch %d: median %.1f ms  p95 %.1f ms" % (bs, p50, p95))
-        keep.append(net)
+                a, b = net(x), net(x)
+                other = net(torch.randn(1, 3, 256, 128, device="cuda"))
+            cos = torch.nn.functional.cosine_similarity
+            print("  embedding size %d; same crop twice cos %.3f; two different noise crops cos %.3f" % (a.shape[1], cos(a, b).item(), cos(a, other).item()))
+            for bs in (1, 8):
+                x = torch.randn(bs, 3, 256, 128, device="cuda")
+                with torch.no_grad():
+                    p50, p95 = bench(lambda: net(x), n=100)
+                print("  batch %d: median %.1f ms  p95 %.1f ms" % (bs, p50, p95))
+            keep.append(net)
     except Exception:
         print("torchreid/OSNet FAILED:\n%s" % traceback.format_exc(limit=4))
 

@@ -22,3 +22,26 @@ GPU clock samples (MHz, max 3105): 1755, 1950, 1815, 1950, 1800, 1860, 1950, 204
 models kept in memory: 6
 GPU memory used now: 295 MB (plan target: peak <= 5,500 MB of 6,141 MB)
 torch peak allocated: 123 MB
+
+## Face models and re-ID models (internet became usable again on 2026-10-06 afternoon: about 950 KB/s to GitHub / HuggingFace)
+### InsightFace buffalo_s subset (det_500m 2.4 MB + w600k_mbf 13 MB) on the GPU
+GPU memory used before anything: 0 MB of 6439 MB
+onnxruntime providers available: ['TensorrtExecutionProvider', 'CUDAExecutionProvider', 'CPUExecutionProvider']
+models loaded: ['detection', 'recognition']
+  detection      runs on: CUDAExecutionProvider
+  recognition    runs on: CUDAExecutionProvider
+FaceAnalysis.get on a 640x480 noise image: median 7.2 ms  p95 8.8 ms (no face found, so this is detector time)
+GPU memory used now: 191 MB (plan target: peak <= 5,500 MB of 6,141 MB)
+
+### OSNet with RE-ID-trained weights (torchreid pretrained=True is ImageNet-only and was NOT used)
+GPU memory used before anything: 0 MB of 6439 MB
+osnet_ain_x1_0 <- osnet_ain_x1_0_dg.state.pt: 550 of 552 weight tensors loaded (2 skipped, e.g. the dataset-specific id classifier)
+  embedding size 512; same crop twice cos 1.000; two different noise crops cos 0.991
+  batch 1: median 13.2 ms  p95 21.5 ms
+  batch 8: median 11.2 ms  p95 20.2 ms
+osnet_x0_25 <- osnet_x0_25_market1501.state.pt: 565 of 567 weight tensors loaded (2 skipped, e.g. the dataset-specific id classifier)
+  embedding size 512; same crop twice cos 1.000; two different noise crops cos 0.996
+  batch 1: median 10.9 ms  p95 18.2 ms
+  batch 8: median 10.2 ms  p95 14.7 ms
+=== loaded together: osnet
+GPU memory used now: 239 MB (plan target: peak <= 5,500 MB of 6,141 MB)

@@ -11,3 +11,7 @@ pip_install.log
 # secrets
 .env
 .env.*
+
+# model weights (fetch with python -m tools.fetch_models)
+weights/
+*.pth

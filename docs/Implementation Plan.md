@@ -194,7 +194,7 @@ Each week ends with a **Sunday integration session** hosted by DQK (in person or
   - Tests: T2, 5 runs.
   - Report: architecture, networking, robot platform, calibration and safety sections (about 5 pages).
 - **HNHL**
-  - `perception/reid.py`: person crop from YOLO on ESP32 frames -> OSNet (`osnet_x0_25` via torchreid; if it does not install on Python 3.14, export to ONNX and run with onnxruntime-gpu).
+  - `perception/reid.py`: person crop from YOLO on ESP32 frames -> OSNet via torchreid with **re-ID-trained weights from `python -m tools.fetch_models`** (`osnet_ain_x1_0` domain-generalised, and `osnet_x0_25` Market1501); compare both on D2/D3 and keep the better one. Not `pretrained=True`: that is ImageNet-only.
   - Tests: T1 rank-1 and ROC on D2.
   - Report: perception and biometrics sections with ROC figures (about 5 pages).
 - **KR**
@@ -299,7 +299,8 @@ reports/<handle>/week-NN/       # test evidence: pytest logs, metrics JSON/CSV, 
 | 2 | The spec does not say how "T1 exits" is detected | ESP32 re-ID + direction of motion toward the door (W7, HNHL) |
 | 3 | COCO classes miss walls, boxes and bags | Accept for W2; if exploration collisions occur, add a bottom-of-frame floor-edge check or fine-tune on D1 frames |
 | 4 | The L/C/R departure sector is in ESP32 camera coordinates, not world, and is now only an optional prior | Record the ESP32 placement pose in phase 1; KR maps it to a world bearing only if the planner uses the prior (W7) |
-| 5 | Python 3.14 support for torchreid / insightface 2.0 is unverified | Checked in W1 (HNHL); fallback is ONNX models via onnxruntime-gpu |
+| 5 | ~~Python support for torchreid / insightface 2.0~~ | **Resolved 2026-10-06** on the `sentry` env (Python 3.12): InsightFace detector + embedder run on CUDAExecutionProvider (about 7 ms), torchreid OSNet runs in 11-13 ms, 3-model pipeline 37 FPS and under 300 MB (`reports/DoanQuocKien/week-01/gpu_baseline_2026-10-06.txt`) |
+| 11 | torchreid `pretrained=True` gives ImageNet-only weights, not re-ID weights, which would make the 85 % Rank-1 target unreachable | Use the re-ID weights from `tools.fetch_models`; osnet_ain_x1_0 (domain-generalised) vs osnet_x0_25 (Market1501, same-domain) is decided by Rank-1 on D2/D3 |
 | 6 | All HIL depends on DQK's availability | Offline-first development; two scheduled sessions per week from W5 onward |
 | 8 | The room map only knows floor the robot has seen: YOLO misses walls and unclassified objects | Plan only over known-free cells with inflated obstacles; report the coverage fraction achieved; make sure the Week 4 exploration covers the room |
 | 9 | The effective detection radius `r_det` is unknown | Placeholder 3.0 m in `config.toml`; DQK measures it in W7 and the plan is recomputed from it |
