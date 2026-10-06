@@ -231,3 +231,57 @@ one-way latency ms (synced via echo; includes JPEG encode): p50 14  p95 21  max 
 gap between frames ms: p50 67  p95 73  max 114   (50 ms = 20 fps)
 frame size: mean 9.0 kB -> 1.5 Mbit/s at 20 fps
 left running: 0
+
+## L. 2026-10-06 real camera test (battery 11.7 V OK)
+# Sensor modes (Argus): 3264x2464@21, 3264x1848@28, 1920x1080@30, 1640x1232@30 (mode 3), 1280x720@60, 1280x720@120. Mode 3 confirmed.
+# Real camera stream: frames came out as colour noise stripes (78 kB each, 12.8 Mbit/s) -> link saturated: 9.3 fps, 51 % missing, p50 latency 1.3 s. NOT a network problem.
+﻿=== REAL CAMERA (sensor mode 3, 640x480 @20 fps request), laptop hotspot 5 GHz, power save fix persistent
+wifi: freq: 5745; signal: -38 dBm; | power_save: Power save: on
+clock echo: answered 60/60; RTT ms min 2  median 9  p95 56  max 114
+video: 300 frames in 32.3 s -> 9.3 fps; missing 317 of 617 (51.4 %)
+one-way latency ms (synced via echo; includes JPEG encode): p50 1258  p95 5380  max 5928
+gap between frames ms: p50 58  p95 402  max 718   (50 ms = 20 fps)
+frame size: mean 78.0 kB -> 12.8 Mbit/s at 20 fps
+camera_pub on the Jetson: 0.0       00:46 sh -c python3 -u jetson/camera_pub.py --source camera --fps 20 > /workspace/sentry/camera_pub.log 2>&1
+30.8       00:46 python3 -u jetson/camera_pub.py --source camera --fps 20
+camera_pub.log: GST_ARGUS: Starting repeat capture requests.
+CONSUMER: Producer has connected; continuing.
+[ WARN:0] global /home/nvidia/host/build_opencv/nv_opencv/modules/videoio/src/cap_gstreamer.cpp (933) open OpenCV | GStreamer warning: Cannot query video position: status=0, value=-1, duration=-1
+left running: 0
+
+# Camera diagnostics: sensor imx219 7-0010 bound and answering on I2C bus 7; stills from nvarguscamerasrc in mode 3 and mode 2 are almost entirely black (a few hot pixels).
+﻿=== kernel messages about the camera / CSI (last lines)
+[    0.550753] SCSI subsystem initialized
+[    0.602078] Linux video capture interface: v2.00
+[    1.014969] Block layer SCSI generic (bsg) driver version 0.4 loaded (major 240)
+[    1.581166] Host read timeout at address 545c00c4
+[    1.631983] sd: No Scsi addr parsed to reserve index
+[    1.814367] imx219 7-0010: tegracam sensor driver:imx219_v2.0.6
+[    1.839415] imx219 8-0010: tegracam sensor driver:imx219_v2.0.6
+[    1.862696] tegra-vii2c 546c0000.i2c: no acknowledge from address 0x10
+[    1.862781] imx219 8-0010: imx219_board_setup: error during i2c read probe (-121)
+[    1.870420] imx219 8-0010: board setup failed
+[    1.874865] imx219: probe of 8-0010 failed with error -121
+[    2.028440] vi 54080000.vi: vi_probe: ++
+[    2.031348] vi 54080000.vi: initialized
+[    2.033333] vi 54080000.vi: subdev nvcsi--2 bound
+[    2.033346] vi 54080000.vi: subdev imx219 7-0010 bound
+[    2.034039] vi 54080000.vi: subdev nvcsi--1 bound
+
+=== is the camera sensor answering on I2C? (IMX219 shows as 10 or UU on bus 6 = CAM0, bus 7 = CAM1)
+bus 6:
+00:          -- -- -- -- -- -- -- -- -- -- -- -- -- 
+10: UU -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+bus 7:
+00:          -- -- -- -- -- -- -- -- -- -- -- -- -- 
+10: UU -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+
+=== camera device
+crw-rw---- 1 root video 81, 0 Oct  5 22:46 /dev/video0
+bash: v4l2-ctl: command not found
+
+=== still pictures straight from the camera, two sensor modes
+mode 3: Freeing pipeline ...
+   saved /tmp/cam_m3_19.jpg -> camera_still_mode3.jpg
+mode 2: Freeing pipeline ...
+   saved /tmp/cam_m2_19.jpg -> camera_still_mode2.jpg
