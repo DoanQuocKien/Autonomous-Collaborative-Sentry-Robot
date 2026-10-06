@@ -74,6 +74,15 @@ Record the outputs in `reports/DoanQuocKien/week-01/`.
 - What does upstream `zmq_camera.py` do? It may already be a ZeroMQ camera client we can learn from.
 - Does `nvarguscamerasrc` give us 640x480 at 20+ fps on this image, or must we capture larger and downscale?
 
+## Gamepad emergency stop (`jetson/estop.py`)
+
+- **Pad:** "TGZ Controller" (DragonRise, USB receiver) at `/dev/input/js0`, readable by any user. The receiver re-enumerates when the pad pairs (USB id 0079:0126 then 0079:181c), so the daemon rescans for the device every second. Inferred buttons (recording 2026-10-06): Select = 10, Start = 11, face buttons 4/0/3/1, L1/R1 = 6/7, L2/R2 = 8/9 (also analog axes 5/4), D-pad = axes 7 (up/down) and 6 (left/right), left stick = axes 2 and 3, button 14 unknown.
+- **Behaviour (fail-safe):** starts ENGAGED; **hold Select+Start for 2 s to ARM** (also proves the pad is awake); **any button press engages it again** and cuts the PCA9685 motor driver over I2C (0x60, ALL_LED_OFF_H bit 4); losing the pad engages it. Re-arming first zeroes every output so nothing resumes at an old speed.
+- **Interlock:** `estop.py` writes `ESTOP` (latch) and `ESTOP_ALIVE` (heartbeat, twice a second) into `/home/jetbot/sentry`. `robot_udp.py` treats the latch **or a missing/stale heartbeat** as ENGAGED, so it never drives without the e-stop program running. `--no-estop` exists only for dry-run development.
+- **Run (host, needs root for the motor cut):** `sudo nohup python3 /home/jetbot/sentry/jetson/estop.py > /home/jetbot/sentry/estop.log 2>&1 &`, then start `robot_udp.py` in the container. First tests: add `--no-motor-cut` to `estop.py`.
+- **Tested 2026-10-06 (dry-run, motors not driven):** no e-stop program means the main program refuses; real pad arm / stop / arm / stop cycle behaved exactly as designed (`reports/DoanQuocKien/week-01/estop_test_2026-10-06.txt`). 56 unit tests cover the logic.
+- **NOT yet tested:** the real I2C motor cut and re-arm on the hardware (wheels off the ground), a hung `robot_udp.py` (the case the direct cut exists for), exact reaction time (logs have one-second resolution), starting the daemon automatically at boot (would need a systemd service on the school robot; not installed). Limitation: a wireless pad that falls asleep sends nothing, so the e-stop works only while the pad is awake; arming at the start of every session proves it.
+
 ## Battery (check it constantly)
 
 - Read it with `python -m tools.jetbot_status <robot-ip>` at the start and end of every session and between long tests (it also shows Wi-Fi, both antenna paths, the driver's power-save state and the containers). Underlying read: `sudo i2cget -y 1 0x41 0x02 w`, byte-swapped, bits 15..3 at 4 mV per step (INA219).
@@ -87,6 +96,7 @@ Record the outputs in `reports/DoanQuocKien/week-01/`.
 | :-- | :-- |
 | Wi-Fi profile `DoanQuocKien` added on the SD card (`/etc/NetworkManager/system-connections/DoanQuocKien`, contains the hotspot password) | `sudo rm` that file. The original `Deco_One` profiles were left untouched. A backup of the original folder is in `C:\Users\admin\jetbot_card_backup` on the laptop |
 | Our code in `/home/jetbot/sentry/` (some `__pycache__` folders are owned by root) | `sudo rm -rf /home/jetbot/sentry` |
+| `/home/jetbot/sentry/` also holds `ESTOP`, `ESTOP_ALIVE`, `estop.log` while the e-stop runs; no systemd service installed | `sudo rm -rf /home/jetbot/sentry` removes everything (stop `estop.py` first) |
 | Wi-Fi power save: permanent fix file `/etc/modprobe.d/8822ce-sentry.conf` (2026-10-06) | `sudo rm /etc/modprobe.d/8822ce-sentry.conf` and reboot restores the driver default |
 | Docker containers `jetbot_jupyter` / `jetbot_display` | Not modified; our scripts only ran inside the jupyter container and are stopped |
 | Antenna 0 missing (not caused by us as far as we know) | Tell the professor; replacement is cheap |
