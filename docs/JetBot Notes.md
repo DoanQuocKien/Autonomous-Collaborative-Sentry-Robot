@@ -68,6 +68,13 @@ Record the outputs in `reports/DoanQuocKien/week-01/`.
 
 **Best network setup so far (2026-10-06, `reports/DoanQuocKien/week-01/link_test_2026-10-04.txt` section J):** the *laptop's own* Windows hotspot, robot about 1 m away at -45 dBm, both antenna chains strong (-42/-47 dBm), Wi-Fi power save OFF. The hotspot ran on 5 GHz channel 149, the same channel as the laptop's own school Wi-Fi connection (non-DFS), so one radio could serve both. Result: synthetic video 0 % loss, **p95 22 ms, max 63 ms**; UDP 6 Mbit/s 0 % loss; TCP 16.8 Mbit/s with silences under 190 ms; no hotspot restarts in 3 minutes. The earlier laptop-hotspot failures happened with the hotspot on 2.4 GHz while the laptop client sat on a 5 GHz DFS channel (60 / 112), with power save on and an antenna missing. Conditions to reproduce: hotspot band Auto or 5 GHz, laptop client on a non-DFS channel, power save off, robot close, both antennas fitted.
 
+**Default routine for the laptop hotspot (no phone, no extra hardware; 2026-10-06 night):**
+1. Set the hotspot band to **2.4 GHz** (Settings > Network & internet > Mobile hotspot > Edit). The robot's Wi-Fi is in the generic 'world' regulatory mode and refused to join while the hotspot was on 'Auto' with the laptop on a radar-sensitive 5 GHz channel (60). The 5 GHz hotspot only worked when the laptop's own Wi-Fi was on a normal channel (36, 149, 161).
+2. Switch the robot on and wait 1-2 minutes; then `ping` it and run `python -m tools.jetbot_status <ip>` (the address was 192.168.137.62 each time on the laptop hotspot).
+3. Measured on this setup (laptop client on 5 GHz channel 60, hotspot on 2.4 GHz, robot about 1 m away): 0 % loss everywhere, TCP 91 Mbit/s, real camera 20.0 fps with 0 of 1200 frames missing, **p95 latency 53 ms** (target 50 ms), worst 127 ms. The tail comes from the laptop's radio time-slicing between its own Wi-Fi and the hotspot; with both on one channel p95 was about 21 ms. Distance and far corners are untested.
+4. Ways to remove the tail without the phone: disconnect the laptop's own Wi-Fi during robot sessions (Windows may then refuse to keep the hotspot on), or give the laptop internet over an Ethernet cable ($2-3) so the Wi-Fi radio serves only the robot.
+5. Keep a fallback for demo day: phone hotspot (same name and password) or Ethernet.
+
 ## Open questions
 
 - ~~Which `jetbot` version and motor driver does the kit's SD image actually use?~~ Answered above: jetbot 0.4.3 in Docker, motor driver at 0x60.

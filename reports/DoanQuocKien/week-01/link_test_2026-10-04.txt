@@ -301,3 +301,42 @@ camera_pub.log: GST_ARGUS: Starting repeat capture requests.
 CONSUMER: Producer has connected; continuing.
 [ WARN:0] global /home/nvidia/host/build_opencv/nv_opencv/modules/videoio/src/cap_gstreamer.cpp (933) open OpenCV | GStreamer warning: Cannot query video position: status=0, value=-1, duration=-1
 left running: 0
+
+## N. 2026-10-06 night: laptop hotspot on 2.4 GHz while the laptop's own Wi-Fi is on 5 GHz channel 60 ('Wi-MESH 5G'), robot ~1 m away (-24 to -29 dBm), battery 12.10 V
+# Context: the robot first refused to join the laptop hotspot (hotspot band Auto, client on a DFS channel); after setting the hotspot band to 2.4 GHz it joined (robot uptime was only 2 min, so a slow boot cannot be ruled out as the cause).
+# Layered test (net_diag):
+﻿=== A. ICMP laptop -> robot (does a full-size packet get through, unfragmented?)
+payload   32 bytes: Packets: Sent = 20, Received = 20, Lost = 0 (0% loss), | Minimum = 2ms, Maximum = 47ms, Average = 15ms
+payload 1000 bytes: Packets: Sent = 20, Received = 20, Lost = 0 (0% loss), | Minimum = 1ms, Maximum = 44ms, Average = 15ms
+payload 1472 bytes: Packets: Sent = 20, Received = 20, Lost = 0 (0% loss), | Minimum = 2ms, Maximum = 46ms, Average = 15ms
+
+=== B. UDP robot -> laptop, video-like rate (1.5 Mbit/s, 1200-byte datagrams, 10 s)
+udp 1.5 Mbit/s: received 1563/1563 datagrams -> loss 0.0 %; gap between datagrams ms p50 2.4 p99 59 max 73
+
+=== C. UDP robot -> laptop, 6 Mbit/s
+udp 6 Mbit/s  : received 6250/6250 datagrams -> loss 0.0 %; gap between datagrams ms p50 0.0 p99 46 max 60
+
+=== D. TCP robot -> laptop paced like the video (1.5 Mbit/s, 9 kB chunks, 10 s)
+tcp paced  : 1.5 Mbit/s average over 10.0 s; longest silence 101 ms; p99 gap 94 ms
+   Mbit/s per second: 1.5 1.4 1.6 1.5 1.5 1.5 1.4 1.5 1.5 1.5
+
+=== E. TCP robot -> laptop as fast as possible (raw capacity, 8 s)
+tcp unpaced: 90.7 Mbit/s average over 8.1 s; longest silence 73 ms; p99 gap 41 ms
+   Mbit/s per second: 82.1 107.2 52.5 60.9 102.0 105.4 104.7 104.0
+
+cleanup: helper removed from the robot
+
+# Real camera, 60 s:
+﻿=== REAL CAMERA 60 s, laptop hotspot 2.4 GHz, laptop client Wi-MESH 5G ch60, power save fix persistent
+wifi: freq: 2462; signal: -29 dBm; | power_save: Power save: on
+clock echo: answered 60/60; RTT ms min 2  median 7  p95 54  max 58
+video: 1200 frames in 59.9 s -> 20.0 fps; missing 0 of 1200 (0.0 %)
+one-way latency ms (synced via echo; includes JPEG encode): p50 13  p95 53  max 127
+gap between frames ms: p50 49  p95 96  max 179   (50 ms = 20 fps)
+frame size: mean 64.0 kB -> 10.5 Mbit/s at 20 fps
+camera_pub on the Jetson: 0.0       01:14 sh -c python3 -u jetson/camera_pub.py --source camera --fps 20 > /workspace/sentry/camera_pub.log 2>&1
+30.9       01:14 python3 -u jetson/camera_pub.py --source camera --fps 20
+camera_pub.log: GST_ARGUS: Starting repeat capture requests.
+CONSUMER: Producer has connected; continuing.
+[ WARN:0] global /home/nvidia/host/build_opencv/nv_opencv/modules/videoio/src/cap_gstreamer.cpp (933) open OpenCV | GStreamer warning: Cannot query video position: status=0, value=-1, duration=-1
+left running: 0
