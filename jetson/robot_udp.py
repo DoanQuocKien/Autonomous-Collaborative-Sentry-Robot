@@ -120,14 +120,18 @@ def main():
         except OSError:
             return True
 
+    def stamp():
+        t = time.time()
+        return "%s.%03d" % (time.strftime("%H:%M:%S", time.localtime(t)), int(t * 1000) % 1000)
+
     def apply(action):
         kind, val = action
         if kind == "motors":
             if robot:
                 robot.set_motors(val[0], val[1])
-            elif val != printed[0]:  # print changes only
+            if val != printed[0]:  # print changes only
                 printed[0] = val
-                print("%s motors %+.2f %+.2f" % (time.strftime("%H:%M:%S"), val[0], val[1]), flush=True)
+                print("%s motors %+.2f %+.2f%s" % (stamp(), val[0], val[1], "" if robot else " (dry-run)"), flush=True)
         else:
             path = os.path.join(args.audio_dir, val + ".wav")
             if os.path.exists(path):  # ponytail: no zombie reaping / overlap control; fine for a few clips
@@ -146,7 +150,7 @@ def main():
             estop = estop_engaged()
             if estop != was:
                 was = estop
-                print("%s e-stop %s" % (time.strftime("%H:%M:%S"), "ENGAGED: refusing motor commands" if estop else "released: motor commands accepted"), flush=True)
+                print("%s e-stop %s" % (stamp(), "ENGAGED: refusing motor commands" if estop else "released: motor commands accepted"), flush=True)
             if select.select([sock], [], [], 0.02)[0]:
                 data, addr = sock.recvfrom(512)
                 if not args.allow_ip or addr[0] == args.allow_ip:

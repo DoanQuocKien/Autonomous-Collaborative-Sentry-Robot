@@ -67,7 +67,7 @@ python3 jetson/robot_udp.py --allow-ip <laptop-ip> --max-speed 0.3
 python3 jetson/camera_pub.py --source synthetic   # test pattern, same wire format as the camera
 python3 jetson/camera_pub.py                      # real camera
 ```
-**Safety interlock:** `robot_udp.py` refuses to move unless `jetson/estop.py` is running on the robot host (heartbeat file) and armed with the gamepad (hold Select+Start 2 s). For dry-run development only, add `--no-estop`. See `docs/JetBot Notes.md`.
+**Safety interlock:** `robot_udp.py` refuses to move unless `jetson/estop.py` is running on the robot host (heartbeat file) and armed with the gamepad (hold Select+Start 2 s) **and then only while R1 is held** (dead-man); any other button is a hard stop. For dry-run development only, add `--no-estop`. See `docs/JetBot Notes.md`.
 
 Laptop-side command sender: `python -m tools.send_cmd --ip <jetbot-ip> --v 0.3 --seconds 2` (add `--silent-end` to test the 300 ms watchdog).
 

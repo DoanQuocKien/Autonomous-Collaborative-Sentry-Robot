@@ -24,7 +24,7 @@ Spec: `docs/Project Specification.md` (source of truth). Plan: `docs/Implementat
 ## Conventions
 - Team: DoanQuocKien (CUDA, holds the JetBot kit), HuynhNguyenHoaiLoc (CUDA, perception), kouun-rokku (no CUDA, CPU logic/tooling, holds the ESP32-CAM + MB base). Branch `<handle>/wNN-topic`, PR + 1 review.
 - Tests: T0 unit (no marker, CPU), `replay`, `gpu`, `hil` markers. Evidence goes to `reports/<handle>/week-NN/`.
-- Safety: `jetson/robot_udp.py` refuses to drive unless `jetson/estop.py` (gamepad e-stop, host) is running and armed (hold Select+Start 2 s); any gamepad button stops. Never use `--no-estop` with real motors. Motor tests only with wheels off the ground.
+- Safety: `jetson/robot_udp.py` refuses to drive unless `jetson/estop.py` (gamepad dead-man + e-stop, host) is running, armed (hold Select+Start 2 s) and R1 is held; releasing R1 or pressing any other button stops it. Never use `--no-estop` with real motors. Motor tests only with wheels off the ground.
 - Robot sessions: run `python -m tools.jetbot_status <ip>` at start/end and between long tests; battery >= 11.1 V OK, < 10.5 V stop and charge (see `docs/JetBot Notes.md`). The robot is school property: keep the return checklist there up to date.
 - Keep seeds, logging and calibration knobs in research code. One small `test_*.py` for non-trivial logic.
 - Serena: set `languages: [python]` in `.serena/project.yml` once code exists. `.serena/` and `graphify-out/` are gitignored.

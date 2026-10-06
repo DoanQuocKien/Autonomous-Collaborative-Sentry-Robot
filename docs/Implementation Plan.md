@@ -68,7 +68,7 @@ Laptop-internal contract:
 
 **Safety (non-negotiable):**
 - The Jetson stops the motors if no control packet arrives for 300 ms.
-- The kit gamepad acts as a hardware e-stop that overrides everything.
+- The kit gamepad is a **dead-man switch plus e-stop** (`jetson/estop.py`, runs on the robot host): the robot moves only while R1 is held and the e-stop is armed (hold Select+Start 2 s); releasing R1 stops it, any other button or losing the pad is a hard stop, and every stop cuts the motor driver directly over I2C. `robot_udp.py` refuses to drive without the e-stop's heartbeat. Verified on the robot 2026-10-06 (wheels off the ground), including with `robot_udp.py` frozen. Details and limits in `docs/JetBot Notes.md`.
 - Speed is capped in `config.toml` during all HIL tests.
 
 ## 4. Testing Policy

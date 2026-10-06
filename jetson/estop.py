@@ -1,20 +1,23 @@
 #!/usr/bin/env python3
-"""Gamepad emergency stop for the JetBot.  Python 3.6, stdlib only.
+"""Gamepad dead-man switch + emergency stop for the JetBot.  Python 3.6, stdlib only.
 
 Runs on the Jetson HOST (not in the jetbot container) so it keeps working if jetson/robot_udp.py hangs or crashes.
 Needs root for the I2C motor cut:  sudo python3 jetson/estop.py
 
-Fail-safe design:
-  * Starts ENGAGED (motors must not move). The operator ARMS it by holding Select+Start for 2 s, which also proves the pad works.
-  * ANY gamepad button press engages it again and cuts the motor driver directly over I2C.
-  * Losing the gamepad (unplugged, re-pairing, receiver reset) engages it.
-  * Files in --dir, read by jetson/robot_udp.py:  ESTOP = latch (exists while engaged),  ESTOP_ALIVE = heartbeat.
-    robot_udp.py treats a missing or stale heartbeat as ENGAGED, so it never drives without this program running.
+The robot may move ONLY while the operator holds R1 (the dead-man button) AND the e-stop is armed:
+  * Starts HARD-STOPPED. ARM by holding Select+Start for 2 s (proves the pad is awake). R1 must then be held to move.
+  * Releasing R1 stops the robot (soft stop); holding R1 again resumes. A pad that dies while R1 is held makes the receiver
+    report a release (measured 2026-10-06 for a power-off), so a dying pad stops the robot instead of silently disabling the e-stop.
+  * ANY other button press, losing the gamepad, or starting up is a HARD stop that needs the Select+Start chord again.
+  * Every stop also cuts the motor driver directly over I2C (about 10-15 ms).
+Files in --dir, read by jetson/robot_udp.py:  ESTOP = latch (exists whenever motion is NOT allowed),  ESTOP_ALIVE = heartbeat.
+robot_udp.py treats a missing or stale heartbeat as stopped, so it never drives without this program running.
 
-Pad: "TGZ Controller" (DragonRise), /dev/input/js0. Select = button 10 and Start = button 11 were inferred from a recording on
-2026-10-06; the chord needs BOTH, so their order does not matter. D-pad and sticks are axes and are ignored.
-The motor cut uses the PCA9685 at I2C 0x60: ALL_LED_OFF_H (0xFD) bit 4 = every output full OFF. Re-arming first zeroes all
-outputs (ALL_LED registers 0xFA-0xFD = 0), so nothing can resume at an old speed.
+Pad: "TGZ Controller" (DragonRise), /dev/input/js0. Buttons inferred from a recording on 2026-10-06: Select = 10, Start = 11
+(the chord needs BOTH, so their order does not matter), R1 = 7. D-pad and sticks are axes and are ignored.
+Unmeasured: a pad that dies some other way (flat batteries, out of range) may freeze the receiver's last state instead.
+The motor cut uses the PCA9685 at I2C 0x60: ALL_LED_OFF_H (0xFD) bit 4 = every output full OFF. Resuming first zeroes all
+outputs (ALL_LED registers 0xFA-0xFD = 0), so nothing can restart at an old speed.
 """
 import argparse
 import errno
@@ -28,56 +31,83 @@ import time
 
 ARM_BUTTONS = (10, 11)
 ARM_HOLD_S = 2.0
+DEADMAN_BUTTON = 7
 JS_EVENT = struct.Struct("<IhBB")  # time ms, value, type, number
 JS_BUTTON, JS_INIT = 0x01, 0x80
 
 
 class EstopLogic(object):
-    """Pure state machine (no files, no clock of its own): easy to test."""
+    """Pure state machine (no files, no clock of its own): easy to test.
 
-    def __init__(self, arm_buttons=ARM_BUTTONS, arm_hold_s=ARM_HOLD_S):
+    Methods return a list of events: "STOP" (motion no longer allowed), "ARM" (hard stop cleared), "GO" (motion allowed).
+    """
+
+    def __init__(self, arm_buttons=ARM_BUTTONS, arm_hold_s=ARM_HOLD_S, deadman=DEADMAN_BUTTON):
         self.arm_buttons = tuple(arm_buttons)
         self.arm_hold_s = arm_hold_s
-        self.engaged = True  # engaged at start: the operator must arm with the pad
+        self.deadman = deadman
+        self.hard = True          # hard stop: startup, any other button, pad lost. Cleared by the arm chord
+        self.dead_held = False    # is R1 held right now?
         self.held = set()
         self.chord_since = None
+        self.reason = "startup"
+
+    @property
+    def motion_allowed(self):
+        return (not self.hard) and self.dead_held
+
+    def _events(self, before, armed_now=False):
+        out = []
+        if armed_now:
+            out.append("ARM")
+        after = self.motion_allowed
+        if before and not after:
+            out.append("STOP")
+        elif after and not before:
+            out.append("GO")
+        return out
 
     def button(self, number, pressed, now):
-        """Feed one button event. Returns "STOP" when a press engages the e-stop, else None."""
+        before = self.motion_allowed
         if pressed:
             self.held.add(number)
         else:
             self.held.discard(number)
+        if number == self.deadman:
+            self.dead_held = pressed
+            if not pressed:
+                self.reason = "R1 released"
+        elif pressed and not self.hard:
+            self.hard = True
+            self.reason = "button %d pressed" % number
         self._update_chord(now)
-        if pressed and not self.engaged:
-            self.engaged = True
-            self.chord_since = None
-            return "STOP"
-        return None
+        return self._events(before)
 
     def _update_chord(self, now):
-        if self.engaged and all(b in self.held for b in self.arm_buttons):
+        if self.hard and all(b in self.held for b in self.arm_buttons):
             if self.chord_since is None:
                 self.chord_since = now
         else:
             self.chord_since = None
 
     def tick(self, now):
-        """Call often, also when no events arrive. Returns "ARM" once the chord has been held long enough."""
-        if self.engaged and self.chord_since is not None and now - self.chord_since >= self.arm_hold_s:
-            self.engaged = False
+        """Call often, also when no events arrive. The arm chord completes here."""
+        if self.hard and self.chord_since is not None and now - self.chord_since >= self.arm_hold_s:
+            before = self.motion_allowed
+            self.hard = False
             self.chord_since = None
-            return "ARM"
-        return None
+            return self._events(before, armed_now=True)
+        return []
 
     def device_lost(self):
-        """The gamepad vanished: engage. Returns "STOP" if that changed anything."""
+        """The gamepad vanished: hard stop and forget every held button."""
+        before = self.motion_allowed
         self.held.clear()
         self.chord_since = None
-        if not self.engaged:
-            self.engaged = True
-            return "STOP"
-        return None
+        self.dead_held = False
+        self.hard = True
+        self.reason = "gamepad lost"
+        return self._events(before)
 
 
 def i2c_write(bus, addr, reg, value, call=subprocess.call):
@@ -95,8 +125,13 @@ def motor_rearm(bus, addr, call=subprocess.call):
     return all([i2c_write(bus, addr, reg, 0x00, call) for reg in (0xFA, 0xFB, 0xFC, 0xFD)])
 
 
+def stamp():
+    t = time.time()
+    return "%s.%03d" % (time.strftime("%H:%M:%S", time.localtime(t)), int(t * 1000) % 1000)
+
+
 def log(msg):
-    print("%s %s" % (time.strftime("%H:%M:%S"), msg))
+    print("%s %s" % (stamp(), msg))
     sys.stdout.flush()
 
 
@@ -106,32 +141,49 @@ def main():
     ap.add_argument("--bus", type=int, default=1)
     ap.add_argument("--addr", type=lambda s: int(s, 0), default=0x60)
     ap.add_argument("--arm-hold", type=float, default=ARM_HOLD_S)
+    ap.add_argument("--deadman", type=int, default=DEADMAN_BUTTON, help="dead-man button number (R1 = 7)")
     ap.add_argument("--no-motor-cut", action="store_true", help="logic and files only; never touch the motor driver (for first tests)")
     args = ap.parse_args()
 
     latch, alive = os.path.join(args.dir, "ESTOP"), os.path.join(args.dir, "ESTOP_ALIVE")
-    logic = EstopLogic(arm_hold_s=args.arm_hold)
+    logic = EstopLogic(arm_hold_s=args.arm_hold, deadman=args.deadman)
 
     def stop(why):
         with open(latch, "w") as f:
             f.write(why + "\n")
-        cut = "motor cut skipped (--no-motor-cut)" if args.no_motor_cut else ("motors CUT" if motor_cut(args.bus, args.addr) else "MOTOR CUT FAILED (i2cset)")
-        log("ENGAGED (%s); %s" % (why, cut))
+        if args.no_motor_cut:
+            cut = "motor cut skipped (--no-motor-cut)"
+        else:
+            t0 = time.time()
+            ok = motor_cut(args.bus, args.addr)
+            cut = ("motors CUT in %.0f ms" % ((time.time() - t0) * 1000)) if ok else "MOTOR CUT FAILED (i2cset)"
+        log("STOPPED (%s); %s" % (why, cut))
 
-    def arm():
+    def go():
+        """Allowed to move: zero all outputs, then remove the latch so robot_udp.py may drive."""
         ok = True if args.no_motor_cut else motor_rearm(args.bus, args.addr)
         if not ok:
-            log("re-arm FAILED to reset the motor driver; staying engaged")
-            logic.engaged = True
+            log("resume FAILED to reset the motor driver; staying stopped")
+            logic.hard = True
+            logic.reason = "motor driver reset failed"
             return
         if os.path.exists(latch):
             os.remove(latch)
-        log("ARMED (Select+Start held %.1f s); robot may move" % args.arm_hold)
+        log("GO (R1 held and armed); robot may move")
+
+    def handle(events):
+        for ev in events:
+            if ev == "STOP":
+                stop(logic.reason)
+            elif ev == "ARM":
+                log("ARMED (Select+Start held %.1f s); now hold R1 to move" % args.arm_hold)
+            elif ev == "GO":
+                go()
 
     stop("startup")
     devs = {}  # fd -> path
     had_pad, last_scan, last_alive = False, 0.0, 0.0
-    log("watching the gamepad; hold Select+Start for %.1f s to arm, any button to stop" % args.arm_hold)
+    log("watching the gamepad; hold Select+Start %.1f s to arm, then hold R1 (button %d) to move; any other button = hard stop" % (args.arm_hold, args.deadman))
     while True:
         now = time.monotonic()
         if now - last_scan > 1.0:
@@ -147,8 +199,10 @@ def main():
             had_pad = True
         elif had_pad:
             had_pad = False
-            if logic.device_lost() == "STOP":
-                stop("gamepad lost")
+            ev = logic.device_lost()
+            handle(ev)
+            if not ev:
+                log("gamepad lost (already stopped)")
         if now - last_alive > 0.5:
             last_alive = now
             with open(alive, "w") as f:
@@ -173,10 +227,8 @@ def main():
                 _, value, typ, number = JS_EVENT.unpack(data)
                 if typ & JS_INIT or (typ & 0x7F) != JS_BUTTON:
                     continue  # skip the initial-state dump and every axis (D-pad, sticks)
-                if logic.button(number, bool(value), time.monotonic()) == "STOP":
-                    stop("button %d pressed" % number)
-        if logic.tick(time.monotonic()) == "ARM":
-            arm()
+                handle(logic.button(number, bool(value), time.monotonic()))
+        handle(logic.tick(time.monotonic()))
 
 
 if __name__ == "__main__":
