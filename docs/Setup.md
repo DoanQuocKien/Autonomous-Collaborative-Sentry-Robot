@@ -71,6 +71,10 @@ python3 jetson/camera_pub.py                      # real camera
 
 Laptop-side command sender: `python -m tools.send_cmd --ip <jetbot-ip> --v 0.3 --seconds 2` (add `--silent-end` to test the 300 ms watchdog).
 
+## GPU baseline
+
+`python -m tools.gpu_baseline` downloads the pretrained models and measures speed and memory on your GPU (sections: `yolo`, `insightface`, `osnet`, `pipeline`; choose with `--only`). On DoanQuocKien's RTX 4050 the 3-model pipeline (YOLOv8n + YOLOv8n-pose + OSNet on two crops) runs at **37 FPS** using about 300 MB of GPU memory, against the plan's 15 FPS and 5.5 GB. Results: `reports/DoanQuocKien/week-01/gpu_baseline_2026-10-06.txt`. InsightFace and the pretrained OSNet weights still need to be downloaded (very slow on the campus network; the face detector and embedder are about 16 MB from HuggingFace `immich-app/buffalo_s`, placed as `det_500m.onnx` and `w600k_mbf.onnx` in `~/.insightface/models/buffalo_s/`).
+
 ## Running the tests
 
 | Command | Runs | Needs |
@@ -89,4 +93,5 @@ Laptop-side command sender: `python -m tools.send_cmd --ip <jetbot-ip> --v 0.3 -
 | `ModuleNotFoundError: tensorboard` from torchreid | `pip install tensorboard` (already in `requirements-base.txt`) |
 | pip stalls or fails on a slow/unstable connection | download the wheel with `curl.exe -L -C - --retry 30 --retry-all-errors -o x.whl <url>` and `pip install --no-deps x.whl` |
 | Video over ZeroMQ is slow or loses most frames, seconds of latency, big packets lost in `ping -f -l 1472` | **Wi-Fi power save on the Jetson** (Realtek RTL8822CE, driver default `rtw_power_mgnt=2`). Permanent fix on our robot: `/etc/modprobe.d/8822ce-sentry.conf` with `options rtl8822ce rtw_power_mgnt=0 rtw_ips_mode=0`, then reboot; check with `python -m tools.jetbot_status <ip>` (`iw get power_save` is misleading). Quick runtime alternative: `sudo iw dev wlan0 set power_save off` (reverts on reboot). Measured effect: 48 % frame loss to 0 %, p95 latency 21 s to 65 ms |
+| Models run 5-8x slower than expected (e.g. a 3-model pipeline at 5 FPS instead of 35), GPU clock stuck near 250-450 MHz | Windows throttles processes started from a background or hidden shell. Run from a normal foreground terminal, or opt the process out of power throttling and raise its priority (see `run_unthrottled()` in `tools/gpu_baseline.py`). Measured 2026-10-06: 5.3 -> 34.9 FPS |
 | `ModuleNotFoundError: common` when running a script from `tools/` | run it as a module from the repo root: `python -m tools.send_cmd` |
