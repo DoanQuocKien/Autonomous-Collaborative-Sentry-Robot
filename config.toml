@@ -40,3 +40,8 @@ checkerboard_inner_corners = [9, 6]   # columns, rows (10 x 7 squares)
 checkerboard_square_m = 0.025         # MEASURE the printed board and update this
 aruco_dict = "DICT_4X4_50"
 aruco_marker_m = 0.10                 # MEASURE the printed marker and update this
+
+[sim]
+v_max_mps = 0.5                  # Simulated max linear velocity in m/s
+w_max_radps = 2.0                # Simulated max angular velocity in rad/s
+loop_hz = 50                     # Simulation loop rate
