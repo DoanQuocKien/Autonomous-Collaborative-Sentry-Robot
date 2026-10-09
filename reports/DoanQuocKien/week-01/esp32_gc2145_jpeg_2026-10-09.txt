@@ -165,3 +165,10 @@ ESP32-CAM camera diagnosis and software-JPEG speed, 2026-10-09 (DoanQuocKien)
         large motion (>= 40)         8 s: 13.8 fps (min 1)   11.7 tiles/frame   9.9 missing tiles/s (healed by the refresh)   0.30 Mbit/s
         whole run                   68 s: 14.4 fps average
    Caveat: only 8 s of large motion in this run; the full-load controlled test (every tile dirty) gives 9-10 fps, the worst case.
+
+22. 2026-10-10, board unreachable (laptop on the cafe Wi-Fi), laptop-side and simulation work only
+   - tools/esp_mjpeg_relay.py serves the tile stream as MJPEG (http://127.0.0.1:81/stream, /jpg); tools/esp_tile_sim.py is a fake ESP32. End to end with the simulator: simulated ESP32 -> TileReceiver -> relay -> KR's record_esp32: 223 JPEGs in about 15 s at 14.9 fps.
+   - Found: after REFR the full-refresh tiles arrived before the JPEG header (sent once a second) and were discarded: receiver missed 155-184 tiles. Fix (firmware and simulator): resend the header on REFR. Late receiver now has a complete picture after 0.16 s, 4 tiles missed.
+   - Change detector: fingerprint pieces spread over the tile (columns 4, 20, 36, 52) and a second trigger (>= 8 samples differing by >= 48). Modelled in sentry/espcam.py and tests/test_tile_detect.py (noise sigma 8: < 0.5 % false dirty; flicker +10 not dirty; vertical edge >= 14 px and horizontal edge >= 4 px found at every position).
+   - Quiet-scene refresh 2 -> 4 tiles per frame (full refresh in about 2.5 s). Firmware compiles (27.8 % flash) but is NOT flashed or measured on a camera.
+   - Tests: 72 pass (record/replay round trip, relay, detector model added).

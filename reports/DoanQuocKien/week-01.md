@@ -9,12 +9,13 @@
 - Tools: `tools/jetbot_status.py` (battery, Wi-Fi, containers), `tools/fetch_models.py` (re-ID and face weights, safe loading), `tools/gpu_pipeline_check.py`, `tools/make_markers.py`, `tools/esp_serial.py`, `tools/esp_tile_rx.py`, `tools/fetch_esp_jpeg.py` – PR #2
 - Environment: conda env `sentry` (Python 3.12, torch 2.9.1+cu128, onnxruntime-gpu 1.23.2), install paths for GPU laptop / CPU laptop / Jetson in `docs/Setup.md` – PR #1, PR #2
 - Hardware decisions and shopping lists (`docs/Hardware.md`), printable calibration targets (`assets/print/`), plan updates (map-based coverage search, hold-and-recenter instead of orbiting, ArUco localization, USB speaker + offline TTS) – PR #2
+- **MJPEG relay and fake ESP32 (2026-10-10):** `tools/esp_mjpeg_relay.py` serves the tile stream as `http://127.0.0.1:81/stream` so KR's `record.py` / `replay.py` work with the GC2145 boards (D1 recording needs it); `tools/esp_tile_sim.py` simulates the board; found and fixed a flaw where the full-refresh after `REFR` was discarded because the JPEG header had not arrived yet; the missing record-then-replay round-trip test for the ESP32 view added (`tests/test_record_replay_esp32.py`); change-detector improvements (thin edges, faster quiet refresh) – PR #2
 - **ESP32-CAM (unplanned):** both camera modules turned out to be GC2145 (no hardware JPEG), so the planned HTTP MJPEG stream is impossible. Built a 640x480 stream in software (raw Bayer capture trick, sensor timing registers, changed-tile UDP stream), laptop receiver `sentry/espcam.py` with white balance, 5 tests, PlatformIO project for KR's CameraWebServer sketch, `docs/ESP32-CAM.md`, plan risks 12-13 – PR #2
 
 ## Tests run
 | Tier | Command | Result | Evidence |
 | :-- | :-- | :-- | :-- |
-| T0 | `pytest -m "not gpu and not hil"` | 64 passed | week-01/pytest.log |
+| T0 | `pytest -m "not gpu and not hil"` | 72 passed | week-01/pytest.log |
 | T2 | Video uplink, real camera, 60 s, laptop hotspot 2.4 GHz | 20.0 fps, 0 of 1200 frames missing, one-way latency p50 13 / p95 53 ms | week-01/link_test_2026-10-04.txt (section N) |
 | T2 | Control link: ping and UDP 1.5 / 6 Mbit/s | 0 % loss | week-01/link_test_2026-10-04.txt |
 | T2 | Watchdog, 5 cycles (`robot_udp --dry-run` on the robot) | stop 305-315 ms after the last packet | week-01/link_test_2026-10-04.txt (section O) |
@@ -35,6 +36,7 @@
 - **Latency target missed by 3 ms (53 vs 50 ms)** on the JetBot video path; to re-measure with the final setup.
 - **No floor driving yet:** the e-stop is verified wheels-off only; first floor test with the e-stop armed is still to do (battery check first, >= 11.1 V).
 - **Campus Wi-Fi is bad** (10 KB/s on some days) and slows downloads; the laptop hotspot only works when the laptop's own Wi-Fi shares its channel or is off.
+- **Unflashed firmware changes (2026-10-10):** the new change detector, faster quiet refresh and header-on-REFR compile and are tested in Python/simulation, but the board was unreachable; flash `esp32/tile_stream` and re-measure before D1 (TODO).
 - **Merge coordination:** HNHL's branch has no PR yet and will conflict in `.gitignore`, the plan and `requirements-base.txt`; KR's PR #3 has no tests for record / replay / sim_robot.
 - The weak hotspot password (8 characters) should be changed; update the robot's saved profile first while it is connected.
 
@@ -43,6 +45,7 @@
 - Week 2 (DQK): `tools/calibrate_fisheye.py` (target < 1.0 px) and `tools/calibrate_motion.py`; T1 reprojection error, T2 motion repeatability (5 runs each of straight 1 m and 90° turn).
 - Decide the camera: keep the GC2145 tile stream or order an OV2640; update the plan accordingly.
 - First floor driving with the e-stop armed, in daylight at low speed.
+- Flash the updated `esp32/tile_stream`, run `tools/esp_mjpeg_relay.py` + `tools/record.py D1` against the real board before the D1 recording.
 - Re-measure video latency (target p95 < 50 ms), optionally install `estop.py` as a systemd service.
 
 ## Hours

@@ -12,7 +12,7 @@ import time
 import cv2
 import numpy as np
 
-from sentry.espcam import HDR, H, T_END, T_HDR, T_TILES, TH, TILES_X, TW, W, planar
+from sentry.espcam import HDR, H, T_END, T_HDR, T_TILES, TH, TILES_X, TW, W, planar, tile_dirty
 
 NT = TILES_X * (H // TH)
 
@@ -45,6 +45,7 @@ def main():
     rx.bind(("0.0.0.0", a.port + 1))
     rx.settimeout(0.001)
     prev = np.zeros((H, W), np.uint8)
+    last_sent = np.zeros(NT, np.int64)
     header, t_hdr, fid, t0 = None, 0.0, 0, time.perf_counter()
     while time.perf_counter() - t0 < a.seconds:
         t_frame = time.perf_counter()
@@ -53,6 +54,7 @@ def main():
                 d, _ = rx.recvfrom(64)
                 if d.startswith(b"REFR"):
                     prev[:] = 0xFF  # everything counts as changed again
+                    t_hdr = 0.0     # and the header is resent at once, like the firmware
         except socket.timeout:
             pass
         cur = scene(t_frame - t0)
@@ -61,11 +63,21 @@ def main():
         for idx in range(NT):
             y, x = (idx // TILES_X) * TH, (idx % TILES_X) * TW
             c, p = cur[y:y + TH, x:x + TW], prev[y:y + TH, x:x + TW]
-            if np.abs(c.astype(int) - p.astype(int)).mean() >= 16:
+            if tile_dirty(c, p):
                 hdr, scan = jpeg_parts(c)
                 header = header or hdr
                 entries.append((idx, scan))
                 prev[y:y + TH, x:x + TW] = c
+                last_sent[idx] = fid
+        queued = {i for i, _ in entries}
+        for idx in [i for i in np.argsort(last_sent) if i not in queued][:2]:  # like the firmware: always refresh the two oldest tiles
+            idx = int(idx)
+            y, x = (idx // TILES_X) * TH, (idx % TILES_X) * TW
+            hdr, scan = jpeg_parts(cur[y:y + TH, x:x + TW])
+            header = header or hdr
+            entries.append((idx, scan))
+            prev[y:y + TH, x:x + TW] = cur[y:y + TH, x:x + TW]
+            last_sent[idx] = fid
         if header and time.perf_counter() - t_hdr > 1:
             tx.sendto(HDR.pack(b"ST", T_HDR, 0, fid, ms, len(header), 0) + header, (a.host, a.port))
             t_hdr = time.perf_counter()

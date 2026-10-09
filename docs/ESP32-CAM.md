@@ -33,6 +33,8 @@ UDP, little endian. The laptop broadcasts `HELO` to port 5601 once a second; the
 | 2 | frame end: `a` = tiles sent, `b` = tiles that were changed; the laptop answers `ACK` + frame_id + esp_ms (the ESP32 prints the round trip) |
 | 0, 3 | single tile / complete JPEG tile (legacy, handled by the receiver) |
 
+`REFR`: the ESP32 forgets what the laptop has, resends the JPEG header at once, then every tile (a receiver started late has a complete picture after about 0.2 s in the simulator).
+
 Use it from Python:
 
 ```python
@@ -63,7 +65,8 @@ It can be fed from `record.py` like any other stream by saving the frames `lates
 - **Fixed camera only.** A moving or shaking camera makes every tile change; throughput then falls to 9-10 fps (full-load test) and large moving regions refresh at about 5 fps.
 - **Tuned on one board.** The second board (ESP32-D0WD-V3 rev 3.1) lost its Wi-Fi uplink as soon as the camera ran, on every setting we tried (not power, memory, encoder, channel width or camera clock; cause unknown, same camera module). The first board works. If a board shows `send-fail` and missing acks only while the camera runs, swap boards.
 - **Wi-Fi.** Hotspot channel 13 worked on the first board with country `VN` (channels 1-13) and 20 MHz width set in the firmware. Laptop Wi-Fi and laptop hotspot on different bands make the radio time-slice (95 % ping loss); keep the laptop's own Wi-Fi on the same 2.4 GHz channel, or off.
-- **Ghost slivers.** A tile is only resent when its fingerprint changes by a mean of 16 or more, so a thin edge that covers a tile only partly can leave a stale sliver until the background refresh reaches that tile (2 tiles per frame, so up to about 5 s). Lower `MOTION_THR` (noisier) or refresh faster if this matters for detection.
+- **Ghost slivers (reduced, 2026-10-10).** A thin edge that covers a tile only partly used to leave a stale sliver for up to about 5 s. The detector now also flags a tile when 8 or more fingerprint samples differ by 48 or more (pieces spread over the tile, gaps at most 12 px: an edge 14 px wide is caught at every position, tested in `tests/test_tile_detect.py`), and while the scene is quiet 4 tiles per frame are refreshed (a full refresh in about 2.5 s). Hairline slivers can still appear behind a fast edge until the refresh reaches them.
+- **Flash status of the 2026-10-10 firmware changes:** the new detector, the faster quiet refresh and "resend the header on `REFR`" compile and are mirrored by `sentry/espcam.py`, the tests and the simulator, but they were written while the board was unreachable and are **not flashed or measured on a camera yet**. Flash `esp32/tile_stream`, run `python -m tools.esp_tile_rx` for a minute and compare with the numbers above before relying on them (the previous firmware, commit 065b761, is the measured one).
 - **Colour** is only gray-world white balanced; no colour-correction matrix.
 - **Power:** the camera needs a stable 5 V (a phone charger did not change the results; the laptop USB port is fine).
 - The `GC2145` driver comment says the ESP32 can only take about 15 MHz PCLK: it is also why raw at 1 byte per pixel (half the data of YUV) is what makes 15 fps possible.

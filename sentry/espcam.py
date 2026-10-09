@@ -22,6 +22,22 @@ T_TILE, T_HDR, T_END, T_FULL, T_TILES = 0, 1, 2, 3, 4
 PORT = 5600
 
 
+# Change detector, a Python mirror of esp32/tile_stream/tile_stream.ino (sampleTile / tileDirty); tests/test_tile_detect.py checks its properties and tools/esp_tile_sim.py uses it.
+MEAN_THR, OUT_DIFF, OUT_COUNT = 16, 48, 8
+
+
+def fingerprint(tile):
+    """8 rows (every 4th) x four 4-byte pieces at columns 4, 20, 36, 52 of a 64x32 tile -> 8 x 16 samples."""
+    rows = tile[0:32:4]
+    return np.concatenate([rows[:, 4 + 16 * s:8 + 16 * s] for s in range(4)], axis=1).astype(np.int32)
+
+
+def tile_dirty(now, old):
+    """Changed when the mean difference of the fingerprints is large, or enough single samples differ strongly (a thin edge covering part of the tile)."""
+    d = np.abs(fingerprint(now) - fingerprint(old))
+    return bool(d.mean() >= MEAN_THR or (d >= OUT_DIFF).sum() >= OUT_COUNT)
+
+
 def unplanar(t):
     """The firmware sends each Bayer tile as four colour planes in the quadrants of a 64x32 image (R, G1, G2, B, each 32x16); put it back."""
     out = np.empty((TH, TW), np.uint8)

@@ -42,6 +42,18 @@
 #ifndef VBLANK
 #define VBLANK 12
 #endif
+#ifndef OUT_DIFF
+#define OUT_DIFF 48     // a fingerprint sample that differs by at least this much counts as an outlier
+#endif
+#ifndef OUT_COUNT
+#define OUT_COUNT 8     // ...and this many outliers mark a tile as changed even if the mean difference is small (a thin edge covering part of the tile)
+#endif
+#ifndef REFRESH_QUIET
+#define REFRESH_QUIET 4 // oldest tiles resent per frame while the scene is quiet (fewer than QUIET_DIRTY changed tiles): a full refresh in about 2.5 s at 15 fps
+#endif
+#ifndef QUIET_DIRTY
+#define QUIET_DIRTY 10
+#endif
 #ifndef REFRESH_PER_FRAME
 #define REFRESH_PER_FRAME 2  // oldest tiles resent every frame: a lost UDP packet heals within NT / REFRESH frames
 #endif
@@ -83,21 +95,29 @@ static bool sendPkt(uint8_t type, uint32_t espMs, uint16_t a, uint16_t b, const 
 
 // Fingerprint of a tile: 8 rows (every 4th) x two 8-byte pieces (one cache line each, because the frame sits in slow external RAM). Raw Bayer: same colours every time.
 static inline void sampleTile(const uint8_t *cur, int tx, int ty, uint8_t *out) {
-  for (int r = 0; r < 8; r++) {
+  for (int r = 0; r < 8; r++) {  // 8 rows (every 4th) x four 4-byte pieces at columns 4, 20, 36, 52: gaps of at most 12 px, still only 2 cache lines per row
     const uint8_t *row = cur + (size_t)(ty * TH + r * 4) * W + tx * TW;
-    memcpy(out + r * 16, row + 8, 8);
-    memcpy(out + r * 16 + 8, row + 40, 8);
+    for (int piece = 0; piece < 4; piece++) memcpy(out + r * 16 + piece * 4, row + 4 + piece * 16, 4);
   }
 }
 
-// mean absolute difference between the tile now and its fingerprint (what the laptop has)
-static uint16_t tileScore(const uint8_t *cur, int tx, int ty) {
+// Changed? Either the mean absolute difference to the fingerprint (what the laptop has) is large, or enough single samples differ strongly
+// (a thin edge that covers only part of the tile). The model of this rule, with its tests, is tests/test_tile_detect.py: keep the constants in sync.
+static bool tileDirty(const uint8_t *cur, int tx, int ty, uint16_t &score) {
   uint8_t now[128];
   sampleTile(cur, tx, ty, now);
   const uint8_t *old = sig[ty * TILES_X + tx];
   uint32_t sum = 0;
-  for (int i = 0; i < 128; i++) { int d = (int)now[i] - (int)old[i]; sum += d < 0 ? -d : d; }
-  return sum / 128;
+  int outliers = 0;
+  for (int i = 0; i < 128; i++) {
+    int d = (int)now[i] - (int)old[i];
+    if (d < 0) d = -d;
+    sum += d;
+    if (d >= OUT_DIFF) outliers++;
+  }
+  uint32_t mean = sum / 128;
+  score = mean + outliers;  // sort key: biggest change first
+  return mean >= MOTION_THR || outliers >= OUT_COUNT;
 }
 
 static int jpegHeaderEnd(const uint8_t *j, int n) {  // index just after the SOS header, where the entropy-coded data starts
@@ -204,6 +224,7 @@ static void step() {
       laptop = from; haveLaptop = true;
     } else if (got >= 4 && memcmp(a, "REFR", 4) == 0) {  // a receiver just started: forget what it has, so every tile is sent again
       memset(sig, 0xFF, sizeof sig);
+      lastHdrMs = 0;  // and send the JPEG header again right away: a receiver cannot decode tiles without it
     } else if (got == 12 && memcmp(a, "ACK ", 4) == 0) {
       uint32_t ms;
       memcpy(&ms, a + 8, 4);
@@ -224,17 +245,18 @@ static void step() {
   uint32_t espMs = millis(), t0 = micros();
   const uint8_t *cur = fb->buf;
 
-  Cand cand[NT + REFRESH_PER_FRAME];
+  Cand cand[NT + REFRESH_QUIET];
   int n = 0;
   uint32_t ts0 = micros();
   for (int i = 0; i < NT; i++) {
-    uint16_t s = tileScore(cur, i % TILES_X, i / TILES_X);
-    if (s >= MOTION_THR) cand[n++] = {s, (uint16_t)i};
+    uint16_t s;
+    if (tileDirty(cur, i % TILES_X, i / TILES_X, s)) cand[n++] = {s, (uint16_t)i};
   }
   int dirty = n;
   scoreUs += micros() - ts0;
   qsort(cand, n, sizeof(Cand), byScoreDesc);
-  for (int k = 0; k < REFRESH_PER_FRAME; k++) {  // the oldest tiles that are not already queued
+  int extra = dirty < QUIET_DIRTY ? REFRESH_QUIET : REFRESH_PER_FRAME;  // spare time while quiet: heal lost tiles and ghost slivers faster
+  for (int k = 0; k < extra; k++) {  // the oldest tiles that are not already queued
     int best = -1;
     for (int i = 0; i < NT; i++) {
       bool queued = false;
