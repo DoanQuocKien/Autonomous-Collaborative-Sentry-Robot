@@ -3,7 +3,7 @@
 
 [net]
 jetbot_ip = "192.168.137.20"     # placeholder, set after the hotspot is up
-esp32_ip = "192.168.137.30"      # placeholder; the GC2145 tile stream does not need it: the ESP32 finds the laptop by itself (docs/ESP32-CAM.md)
+esp32_ip = "127.0.0.1"           # tools/record.py reads http://<esp32_ip>:81/stream. With the GC2145 boards run tools/esp_mjpeg_relay.py on the laptop (it serves that URL itself); with an OV2640 board put the board's IP here
 video_port = 5555
 control_port = 5556
 clock_port = 5557

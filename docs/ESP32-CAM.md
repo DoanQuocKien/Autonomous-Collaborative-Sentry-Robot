@@ -50,6 +50,12 @@ It can be fed from `record.py` like any other stream by saving the frames `lates
 3. Open `esp32/tile_stream` in VS Code, or run `pio run -t upload --upload-port COMx` (PlatformIO's `pio.exe` is in `~/.platformio/penv/Scripts/`). The board needs an unplugged ribbon check first: gold contacts toward the board, latch fully closed.
 4. Laptop: `python -m tools.esp_tile_rx --show` (allow Python through the Windows firewall for UDP, Private networks).
 
+## Using it with `record.py` / `replay.py` (D1 recording) and without the board
+
+- **Recording:** `tools/record.py` reads `http://<esp32_ip>:81/stream`. With the GC2145 boards run `python -m tools.esp_mjpeg_relay` first (it serves exactly that MJPEG stream from the tile stream; `config.toml` has `esp32_ip = "127.0.0.1"`), then `python -m tools.record D1`. Tested end to end with a simulated ESP32: 223 JPEGs in about 15 s at 14.9 fps. With an OV2640 board, put the board's IP in `config.toml` and skip the relay.
+- **Replay** needs nothing new: `tools/replay.py` already serves the recorded ESP32 frames as MJPEG on port 81.
+- **No board at hand:** `python -m tools.esp_tile_sim` sends the same tile stream of a synthetic moving scene, so the receiver, the relay and the recorder can be developed and tested on any laptop.
+
 `esp32/sentry_cam` is the stock CameraWebServer (HTTP MJPEG) for an OV2640 module, patched to build on Arduino core 2.0.17 (`ledcAttach` guard). `esp32/experiments/` holds the measurement sketches behind the numbers above.
 
 ## Known limits and things that went wrong
@@ -57,6 +63,7 @@ It can be fed from `record.py` like any other stream by saving the frames `lates
 - **Fixed camera only.** A moving or shaking camera makes every tile change; throughput then falls to 9-10 fps (full-load test) and large moving regions refresh at about 5 fps.
 - **Tuned on one board.** The second board (ESP32-D0WD-V3 rev 3.1) lost its Wi-Fi uplink as soon as the camera ran, on every setting we tried (not power, memory, encoder, channel width or camera clock; cause unknown, same camera module). The first board works. If a board shows `send-fail` and missing acks only while the camera runs, swap boards.
 - **Wi-Fi.** Hotspot channel 13 worked on the first board with country `VN` (channels 1-13) and 20 MHz width set in the firmware. Laptop Wi-Fi and laptop hotspot on different bands make the radio time-slice (95 % ping loss); keep the laptop's own Wi-Fi on the same 2.4 GHz channel, or off.
+- **Ghost slivers.** A tile is only resent when its fingerprint changes by a mean of 16 or more, so a thin edge that covers a tile only partly can leave a stale sliver until the background refresh reaches that tile (2 tiles per frame, so up to about 5 s). Lower `MOTION_THR` (noisier) or refresh faster if this matters for detection.
 - **Colour** is only gray-world white balanced; no colour-correction matrix.
 - **Power:** the camera needs a stable 5 V (a phone charger did not change the results; the laptop USB port is fine).
 - The `GC2145` driver comment says the ESP32 can only take about 15 MHz PCLK: it is also why raw at 1 byte per pixel (half the data of YUV) is what makes 15 fps possible.
