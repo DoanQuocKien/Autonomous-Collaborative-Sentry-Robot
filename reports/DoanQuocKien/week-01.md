@@ -1,6 +1,6 @@
 # Week 01 – DoanQuocKien (2026-10-05 to 2026-10-11)
 
-*Draft written Saturday 2026-10-10. Items marked **TODO** are not done yet; the Sunday session and the hours need filling in.*
+*Written Saturday 2026-10-10. Items marked **TODO** are not done yet; the Sunday session results still need adding.*
 
 ## Done
 - Robot bring-up and link: JetBot reachable from the laptop over the Windows hotspot (2.4 GHz, because the ESP32 needs it); Wi-Fi power save on the Realtek RTL8822CE fixed permanently (`/etc/modprobe.d/8822ce-sentry.conf`), antenna fitted. The remaining checks are in `robot_checks.md` and `robot_remote_checks.txt` – PR #1 (merged), PR #2 (open)
@@ -46,4 +46,8 @@
 - Re-measure video latency (target p95 < 50 ms), optionally install `estop.py` as a systemd service.
 
 ## Hours
-- **TODO** (fill in)
+- About 18 h of logged working sessions (estimated from chat timestamps, gaps over 20 min removed; 16-23 h depending on the cutoff):
+  - Oct 3-4 (before the week): about 8 h – plan, repo, environment, first robot link
+  - Oct 5-6: about 3 h – robot checks, e-stop, link tests
+  - Oct 9-10: about 6.5 h – ESP32-CAM debugging and the 640x480 stream, docs, PR work
+- Not counted: hands-on robot handling, charging, shopping, travel.
