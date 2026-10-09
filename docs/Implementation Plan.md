@@ -54,7 +54,7 @@ Freezing these lets the three members work in parallel against the same contract
 | JetBot -> laptop video | ZeroMQ PUB/SUB, port 5555, `CONFLATE=1` on SUB (latest frame only) | multipart `[header_json, jpeg_bytes]`; header `{"seq": int, "t_cap": float (Jetson monotonic s), "w": int, "h": int}` |
 | Laptop -> JetBot control | UDP, port 5556, non-blocking | JSON `{"seq": int, "v": float, "w": float}` with v, w normalized to [-1, 1]; or `{"seq": int, "play": "<clip_name>"}` |
 | Clock sync | UDP echo, port 5557 | laptop sends `t0`, Jetson replies `{t0, t_jetson}`; offset by Cristian's algorithm (min-RTT of 20 samples) |
-| ESP32-CAM -> laptop | HTTP MJPEG, `http://<esp32-ip>:81/stream` | VGA 640x480, 15 FPS, static IP on hotspot |
+| ESP32-CAM -> laptop | **UDP tiles, port 5600** (GC2145 module, no hardware JPEG): raw Bayer 640x480, changed 64x32 tiles only, laptop found by `HELO` broadcast; `sentry.espcam.TileReceiver.latest()` gives a BGR frame. **Proposed 2026-10-09, needs KR's and HNHL's approval** (section 3 rule). With an OV2640 module the original HTTP MJPEG `http://<esp32-ip>:81/stream` (VGA, 15 FPS) is used instead | 640x480 at 14.4 FPS average (fixed camera); see `docs/ESP32-CAM.md` |
 
 Laptop-internal contract:
 - Every perception module is a class with a `__call__(frame_bgr, t) -> dataclass` method and no global state.
@@ -146,7 +146,7 @@ Each week ends with a **Sunday integration session** hosted by DQK (in person or
 - **KR**
   - `tools/record.py` + `tools/replay.py`: record both streams with timestamps; replay through the same interface as the live receivers.
   - `tools/sim_robot.py`: UDP sink that integrates (v, w) with unicycle kinematics and logs pose.
-  - `esp32/sentry_cam` sketch (based on CameraWebServer, VGA, 15 FPS, static IP). KR holds the ESP32 kit, so KR flashes and tests it directly, and brings it to the Sunday session (needed for the ESP32 door view in D1 and the Week 3 handshake).
+  - `esp32/sentry_cam` sketch (based on CameraWebServer, VGA, 15 FPS, static IP). KR holds the ESP32 kit, so KR flashes and tests it directly, and brings it to the Sunday session (needed for the ESP32 door view in D1 and the Week 3 handshake). **Update 2026-10-09:** DQK's modules turned out to be GC2145 (no JPEG); the 640x480 stream for that module is `esp32/tile_stream` + `sentry/espcam.py` (see `docs/ESP32-CAM.md`). KR: check which sensor your board has (`Camera PID=` in the boot log, or run `tile_stream` and read `esp_tile_rx`); an OV2640 board uses the stock sketch.
   - pytest skeleton: `conftest.py`, markers, `config.toml` loader.
   - Tests: T0 record-then-replay round trip gives identical frames and timestamps.
 - **Session:** freeze the section 3 interfaces; record **D1**.
@@ -306,3 +306,5 @@ reports/<handle>/week-NN/       # test evidence: pytest logs, metrics JSON/CSV, 
 | 9 | The effective detection radius `r_det` is unknown | Placeholder 3.0 m in `config.toml`; DQK measures it in W7 and the plan is recomputed from it |
 | 10 | Dead-reckoning drift along a long search path (no encoders) | Re-localize whenever an ArUco marker is seen; measure path-following error in W7; shorten the path by lowering the coverage target if error is too large |
 | 7 | Mid-term due date assumed to be Nov 1 | Confirm with the instructor in W1 |
+| 12 | The ESP32-CAM modules (both the Shopee and the local one) carry a GC2145, which has no hardware JPEG: the plan's HTTP MJPEG VGA 15 FPS is impossible with the stock sketch (1.7-7.7 FPS) | **Worked around in software on 2026-10-09:** raw Bayer + changed-tile UDP stream, 14.4 FPS average, 9-10 FPS worst case; needs a fixed camera. Alternative: buy an OV2640 module (about 25 FPS VGA, stock sketch). Details: `docs/ESP32-CAM.md` |
+| 13 | The second ESP32-CAM board loses its Wi-Fi uplink while the camera runs (cause unknown); the first board is fine | Use the first board for the stream; ask KR to test their board; if a board shows send failures only while the camera runs, swap it |

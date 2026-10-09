@@ -71,6 +71,10 @@ python3 jetson/camera_pub.py                      # real camera
 
 Laptop-side command sender: `python -m tools.send_cmd --ip <jetbot-ip> --v 0.3 --seconds 2` (add `--silent-end` to test the 300 ms watchdog).
 
+## D. ESP32-CAM firmware (PlatformIO in VS Code)
+
+Install the PlatformIO IDE extension; it installs its own core on first start (several hundred MB, slow on bad Wi-Fi). Then `python -m tools.fetch_esp_jpeg`, copy `esp32/sentry_cam/secrets.example.h` to `secrets.h` (hotspot name and password; 2.4 GHz only), open `esp32/tile_stream` and build or upload. PlatformIO's `pio.exe` is not on the PATH of a normal terminal: use `~/.platformio/penv/Scripts/pio.exe` or the PlatformIO terminal. Never flash another person's board without asking: it overwrites their firmware. The serial port number can change after a replug (COM3 -> COM4). Full story, interface and limits: `docs/ESP32-CAM.md`.
+
 ## GPU checks
 
 `python -m tools.gpu_baseline` is HuynhNguyenHoaiLoc's Week 1 GPU baseline (single-model speed and memory; on their branch until merged). `python -m tools.gpu_pipeline_check` (sections `osnet`, `pipeline`; choose with `--only`) checks what that tool does not: the whole multi-model pipeline and the re-ID OSNet weights. On DoanQuocKien's RTX 4050 the 3-model pipeline (YOLOv8n + YOLOv8n-pose + OSNet on two crops) runs at **37 FPS** using about 300 MB of GPU memory, against the plan's 15 FPS and 5.5 GB. Results: `reports/DoanQuocKien/week-01/gpu_baseline_2026-10-06.txt`. InsightFace's detector and embedder run on the GPU (CUDAExecutionProvider, about 7 ms per 640x480 frame) and OSNet runs in 11-13 ms per batch with re-ID weights.

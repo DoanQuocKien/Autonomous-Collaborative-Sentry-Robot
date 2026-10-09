@@ -10,7 +10,7 @@ Spec: `docs/Project Specification.md` (source of truth). Plan: `docs/Implementat
 
 ## Architecture
 - Laptop runs ALL models (YOLOv8, YOLOv8-pose, InsightFace, OSNet) and the state machine. Jetson only captures frames and drives motors.
-- JetBot -> laptop: ZeroMQ, JPEG q60 (5 GHz). Laptop -> JetBot: non-blocking UDP (v, omega). ESP32-CAM: MJPEG VGA 15 FPS (2.4 GHz).
+- JetBot -> laptop: ZeroMQ, JPEG q60 (5 GHz). Laptop -> JetBot: non-blocking UDP (v, omega). ESP32-CAM (2.4 GHz): OV2640 -> HTTP MJPEG VGA; our GC2145 boards (no JPEG) -> `esp32/tile_stream` UDP tile stream via `sentry.espcam.TileReceiver`, see `docs/ESP32-CAM.md`.
 - No encoders/IMU: pose = dead reckoning from calibrated (v, omega) + ArUco corrections. Camera is a 160deg fisheye: calibrate and undistort before the ground-distance formula.
 - Audio: USB speaker playing pre-generated WAVs (offline TTS rendered on the laptop).
 

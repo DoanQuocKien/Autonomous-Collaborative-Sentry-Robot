@@ -1,0 +1,167 @@
+ESP32-CAM camera diagnosis and software-JPEG speed, 2026-10-09 (DoanQuocKien)
+
+1. First module: boot error 0x106 (core 3.x, KR's log) / 0x105 (core 2.0.17, PlatformIO espressif32@6.9.0). Cause: torn flat cable. Replaced.
+2. Second module (bought locally): probes fine; "JPEG format is not supported on this sensor".
+   Identified with esp32/sentry_cam (RGB565 + PID print): SENSOR PID=0x2145 = GC2145, I2C addr 0x3c. No hardware JPEG.
+   (The Shopee listing said the sensor is random: OV3660, OV2640 or OV5640. It is none of them.)
+3. Software JPEG speed (esp32/jpeg_bench: RGB565 grab + frame2jpg quality 60, 30 frames per size, no Wi-Fi):
+   160x120  17.2 fps  grab 29 ms  jpeg  29 ms    4 KB/frame
+   320x240   7.7 fps  grab  4 ms  jpeg 127 ms   25 KB/frame
+   400x296   4.6 fps  grab  3 ms  jpeg 214 ms   49 KB/frame
+   640x480   1.7 fps  grab  7 ms  jpeg 596 ms  131 KB/frame
+   Target (spec): VGA 640x480 at 15 fps -> not reachable with the GC2145. An OV2640 (hardware JPEG) is needed for that.
+4. Also seen: sketch with CORE_DEBUG_LEVEL=5 and Wi-Fi panicked ("Cache disabled but cached memory region accessed") and rebooted in a loop.
+5. Code note: the stock example calls ledcAttach (core 3.x only); patched with a version guard for core 2.x.
+
+6. Raw RGB565 over UDP to the laptop (esp32/raw_udp + tools/esp_raw_rx.py; QVGA 153,600 B/frame = 110 packets of 1400 B; the laptop finds the ESP32 by a HELO broadcast, no fixed IP)
+   Network: phone hotspot, 2.4 GHz channel 13, laptop and ESP32 both on it (ESP32 RSSI -47 to -60 dBm).
+   (First two attempts were invalid: the laptop's own Wi-Fi was on 5 GHz while its hotspot was on 2.4 GHz; one radio time-slices, ping to the ESP32 lost 95 %.)
+   Camera on, 10 fps / 15 fps / as fast as possible: the ESP32 managed only 0.1-0.5 fps and dropped 5-43 packets per 2 s window; no frame completed on the laptop.
+   Camera off (dummy data, same packets): 4.3-4.8 fps, 0 lost, 5.5-6.0 Mbit/s, first-to-last packet spread about 210 ms per frame,
+   round trip time (frame sent -> ACK) 420-480 ms avg, laptop decode of RGB565 -> BGR about 1 ms, relative latency p95 about 55 ms.
+   Conclusion: on this link the ESP32 carries about 6 Mbit/s of UDP, so raw QVGA tops out near 5 fps even with the camera off, and running the camera at the same time
+   starves the sender. Raw streaming is worse than software JPEG at QVGA (7.7 fps, 25 KB/frame). VGA raw (614 KB/frame) is out of the question.
+
+7. Other encoders and formats (esp32/jpeg_bench, JPEG quality 60, 30 frames each, camera and encoder only, no Wi-Fi). Times are per frame, encode only.
+   Encoder A = esp32-camera frame2jpg. Encoder B = Espressif esp_new_jpeg (prebuilt libesp_new_jpeg.a for ESP32, from espressif/esp-adf-libs), single task and dual-core (task_enable).
+   format  size     A frame2jpg   B single   B dual-core   JPEG size
+   RGB565  320x240   116 ms        76 ms      58 ms         7 KB
+   YUV422  320x240   145 ms        51 ms      33 ms         8 KB
+   GRAY    320x240    40 ms        35 ms      28 ms         7 KB
+   GRAY    400x296    57 ms        52 ms      42 ms         9 KB
+   GRAY    640x480   151 ms       138 ms     117 ms        20 KB
+   YUV422  640x480   608 ms       195 ms     129 ms        23 KB
+   Lower camera clock (XCLK 20 -> 10 MHz) made it worse: grab 39 -> 83-117 ms (GRAY 320x240), RGB565 320x240 grab 5 -> 41 ms.
+   Conclusion: esp_new_jpeg with YUV422 input is 3-4.7x faster than frame2jpg. Colour QVGA is encode-limited near 30 fps, colour VGA near 7 fps (dual-core).
+   Not yet measured: the same encode while streaming over Wi-Fi (camera + radio + encoder at once), and sensor frame rate limits at VGA.
+
+8. Everything together (esp32/jpeg_udp + tools/esp_raw_rx.py): GC2145 YUV422 capture + esp_new_jpeg dual-core encode (quality 60) + JPEG over UDP + Wi-Fi on, phone hotspot 2.4 GHz ch 13, RSSI -53 to -67 dBm,
+   laptop found by HELO broadcast. 8 s per phase. Numbers are ESP32-side (serial) and laptop-side (receiver) for the same runs.
+   phase                 fps sent   jpeg/frame   encode   send   ESP rtt avg (max)       laptop: lost frames, decode
+   QVGA 320x240 15fps*      7.5       8 KB        57 ms    8 ms   166-319 ms (619)        0-2, 0.3 ms
+   QVGA 320x240 max        12.4-13.3  7 KB        61 ms    9 ms   159-210 ms (1282)       0-1, 0.3 ms
+   CIF  400x296 max         6.5-7.3  10 KB        89 ms    9 ms   234-350 ms (1425)       0, 0.5 ms
+   VGA  640x480 15fps*      1.1-2.0  16-24 KB    236-263 ms 14-608 ms  1.6-1.7 s (2.8 s)   1 per phase; send failures
+   VGA  640x480 max         1.9      21 KB       276 ms   20 ms   1.5 s (2.7 s)           1 per phase
+   * the 15 fps phases wait for 66 ms after the previous send before grabbing, so they cannot reach 15 fps (pacing in the sketch is sequential, not scheduled); use the "max" rows for capability.
+   rtt = frame grabbed on the ESP32 -> encode -> send -> laptop reassembles -> ack back -> ESP32 reads it in its loop (so it includes the 57-276 ms encode and up to one loop period).
+   Laptop-side relative latency (delay above the best case, clocks not synchronised): QVGA p95 60-190 ms, CIF p95 120-220 ms, VGA p95 600-1900 ms.
+   Findings: with Wi-Fi running, encode is slower than the bench (QVGA 33 -> 60 ms, VGA 129 -> 250-275 ms): the encoder's helper task on core 0 competes with the Wi-Fi stack.
+   JPEG payloads are tiny (0.2-0.9 Mbit/s) so the link is not the limit any more; the CPU is. Colour QVGA about 12-13 fps; VGA does not work (about 2 fps, 1.5 s latency).
+
+9. Tuning sweep (esp32/jpeg_udp, camera + encoder + Wi-Fi, as fast as possible, 7 s per setting, JPEG quality 60 unless stated). Encode time per frame, ESP32 side:
+   QVGA dual-core (helper task on core 0)   57-62 ms     QVGA single task, 2 frame buffers   58-60 ms
+   QVGA single task, 1 frame buffer          50-52 ms     QVGA 4:2:2 chroma instead of 4:2:0   66-67 ms (slower)
+   QVGA quality 40                           57-59 ms     VGA dual-core                       275-288 ms
+   Result: none of the knobs moves QVGA encode below about 50 ms; one frame buffer is about 10 ms faster, dual-core gives nothing once Wi-Fi is running.
+   This run is NOT a fair fps comparison: the Wi-Fi link was worse (RSSI -55 -> -68 dBm), UDP sends failed with lwip error 12 (ENOMEM, 2,400+ log lines), camera overflow errors (EV-EOF-OVF, EV-VSYNC-OVF) appeared,
+   and after about 50 s the camera could no longer be re-initialised ("DMA buffer 30720 Byte malloc failed, largest free block 30708 Byte": internal RAM exhausted/fragmented by repeated re-init).
+   Lessons for the real firmware: initialise the camera once per boot (one resolution); never block on UDP sends (drop the frame when lwip is out of buffers) so latency stays bounded.
+
+10. Research (web, 2026-10-09):
+   - Others measure frame2jpg QVGA at RGB565 125 ms, GRAY 46 ms, YUV422 158 ms on ESP32 (espressif/esp32-camera issue 521): same as ours; no solution given there.
+   - Espressif FAQ: sensors without JPEG need software JPEG on the ESP32 (esp-iot-solution pic_server).
+   - esp32-camera README: 2+ frame buffers put more strain on CPU/memory; YUV/RGB strain PSRAM writes and can lose data with Wi-Fi on.
+   - esp_new_jpeg benchmark pages give ESP32-S3 numbers only (1280x720 YCbYCr 4.84 fps); the classic ESP32 uses a plain build of the same library, as measured above.
+   - A faster chip is the other way: an ESP32-S3 camera board (LCD_CAM interface, SIMD in esp_new_jpeg). Scaling the S3 figure by pixel count suggests about 12-15 fps at VGA. This is an estimate, not a measurement.
+
+11. Second ESP32 board (the one sold with the camera; ESP32-D0WD-V3 rev 3.1, factory AT firmware before we flashed it), same camera module.
+   Sensor ID read on it: PID 0x2145 = GC2145, address 0x3c. So the sensor is the same; the board is not the cause of the missing JPEG.
+   Same test (esp32/jpeg_udp, QVGA color, dual-core encode): 11.5-12.2 fps for the first 3-4 windows (about 8 s), encode 58-61 ms, send 8 ms, then the same degradation as on the old board.
+12. Degradation after a few seconds, both boards (esp32/jpeg_udp, one resolution, camera initialised once, phone hotspot 2.4 GHz channel 13, RSSI -55 to -64 dBm):
+   send time per frame rises from 8 ms to 150-750 ms, send-fail and lwip errno 12 (ENOMEM) on thousands of packets, ESP32 ACK count drops to 0, laptop receives almost nothing; ping from laptop to the ESP32 returned "Destination host unreachable" (no ARP answer).
+   Free internal heap stayed healthy: 70-105 KB free, largest block 43 KB (dual-core, 2 buffers) and 145-170 KB free, largest 74-98 KB (single task, 1 buffer). So it is not RAM exhaustion.
+   Ruled out: memory, encoder settings, board. Open: phone hotspot behaviour on channel 13, or the ESP32 Wi-Fi TX path stalling. Next experiment: another 2.4 GHz channel (1, 6 or 11) or the laptop hotspot; keep frame-dropping in the final firmware.
+
+13. Fixes found online and applied (esp32/jpeg_udp): HT20 channel width (esp_wifi_set_bandwidth), explicit country VN with channels 1-13 (esp_wifi_set_country), short retry then drop the frame instead of 20 x 1 ms retries (sketch no longer builds delay).
+   Sources: Espressif Wi-Fi driver docs (HT40 default, HT20 recommended in crowded 2.4 GHz); esp32.com UDP ENOMEM threads (pace / drop); a Sunfounder FAQ claims ESP32 supports channels 1-11 only (not verified against Espressif docs).
+   Result, phone hotspot still on channel 13: no more growing stalls (send 18-30 ms steady, no multi-second rtt), but the uplink still delivers almost nothing: 8-15 send failures per 2 s, ACKs about 0, laptop receives 0-3 fps.
+   Not caused by: encoder settings, heap, board, 40 MHz width, country restriction. Remaining suspects: ESP32 uplink to the phone AP (power supply droop from laptop USB while camera + radio run, antenna selection resistor, phone AP behaviour), time-varying hotspot quality (the same hotspot gave 12 fps for about 8 s earlier, and the laptop-side Wi-Fi was fine: 144 Mbit/s).
+
+14. Root cause search: why the Wi-Fi uplink dies while the camera runs (esp32/jpeg_udp A/B phases, QVGA JPEG about 7 KB/frame, phone hotspot ch 13, ESP32 powered from laptop USB; same packets in every phase; ESP32 side numbers per 2 s window)
+   phone charger instead of laptop USB                   still bad (laptop saw 1-5 fps, latency up to 6 s)  -> not USB power
+   camera on + encoding, XCLK 20 MHz                     6.7-7 fps sent, 4-14 send failures, ACKs 0-6 of ~14, rtt 1-3 s
+   camera on + encoding, XCLK 10 MHz                     3.5 fps, send failures 0-7, ACKs 1-5, rtt 1.6-3.8 s -> not the clock frequency
+   camera on + encoding, TX power 19.5 / 11 / 5 dBm      all bad                                              -> not TX power / regulator sag
+   camera on, frames grabbed, NO encoding                9.5-11 fps sent, 2-18 send failures, ACKs 0-19, rtt 0.8-1.6 s -> not the JPEG encoder or CPU load
+   camera OFF (last JPEG resent at 11.5-12 fps)          0 send failures, 23-28 of ~24 ACKs per 2 s, rtt 21-24 ms, RSSI -39 to -45 dBm  <- perfect, repeated 3 times
+   Also ruled out: free heap (70-240 KB), board (two ESP32 boards behave the same), HT40 width and country (fixed, no change).
+   Conclusion: with the camera active (clock, pixel bus, ribbon cable, I2S DMA), the ESP32 cannot transmit reliably on 2.4 GHz; receive stays fine (RSSI normal). Same behaviour on both boards and with the same GC2145 camera module.
+   Not yet tried: shielding the camera ribbon (aluminium foil/copper tape, grounded), a shorter ribbon or different camera module (OV2640), external IPEX antenna, a wired (USB/UART) link, pausing the camera between frames.
+
+15. More isolation runs (esp32/jpeg_udp, same packets, camera on vs off), 2026-10-09 evening
+   camera ribbon reseated (it was briefly not detected, 0x105; fine after reseating):  same result, camera on = bad, camera off = clean.
+   frame buffer in internal RAM instead of PSRAM (160x120, 3 KB frames, 0.2 Mbit/s):     link works 2-6 s, then collapses, same as PSRAM -> not PSRAM contention.
+   camera initialised with its clock running but nearly idle (1 frame per 2 s, no encoding):  still collapses; camera off is clean -> not frame capture, not DMA, not the encoder: the camera being present and clocked is enough.
+   802.11b+g only (robust legacy rates):  worse (ACKs 0 from the start with camera on).   802.11b only (DSSS):  no better.
+   Conclusion so far: not software. Most likely electrical interference from the camera clock/pixel bus/ribbon (harmonics of 10 or 20 MHz fall in the 2.4 GHz band) on this module or board. Software knobs tried: encoder, formats, buffers, PSRAM, TX power, bandwidth, country, protocol, USB power, board swap.
+   Physical tests not yet done: foil/copper-tape shield on ribbon and module (grounded), shorter ribbon, external antenna, different camera module (OV2640), wired link.
+
+16. Old ESP32 board (the one KR's sketch was first tested on), same firmware, same phone hotspot channel 13, 2026-10-09 evening
+   Camera on + encoding + streaming works: no collapse.
+   - single task, 1 frame buffer: 47 windows (94 s): 0 send failures, every frame acknowledged, 6.9 fps, rssi -37 to -41 dBm.
+   - dual-core encode, 2 frame buffers (esp32/jpeg_udp as committed): 37 windows (74 s): 0 send failures, 11.5-13.9 fps sent, encode 54-62 ms, rtt avg 130-280 ms (includes encode and the ESP32 loop delay);
+     laptop side: 75 s, average 12.6 fps (min 4, max 15), 17 frames lost, relative latency p50 about 100 ms, worst p95 1.0 s.
+   The same camera-on test failed on the second board every time (sections 12-15). The first board is therefore the better one, or something about it (antenna, regulator, camera seating) differs.
+   Still: gc2145_latest.png (reports/.../camera): colour, blurry (fixed-focus lens looking at a close object).
+
+17. Can the GC2145 reach 640x480 at 15 fps? (old board, esp_new_jpeg, quality 60, 4:2:0)
+   Encode only, camera off, no Wi-Fi, one real VGA YUV422 frame encoded 24 times (esp32/par_bench), frames per second:
+     640x480  one encoder 5.1 | one encoder + helper task 7.7 | two encoders, one per core 5.9
+     640x320 crop (top 320 rows): one 7.7 | helper 11.5 | two encoders 9.0
+   Two parallel encoders are slower than the helper mode (shared memory bandwidth). Ceiling for full VGA on a classic ESP32: about 7.7 fps before Wi-Fi uses any CPU.
+   Real stream, VGA, camera + dual-core encode + Wi-Fi, old board, 54 s: ESP32 sent 1.7-3.1 fps, encode 221-228 ms, 22 KB/frame (16 packets), 1-5 send failures per 2 s, laptop received 0.9 fps average, 63 frames lost.
+   Conclusion: 640x480 at 15 fps is not reachable with this camera on this chip. Options: OV2640 module (hardware JPEG; others report about 29 fps VGA on the AI-Thinker board, not measured by us) or an ESP32-S3 board (SIMD; estimate only).
+   Web research found no classic-ESP32 VGA encoder benchmark and no hardware JPEG mode for the GC2145 (Espressif FAQ: use software JPEG).
+
+18. Software route to 640x480 on the GC2145 (old board, esp32/tile_stream + tools/esp_tile_rx.py), 2026-10-09 night
+   Findings, in the order they were found:
+   a) The JPEG encoder is CPU-bound, not memory-bound: strips/tiles copied into internal RAM give the same 198-218 ms per VGA frame (esp32/par_bench). Cost is about 0.65 us per pixel (YUV 4:2:0) whatever the tile size, so encoding only changed tiles scales with the changed area.
+   b) The camera, not the encoder, limited VGA: YUV422 640x480 delivers only 5.0 fps at XCLK 20 MHz (2.5 fps at 10 MHz; 320x240 gives 13.5 fps) (esp32/cam_rate).
+      The stock driver deliberately throttles the sensor pixel clock for the ESP32 (0xf8 low 6 bits = divx4, 0xfa high nibble = divide_by; comment "pclk <= 15MHz"). Halving the divider made frames arrive truncated (FB-SIZE 499200 != 614400): the ESP32 camera input cannot take 2 bytes/pixel that fast.
+   c) Raw Bayer halves the data (1 byte/pixel). The ESP32 camera layer rejects PIXFORMAT_RAW ("Requested format is not supported", divide by zero), and the GC2145 driver only knows YUV422/RGB565, but it only counts bytes per frame:
+      480x320 YUV422 = 307200 B = one 640x480 raw frame. So: init as HVGA YUV422, then s->set_framesize(VGA), set_reg(0xfe,0) and set_reg(0x84, 0x17) (raw output). Frames then arrive as 307200 B with no errors. Verified as a real picture (BG Bayer pattern) with tools/esp_grab_raw.py.
+   d) Raw capture rate vs divider (Wi-Fi off): divx4 2 = 5.0 fps, 3 = 6.7, 4 = 8.3, 5 = 10.0, 6 = 11.7, 7 and up = 13.0 (a ceiling; divide_by 1 corrupts frames above about 12.7 fps).
+   e) Wi-Fi slows the camera: Wi-Fi off 13.0 fps; connected idle 7.7; sending 100 pkt/s 6.7; 300 pkt/s 4.0; with hundreds of cam_hal EV-EOF-OVF overflow errors. The camera interrupt lands on the core that calls esp_camera_init: camera started on core 0 (the Wi-Fi core) holds 12.0-12.7 fps with Wi-Fi connected, started on core 1 only 8-11.8 fps. The stream therefore runs as a task pinned to core 0.
+      (Probably the same interaction that broke the Wi-Fi uplink in sections 12-15 on the second board; not verified.)
+   f) Conditional replenishment: the camera is fixed, so only changed 64x32 tiles are encoded (grey JPEG of the raw Bayer tile, quality 80) and sent, biggest change first, within a time budget; the two oldest tiles are always refreshed so packet loss heals.
+      Change detection uses a fingerprint per tile in internal RAM (8 rows x 16 bytes); threshold 16 (raw Bayer is noisy: threshold 6 flagged 94 of 150 tiles in a still scene). Scoring all 150 tiles takes about 5 ms.
+      The JPEG work runs on a worker task on core 1, results are packed several tiles per UDP packet (a UDP send costs about 3.5 ms whatever its size). The JPEG header is sent once a second; tiles carry only scan data.
+   Result, full 640x480 picture on the laptop (tools/esp_tile_rx.py, demosaic BG), 64 s run, phone hotspot ch 13, rssi -47:
+      still scene: 10-12 fps, 2 tiles per frame, 0.1 Mbit/s, tile decode 0.1 ms, no missing tiles
+      large movement (100 dirty tiles): 6-9 fps with 20-27 tiles per frame, 0.3-0.5 Mbit/s, a few missing tiles (healed by the refresh)
+      encoder throughput under load: about 160 tiles per second (about 2 ms per 64x32 tile on core 1)
+   Limits: assumes a fixed camera (a shaking or moving camera makes every tile dirty); raw colours have no white balance or gamma yet (blue cast); the ceiling is 13 fps from the camera interface, and large moving regions update at about 5 fps.
+   Ideas not yet tried: 640x360 window (230 KB/frame, about 17 fps capture); quality 60 (faster encode); shrinking scoring cost; white balance on the laptop; splitting the Bayer mosaic into 4 planes before JPEG (smoother, cheaper).
+
+19. 640x480 at 15 fps reached (old board, esp32/tile_stream, Wi-Fi on, phone hotspot ch 13)
+   Cause of the 13 fps wall: above xclk 10 MHz the esp32-camera driver uses I2S "high-speed" sampling (SM_0A00_0B00): every sensor byte occupies a 4-byte DMA word and cam_task filters them out one by one.
+   At xclk <= 10 MHz it uses SM_0A0B_0C0D (2 bytes per word, half the DMA traffic and half the filter work). The threshold is only a proxy for pixel speed; the GC2145 PLL restores the pixel rate.
+   Blanking (Wi-Fi off, esp32/cam_rate): vblank 46 -> 12 lines: 12.7 -> 13.3 fps at xclk 20; vblank 4 or any hblank below 280: frames corrupted (FB-SIZE).
+   xclk 10 MHz, vblank 12: divide_by 2 plateaus at 13.3 fps for divx4 15-29 (sensor limit); divide_by 1: divx4 9 = 13.0, divx4 11 = 15.7 fps clean, divx4 13 = 8.7 (frames dropped).
+   Tile stream with xclk 10 MHz, divx4 11, divide_by 1, vblank 12, camera on core 0, Wi-Fi on: ESP32 13.2-15.6 fps (frame interval 64-76 ms), 0 FB-SIZE errors, 9 overflow lines in 40 s;
+   laptop 13-18 fps (mostly 14-16) at full 640x480, 0.1-0.4 Mbit/s, round trip 86-200 ms. Mostly still scene: 2-9 tiles per frame. Large motion not yet measured with these settings (encode+send about 2.2 ms per tile, so heavy motion lowers the rate).
+
+20. Motion test of the 15 fps tile stream (same settings as section 19, budget 55 ms, quality 80, 72 s, person moving in front of the camera; laptop side, per second)
+   still (dirty < 3 tiles)      5 s: 12.4 fps, 2.7 tiles/frame, 0 missing
+   small motion (3-10 dirty)   14 s: 10.5 fps (min 4), 7.6 tiles/frame, 0.2 missing/s, 0.25 Mbit/s
+   moderate (10-40 dirty)      19 s:  9.3 fps (min 2), 15.3 tiles/frame, 1.5 missing/s, 0.39 Mbit/s
+   large motion (>= 40 dirty)  30 s:  7.3 fps (min 2), 20.4 tiles/frame, 10.4 missing/s, 0.45 Mbit/s
+   ESP32 side in heavy motion: encode+send 58-85 ms per frame (about 2.8 ms per tile), 2-22 send failures per 2 s, round trip 0.3-1.0 s, camera still 0 FB-SIZE errors.
+   So the 15 fps figure holds for still / slight motion; with a person moving across the frame the stream drops to 7-10 fps and starts losing tiles (UDP uplink strain; refresh repairs them).
+   Next: smaller per-frame budget (35 ms, so the loop keeps up with the 15 fps camera), quality 60, planar Bayer split for cheaper JPEG, lower per-tile send cost.
+
+21. Tuning results (esp32/tile_stream; laptop-side numbers per second, person moving in front of the camera; motion mix differs between runs, so the controlled test is given too)
+   a) budget 55 -> 35 ms, JPEG quality 80 -> 60:     68 s average 13.8 fps (was 8.9); large motion 11.2 fps (was 7.3); missing tiles 4.5/s (was 10.4/s).
+   b) planar Bayer split (R,G1,G2,B planes in the 4 quadrants of a tile, receiver un-shuffles): bandwidth about 20-25 % lower; controlled test below.
+   c) controlled test, every tile forced dirty (MOTION_THR 0), 29 s, laptop side:
+        stream task on core 0 (before):    7.3 fps plain, 6.4 fps planar, about 7-8.6 ms per tile on the ESP32
+        stream logic on core 1 (camera + Wi-Fi stay on core 0, MAXJ 6): plain 9.7 fps / 115 tiles/s / 3.4 missing/s / 0.32 Mbit/s; planar 9.2 fps / 106 tiles/s / 0.6 missing/s / 0.29 Mbit/s
+      Planar kept: far fewer lost tiles. (The grep "Guru" count in those logs was a false alarm: it matched the summary line "'Guru Meditation': 0".)
+   d) final default build (budget 35 ms, quality 60, planar, stream logic on core 1, camera/Wi-Fi on core 0, xclk 10 MHz, divx4 11, divide_by 1, vblank 12), 68 s motion test:
+        still (<3 dirty tiles)      19 s: 14.9 fps (min 12)   3.2 tiles/frame   0.11 Mbit/s
+        small motion (3-10)         26 s: 14.1 fps (min 10)   7.1 tiles/frame   0.26 Mbit/s
+        moderate (10-40)            15 s: 14.4 fps (min 11)   9.4 tiles/frame   0.33 Mbit/s
+        large motion (>= 40)         8 s: 13.8 fps (min 1)   11.7 tiles/frame   9.9 missing tiles/s (healed by the refresh)   0.30 Mbit/s
+        whole run                   68 s: 14.4 fps average
+   Caveat: only 8 s of large motion in this run; the full-load controlled test (every tile dirty) gives 9-10 fps, the worst case.
