@@ -1,0 +1,19 @@
+============================= test session starts =============================
+platform win32 -- Python 3.12.14, pytest-9.1.1, pluggy-1.6.0
+rootdir: D:\CS532\Autonomous Collaborative Sentry Robot
+configfile: pytest.ini
+testpaths: tests
+plugins: anyio-4.15.1
+collected 64 items
+
+tests\test_camera_pub.py ..                                              [  3%]
+tests\test_config.py ...                                                 [  7%]
+tests\test_controller.py ..........                                      [ 23%]
+tests\test_espcam.py .....                                               [ 31%]
+tests\test_estop.py ...........                                          [ 48%]
+tests\test_jetbot_status.py ..                                           [ 51%]
+tests\test_markers.py ....                                               [ 57%]
+tests\test_mixing.py ......                                              [ 67%]
+tests\test_protocol.py .....................                             [100%]
+
+============================= 64 passed in 4.53s ==============================
