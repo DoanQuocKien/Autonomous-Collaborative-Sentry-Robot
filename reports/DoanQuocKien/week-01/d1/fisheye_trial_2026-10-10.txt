@@ -1,0 +1,11 @@
+Trial cv2.fisheye calibration on data/D1/checkerboard (640x480 stream, 9x6 inner corners, 25 mm squares); not the Week 2 tool.
+58 photos detected; corners per cell of a 4x4 grid:
+ [[ 88  61 174  59]
+ [366 349 359 172]
+ [312 359 370 174]
+ [ 87  81  63  58]]
+all 58: RMS 1.387 px fx 309.5 fy 306.1 cx 285.8 cy 239.1 D [-0.0323 -0.0006 -0.0056  0.0015]
+photos > 2 px: [('cb_010', 3.6), ('cb_013', 3.6), ('cb_012', 3.5), ('cb_014', 3.3), ('cb_011', 3.1), ('cb_008', 3.0), ('cb_030', 2.2)]
+dropping worst until RMS < 1: ['cb_010', 'cb_013', 'cb_012', 'cb_014', 'cb_011'] -> 53 photos, RMS 0.947 fx 309.6 cx 285.8 cy 239.2
+half 0 (29 photos): RMS 1.251 fx 308.8 cx 286.2 cy 238.0
+half 1 (29 photos): RMS 1.509 fx 309.9 cx 285.5 cy 240.2
