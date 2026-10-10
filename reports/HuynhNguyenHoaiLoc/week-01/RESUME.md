@@ -6,6 +6,14 @@ pause is no longer active; read the latest weekly report for current status.
 
 ## Latest state after resuming - supersedes the historical snapshot below
 
+**Review update 2026-10-10:** baseline implementation is now committed on the
+W1 branch. New review fixes/evidence remain in the working tree. Final checks:
+87 tests passed, check_env ALL GOOD with actual CUDA Relu execution, and
+synthetic localhost telemetry passed (28.767 run FPS, decoded p95 2.984 ms).
+See [the weekly report](../week-01.md) and
+[prepared PR text](../../../docs/PR-W1-HNHL.md). The measurements and process
+statements below describe the earlier 2026-10-04 session.
+
 Local W1 implementation and GPU/environment verification are complete.
 The `.venv` is now ready; no further download/install is required for W1.
 

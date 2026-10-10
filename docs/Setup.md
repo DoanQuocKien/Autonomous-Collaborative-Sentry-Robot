@@ -14,7 +14,7 @@ HNHL also verified Python 3.12.15 in a local `.venv` on RTX 5060 Laptop GPU
 
 ## A. GPU laptop
 
-Needs Miniconda and an up-to-date NVIDIA driver (CUDA 12.8 wheels need a driver that supports CUDA 12.8; check `nvidia-smi`).
+Use Python 3.12 through Miniconda or a local virtual environment, and an NVIDIA driver compatible with CUDA 12.8 (check `nvidia-smi`). HNHL's existing environment is `.venv`; run `.venv\Scripts\python.exe` directly. The Conda commands below are the alternative for a new machine.
 
 ```powershell
 conda create -n sentry python=3.12 -y

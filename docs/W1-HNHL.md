@@ -63,6 +63,10 @@ must not modify `frame_bgr` when sharing it with other modules.
 receive time and local decode-completion time. KR's replay adapter can return
 the same class; preserve source `t_cap` and sequence from recordings.
 The receiver accepts sequence resets after publisher restarts.
+Context/socket creation failures are propagated through the same worker-error
+contract, and partially created resources are closed. Shared packet decoders
+reject numbers outside the finite float range with `ValueError`, so invalid
+numeric packets are discarded instead of terminating receivers or clock echo.
 
 The worker owns the ZMQ socket, drains complete `[header, JPEG]` messages,
 decodes the newest drained message and overwrites one slot. Invalid messages
@@ -141,6 +145,9 @@ simulated 100-second clock offset, then invokes the real latency logger.
 Output is explicitly labelled synthetic localhost evidence. At a source rate
 of exactly 20 FPS, encode/scheduling overhead in the synthetic generator can
 lower measured FPS below 20; use 30 FPS to test the telemetry pass calculation.
+The simulated offset must be finite. Publisher sleep is interruptible with
+bounded, high-resolution slices, so even a low source FPS can shut down promptly
+without reducing normal Windows timer precision.
 
 ## Integration still needed
 

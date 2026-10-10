@@ -6,6 +6,7 @@
 import argparse
 import importlib
 import importlib.metadata as md
+import json
 import os
 from pathlib import Path
 import sys
@@ -27,17 +28,33 @@ def installed(pkg):
 
 
 def onnx_cuda_session():
+    import numpy as np
     import onnxruntime as ort
     from onnx import TensorProto as T, helper as h
     g = h.make_graph([h.make_node("Relu", ["x"], ["y"])], "g", [h.make_tensor_value_info("x", T.FLOAT, [1, 4])],
                      [h.make_tensor_value_info("y", T.FLOAT, [1, 4])])
     m = h.make_model(g, opset_imports=[h.make_opsetid("", 13)])
     m.ir_version = 8
-    s = ort.InferenceSession(m.SerializeToString(), providers=["CUDAExecutionProvider", "CPUExecutionProvider"])
+    profile_dir = Path(__file__).resolve().parents[1] / "data" / "check_env"
+    profile_dir.mkdir(parents=True, exist_ok=True)
+    options = ort.SessionOptions()
+    options.enable_profiling = True
+    options.profile_file_prefix = str(profile_dir / "ort_cuda")
+    s = ort.InferenceSession(m.SerializeToString(), sess_options=options,
+                             providers=["CUDAExecutionProvider", "CPUExecutionProvider"])
+    try:
+        output = s.run(None, {"x": np.array([[-1, 2, -3, 4]], dtype=np.float32)})[0]
+    finally:
+        profile_path = s.end_profiling()
+    events = json.loads(Path(profile_path).read_text(encoding="utf-8"))
+    executed = {event.get("args", {}).get("provider") for event in events}
+    if not np.array_equal(output, [[0, 2, 0, 4]]) or "CUDAExecutionProvider" not in executed:
+        raise RuntimeError("Relu must produce correct output and actually execute on CUDA")
     return s.get_providers()[0]
 
 
 def main():
+    problems.clear()
     ap = argparse.ArgumentParser()
     ap.add_argument("--cpu-ok", action="store_true", help="CPU-only machine: GPU problems are warnings")
     gpu_fatal = not ap.parse_args().cpu_ok
@@ -59,7 +76,8 @@ def main():
     if cuda or gpu_fatal:
         try:
             first = onnx_cuda_session()
-            report(first == "CUDAExecutionProvider", "onnxruntime session", "first provider: " + first, fatal=gpu_fatal)
+            report(first == "CUDAExecutionProvider", "onnxruntime session",
+                   "Relu executed on CUDA; first provider: " + first, fatal=gpu_fatal)
         except Exception as e:  # noqa: BLE001 - any failure here means "no GPU for onnx"
             report(False, "onnxruntime session", str(e)[:120], fatal=gpu_fatal)
 

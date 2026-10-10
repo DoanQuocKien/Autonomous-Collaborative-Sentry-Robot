@@ -1,0 +1,26 @@
+Clock sync: {"offset_s": 100.000001050008, "rtt_s": 3.749999450519681e-05, "samples": 20, "t_sync": 242466.3165318}
+{
+  "frames": 144,
+  "observed_duration_s": 4.9537792000046466,
+  "delivered_fps": 28.86684977801713,
+  "decoded_latency_p50_ms": 2.332700023544021,
+  "decoded_latency_p95_ms": 2.9844649994629435,
+  "negative_latency_frames": 0,
+  "sequence_resets": 0,
+  "sequence_gaps": 0,
+  "clock_offset_s": 100.000001050008,
+  "clock_rtt_s": 3.749999450519681e-05,
+  "clock_samples": 20,
+  "clock_uncertainty_ms": 0.018749997252598405,
+  "pass": true,
+  "scope": "live_stream_requires_HIL_validation",
+  "ip": "127.0.0.1",
+  "measurement_duration_s": 5.005701899994165,
+  "laptop_clock": "perf_counter",
+  "laptop_clock_resolution_s": 1e-07,
+  "receiver_messages": 144,
+  "receiver_invalid": 0,
+  "receiver_skipped": 0,
+  "note": "Latency starts after camera read, per camera_pub t_cap; excludes sensor exposure. Latest-frame skips are not network packet loss. Resync after source restart.",
+  "run_fps": 28.767194466807513
+}

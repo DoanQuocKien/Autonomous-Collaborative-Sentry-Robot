@@ -7,6 +7,7 @@ The resulting CSV/JSON is loopback evidence, never robot/Wi-Fi acceptance.
 """
 import argparse
 import json
+import math
 from pathlib import Path
 import queue
 import socket
@@ -33,14 +34,27 @@ def main():
     args = ap.parse_args()
     if not (0 < args.fps < float("inf") and 0 < args.seconds < float("inf")):
         ap.error("fps and seconds must be positive and finite")
+    if not math.isfinite(args.offset):
+        ap.error("--offset must be finite")
     ready = queue.Queue()
     stop = threading.Event()
     errors = []
 
+    def pause(seconds):
+        # Event.wait has coarse timing on some Windows hosts. Keep time.sleep's
+        # resolution, with bounded slices so even a low-FPS publisher can stop.
+        deadline = time.perf_counter() + seconds
+        while not stop.is_set():
+            remaining = deadline - time.perf_counter()
+            if remaining <= 0:
+                break
+            time.sleep(min(remaining, cfg["net"]["video_poll_ms"] / 1000))
+
     def publish():
-        ctx = zmq.Context()
-        pub = ctx.socket(zmq.XPUB)
+        ctx = pub = None
         try:
+            ctx = zmq.Context()
+            pub = ctx.socket(zmq.XPUB)
             pub.setsockopt(zmq.LINGER, 0)
             port = pub.bind_to_random_port("tcp://127.0.0.1")
             ready.put(port)
@@ -50,7 +64,8 @@ def main():
                     break
 
             def frames():
-                for image in synthetic_frames(cfg["camera"]["width"], cfg["camera"]["height"], args.fps):
+                for image in synthetic_frames(cfg["camera"]["width"], cfg["camera"]["height"],
+                                              args.fps, sleep=pause):
                     if stop.is_set():
                         break
                     yield image
@@ -59,8 +74,12 @@ def main():
         except Exception as exc:
             errors.append(str(exc))
         finally:
-            pub.close()
-            ctx.term()
+            try:
+                if pub is not None:
+                    pub.close(linger=0)
+            finally:
+                if ctx is not None:
+                    ctx.term()
 
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as echo:
         echo.bind(("127.0.0.1", 0))

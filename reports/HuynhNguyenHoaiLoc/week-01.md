@@ -117,6 +117,39 @@ accuracy remains a W3 task.
   in the Oct 11 integration session, and confirm the mid-term due date.
 - W2: obstacle distance/repulsion and vantage scoring after calibration/D1.
 
+## Code consistency review (2026-10-10)
+
+Reviewed the current W1 branch against the implementation plan, shared wire
+protocol, Jetson publisher/controller, CLI tools and environment documentation.
+The video/control formats, clock-offset sign and live/replay frame contract
+are consistent. The existing baseline suite passed 77 tests before the fixes.
+
+Regression tests reproduced two errors before correction: oversized JSON
+numbers raised `OverflowError` outside the documented decoder contract, and
+ZMQ context/socket creation errors bypassed worker error propagation/cleanup.
+Both are fixed. The shared protocol and Jetson modules retain Python 3.6 syntax.
+
+Additional corrections reject nonfinite simulated clock offsets, make low-FPS
+smoke-test publisher shutdown interruptible, and require `check_env.py` to run
+Relu and verify its executed CUDA provider rather than only list providers.
+CLAUDE.md, Setup.md and the implementation plan now consistently describe
+Python 3.12, HNHL's `.venv` and the distinction between RTX 5060 and RTX 4050.
+
+| Check | Final result | Evidence |
+| :-- | :-- | :-- |
+| CPU + localhost suite | **87 passed in 6.81 s** | [review_pytest.log](week-01/review_pytest.log) |
+| CUDA environment | **ALL GOOD**, ONNX Relu output and CUDA execution verified | [review_check_env.log](week-01/review_check_env.log), [profile](week-01/review_ort_cuda.json) |
+| CLI localhost smoke, 30 FPS source / 5 s | **144 frames**, run **28.767 FPS**, decoded p95 **2.984 ms**, pass | [JSON](week-01/review_loopback_latency.json), [CSV](week-01/review_loopback_latency.csv), [log](week-01/review_loopback.log) |
+| Jetson compatibility | `ast.parse(..., feature_version=(3, 6))` passes for common/ and jetson/ | Syntax check only; device execution still pending |
+
+The 2026-10-04 GPU benchmark is retained as historical evidence; YOLO/InsightFace
+benchmarks were not repeated during this review. New localhost measurements
+remain synthetic and do not close HIL, D1 or RTX 4050 acceptance items.
+PR title/body are prepared in [PR-W1-HNHL.md](../../docs/PR-W1-HNHL.md), targeting
+`main` from `HuynhNguyenHoaiLoc/w01-network-telemetry`, with DQK as reviewer.
+The original implementation has been committed on this branch; the review
+fixes and new evidence are saved in the working tree for HNHL to commit/push.
+
 ## Hours
 
 Not tracked; to be filled by HNHL.

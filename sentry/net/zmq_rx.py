@@ -76,9 +76,10 @@ class ZMQReceiver:
             raise RuntimeError("video receiver failed") from self._error
 
     def _run(self):
-        ctx = zmq.Context()
-        sock = ctx.socket(zmq.SUB)
+        ctx = sock = None
         try:
+            ctx = zmq.Context()
+            sock = ctx.socket(zmq.SUB)
             sock.setsockopt(zmq.LINGER, 0)
             sock.setsockopt(zmq.RCVHWM, self._hwm)
             sock.setsockopt(zmq.SUBSCRIBE, b"")
@@ -113,12 +114,21 @@ class ZMQReceiver:
         except Exception as exc:
             self._error = exc
         finally:
-            sock.close()
-            ctx.term()
-            self._stop.set()
-            self._ready.set()
-            with self._condition:
-                self._condition.notify_all()
+            try:
+                try:
+                    if sock is not None:
+                        sock.close(linger=0)
+                finally:
+                    if ctx is not None:
+                        ctx.term()
+            except Exception as exc:
+                if self._error is None:
+                    self._error = exc
+            finally:
+                self._stop.set()
+                self._ready.set()
+                with self._condition:
+                    self._condition.notify_all()
 
     def read(self, timeout=None):
         if self._thread is None:

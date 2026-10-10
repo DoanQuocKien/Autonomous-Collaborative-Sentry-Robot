@@ -295,6 +295,6 @@ reports/<handle>/week-NN/       # test evidence: pytest logs, metrics JSON/CSV, 
 | 2 | The spec does not say how "T1 exits" is detected | ESP32 re-ID + direction of motion toward the door (W7, HNHL) |
 | 3 | COCO classes miss walls, boxes and bags | Accept for W2; if exploration collisions occur, add a bottom-of-frame floor-edge check or fine-tune on D1 frames |
 | 4 | ESP32 L/C/R sector is in camera coordinates, not world | Record the ESP32 placement pose in phase 1; KR maps it to world bearing (W7) |
-| 5 | Python 3.14 support for torchreid / insightface 2.0 is unverified | Checked in W1 (HNHL); fallback is ONNX models via onnxruntime-gpu |
+| 5 | Model package upgrades can change Python, CUDA or API compatibility | W1 verifies Python 3.12 and records installed versions; rerun environment/inference checks after upgrades. ONNX models via onnxruntime-gpu remain a fallback. |
 | 6 | All HIL depends on DQK's availability | Offline-first development; two scheduled sessions per week from W5 onward |
 | 7 | Mid-term due date assumed to be Nov 1 | Confirm with the instructor in W1 |

@@ -3,7 +3,7 @@ import numpy as np
 import pytest
 
 from common.protocol import encode_video_header
-from sentry.net.zmq_rx import decode_frame
+from sentry.net.zmq_rx import ZMQReceiver, decode_frame
 
 
 def packet(seq=1, w=64, h=48):
@@ -31,3 +31,35 @@ def test_decode_preserves_timestamps_jpeg_and_bgr():
 def test_invalid_frames(parts):
     with pytest.raises(ValueError):
         decode_frame(parts, 0)
+
+
+@pytest.mark.parametrize("fail_at", ["context", "socket"])
+def test_socket_creation_failure_wakes_readers_and_cleans_up(monkeypatch, fail_at):
+    class ContextStub:
+        terminated = False
+
+        def socket(self, *args):
+            raise OSError("socket creation failed")
+
+        def term(self):
+            self.terminated = True
+
+    ctx = ContextStub()
+
+    def make_context():
+        if fail_at == "context":
+            raise OSError("context creation failed")
+        return ctx
+
+    monkeypatch.setattr("sentry.net.zmq_rx.zmq.Context", make_context)
+    rx = ZMQReceiver()
+    try:
+        with pytest.raises(RuntimeError, match="video receiver failed") as error:
+            rx.start()
+        assert isinstance(error.value.__cause__, OSError)
+        with pytest.raises(RuntimeError, match="video receiver failed"):
+            rx.read(0)
+    finally:
+        rx.close()
+    assert not rx._thread.is_alive()
+    assert fail_at == "context" or ctx.terminated
