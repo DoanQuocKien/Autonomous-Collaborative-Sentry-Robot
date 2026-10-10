@@ -2,7 +2,7 @@
 # Jetson-side motor calibration (k, min_pwm) lives in calib/motion.json instead: Jetson Python 3.6 has no TOML reader.
 
 [net]
-jetbot_ip = "192.168.137.20"     # placeholder, set after the hotspot is up
+jetbot_ip = "auto"             # scanned on the laptop's network each run (tools/find_jetbot.py); or a fixed IP
 esp32_ip = "127.0.0.1"           # tools/record.py reads http://<esp32_ip>:81/stream. With the GC2145 boards run tools/esp_mjpeg_relay.py on the laptop (it serves that URL itself); with an OV2640 board put the board's IP here
 video_port = 5555
 control_port = 5556
