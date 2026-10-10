@@ -6,8 +6,6 @@ import urllib.request
 from pathlib import Path
 import zmq
 
-from tools.find_jetbot import resolve
-
 try:
     import tomllib
 except ImportError:
@@ -25,7 +23,7 @@ def load_config():
 def record_jetbot(ip, port, out_dir):
     ctx = zmq.Context()
     sock = ctx.socket(zmq.SUB)
-    # no CONFLATE: it asserts (fq.cpp !_more) on our two-part [header, jpeg] messages
+    sock.setsockopt(zmq.CONFLATE, 1)
     sock.connect(f"tcp://{ip}:{port}")
     sock.setsockopt_string(zmq.SUBSCRIBE, "")
     
@@ -106,6 +104,7 @@ def main():
     args = parser.parse_args()
     
     config = load_config()
+    from tools.find_jetbot import resolve  # jetbot_ip = "auto" scans the network
     jetbot_ip = resolve(config["net"]["jetbot_ip"])
     esp32_ip = config["net"]["esp32_ip"]
     video_port = config["net"]["video_port"]
