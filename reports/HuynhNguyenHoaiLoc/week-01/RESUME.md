@@ -6,6 +6,16 @@ pause is no longer active; read the latest weekly report for current status.
 
 ## Latest state after resuming - supersedes the historical snapshot below
 
+**Post-push integration 2026-10-10:** HNHL pushed the earlier fixes as d214c45.
+Synced main through 7d34e46, resolved three merge conflicts and connected the
+JetBot recorder/replay to the VideoFrame contract. Latest checks: 121 passed,
+CUDA environment ALL GOOD, localhost 28.749 run FPS / decoded p95 3.189 ms.
+New evidence uses integration_*; earlier review_* remains historical. The
+local merge commit is ready for HNHL to push. Remaining: DQK PR review,
+real video latency retest (DQK's existing p95 is 53 ms), D1, team ESP32
+interface approval and RTX 4050 YOLOv8n/s baseline. The older Git-state
+statements below are historical, superseded by this update.
+
 **Review update 2026-10-10:** baseline implementation is now committed on the
 W1 branch. New review fixes/evidence remain in the working tree. Final checks:
 87 tests passed, check_env ALL GOOD with actual CUDA Relu execution, and

@@ -1,0 +1,95 @@
+# Dead-man switch + e-stop on the real robot, 2026-10-06 (wheels OFF the ground, robot_udp capped at --max-speed 0.3, battery 11.3-11.5 V)
+# Clocks: estop.log = host clock; robot_udp.log = container clock = host - 7 h.
+
+## Pad facts
+- Receiver streams ~121 raw HID reports/s on both interfaces whether or not anything is pressed (no heartbeat usable to detect a dead pad).
+- Measured: switching the pad OFF while R1 (button 7) is held makes the receiver emit a RELEASE for R1 (js events: press 19.55 s, release 28.57 s when the pad was switched off). Not measured: flat batteries, out of range. A short delay between flipping the switch and the release is the pad/receiver link timeout.
+- Pad sleeps when idle (user's observation); a sleeping pad cannot hold R1, so the robot cannot move (fail-safe).
+
+## Test 1: first dead-man cycle test (press / release / hard stop / re-arm)
+﻿robot clock: 23:59:54
+
+=== estop.log (host clock)
+23:54:46.165 STOPPED (startup); motors CUT in 3 ms
+23:54:46.165 watching the gamepad; hold Select+Start 2.0 s to arm, then hold R1 (button 7) to move; any other button = hard stop
+23:54:46.225 gamepad found: /dev/input/js0
+23:58:24.677 ARMED (Select+Start held 2.0 s); now hold R1 to move
+23:58:26.168 GO (R1 held and armed); robot may move
+23:58:27.333 STOPPED (R1 released); motors CUT in 13 ms
+23:58:30.018 GO (R1 held and armed); robot may move
+23:58:31.319 STOPPED (R1 released); motors CUT in 3 ms
+23:58:35.830 GO (R1 held and armed); robot may move
+23:58:36.792 STOPPED (button 3 pressed); motors CUT in 3 ms
+23:58:43.193 ARMED (Select+Start held 2.0 s); now hold R1 to move
+23:58:44.509 GO (R1 held and armed); robot may move
+23:58:49.395 STOPPED (R1 released); motors CUT in 12 ms
+23:58:52.611 GO (R1 held and armed); robot may move
+23:58:55.495 STOPPED (R1 released); motors CUT in 15 ms
+
+=== robot_udp.log (container clock = host - 7 h)
+06:54:53.318 motors +0.00 +0.00
+06:54:53.318 e-stop ENGAGED: refusing motor commands
+06:58:26.175 e-stop released: motor commands accepted
+06:58:26.214 motors +0.30 +0.30
+06:58:27.320 e-stop ENGAGED: refusing motor commands
+06:58:27.371 motors +0.00 +0.00
+06:58:30.020 e-stop released: motor commands accepted
+06:58:30.107 motors +0.30 +0.30
+06:58:31.322 e-stop ENGAGED: refusing motor commands
+06:58:31.417 motors +0.00 +0.00
+06:58:35.831 e-stop released: motor commands accepted
+06:58:35.855 motors +0.30 +0.30
+06:58:36.792 e-stop ENGAGED: refusing motor commands
+06:58:36.831 motors +0.00 +0.00
+06:58:44.511 e-stop released: motor commands accepted
+06:58:44.553 motors +0.30 +0.30
+06:58:49.390 e-stop ENGAGED: refusing motor commands
+06:58:49.415 motors +0.00 +0.00
+06:58:52.631 e-stop released: motor commands accepted
+06:58:52.676 motors +0.30 +0.30
+06:58:55.495 e-stop ENGAGED: refusing motor commands
+06:58:55.523 motors +0.00 +0.00
+
+## Test 2: freeze test #1 - INVALID. The pgrep matched the sh -c wrapper, not the python3 process; robot_udp kept running (its stop lines appear at the release time).
+﻿00:00:42.774 waiting for you to hold R1 (a new GO line)...
+GO seen: 00:01:42.572 GO (R1 held and armed); robot may move
+00:01:48.248 FREEZING robot_udp (host pid 2738) with SIGSTOP: it can no longer stop the motors itself
+process state: Ts (T = stopped)
+00:01:57.902 e-stop daemon reported: 00:01:57.738 STOPPED (R1 released); motors CUT in 15 ms
+00:02:02.170 robot_udp continued; process state: Ss
+
+=== estop.log since the test started
+00:01:42.572 GO (R1 held and armed); robot may move
+00:01:57.738 STOPPED (R1 released); motors CUT in 15 ms
+
+=== robot_udp.log tail (container clock = host - 7 h)
+06:58:55.495 e-stop ENGAGED: refusing motor commands
+06:58:55.523 motors +0.00 +0.00
+07:01:42.585 e-stop released: motor commands accepted
+07:01:42.622 motors +0.30 +0.30
+07:01:57.728 e-stop ENGAGED: refusing motor commands
+07:01:57.780 motors +0.00 +0.00
+
+## Test 3: freeze test #2 - VALID. python3 process 2743 in state T (stopped); R1 released at 00:03:17.29 -> motors CUT in 11 ms by estop.py; robot_udp.log shows no stop line while frozen and logs ENGAGED only after SIGCONT (00:03:21).
+﻿00:02:46.006 waiting for you to hold R1 (a new GO line)...
+GO seen: 00:03:01.849 GO (R1 held and armed); robot may move
+python3 process chosen: 2743 python3         Sl | all matches: 16
+00:03:07.613 FREEZING robot_udp (host pid 2743) with SIGSTOP: it can no longer stop the motors itself
+process state: Tl (T = stopped)
+00:03:17.507 e-stop daemon reported: 00:03:17.290 STOPPED (R1 released); motors CUT in 11 ms
+robot_udp.log while it is frozen (its last two lines; no new line may appear for the stop):
+07:03:01.856 e-stop released: motor commands accepted
+07:03:01.903 motors +0.30 +0.30
+00:03:21.850 robot_udp continued; process state: Sl
+
+=== estop.log since the test started
+00:03:01.849 GO (R1 held and armed); robot may move
+00:03:17.290 STOPPED (R1 released); motors CUT in 11 ms
+
+=== robot_udp.log tail (container clock = host - 7 h)
+07:01:57.728 e-stop ENGAGED: refusing motor commands
+07:01:57.780 motors +0.00 +0.00
+07:03:01.856 e-stop released: motor commands accepted
+07:03:01.903 motors +0.30 +0.30
+07:03:21.694 e-stop ENGAGED: refusing motor commands
+07:03:21.711 motors +0.00 +0.00

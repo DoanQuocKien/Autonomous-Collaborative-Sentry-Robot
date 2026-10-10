@@ -7,13 +7,13 @@ Week 1 starts **Mon 2026-10-05**. The Mid-Term Technical Report is due **Sun 202
 
 | Handle | CUDA | Hardware | Primary ownership |
 | :-- | :-: | :-: | :-- |
-| **DoanQuocKien** (DQK) | Yes | Holds JetBot, ESP32-CAM, FTDI, speaker | Jetson side, motor control, calibration, controllers on the robot, hardware-in-the-loop (HIL) testing, integration host |
+| **DoanQuocKien** (DQK) | Yes | Holds the JetBot kit (speaker later) | Jetson side, motor control, calibration, controllers on the robot, hardware-in-the-loop (HIL) testing, integration host |
 | **HuynhNguyenHoaiLoc** (HNHL) | Yes | – | Laptop perception: YOLOv8, ByteTrack, InsightFace, OSNet, YOLOv8-pose, GPU profiling |
-| **kouun-rokku** (KR) | No | – | CPU-side logic: record/replay tooling, ORB entrance matching, localization (ArUco + dead reckoning), state machine, queue/handoff logic, simulation, audio assets, test infrastructure, report editing |
+| **kouun-rokku** (KR) | No | Holds the ESP32-CAM + MB base | CPU-side logic: record/replay tooling, ORB entrance matching, localization (ArUco + dead reckoning), state machine, queue/handoff logic, simulation, audio assets, test infrastructure, report editing |
 
 Principles behind the split:
 - KR has no GPU, so KR owns everything that runs on CPU and the tooling that lets others work without the robot.
-- Only DQK has the hardware, so every task must be developable **offline on recorded data** first. HIL time on DQK's setup is for validation, not development.
+- Only DQK has the robot (and only KR has the ESP32 kit), so every task must be developable **offline on recorded data** first. HIL time on DQK's setup is for validation, not development.
 - Each member carries roughly equal weekly load (about 3 work items per week).
 
 ## 2. Repository Layout (target)
@@ -22,7 +22,7 @@ Principles behind the split:
 sentry/                 # laptop package, Python 3.12 in sentry (see Setup.md)
   net/                  # zmq_rx.py, udp_tx.py, mjpeg_rx.py, clock_sync.py
   perception/           # obstacle.py, entrance.py, face.py, reid.py, tracker.py, pose.py
-  nav/                  # localization.py, vantage.py, controllers.py
+  nav/                  # localization.py, gridmap.py, vantage.py, coverage.py, controllers.py
   app/                  # state_machine.py, target_queue.py, audio.py, main.py
 config.toml             # repo-root tunables (thresholds, gains, ports); stdlib tomllib
 common/                 # Python 3.6-compatible, stdlib only; used by BOTH laptop and Jetson
@@ -54,14 +54,14 @@ Freezing these lets the three members work in parallel against the same contract
 | JetBot -> laptop video | ZeroMQ PUB/SUB, port 5555; bounded SUB queue, drain complete messages and overwrite one latest-frame slot | multipart `[header_json, jpeg_bytes]`; header `{"seq": int, "t_cap": float (Jetson monotonic s), "w": int, "h": int}` |
 | Laptop -> JetBot control | UDP, port 5556, non-blocking | JSON `{"seq": int, "v": float, "w": float}` with v, w normalized to [-1, 1]; or `{"seq": int, "play": "<clip_name>"}` |
 | Clock sync | UDP echo, port 5557 | laptop sends `t0`, Jetson replies `{t0, t_jetson}`; offset by Cristian's algorithm (min-RTT of 20 samples) |
-| ESP32-CAM -> laptop | HTTP MJPEG, `http://<esp32-ip>:81/stream` | VGA 640x480, 15 FPS, static IP on hotspot |
+| ESP32-CAM -> laptop | **UDP tiles, port 5600** (GC2145 module, no hardware JPEG): raw Bayer 640x480, changed 64x32 tiles only, laptop found by `HELO` broadcast; `sentry.espcam.TileReceiver.latest()` gives a BGR frame. **Proposed 2026-10-09, needs KR's and HNHL's approval** (section 3 rule). With an OV2640 module the original HTTP MJPEG `http://<esp32-ip>:81/stream` (VGA, 15 FPS) is used instead | 640x480 at 14.4 FPS average (fixed camera); see `docs/ESP32-CAM.md` |
 
 Laptop-internal contract:
-- Video adapters use `read(timeout) -> VideoFrame | None`, single consumer, with `frame_bgr`, original `jpeg`, `seq`, source `t_cap`, laptop `t_rx` and `t_decode` (see `sentry/net/frame.py`). Latest-frame receivers deliberately skip old frames; record/replay preserves source timestamps.
+- JetBot video adapters use `read(timeout) -> VideoFrame | None`, single consumer, with `frame_bgr`, original `jpeg`, `seq`, source `t_cap`, laptop `t_rx` and `t_decode` (see `sentry/net/frame.py`). Latest-frame receivers deliberately skip old frames; record/replay preserves source timestamps. `tools.replay.ReplayStream.read()` implements this offline contract; legacy tuple iteration remains supported. The proposed ESP32 tile interface uses `latest()` as documented separately above.
 - Do not use `ZMQ_CONFLATE` on the multipart video link: [libzmq documents that it retains only one part](https://libzmq.readthedocs.io/en/latest/zmq_setsockopt.html#zmq-conflate-keep-only-last-message). The wire format stays unchanged; review this correction with the team before the W1 interface freeze.
 - Every perception module is a class with a `__call__(frame_bgr, t) -> dataclass` method and no global state.
 - Every module can be fed from `replay.py` exactly as from a live stream.
-- The state machine only consumes **events** (e.g. `ENTRANCE_FOUND`, `INTRUDER_QUEUED`, `TARGET_STATIONARY`, `STRIKE`, `TARGET_EXITED`) and emits **commands**. It never touches sockets or models directly, so it is unit-testable on CPU.
+- The state machine only consumes **events** (e.g. `ENTRANCE_FOUND`, `INTRUDER_QUEUED`, `TARGET_STATIONARY`, `STRIKE`, `TARGET_EXITED`, `TARGET_FOUND`, `SEARCH_EXHAUSTED`) and emits **commands**. It never touches sockets or models directly, so it is unit-testable on CPU.
 
 **Motion convention** (details and reasons in `JetBot Notes.md`):
 - `v, w` are normalized to [-1, 1]; positive `w` turns left. The Jetson mixes `left = v - K*w`, `right = v + K*w`.
@@ -70,7 +70,7 @@ Laptop-internal contract:
 
 **Safety (non-negotiable):**
 - The Jetson stops the motors if no control packet arrives for 300 ms.
-- The kit gamepad acts as a hardware e-stop that overrides everything.
+- The kit gamepad is a **dead-man switch plus e-stop** (`jetson/estop.py`, runs on the robot host): the robot moves only while R1 is held and the e-stop is armed (hold Select+Start 2 s); releasing R1 stops it, any other button or losing the pad is a hard stop, and every stop cuts the motor driver directly over I2C. `robot_udp.py` refuses to drive without the e-stop's heartbeat. Verified on the robot 2026-10-06 (wheels off the ground), including with `robot_udp.py` frozen. Details and limits in `docs/JetBot Notes.md`.
 - Speed is capped in `config.toml` during all HIL tests.
 
 ## 4. Testing Policy
@@ -114,12 +114,16 @@ Privacy: face photos and recordings of volunteers stay in `data/` and the team D
 | ESP32 handshake | I_ref detection when camera faces door / is turned away | 10/10 correct accepts, 10/10 correct rejects | T2 |
 | Face verification | TAR @ FAR on D2 | TAR >= 95 % at FAR <= 1 %; report ROC and justify 0.45 or a replacement | T1 |
 | OSNet re-ID | Rank-1 on D2/D3 gallery (>= 5 people) | >= 85 %; threshold picked from ROC | T1 |
-| Sector logging | L/C/R accuracy on D2 | >= 90 % | T1 |
+| Sector logging (optional search prior) | L/C/R accuracy on D2 | >= 90 % | T1 |
 | Tracking | ID switches on D3 | <= 1 per minute (2-person scenes) | T1 |
 | Pursuit PD | Steady-state distance; centering | 1.2 +/- 0.2 m; bbox centre within +/- 10 % of frame width, 80 % of the time | T2 |
-| Circling | Trigger delay; orbit radius | triggers 2.0-3.0 s after stop; R = 1.0 +/- 0.25 m | T2 |
+| Hold detector | Target speed in the world frame while the robot yaws | robot rotation alone never triggers HOLD (sim); HOLD exits when target speed > exit threshold | T0 |
+| Standoff hold | Trigger delay; re-centering | stops 2.0-3.0 s after the target stops; bbox centre within +/- 10 % of frame width within 1.5 s; no orbiting | T2 |
 | Strike detection | Recall; false triggers; latency (frame to command) | recall >= 90 % on D4; <= 1 false trigger / 5 min of walking; <= 150 ms | T1 + T2 |
-| Handoff | T2 re-acquired after T1 exits | within 20 s in >= 4/5 trials | T2 |
+| Room map | Obstacle cells vs tape-measured positions on D1 | >= 80 % of the 20 obstacles within 20 cm | T1 |
+| Coverage planner | 3 synthetic rooms in the recorded-map format | coverage >= 90 % of known-free cells, plan time < 2 s, tour no longer than a lawnmower baseline | T0 |
+| Search & re-acquire | T2 present, T1 exits | T2 found during the planned path in >= 4/5 trials; record time to find | T2 |
+| Search exhausted | T2 absent (removed from the room) | path completes, T2 dropped from the queue, robot reaches the next target or standby; 3/3 trials, 0 collisions | T2 |
 | Full loop | Two consecutive intruders, start to standby | >= 4/5 runs without manual help | T2 |
 | GPU budget | All models running together | peak VRAM <= 5.5 GB; pipeline >= 15 FPS | T1 (gpu) |
 
@@ -138,13 +142,13 @@ Each week ends with a **Sunday integration session** hosted by DQK (in person or
 - **HNHL**
   - `sentry/net/zmq_rx.py`: latest-frame receiver thread with JPEG decode.
   - `udp_tx.py`: rate-limited 30 Hz sender.
-  - `clock_sync.py` and a latency logger that writes CSVs.
+  - `clock_sync.py` and a latency logger that writes CSVs. **Use `time.perf_counter()` for Windows-side timestamps: `time.monotonic()` ticks only every 15.6 ms there, which corrupts RTT and offset estimates (measured 2026-10-04).**
   - GPU baseline: YOLOv8n/s FPS and VRAM at 640 on the RTX 4050; confirm torch, insightface and onnxruntime-gpu run in `sentry` (Python 3.12, see Setup.md), and record versions. HNHL's RTX 5060 measurements must be labelled separately; they do not substitute for the RTX 4050 baseline.
   - Tests: T0 for clock-sync math with synthetic delays.
 - **KR**
   - `tools/record.py` + `tools/replay.py`: record both streams with timestamps; replay through the same interface as the live receivers.
   - `tools/sim_robot.py`: UDP sink that integrates (v, w) with unicycle kinematics and logs pose.
-  - `esp32/sentry_cam` sketch (based on CameraWebServer, VGA, 15 FPS, static IP). DQK flashes it at the integration session, or lends the ESP32 kit, which is independent of the robot.
+  - `esp32/sentry_cam` sketch (based on CameraWebServer, VGA, 15 FPS, static IP). KR holds the ESP32 kit, so KR flashes and tests it directly, and brings it to the Sunday session (needed for the ESP32 door view in D1 and the Week 3 handshake). **Update 2026-10-09:** DQK's modules turned out to be GC2145 (no JPEG); the 640x480 stream for that module is `esp32/tile_stream` + `sentry/espcam.py` (see `docs/ESP32-CAM.md`). KR: check which sensor your board has (`Camera PID=` in the boot log, or run `tile_stream` and read `esp_tile_rx`); an OV2640 board uses the stock sketch.
   - pytest skeleton: `conftest.py`, markers, `config.toml` loader.
   - Tests: T0 record-then-replay round trip gives identical frames and timestamps.
 - **Session:** freeze the section 3 interfaces; record **D1**.
@@ -157,8 +161,9 @@ Each week ends with a **Sunday integration session** hosted by DQK (in person or
   - Tests: T1 reprojection error; T2 motion repeatability (5 runs each of straight 1 m and 90° turn).
 - **HNHL**
   - `perception/obstacle.py`: YOLOv8 on undistorted frames, COCO furniture classes (chair, couch, bed, dining table, potted plant, tv, refrigerator, suitcase), bottom-centre ground distance `d = f*H/(y_max - c_y)`, repulsive angular term.
-  - `nav/vantage.py`: score candidate stops for line of sight, 1.5-3.0 m from the door, and nearness to a boundary.
-  - Tests: T0 for the distance formula and repulsion sign; T1 distance error on D1.
+  - `nav/gridmap.py`: occupancy grid (robot pose + obstacle ground points -> occupied, driven/seen floor -> free, rest unknown); saved at the end of Phase 1 for the Week 7 search.
+  - `nav/vantage.py`: score candidate stops on the grid for line of sight, 1.5-3.0 m from the door, and nearness to a boundary.
+  - Tests: T0 for the distance formula, repulsion sign and grid updates on synthetic data; T1 distance error and map-vs-tape error on D1.
 - **KR**
   - `perception/entrance.py`: ORB (2000 features) + Hamming BF matching + Lowe ratio + RANSAC homography; match when inliers > threshold (tuned on D1); entrance bearing from the homography centroid through the camera model.
   - `nav/localization.py`: dead reckoning from `motion.json`, corrected by ArUco pose (`cv2.aruco`, 10 cm markers).
@@ -191,12 +196,12 @@ Each week ends with a **Sunday integration session** hosted by DQK (in person or
   - Tests: T2, 5 runs.
   - Report: architecture, networking, robot platform, calibration and safety sections (about 5 pages).
 - **HNHL**
-  - `perception/reid.py`: person crop from YOLO on ESP32 frames -> OSNet (`osnet_x0_25` via torchreid; if it does not install on Python 3.14, export to ONNX and run with onnxruntime-gpu).
+  - `perception/reid.py`: person crop from YOLO on ESP32 frames -> OSNet via torchreid with **re-ID-trained weights from `python -m tools.fetch_models`** (`osnet_ain_x1_0` domain-generalised, and `osnet_x0_25` Market1501); compare both on D2/D3 and keep the better one. Not `pretrained=True`: that is ImageNet-only.
   - Tests: T1 rank-1 and ROC on D2.
   - Report: perception and biometrics sections with ROC figures (about 5 pages).
 - **KR**
   - `app/target_queue.py`: FIFO of intruder records (id, face embedding, appearance vector, sector, snapshot path, timestamps).
-  - Sector logging: bounding-box horizontal drift over 2 s -> L/C/R.
+  - Sector logging: bounding-box horizontal drift over 2 s -> L/C/R (optional prior for the Week 7 search).
   - Phase 2 replay pipeline on D2, connected end to end.
   - Tests: T0 for the queue and sector classification; T1 sector accuracy on D2.
   - Report: localization, entrance matching, state machine and test methodology sections, plus editing and merging the full 15-20 pages.
@@ -213,11 +218,11 @@ Each week ends with a **Sunday integration session** hosted by DQK (in person or
   - GPU profiling of all models together.
   - Tests: T1 ID switches on D3; T1 (gpu) VRAM and FPS budget.
 - **KR**
-  - Stationarity detector (ground-projected foot-point speed < 0.1 m/s for > 2.0 s).
-  - Tangential circling controller.
-  - Closed-loop tests of PD and circling against `sim_robot` with a scripted target.
-  - Tests: T0 for detector timing and orbit radius in sim (R = 1.0 +/- 0.1 m in sim).
-- **Session:** T2 pursuit + circling.
+  - Hold detector: target ground speed in the world frame (robot pose and yaw compensated, so the robot's own rotation is not mistaken for target motion) < 0.1 m/s for > 2.0 s -> HOLD; exit when > 0.2 m/s (hysteresis).
+  - HOLD behaviour: zero translation, yaw-only PD that keeps the bbox centered (reuses the PD yaw term from DQK's controller). No orbiting: the target would sit 90 degrees off-axis, outside the camera's field of view.
+  - Closed-loop tests of PD and hold against `sim_robot` with a scripted target.
+  - Tests: T0 for detector timing, hysteresis, and "robot yawing alone never triggers hold".
+- **Session:** T2 pursuit + hold.
 
 ### Week 6 (Nov 9-15): Threat Evasion
 
@@ -233,23 +238,24 @@ Each week ends with a **Sunday integration session** hosted by DQK (in person or
   - `tools/label_events.py`: keypress labeller for onset timestamps.
   - False-trigger harness (false triggers per minute on normal walking).
   - EVADE state + cooldown in the state machine.
-  - Tests: T0 for the state machine preempting PURSUE/CIRCLE with EVADE; T1 false-trigger rate.
+  - Tests: T0 for the state machine preempting PURSUE/HOLD with EVADE; T1 false-trigger rate.
 - **Session:** T2 strike evasion.
 
 ### Week 7 (Nov 16-22): Next-Target Integration
 
 - **DQK**
-  - Return-to-sweet-spot navigation (localization + ArUco) and the ±30° sector sweep motion on the robot.
+  - Follow a planned path on the robot (waypoint following with the obstacle override and ArUco pose corrections) and the slow in-place 360° scan at each viewpoint.
+  - Measure the effective detection radius `r_det` (distance at which OSNet still matches reliably; 3 people) and write it to `config.toml`.
   - Full-loop HIL with two intruders.
   - Tests: T2 full loop, 5 runs.
 - **HNHL**
   - Exit-event detection on the ESP32 (re-ID matches T1 at the door and motion is toward the door).
-  - Sweep-time re-ID matching on the JetBot stream, with a lock threshold.
+  - Search-time re-ID matching on the JetBot stream while moving and scanning, with a lock threshold.
   - Tests: T1 exit detection on recorded exits; T1 re-acquisition precision.
 - **KR**
-  - Handoff orchestration in the state machine: TARGET_EXITED -> RETURN -> PIVOT(sector) -> SWEEP -> PURSUE.
-  - Map the ESP32-frame sector to a world bearing using the ESP32 placement pose recorded in phase 1.
-  - Tests: T0 for the full two-intruder event script and sector-to-bearing geometry.
+  - `nav/coverage.py`: viewpoints chosen greedily on the saved map until the coverage target is met within `r_det` and line of sight; tour ordered by nearest neighbour + 2-opt; legs connected by A* on an obstacle-inflated grid; optional departure-sector prior.
+  - Handoff orchestration in the state machine: TARGET_EXITED -> PLAN -> FOLLOW/SCAN -> TARGET_FOUND -> PURSUE, or SEARCH_EXHAUSTED -> drop from queue -> next target or STANDBY.
+  - Tests: T0 for the planner on 3 synthetic rooms (coverage, plan time, tour length vs a lawnmower baseline) and for the two-intruder event script, including the not-found drop.
 - **Session:** two-intruder rehearsal.
 
 ### Week 8 (Nov 23-29): Validation & Defense
@@ -294,7 +300,13 @@ reports/<handle>/week-NN/       # test evidence: pytest logs, metrics JSON/CSV, 
 | 1 | Spec's strike window of "100 ms" is only 1.5 frames at 15 FPS | Measure the actual JetBot pipeline FPS in W1; use timestamp-based windows; if FPS < 20, widen the window to 2 frames and re-tune the 0.40 threshold on D4 |
 | 2 | The spec does not say how "T1 exits" is detected | ESP32 re-ID + direction of motion toward the door (W7, HNHL) |
 | 3 | COCO classes miss walls, boxes and bags | Accept for W2; if exploration collisions occur, add a bottom-of-frame floor-edge check or fine-tune on D1 frames |
-| 4 | ESP32 L/C/R sector is in camera coordinates, not world | Record the ESP32 placement pose in phase 1; KR maps it to world bearing (W7) |
-| 5 | Model package upgrades can change Python, CUDA or API compatibility | W1 verifies Python 3.12 and records installed versions; rerun environment/inference checks after upgrades. ONNX models via onnxruntime-gpu remain a fallback. |
+| 4 | The L/C/R departure sector is in ESP32 camera coordinates, not world, and is now only an optional prior | Record the ESP32 placement pose in phase 1; KR maps it to a world bearing only if the planner uses the prior (W7) |
+| 5 | Model package upgrades can change Python, CUDA or API compatibility | **Resolved for the recorded W1 environments:** Python 3.12 verified by HNHL; DQK's InsightFace CUDA detector + embedder about 7 ms, OSNet 11-13 ms and 3-model pipeline 37 FPS under 300 MB (`reports/DoanQuocKien/week-01/gpu_baseline_2026-10-06.txt`). Record versions and rerun checks after upgrades. |
+| 11 | torchreid `pretrained=True` gives ImageNet-only weights, not re-ID weights, which would make the 85 % Rank-1 target unreachable | Use the re-ID weights from `tools.fetch_models`; osnet_ain_x1_0 (domain-generalised) vs osnet_x0_25 (Market1501, same-domain) is decided by Rank-1 on D2/D3 |
 | 6 | All HIL depends on DQK's availability | Offline-first development; two scheduled sessions per week from W5 onward |
+| 8 | The room map only knows floor the robot has seen: YOLO misses walls and unclassified objects | Plan only over known-free cells with inflated obstacles; report the coverage fraction achieved; make sure the Week 4 exploration covers the room |
+| 9 | The effective detection radius `r_det` is unknown | Placeholder 3.0 m in `config.toml`; DQK measures it in W7 and the plan is recomputed from it |
+| 10 | Dead-reckoning drift along a long search path (no encoders) | Re-localize whenever an ArUco marker is seen; measure path-following error in W7; shorten the path by lowering the coverage target if error is too large |
 | 7 | Mid-term due date assumed to be Nov 1 | Confirm with the instructor in W1 |
+| 12 | The ESP32-CAM modules (both the Shopee and the local one) carry a GC2145, which has no hardware JPEG: the plan's HTTP MJPEG VGA 15 FPS is impossible with the stock sketch (1.7-7.7 FPS) | **Worked around in software on 2026-10-09:** raw Bayer + changed-tile UDP stream, 14.4 FPS average, 9-10 FPS worst case; needs a fixed camera. Alternative: buy an OV2640 module (about 25 FPS VGA, stock sketch). Details: `docs/ESP32-CAM.md` |
+| 13 | The second ESP32-CAM board loses its Wi-Fi uplink while the camera runs (cause unknown); the first board is fine | Use the first board for the stream; ask KR to test their board; if a board shows send failures only while the camera runs, swap it |

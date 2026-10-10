@@ -1,0 +1,373 @@
+# Link test JetBot <-> laptop over the phone hotspot (2.4 GHz ch 1), 2026-10-04
+# Code deployed to /home/jetbot/sentry and run inside the jetbot_jupyter container; robot_udp in --dry-run (motors NOT driven).
+# Windows-side timing: runs 1-2 used time.monotonic() (15.6 ms tick, coarse); run 3+ used perf_counter.
+
+## A. control link, clock echo, junk packets, synthetic video (monotonic timer)
+﻿=== 1. start robot_udp.py --dry-run inside the jetbot_jupyter container
+processes running: 2
+
+=== 2. clock echo (UDP 5557), 30 samples
+answered 30/30; RTT ms: min 15.0  median 23.5  p95 110.0  max 187.0
+
+=== 3. control: 150 packets forward at 30 Hz (5 s), then silence
+sent 150, Jetson applied 150 forward commands -> loss 0.0 %
+last lines: ['motors +0.50 +0.50', 'motors +0.00 +0.00']
+watchdog stop after silence: YES
+
+=== 4. restarted sender (seq starts at 0 again after >1 s silence) + left pivot
+distinct lines: ['motors +0.00 +0.00', 'motors -0.50 +0.50']
+
+=== 5. junk packets must produce NO motor output
+lines produced by 6 junk packets: none (correct)
+
+=== 6. stop robot_udp; processes left: 0
+log tail: ['motors -0.50 +0.50', 'motors +0.00 +0.00', 'motors +0.00 +0.00']
+
+=== 7. synthetic video stream (ZeroMQ 5555), 640x480 @ 20 fps, JPEG q60
+timeout waiting for frames
+camera_pub stopped; processes left: 0
+camera_pub log: empty (ok)
+
+## B. video latency run 1 (monotonic timer, power save ON)
+﻿=== synthetic video, Wi-Fi power save as found (ON)
+wifi: freq: 2412; signal: -62 dBm; | power_save: Power save: on
+clock echo: answered 60/60; RTT ms min 0  median 16  p95 78  max 329
+video: 300 frames in 22.3 s -> 13.4 fps; missing 42 of 342 (12.3 %)
+one-way latency ms (synced via echo; includes JPEG encode): p50 33  p95 871  max 2882
+gap between frames ms: p50 62  p95 125  max 2937   (50 ms = 20 fps)
+frame size: mean 9.0 kB -> 1.5 Mbit/s at 20 fps
+left running: 0
+
+## C. video latency run 2 (perf_counter, power save ON)
+﻿=== synthetic video, high-res timer, Wi-Fi power save ON
+wifi: freq: 2412; signal: -67 dBm; | power_save: Power save: on
+clock echo: answered 60/60; RTT ms min 4  median 16  p95 25  max 30
+video: 300 frames in 52.0 s -> 5.7 fps; missing 413 of 713 (57.9 %)
+one-way latency ms (synced via echo; includes JPEG encode): p50 33  p95 8542  max 12780
+gap between frames ms: p50 63  p95 899  max 3873   (50 ms = 20 fps)
+frame size: mean 9.1 kB -> 1.5 Mbit/s at 20 fps
+left running: 0
+
+## D. while streaming: receive rate and TCP retransmissions on the Jetson (sendQ and wifi columns failed to parse; ignore)
+﻿t(s)  rx_fps  sendQ(bytes)  retrans  wifi: signal  tx_retries  tx_failed  tx_bitrate   load   jetson_cpu_idle
+   4     2.5             ?       11       ? dBm           ?          ?           ?   0.51   85.2
+   8    15.9             ?       12       ? dBm           ?          ?           ?   0.55   85.2
+  12    15.4             ?       22       ? dBm           ?          ?           ?   0.74   85.2
+  16    15.4             ?       29       ? dBm           ?          ?           ?   0.68   85.2
+  20    15.3             ?       47       ? dBm           ?          ?           ?   0.71   85.2
+  24    15.3             ?       62       ? dBm           ?          ?           ?   0.65   85.3
+  28    15.6             ?       70       ? dBm           ?          ?           ?   0.65   85.3
+  32    15.4             ?       80       ? dBm           ?          ?           ?   0.60   85.3
+
+stream summary: 521 frames in the sampled window
+--- last ss detail for the stream:
+Recv-Q     Send-Q            Local Address:Port           Peer Address:Port
+left running: 0
+
+## E. phone hotspot switched to 5 GHz (ch 161, robot -71 dBm), power save ON: video run
+﻿=== synthetic video, phone hotspot on 5 GHz (ch 161), Wi-Fi power save ON
+wifi: freq: 5805; signal: -71 dBm; | power_save: Power save: on
+clock echo: answered 60/60; RTT ms min 9  median 19  p95 64  max 72
+video: 300 frames in 57.1 s -> 5.2 fps; missing 274 of 574 (47.7 %)
+one-way latency ms (synced via echo; includes JPEG encode): p50 4237  p95 21488  max 25597
+gap between frames ms: p50 35  p95 496  max 8533   (50 ms = 20 fps)
+frame size: mean 9.0 kB -> 1.5 Mbit/s at 20 fps
+left running: 0
+
+## F. layered network test on 5 GHz (no ZeroMQ): ICMP sizes, UDP and TCP robot -> laptop
+﻿=== A. ICMP laptop -> robot (does a full-size packet get through, unfragmented?)
+payload   32 bytes: Packets: Sent = 20, Received = 20, Lost = 0 (0% loss), | Minimum = 5ms, Maximum = 13ms, Average = 8ms
+payload 1000 bytes: Packets: Sent = 20, Received = 20, Lost = 0 (0% loss), | Minimum = 7ms, Maximum = 265ms, Average = 62ms
+payload 1472 bytes: Packets: Sent = 20, Received = 17, Lost = 3 (15% loss), | Minimum = 11ms, Maximum = 615ms, Average = 149ms
+
+=== B. UDP robot -> laptop, video-like rate (1.5 Mbit/s, 1200-byte datagrams, 10 s)
+udp 1.5 Mbit/s: received 480/493 datagrams -> loss 2.6 %; gap between datagrams ms p50 5.8 p99 719 max 1265
+
+=== C. UDP robot -> laptop, 6 Mbit/s
+udp 6 Mbit/s  : received 561/568 datagrams -> loss 1.2 %; gap between datagrams ms p50 7.4 p99 331 max 1018
+
+=== D. TCP robot -> laptop paced like the video (1.5 Mbit/s, 9 kB chunks, 10 s)
+tcp paced  : 0.1 Mbit/s average over 14.5 s; longest silence 3922 ms; p99 gap 1315 ms
+   Mbit/s per second: 0.0 0.3 0.0 0.2 0.3 0.2 0.3 0.2 0.1 0.2
+
+=== E. TCP robot -> laptop as fast as possible (raw capacity, 8 s)
+tcp unpaced: 0.1 Mbit/s average over 24.0 s; longest silence 6080 ms; p99 gap 2206 ms
+   Mbit/s per second: 0.1 0.2 0.1 0.0 0.0 0.0 0.0 0.0
+
+cleanup: helper removed from the robot
+
+## G. Wi-Fi power save turned OFF at runtime (sudo iw dev wlan0 set power_save off): layered network test
+﻿=== A. ICMP laptop -> robot (does a full-size packet get through, unfragmented?)
+payload   32 bytes: Packets: Sent = 20, Received = 20, Lost = 0 (0% loss), | Minimum = 6ms, Maximum = 9ms, Average = 6ms
+payload 1000 bytes: Packets: Sent = 20, Received = 20, Lost = 0 (0% loss), | Minimum = 4ms, Maximum = 9ms, Average = 7ms
+payload 1472 bytes: Packets: Sent = 20, Received = 20, Lost = 0 (0% loss), | Minimum = 6ms, Maximum = 10ms, Average = 7ms
+
+=== B. UDP robot -> laptop, video-like rate (1.5 Mbit/s, 1200-byte datagrams, 10 s)
+udp 1.5 Mbit/s: received 1563/1563 datagrams -> loss 0.0 %; gap between datagrams ms p50 6.2 p99 39 max 402
+
+=== C. UDP robot -> laptop, 6 Mbit/s
+udp 6 Mbit/s  : received 2376/2381 datagrams -> loss 0.2 %; gap between datagrams ms p50 0.0 p99 109 max 1262
+
+=== D. TCP robot -> laptop paced like the video (1.5 Mbit/s, 9 kB chunks, 10 s)
+tcp paced  : 1.0 Mbit/s average over 15.2 s; longest silence 1864 ms; p99 gap 376 ms
+   Mbit/s per second: 0.5 1.3 0.5 0.8 1.4 1.0 1.3 1.4 2.1 1.6
+
+=== E. TCP robot -> laptop as fast as possible (raw capacity, 8 s)
+tcp unpaced: 0.4 Mbit/s average over 9.1 s; longest silence 1641 ms; p99 gap 753 ms
+   Mbit/s per second: 0.4 0.3 0.0 0.1 0.7 0.1 0.4 0.1
+
+cleanup: helper removed from the robot
+
+## H. same, synthetic video stream (perf_counter timing)
+﻿=== synthetic video, phone hotspot 5 GHz, Wi-Fi power save OFF
+wifi: freq: 5805; signal: -66 dBm; | power_save: Power save: off
+clock echo: answered 60/60; RTT ms min 9  median 18  p95 23  max 65
+video: 300 frames in 19.7 s -> 15.2 fps; missing 0 of 300 (0.0 %)
+one-way latency ms (synced via echo; includes JPEG encode): p50 22  p95 65  max 200
+gap between frames ms: p50 66  p95 86  max 199   (50 ms = 20 fps)
+frame size: mean 9.0 kB -> 1.5 Mbit/s at 20 fps
+left running: 0
+
+## I. RETEST with Wi-Fi power save turned back ON (confirms the effect; robot at -53 dBm this time)
+=== synthetic video, 5 GHz, power save ON (retest)
+wifi: freq: 5805; signal: -53 dBm; | power_save: Power save: on
+clock echo: answered 60/60; RTT ms min 4  median 8  p95 13  max 47
+video: 300 frames in 27.2 s -> 11.0 fps; missing 115 of 415 (27.7 %)
+one-way latency ms (synced via echo; includes JPEG encode): p50 23  p95 2120  max 5392
+gap between frames ms: p50 64  p95 135  max 3079   (50 ms = 20 fps)
+frame size: mean 9.1 kB -> 1.5 Mbit/s at 20 fps
+left running: 0
+=== A. ICMP laptop -> robot (does a full-size packet get through, unfragmented?)
+payload   32 bytes: Packets: Sent = 20, Received = 20, Lost = 0 (0% loss), | Minimum = 5ms, Maximum = 19ms, Average = 8ms
+payload 1000 bytes: Packets: Sent = 20, Received = 20, Lost = 0 (0% loss), | Minimum = 5ms, Maximum = 32ms, Average = 11ms
+payload 1472 bytes: Packets: Sent = 20, Received = 20, Lost = 0 (0% loss), | Minimum = 5ms, Maximum = 14ms, Average = 8ms
+
+=== B. UDP robot -> laptop, video-like rate (1.5 Mbit/s, 1200-byte datagrams, 10 s)
+udp 1.5 Mbit/s: received 1543/1563 datagrams -> loss 1.3 %; gap between datagrams ms p50 0.0 p99 193 max 1592
+
+=== C. UDP robot -> laptop, 6 Mbit/s
+udp 6 Mbit/s  : received 712/734 datagrams -> loss 3.0 %; gap between datagrams ms p50 0.0 p99 201 max 1687
+
+=== D. TCP robot -> laptop paced like the video (1.5 Mbit/s, 9 kB chunks, 10 s)
+tcp paced  : 0.5 Mbit/s average over 11.1 s; longest silence 2222 ms; p99 gap 971 ms
+   Mbit/s per second: 0.5 0.1 0.4 0.7 1.8 1.1 0.0 0.0 0.6 0.0
+
+=== E. TCP robot -> laptop as fast as possible (raw capacity, 8 s)
+tcp unpaced: 0.2 Mbit/s average over 12.4 s; longest silence 1599 ms; p99 gap 1467 ms
+   Mbit/s per second: 0.0 0.0 0.3 0.1 0.4 0.1 0.4 0.0
+
+cleanup: helper removed from the robot
+
+# After section I, power save was switched OFF again at runtime (reverts on reboot).
+
+## J. 2026-10-06: robot on the LAPTOP hotspot (5 GHz channel 149 = the channel the laptop's own school Wi-Fi 'UIT Public' uses), power save OFF, robot at -45 dBm, both antenna chains strong (-42 / -47 dBm)
+﻿=== synthetic video, laptop hotspot 5 GHz ch149, power save OFF
+wifi: freq: 5745; signal: -45 dBm; | power_save: Power save: off
+clock echo: answered 60/60; RTT ms min 2  median 5  p95 13  max 21
+video: 300 frames in 19.5 s -> 15.4 fps; missing 0 of 300 (0.0 %)
+one-way latency ms (synced via echo; includes JPEG encode): p50 17  p95 22  max 63
+gap between frames ms: p50 67  p95 73  max 114   (50 ms = 20 fps)
+frame size: mean 9.0 kB -> 1.5 Mbit/s at 20 fps
+left running: 0
+﻿=== A. ICMP laptop -> robot (does a full-size packet get through, unfragmented?)
+payload   32 bytes: Packets: Sent = 20, Received = 20, Lost = 0 (0% loss), | Minimum = 2ms, Maximum = 19ms, Average = 5ms
+payload 1000 bytes: Packets: Sent = 20, Received = 20, Lost = 0 (0% loss), | Minimum = 2ms, Maximum = 16ms, Average = 7ms
+payload 1472 bytes: Packets: Sent = 20, Received = 20, Lost = 0 (0% loss), | Minimum = 2ms, Maximum = 17ms, Average = 6ms
+
+=== B. UDP robot -> laptop, video-like rate (1.5 Mbit/s, 1200-byte datagrams, 10 s)
+udp 1.5 Mbit/s: received 1563/1563 datagrams -> loss 0.0 %; gap between datagrams ms p50 6.4 p99 15 max 30
+
+=== C. UDP robot -> laptop, 6 Mbit/s
+udp 6 Mbit/s  : received 6250/6250 datagrams -> loss 0.0 %; gap between datagrams ms p50 1.4 p99 10 max 69
+
+=== D. TCP robot -> laptop paced like the video (1.5 Mbit/s, 9 kB chunks, 10 s)
+tcp paced  : 1.5 Mbit/s average over 10.0 s; longest silence 80 ms; p99 gap 58 ms
+   Mbit/s per second: 1.5 1.5 1.5 1.5 1.5 1.4 1.5 1.5 1.5 1.5
+
+=== E. TCP robot -> laptop as fast as possible (raw capacity, 8 s)
+tcp unpaced: 16.8 Mbit/s average over 8.4 s; longest silence 186 ms; p99 gap 22 ms
+   Mbit/s per second: 15.7 18.3 13.0 19.4 16.9 18.7 13.0 15.1
+
+cleanup: helper removed from the robot
+
+## hotspot monitor during the tests (a line is written only when something changes):
+12:37:09 state=On clients=1 laptop-wifi-Channel                : 149
+
+## K. 2026-10-06: permanent power-save fix (/etc/modprobe.d/8822ce-sentry.conf: options rtl8822ce rtw_power_mgnt=0 rtw_ips_mode=0). First attempt wrote an EMPTY file (my pipe lost the text) so nothing changed; second attempt:
+﻿battery: 11.92 V (rough 74 %, linear 9.9-12.6 V) -> OK
+module:  /lib/modules/4.9.201-tegra/kernel/drivers/net/wireless/realtek/rtl8822ce/rtl8822ce.ko
+parm:           rtw_ips_mode:The default IPS mode (int)
+parm:           rtw_power_mgnt:int
+module inside the initramfs (would ignore /etc/modprobe.d unless rebuilt)?: 0
+0
+0
+what loads it at boot: (only the PCI alias via udev)
+
+write config: written
+-rw-r--r-- 1 root root 245 Oct  5 22:45 /etc/modprobe.d/8822ce-sentry.conf
+# Added by the CS532 sentry project (2026-10-06): the Realtek vendor driver defaults to maximum Wi-Fi power saving,
+# which made video stall for seconds. Delete this file to restore the default.
+options rtl8822ce rtw_power_mgnt=0 rtw_ips_mode=0
+modprobe sees: options rtl8822ce rtw_power_mgnt=0 rtw_ips_mode=0
+
+battery: 11.90 V (rough 74 %, linear 9.9-12.6 V) -> OK
+clean reboot...
+back up after 36 s
+
+=== after reboot
+uptime: up
+rtw_power_mgnt: 0 | rtw_ips_mode: 0 (want 0 and 0)
+iw power_save: Power save: on | iwconfig: Power Management:off
+link: SSID: DoanQuocKien | 	freq: 5745 | 	signal: -42 dBm
+containers: jetbot_jupyter Up 30 seconds ; jetbot_display Up 30 seconds
+battery: 11.91 V (rough 74 %, linear 9.9-12.6 V) -> OK
+
+## driver's own report after the reboot, then video with no manual override
+﻿=== synthetic video, laptop hotspot, after reboot with the persistent modprobe fix, no manual override
+wifi: freq: 5745; signal: -43 dBm; | power_save: Power save: on
+clock echo: answered 60/60; RTT ms min 2  median 6  p95 13  max 28
+video: 300 frames in 19.5 s -> 15.3 fps; missing 0 of 300 (0.0 %)
+one-way latency ms (synced via echo; includes JPEG encode): p50 14  p95 21  max 198
+gap between frames ms: p50 67  p95 73  max 114   (50 ms = 20 fps)
+frame size: mean 9.0 kB -> 1.5 Mbit/s at 20 fps
+left running: 0
+
+## L. 2026-10-06 real camera test (battery 11.7 V OK)
+# Sensor modes (Argus): 3264x2464@21, 3264x1848@28, 1920x1080@30, 1640x1232@30 (mode 3), 1280x720@60, 1280x720@120. Mode 3 confirmed.
+# Real camera stream: frames came out as colour noise stripes (78 kB each, 12.8 Mbit/s) -> link saturated: 9.3 fps, 51 % missing, p50 latency 1.3 s. NOT a network problem.
+﻿=== REAL CAMERA (sensor mode 3, 640x480 @20 fps request), laptop hotspot 5 GHz, power save fix persistent
+wifi: freq: 5745; signal: -38 dBm; | power_save: Power save: on
+clock echo: answered 60/60; RTT ms min 2  median 9  p95 56  max 114
+video: 300 frames in 32.3 s -> 9.3 fps; missing 317 of 617 (51.4 %)
+one-way latency ms (synced via echo; includes JPEG encode): p50 1258  p95 5380  max 5928
+gap between frames ms: p50 58  p95 402  max 718   (50 ms = 20 fps)
+frame size: mean 78.0 kB -> 12.8 Mbit/s at 20 fps
+camera_pub on the Jetson: 0.0       00:46 sh -c python3 -u jetson/camera_pub.py --source camera --fps 20 > /workspace/sentry/camera_pub.log 2>&1
+30.8       00:46 python3 -u jetson/camera_pub.py --source camera --fps 20
+camera_pub.log: GST_ARGUS: Starting repeat capture requests.
+CONSUMER: Producer has connected; continuing.
+[ WARN:0] global /home/nvidia/host/build_opencv/nv_opencv/modules/videoio/src/cap_gstreamer.cpp (933) open OpenCV | GStreamer warning: Cannot query video position: status=0, value=-1, duration=-1
+left running: 0
+
+# Camera diagnostics: sensor imx219 7-0010 bound and answering on I2C bus 7; stills from nvarguscamerasrc in mode 3 and mode 2 are almost entirely black (a few hot pixels).
+﻿=== kernel messages about the camera / CSI (last lines)
+[    0.550753] SCSI subsystem initialized
+[    0.602078] Linux video capture interface: v2.00
+[    1.014969] Block layer SCSI generic (bsg) driver version 0.4 loaded (major 240)
+[    1.581166] Host read timeout at address 545c00c4
+[    1.631983] sd: No Scsi addr parsed to reserve index
+[    1.814367] imx219 7-0010: tegracam sensor driver:imx219_v2.0.6
+[    1.839415] imx219 8-0010: tegracam sensor driver:imx219_v2.0.6
+[    1.862696] tegra-vii2c 546c0000.i2c: no acknowledge from address 0x10
+[    1.862781] imx219 8-0010: imx219_board_setup: error during i2c read probe (-121)
+[    1.870420] imx219 8-0010: board setup failed
+[    1.874865] imx219: probe of 8-0010 failed with error -121
+[    2.028440] vi 54080000.vi: vi_probe: ++
+[    2.031348] vi 54080000.vi: initialized
+[    2.033333] vi 54080000.vi: subdev nvcsi--2 bound
+[    2.033346] vi 54080000.vi: subdev imx219 7-0010 bound
+[    2.034039] vi 54080000.vi: subdev nvcsi--1 bound
+
+=== is the camera sensor answering on I2C? (IMX219 shows as 10 or UU on bus 6 = CAM0, bus 7 = CAM1)
+bus 6:
+00:          -- -- -- -- -- -- -- -- -- -- -- -- -- 
+10: UU -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+bus 7:
+00:          -- -- -- -- -- -- -- -- -- -- -- -- -- 
+10: UU -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+
+=== camera device
+crw-rw---- 1 root video 81, 0 Oct  5 22:46 /dev/video0
+bash: v4l2-ctl: command not found
+
+=== still pictures straight from the camera, two sensor modes
+mode 3: Freeing pipeline ...
+   saved /tmp/cam_m3_19.jpg -> camera_still_mode3.jpg
+mode 2: Freeing pipeline ...
+   saved /tmp/cam_m2_19.jpg -> camera_still_mode2.jpg
+
+## M. 2026-10-06 real camera with the lens cap removed (it was the cap: frames were black). Battery 11.70 V OK.
+# A saved frame shows the room and people, so it is NOT stored in the repo (plan: recordings of people stay in data/).
+﻿=== REAL CAMERA, lens cap removed (sensor mode 3, 640x480, 20 fps requested), laptop hotspot 5 GHz
+wifi: freq: 5745; signal: -36 dBm; | power_save: Power save: on
+clock echo: answered 60/60; RTT ms min 2  median 11  p95 59  max 78
+video: 300 frames in 15.0 s -> 20.0 fps; missing 0 of 300 (0.0 %)
+one-way latency ms (synced via echo; includes JPEG encode): p50 12  p95 62  max 137
+gap between frames ms: p50 49  p95 93  max 152   (50 ms = 20 fps)
+frame size: mean 16.1 kB -> 2.6 Mbit/s at 20 fps
+camera_pub on the Jetson: 0.0       00:29 sh -c python3 -u jetson/camera_pub.py --source camera --fps 20 > /workspace/sentry/camera_pub.log 2>&1
+28.9       00:29 python3 -u jetson/camera_pub.py --source camera --fps 20
+camera_pub.log: GST_ARGUS: Starting repeat capture requests.
+CONSUMER: Producer has connected; continuing.
+[ WARN:0] global /home/nvidia/host/build_opencv/nv_opencv/modules/videoio/src/cap_gstreamer.cpp (933) open OpenCV | GStreamer warning: Cannot query video position: status=0, value=-1, duration=-1
+left running: 0
+
+## N. 2026-10-06 night: laptop hotspot on 2.4 GHz while the laptop's own Wi-Fi is on 5 GHz channel 60 ('Wi-MESH 5G'), robot ~1 m away (-24 to -29 dBm), battery 12.10 V
+# Context: the robot first refused to join the laptop hotspot (hotspot band Auto, client on a DFS channel); after setting the hotspot band to 2.4 GHz it joined (robot uptime was only 2 min, so a slow boot cannot be ruled out as the cause).
+# Layered test (net_diag):
+﻿=== A. ICMP laptop -> robot (does a full-size packet get through, unfragmented?)
+payload   32 bytes: Packets: Sent = 20, Received = 20, Lost = 0 (0% loss), | Minimum = 2ms, Maximum = 47ms, Average = 15ms
+payload 1000 bytes: Packets: Sent = 20, Received = 20, Lost = 0 (0% loss), | Minimum = 1ms, Maximum = 44ms, Average = 15ms
+payload 1472 bytes: Packets: Sent = 20, Received = 20, Lost = 0 (0% loss), | Minimum = 2ms, Maximum = 46ms, Average = 15ms
+
+=== B. UDP robot -> laptop, video-like rate (1.5 Mbit/s, 1200-byte datagrams, 10 s)
+udp 1.5 Mbit/s: received 1563/1563 datagrams -> loss 0.0 %; gap between datagrams ms p50 2.4 p99 59 max 73
+
+=== C. UDP robot -> laptop, 6 Mbit/s
+udp 6 Mbit/s  : received 6250/6250 datagrams -> loss 0.0 %; gap between datagrams ms p50 0.0 p99 46 max 60
+
+=== D. TCP robot -> laptop paced like the video (1.5 Mbit/s, 9 kB chunks, 10 s)
+tcp paced  : 1.5 Mbit/s average over 10.0 s; longest silence 101 ms; p99 gap 94 ms
+   Mbit/s per second: 1.5 1.4 1.6 1.5 1.5 1.5 1.4 1.5 1.5 1.5
+
+=== E. TCP robot -> laptop as fast as possible (raw capacity, 8 s)
+tcp unpaced: 90.7 Mbit/s average over 8.1 s; longest silence 73 ms; p99 gap 41 ms
+   Mbit/s per second: 82.1 107.2 52.5 60.9 102.0 105.4 104.7 104.0
+
+cleanup: helper removed from the robot
+
+# Real camera, 60 s:
+﻿=== REAL CAMERA 60 s, laptop hotspot 2.4 GHz, laptop client Wi-MESH 5G ch60, power save fix persistent
+wifi: freq: 2462; signal: -29 dBm; | power_save: Power save: on
+clock echo: answered 60/60; RTT ms min 2  median 7  p95 54  max 58
+video: 1200 frames in 59.9 s -> 20.0 fps; missing 0 of 1200 (0.0 %)
+one-way latency ms (synced via echo; includes JPEG encode): p50 13  p95 53  max 127
+gap between frames ms: p50 49  p95 96  max 179   (50 ms = 20 fps)
+frame size: mean 64.0 kB -> 10.5 Mbit/s at 20 fps
+camera_pub on the Jetson: 0.0       01:14 sh -c python3 -u jetson/camera_pub.py --source camera --fps 20 > /workspace/sentry/camera_pub.log 2>&1
+30.9       01:14 python3 -u jetson/camera_pub.py --source camera --fps 20
+camera_pub.log: GST_ARGUS: Starting repeat capture requests.
+CONSUMER: Producer has connected; continuing.
+[ WARN:0] global /home/nvidia/host/build_opencv/nv_opencv/modules/videoio/src/cap_gstreamer.cpp (933) open OpenCV | GStreamer warning: Cannot query video position: status=0, value=-1, duration=-1
+left running: 0
+
+## O. 2026-10-06 night: watchdog timing (robot_udp --dry-run --no-estop on the robot itself; a sender on the robot sends v=1.0 at 30 Hz for 1 s, then goes silent; 5 cycles; times from the sender's last packet to the 'motors +0.00' line)
+﻿robot_udp (dry-run) running: yes
+
+robot log:
+16:24:24.572 motors +0.00 +0.00 (dry-run)
+16:24:24.573 e-stop released: motor commands accepted
+16:24:29.923 motors +0.50 +0.50 (dry-run)
+16:24:31.205 motors +0.00 +0.00 (dry-run)
+16:24:32.434 motors +0.50 +0.50 (dry-run)
+16:24:33.714 motors +0.00 +0.00 (dry-run)
+16:24:34.941 motors +0.50 +0.50 (dry-run)
+16:24:36.220 motors +0.00 +0.00 (dry-run)
+16:24:37.446 motors +0.50 +0.50 (dry-run)
+16:24:38.731 motors +0.00 +0.00 (dry-run)
+16:24:39.960 motors +0.50 +0.50 (dry-run)
+16:24:41.243 motors +0.00 +0.00 (dry-run)
+
+sender:
+cycle 1 last packet sent at 16:24:30.892
+cycle 2 last packet sent at 16:24:33.400
+cycle 3 last packet sent at 16:24:35.905
+cycle 4 last packet sent at 16:24:38.421
+cycle 5 last packet sent at 16:24:40.938
+
+watchdog: last packet -> motors stop, per cycle (ms): 313, 314, 315, 310, 305
+min 305  median 313  max 315 ms   (acceptance: <= 350 ms; the watchdog is set to 300 ms)
+
+# Acceptance (plan 4.3 'Control link'): motors stop <= 350 ms after link loss -> MET (305-315 ms; watchdog set to 300 ms).
+# Observation: the robot's uptime was 1 minute when it came back after a drop at about 23:15, so it had rebooted rather than just lost Wi-Fi. CONFIRMED by DoanQuocKien: he restarted it manually. No brownout evidence (battery 12.10 V before, 11.95 V after).
+# Clean shutdown at 23:25 via 'sudo shutdown -h now'; battery word 0x2a5d = 11.92 V.

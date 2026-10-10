@@ -8,3 +8,23 @@ data/
 runs/
 pip_install.log
 .venv/
+
+# secrets
+.env
+.env.*
+
+# model weights (fetch with python -m tools.fetch_models)
+weights/
+*.pth
+
+# ESP32 Wi-Fi credentials
+esp32/sentry_cam/secrets.h
+
+# PlatformIO build output and editor files
+esp32/sentry_cam/.pio/
+esp32/sentry_cam/.vscode/
+
+# ESP32 firmware: build output, the fetched encoder binary, and local experiments secrets
+esp32/**/.pio/
+esp32/**/.vscode/
+esp32/lib_shared/

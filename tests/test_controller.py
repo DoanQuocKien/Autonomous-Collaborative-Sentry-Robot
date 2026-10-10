@@ -52,6 +52,29 @@ def test_rejected_packet_does_not_feed_watchdog():
     assert c.on_tick(0.31) == ("motors", (0.0, 0.0))
 
 
+def test_estop_blocks_motor_commands_and_keeps_sending_stop():
+    c = Controller(max_speed=0.5)
+    assert c.on_packet(encode_control(1, 1.0, 0.0), now=0.0, estop=True) is None   # command ignored while engaged
+    assert c.on_tick(0.0, estop=True) == ("motors", (0.0, 0.0))                      # stop right away
+    assert c.on_tick(0.1, estop=True) is None                                        # not spammed
+    assert c.on_tick(0.26, estop=True) == ("motors", (0.0, 0.0))                     # repeated every 0.25 s
+    assert c.on_packet(encode_control(2, 1.0, 0.0), now=0.3, estop=True) is None
+
+
+def test_commands_resume_only_after_estop_is_released_and_a_new_command_arrives():
+    c = Controller(max_speed=0.5, watchdog_s=0.3)
+    c.on_packet(encode_control(1, 1.0, 0.0), now=0.0)
+    c.on_tick(0.1, estop=True)                                                       # e-stop engages mid-run
+    assert c.on_tick(0.2, estop=False) is None                                       # released: no stale motion resumes
+    assert c.on_tick(5.0, estop=False) is None                                       # and no leftover command trips the watchdog later
+    assert c.on_packet(encode_control(2, 1.0, 0.0), now=0.3) == ("motors", (0.5, 0.5))
+
+
+def test_estop_does_not_block_audio_clips():
+    c = Controller()
+    assert c.on_packet(encode_play(1, "guard_ready"), 0.0, estop=True) == ("play", "guard_ready")
+
+
 def test_play_passthrough_does_not_move_motors():
     c = Controller()
     assert c.on_packet(encode_play(1, "guard_ready"), 0.0) == ("play", "guard_ready")

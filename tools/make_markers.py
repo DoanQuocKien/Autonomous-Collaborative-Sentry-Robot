@@ -40,10 +40,11 @@ def marker(dict_name, marker_id, size_mm=100):
 
 
 def marker_pages(ids, dict_name="DICT_4X4_50", size_mm=100):
+    per_page = 2 if size_mm <= 100 else 1  # two 10 cm markers fit an A4 page; bigger ones get a page each
     pages = []
-    for i in range(0, len(ids), 2):
+    for i in range(0, len(ids), per_page):
         pg = page()
-        for slot, mid in enumerate(ids[i:i + 2]):
+        for slot, mid in enumerate(ids[i:i + per_page]):
             x, y = (px(210) - px(size_mm)) // 2, px(15) + slot * px(125)
             pg[y:y + px(size_mm), x:x + px(size_mm)] = marker(dict_name, mid, size_mm)
             text(pg, "%s id %d  (%d mm)" % (dict_name, mid, size_mm), x, y + px(size_mm) + px(8))
@@ -82,5 +83,6 @@ if __name__ == "__main__":
     out = Path(__file__).resolve().parent.parent / "assets" / "print"
     out.mkdir(parents=True, exist_ok=True)
     save_pdf(marker_pages(list(range(6))), out / "aruco_4x4_50_ids0-5_100mm.pdf")
+    save_pdf(marker_pages(list(range(6)), size_mm=150), out / "aruco_4x4_50_ids0-5_150mm.pdf")
     save_pdf([checkerboard_page()], out / "checkerboard_9x6_25mm.pdf")
     print("wrote", *sorted(p.name for p in out.glob("*.pdf")))

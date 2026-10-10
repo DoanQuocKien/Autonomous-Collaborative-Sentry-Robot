@@ -8,6 +8,8 @@ done is still pending.
 Resumed at HNHL's request on 2026-10-04 after the shutdown pause. Current
 environment/measurement status is tracked below; historical handoff notes
 are in [RESUME.md](week-01/RESUME.md).
+Latest verification after syncing main is in the post-push integration section
+below; the original benchmark and first review evidence remain historical.
 
 ## Implemented locally
 
@@ -147,8 +149,45 @@ benchmarks were not repeated during this review. New localhost measurements
 remain synthetic and do not close HIL, D1 or RTX 4050 acceptance items.
 PR title/body are prepared in [PR-W1-HNHL.md](../../docs/PR-W1-HNHL.md), targeting
 `main` from `HuynhNguyenHoaiLoc/w01-network-telemetry`, with DQK as reviewer.
-The original implementation has been committed on this branch; the review
-fixes and new evidence are saved in the working tree for HNHL to commit/push.
+The original implementation and review fixes were pushed by HNHL in `d214c45`;
+the post-push integration below supersedes that review's Git status.
+
+## Post-push integration with main (2026-10-10)
+
+Fetched origin and verified HNHL's local HEAD matched the pushed `d214c45`.
+Main had advanced to `7d34e46`, including DQK's robot/ESP32 work and KR's
+record/replay/simulator. Merging it required resolving .gitignore, shared
+requirements and the implementation plan. Preserved .venv and all new main
+ignore rules; kept gdown plus paramiko/pyserial; combined W1 clock/GPU notes
+with the latest hardware, HOLD/search and risk updates.
+
+Found and fixed a real integration mismatch: KR's recorder used unsupported
+multipart CONFLATE, and offline replay did not implement the documented
+VideoFrame read contract. The recorder now uses ZMQReceiver and stores raw
+JPEGs/source seq/t_cap plus local perf_counter timing. File numbering does
+not depend on seq, so restart/duplicate sequence values cannot overwrite
+earlier frames. ReplayStream.read() preserves those values; tuple iteration
+remains compatible, including the existing ESP32 replay path. Legacy JetBot
+recordings without local times use current replay times for those fields.
+
+| Check | Result | Evidence |
+| :-- | :-- | :-- |
+| Combined CPU + localhost suite | **121 passed in 12.44 s**, including JetBot/ESP32 round trips | [log](week-01/integration_pytest.log) |
+| GPU environment | **ALL GOOD**, actual ONNX Relu CUDA execution verified | [log](week-01/integration_check_env.log), [profile](week-01/integration_ort_cuda.json) |
+| CLI localhost smoke, 30 FPS source / 5 s | **144 frames**, run **28.749 FPS**, decoded p95 **3.189 ms**, pass | [JSON](week-01/integration_loopback_latency.json), [CSV](week-01/integration_loopback_latency.csv), [log](week-01/integration_loopback.log) |
+| Environment | Added paramiko 5.0.0 and pyserial 3.5; recorded all **80** distributions | [versions](week-01/integration_environment_versions.json) |
+| Jetson compatibility | common/ and jetson/ still parse with Python 3.6 feature version | Syntax check only |
+
+DQK's newly integrated [report](../DoanQuocKien/week-01.md) already records
+real-camera 20 FPS/p95 53 ms, control loss 0%, watchdog 305-315 ms and wheels-off
+e-stop checks. Those are DQK's measurements, not new HNHL HIL results. Video
+still misses the <50 ms p95 target and needs a final integrated remeasurement.
+D1, team approval of the proposed ESP32 interface and the YOLOv8n/s target
+RTX 4050 baseline remain outstanding. The old RTX 5060 model benchmark is
+unchanged. Prepared PR text now reflects the combined branch and new evidence.
+
+The integration is saved as a local merge commit; HNHL must push it to update
+the remote W1 branch. No main push, PR merge or hardware action was performed.
 
 ## Hours
 

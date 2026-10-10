@@ -3,6 +3,7 @@
 Owner: HuynhNguyenHoaiLoc. Scheduled week: 2026-10-05 through 2026-10-11.
 Development started 2026-10-04. Hardware setup, gamepad e-stop and D1 recording
 remain with DQK; record/replay tooling remains with KR.
+The branch now integrates main through `7d34e46` (DQK/KR's W1 changes).
 
 ## Environment and checks
 
@@ -61,7 +62,12 @@ and raises `RuntimeError` on worker failure. It has one consumer. A consumer
 must not modify `frame_bgr` when sharing it with other modules.
 `VideoFrame` also carries the source sequence, original JPEG bytes, local
 receive time and local decode-completion time. KR's replay adapter can return
-the same class; preserve source `t_cap` and sequence from recordings.
+the same class; `tools.replay.ReplayStream.read(timeout)` now returns it and
+preserves source `t_cap`/sequence, JPEG bytes and recorded local times. The
+legacy `(frame_bgr, timestamp)` iterator remains available. For older JetBot
+recordings without local timing fields, `t_rx`/`t_decode` are generated during
+replay; they are not historical receive-latency evidence. ESP32's iterator
+still uses its own metadata and is separate from the JetBot clock contract.
 The receiver accepts sequence resets after publisher restarts.
 Context/socket creation failures are propagated through the same worker-error
 contract, and partially created resources are closed. Shared packet decoders
@@ -75,6 +81,10 @@ bounds prevent indefinite work or memory growth with a slow consumer.
 `CONFLATE` is intentionally absent because [libzmq does not support multipart
 conflation](https://libzmq.readthedocs.io/en/latest/zmq_setsockopt.html#zmq-conflate-keep-only-last-message).
 Review this correction at the W1 interface freeze; wire bytes are unchanged.
+`tools.record.record_jetbot` uses the same receiver, stores original JPEGs,
+and numbers files independently of source sequence to avoid overwriting a
+previous recording when the publisher restarts. Latest-frame drops can still
+occur during slow disk writes; source sequence gaps document these skips.
 
 ## UDP control
 
@@ -108,6 +118,9 @@ cap enforced by `jetson/robot_udp.py --max-speed`.
 
 On the Jetson, run `jetson/robot_udp.py` (or `--dry-run` for transport testing)
 to enable clock echo port 5557 and `jetson/camera_pub.py` for video port 5555.
+The current robot deployment uses the `jetbot_jupyter` container; follow
+Setup.md. Motor movement additionally requires the host `jetson/estop.py`
+interlock to be armed with R1 held; a telemetry run does not drive the motors.
 Then on the laptop:
 
 ```powershell
@@ -149,9 +162,15 @@ The simulated offset must be finite. Publisher sleep is interruptible with
 bounded, high-resolution slices, so even a low source FPS can shut down promptly
 without reducing normal Windows timer precision.
 
-## Integration still needed
+## Integration status after main sync
 
-- DQK: real video latency/FPS, UDP loss and watchdog stop (<= 350 ms), gamepad e-stop.
+- DQK has recorded real-camera 20 FPS/p95 53 ms, control loss 0%, watchdog
+  305-315 ms and wheels-off gamepad e-stop evidence. See
+  [DQK's report](../reports/DoanQuocKien/week-01.md). These are DQK's recorded
+  runs, not measurements performed by HNHL; p95 53 ms misses the <50 ms target.
+- DQK: rerun final real video latency with the integrated HNHL receiver/logger.
 - Team: review/freeze multipart/latest-frame and `VideoFrame` contracts; record D1.
+- KR/HNHL: review the proposed GC2145 UDP-tile/HTTP-relay interface before freeze;
+  integrating the code does not approve that proposal or prove firmware HIL.
 - DQK/RTX 4050 host: rerun GPU baseline for the specified 6 GB target.
 - DQK: review HNHL's branch/PR; merge after T0 passes and one approval.

@@ -1,7 +1,9 @@
 # W1 HNHL: triển khai networking, telemetry và GPU baseline
 
-Base: `main`  
-Compare: `HuynhNguyenHoaiLoc/w01-network-telemetry`  
+Base: `main`
+
+Compare: `HuynhNguyenHoaiLoc/w01-network-telemetry`
+
 Reviewer đề nghị: `DoanQuocKien`
 
 ## Mục tiêu
@@ -34,25 +36,33 @@ review, tích hợp với JetBot và giao diện record/replay của KR.
 - Loại offset NaN/Inf trước khi khởi động smoke test; cho publisher FPS thấp
   dừng kịp thời. `check_env.py` xác minh kết quả Relu và CUDA provider thực
   thi. Thống nhất tài liệu với Python 3.12, `.venv` và GPU thực tế của HNHL.
+- Tích hợp `main` tại `7d34e46`, giữ e-stop, ESP32 relay, cấu hình HOLD/search
+  và simulator của DQK/KR. Giải quyết ba xung đột ở ignore, dependencies và plan.
+- Nối recorder JetBot với `ZMQReceiver` thay cho `CONFLATE` multipart; lưu JPEG
+  gốc cùng timestamp nguồn/local. Filename độc lập với seq để không ghi đè
+  sau restart. `ReplayStream.read()` trả `VideoFrame`; iterator tuple cũ vẫn
+  hoạt động. Thêm kiểm thử round-trip JetBot và giữ kiểm thử ESP32 của main.
 
 ## Kiểm chứng
 
-Chạy lại ngày 2026-10-10 bằng `.venv\Scripts\python.exe`:
+Chạy lại sau tích hợp main ngày 2026-10-10 bằng `.venv\Scripts\python.exe`:
 
 ```powershell
-.venv\Scripts\python.exe -m pytest -m "not gpu and not hil" --basetemp=data/pytest-w1-review-release -p no:cacheprovider -q
+.venv\Scripts\python.exe -m pytest -m "not gpu and not hil" --basetemp=data/pytest-w1-postpush-final -p no:cacheprovider -q
 .venv\Scripts\python.exe tools/check_env.py
-.venv\Scripts\python.exe -m tools.check_net --fps 30 --seconds 5 --out reports/HuynhNguyenHoaiLoc/week-01/review_loopback_latency.csv
+.venv\Scripts\python.exe -m tools.check_net --fps 30 --seconds 5 --out reports/HuynhNguyenHoaiLoc/week-01/integration_loopback_latency.csv
 ```
 
 | Kiểm tra | Kết quả |
 | :-- | :-- |
-| T0 + transport localhost | **87 passed**, 6.81 s |
+| T0 + transport localhost, JetBot/ESP32 record/replay | **121 passed**, 12.44 s |
 | Môi trường CUDA | **ALL GOOD**, Relu chạy thực tế trên CUDA và trả đúng output |
-| Synthetic localhost telemetry | **144 frames**, run **28.767 FPS**, decoded p95 **2.984 ms**, pass |
+| Synthetic localhost telemetry | **144 frames**, run **28.749 FPS**, decoded p95 **3.189 ms**, pass |
 | Cú pháp `common/`, `jetson/` | Tương thích Python 3.6 qua AST check |
 
-Log và CSV/JSON mới nằm tại `reports/HuynhNguyenHoaiLoc/week-01/review_*`.
+Log và CSV/JSON mới nằm tại `reports/HuynhNguyenHoaiLoc/week-01/integration_*`.
+Môi trường bổ sung `paramiko`/`pyserial` theo requirements mới; phiên bản của
+80 distributions được lưu tại `integration_environment_versions.json`.
 Báo cáo đầy đủ: `reports/HuynhNguyenHoaiLoc/week-01.md`.
 
 GPU baseline ngày 2026-10-04 được giữ lại, chưa đo lại trong lần review này:
@@ -70,8 +80,11 @@ Memory là PyTorch allocator, chưa phải tổng VRAM của toàn pipeline.
 ## Phần tích hợp còn chờ
 
 - DQK review PR và team xác nhận giao diện video/live/replay tuần 1.
-- JetBot thật: p95 video < 50 ms, FPS >= 20 ở 640x480; packet loss < 1%,
-  watchdog stop <= 350 ms, gamepad e-stop và ghi D1.
+- DQK đã có bằng chứng 20 FPS/p95 53 ms, control loss 0%, watchdog 305-315 ms
+  và e-stop với bánh nâng khỏi sàn trong `reports/DoanQuocKien/week-01.md`.
+  Cần đo lại video với receiver/logger tích hợp để đạt p95 < 50 ms và ghi D1.
+- Team xác nhận đề xuất GC2145 UDP-tile/HTTP-relay; tích hợp code chưa thay
+  cho phê duyệt giao diện hoặc flash/đo lại firmware thật.
 - Đo GPU baseline trên RTX 4050 6 GB theo target của dự án.
 
 Các số đo localhost chỉ chứng minh logic/transport tổng hợp. Timestamp camera
