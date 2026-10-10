@@ -3,6 +3,22 @@
 Fill the result blocks as you go and commit this file. Safe-testing rules: **wheels off the ground** until the section says otherwise, `--max-speed` low, gamepad in hand.
 Reasons for each check are in `docs/JetBot Notes.md`; install steps are in `docs/Setup.md` (section C).
 
+## 0. First connection (course procedure, jetbot.org docs agree)
+Needs: the kit's own SD card in the Jetson (do not wipe it), HDMI monitor + cable, USB keyboard. No micro-USB cable needed.
+1. Insert the card, power on, wait for boot. Log in on the monitor: `jetbot` / `jetbot`.
+2. Join Wi-Fi (the first test can use the same home Wi-Fi the laptop is on; the hotspot question only matters when the ESP32 joins in W3):
+   ```
+   nmcli device                                   # Wi-Fi interface name, probably wlan0
+   sudo nmcli device wifi connect "<SSID>" password "<PASSWORD>"
+   hostname -I                                    # IP; after this the OLED screen also shows it
+   ```
+3. From the laptop: `ping <jetson-ip>`, then `ssh jetbot@<jetson-ip>`. Jupyter is at `http://<jetson-ip>:8888` (password `jetbot`).
+4. If ping fails but the Jetson has an IP, the router may isolate Wi-Fi clients: use a phone hotspot (2.4 GHz) instead.
+5. Optional: back up the kit's card first to a spare one (any imaging tool), so a mistake is recoverable.
+```
+(paste: interface, IP, ping result, band from `iw dev wlan0 link`)
+```
+
 ## 1. What is on the robot
 ```
 cat /etc/nv_tegra_release ; python3 --version

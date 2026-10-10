@@ -23,6 +23,12 @@ def test_checkerboard_has_9x6_inner_corners():
     assert found and len(corners) == 54
 
 
+def test_150mm_markers_fit_one_per_page():
+    pages = marker_pages([0, 1, 2], size_mm=150)
+    assert len(pages) == 3 and pages[0].shape == (px(297), px(210))
+    assert marker("DICT_4X4_50", 0, 150).shape == (1500, 1500)
+
+
 def test_pages_are_a4():
     assert marker_pages([0, 1, 2])[0].shape == (px(297), px(210)) and len(marker_pages([0, 1, 2])) == 2
     assert checkerboard_page().shape == (px(210), px(297))

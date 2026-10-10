@@ -1,0 +1,30 @@
+# Gamepad e-stop test, 2026-10-06 (DRY-RUN: robot_udp printed motor values, estop.py ran with --no-motor-cut, motors NOT driven)
+# Pad: TGZ Controller (DragonRise), /dev/input/js0. Buttons inferred from a recording: Select=10, Start=11, face 4/0/3/1, L1/R1=6/7, L2/R2=8/9 (+axes 5/4), D-pad = axes 7/6, left stick = axes 2/3.
+# Clocks: estop.log uses the host clock (UTC+7 shown), robot_udp.log the container clock (UTC).
+
+## Test 1: main program started with NO e-stop program running (fail-safe check): it refused to move
+06:32:50 motors +0.00 +0.00 / 06:32:50 e-stop ENGAGED: refusing motor commands
+
+## Test 2: real gamepad, full cycle (ARM, STOP, ARM, STOP) with a v=0.6 command stream at 30 Hz
+﻿=== e-stop daemon log (host clock)
+23:37:27 ENGAGED (startup); motor cut skipped (--no-motor-cut)
+23:37:27 watching the gamepad; hold Select+Start for 2.0 s to arm, any button to stop
+23:37:27 gamepad found: /dev/input/js0
+23:38:15 ARMED (Select+Start held 2.0 s); robot may move
+23:38:28 ENGAGED (button 1 pressed); motor cut skipped (--no-motor-cut)
+23:38:42 ARMED (Select+Start held 2.0 s); robot may move
+23:38:53 ENGAGED (button 0 pressed); motor cut skipped (--no-motor-cut)
+
+=== robot_udp dry-run log (container clock, UTC)
+06:37:25 motors +0.00 +0.00
+06:37:25 e-stop ENGAGED: refusing motor commands
+06:38:15 e-stop released: motor commands accepted
+06:38:15 motors +0.30 +0.30
+06:38:28 e-stop ENGAGED: refusing motor commands
+06:38:28 motors +0.00 +0.00
+06:38:42 e-stop released: motor commands accepted
+06:38:42 motors +0.30 +0.30
+06:38:53 e-stop ENGAGED: refusing motor commands
+06:38:53 motors +0.00 +0.00
+
+left running: 1

@@ -3,7 +3,7 @@
 
 [net]
 jetbot_ip = "192.168.137.20"     # placeholder, set after the hotspot is up
-esp32_ip = "192.168.137.30"      # placeholder
+esp32_ip = "127.0.0.1"           # tools/record.py reads http://<esp32_ip>:81/stream. With the GC2145 boards run tools/esp_mjpeg_relay.py on the laptop (it serves that URL itself); with an OV2640 board put the board's IP here
 video_port = 5555
 control_port = 5556
 clock_port = 5557
@@ -26,9 +26,9 @@ whitelist_cosine = 0.45
 entrance_min_m = 1.5
 entrance_max_m = 3.0
 standoff_m = 1.2
-orbit_radius_m = 1.0
 stationary_speed_mps = 0.1
 stationary_time_s = 2.0
+stationary_exit_speed_mps = 0.2   # proposed hysteresis for leaving HOLD; tune in W5
 strike_area_growth = 0.40
 strike_window_s = 0.1
 evade_v = -1.0
@@ -40,6 +40,10 @@ checkerboard_inner_corners = [9, 6]   # columns, rows (10 x 7 squares)
 checkerboard_square_m = 0.025         # MEASURE the printed board and update this
 aruco_dict = "DICT_4X4_50"
 aruco_marker_m = 0.10                 # MEASURE the printed marker and update this
+
+[search]                        # map-based coverage search after the active intruder exits
+detection_radius_m = 3.0         # PLACEHOLDER r_det; DQK measures it in W7
+coverage_target = 0.90           # fraction of known-free cells the planned viewpoints must cover
 
 [sim]
 v_max_mps = 0.5                  # Simulated max linear velocity in m/s
