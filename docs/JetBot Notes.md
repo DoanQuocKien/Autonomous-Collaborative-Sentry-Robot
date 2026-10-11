@@ -111,3 +111,10 @@ Record the outputs in `reports/DoanQuocKien/week-01/`.
 | Antenna 0 missing (not caused by us as far as we know) | Tell the professor; replacement is cheap |
 | On the laptop: usbipd-win installed and the card reader shared (busid 1-3) | Optional: `usbipd unbind --busid 1-3`, uninstall usbipd-win |
 | SD card filesystem had minor inconsistencies from power-offs by the switch | Prefer a clean shutdown (`sudo shutdown -h now` over SSH) before cutting power |
+
+## Low-speed motor behaviour (measured 2026-10-11, cafe floor, level, battery about 12.1 V)
+
+- At a motor value of **0.09** (`send_cmd --v 0.3` with `--max-speed 0.3`) the robot veered left: static friction makes the two motors start at slightly different values. At **0.12, 0.15, 0.18, 0.21 and 0.30** it drove straight (4 runs of 4 s at 0.15-0.21, 1 s at 0.12, several at 0.30; operator's observation, not measured with a tape).
+- So the drift is a low-speed effect, not a constant left/right bias: no trim knob was added. `/home/jetbot/sentry/calib/motion.json` on the robot now holds `{"min_pwm": 0.12}` (anything below 0.12 becomes a clean stop; `robot_udp.py` was restarted to read it). The proper measurement of `min_pwm`, `k` and drift stays in Week 2 (`tools/calibrate_motion.py`), also on the classroom floor.
+- Consequence for planning: with `--max-speed 0.3` the smallest usable command is `v` about 0.4. The pursuit HOLD logic (target slower than 0.1 m/s) must stop, not creep.
+- Test procedure used: arm with `estop.py --arm-buttons 11 --arm-hold 1.5` (Start alone), run a command script on the laptop, hold R1 for the whole run. Commands are only applied while R1 is held.
