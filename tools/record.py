@@ -81,7 +81,8 @@ def main():
     args = parser.parse_args()
     
     config = load_config()
-    jetbot_ip = config["net"]["jetbot_ip"]
+    from tools.find_jetbot import resolve  # jetbot_ip = "auto" scans the network
+    jetbot_ip = resolve(config["net"]["jetbot_ip"])
     esp32_ip = config["net"]["esp32_ip"]
     video_port = config["net"]["video_port"]
     

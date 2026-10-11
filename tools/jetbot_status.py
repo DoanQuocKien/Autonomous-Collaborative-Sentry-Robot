@@ -26,17 +26,18 @@ def battery_status(volts):
 
 
 def main():
+    from tools.find_jetbot import resolve
     import paramiko  # imported here so the pure functions above can be tested without it
 
     ap = argparse.ArgumentParser()
-    ap.add_argument("host")
+    ap.add_argument("host", nargs="?", default="auto", help="IP, or auto to search the network")
     ap.add_argument("--user", default="jetbot")
     ap.add_argument("--password", default="jetbot", help="documented default login of the JetBot image")
     a = ap.parse_args()
 
     c = paramiko.SSHClient()
     c.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    c.connect(a.host, username=a.user, password=a.password, timeout=20, look_for_keys=False, allow_agent=False)
+    c.connect(resolve(a.host), username=a.user, password=a.password, timeout=20, look_for_keys=False, allow_agent=False)
     sudo = "echo %s | sudo -S -p '' " % a.password
 
     def run(cmd):

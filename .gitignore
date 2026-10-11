@@ -28,3 +28,6 @@ esp32/sentry_cam/.vscode/
 esp32/**/.pio/
 esp32/**/.vscode/
 esp32/lib_shared/
+
+# local secrets
+.env
