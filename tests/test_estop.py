@@ -1,4 +1,7 @@
-from jetson.estop import EstopLogic, motor_cut, motor_rearm
+import subprocess
+
+from jetson.estop import EstopLogic, i2c_write, motor_cut, motor_rearm, write_heartbeat
+from jetson.robot_udp import estop_engaged
 
 R1, SELECT, START = 7, 10, 11
 
@@ -136,3 +139,27 @@ def test_single_key_arming_still_needs_the_full_hold_and_r1():
     assert e.button(R1, True, 3.7) == ["GO"]
     assert e.button(4, True, 3.8) == ["STOP"] and e.hard     # any other key is still a hard stop
 
+
+
+def test_a_hung_i2c_bus_is_a_failed_write_not_a_hang():
+    def hung(cmd, **kw):
+        assert kw["timeout"] > 0
+        raise subprocess.TimeoutExpired(cmd, kw["timeout"])
+
+    assert not i2c_write(1, 0x60, 0xFD, 0x10, hung)
+    assert not motor_cut(1, 0x60, lambda cmd, **kw: (_ for _ in ()).throw(FileNotFoundError("i2cset")))
+
+
+def test_heartbeat_interlock(tmp_path):
+    latch, alive = str(tmp_path / "ESTOP"), str(tmp_path / "ESTOP_ALIVE")
+    assert estop_engaged(latch, alive, 100.0)                   # no e-stop program: engaged
+    write_heartbeat(alive, 100.0)
+    assert not estop_engaged(latch, alive, 101.0)               # fresh heartbeat, no latch: released
+    assert estop_engaged(latch, alive, 102.5)                   # stale
+    assert estop_engaged(latch, alive, 98.0)                    # from the future (old wall-clock writer, clock jump)
+    (tmp_path / "ESTOP_ALIVE").write_text("")
+    assert estop_engaged(latch, alive, 100.0)                   # unreadable
+    write_heartbeat(alive, 100.0)
+    (tmp_path / "ESTOP").write_text("R1 released")
+    assert estop_engaged(latch, alive, 100.1)                   # latch always wins
+    assert not (tmp_path / "ESTOP_ALIVE.tmp").exists()

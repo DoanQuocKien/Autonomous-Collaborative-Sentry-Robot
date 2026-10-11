@@ -35,12 +35,16 @@ MIN_MOVING_S = 0.3
 
 
 def moving_seconds(log_lines):
-    """Seconds the motors were non-zero, from robot_udp.log lines like '09:19:19.123 motors +0.12 +0.12' (only differences of the log's own times are used; a run across midnight is not handled)."""
-    ev = []
+    """Seconds the motors were non-zero, from robot_udp.log lines like '09:19:19.123 motors +0.12 +0.12' (only differences of the log's own times are used; a time that goes backwards is a run across midnight)."""
+    ev, day = [], 0.0
     for line in log_lines:
         m = re.match(r"(\d+):(\d+):(\d+\.\d+) motors ([+-]\d+\.\d+) ([+-]\d+\.\d+)", line)
         if m:
-            ev.append((int(m[1]) * 3600 + int(m[2]) * 60 + float(m[3]), float(m[4]), float(m[5])))
+            t = int(m[1]) * 3600 + int(m[2]) * 60 + float(m[3]) + day
+            if ev and t < ev[-1][0]:
+                day += 86400.0
+                t += 86400.0
+            ev.append((t, float(m[4]), float(m[5])))
     return sum(t2 - t for (t, left, right), (t2, _, _) in zip(ev, ev[1:]) if left or right)
 
 
@@ -91,11 +95,8 @@ def read_rows(path):
 
 
 def _ssh(ip, user, password):
-    import paramiko  # imported here so the pure functions above can be tested without it
-    c = paramiko.SSHClient()
-    c.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    c.connect(ip, username=user, password=password, timeout=20, look_for_keys=False, allow_agent=False)
-    return c
+    from tools import jetbot_ssh  # pinned host key, no password on any command line
+    return jetbot_ssh.connect(ip, user, password)
 
 
 def _sh(c, cmd):
@@ -114,7 +115,9 @@ def run_trials(a):
     from sentry.net.discover import resolve
     from sentry.net.udp_tx import UDPSender
     from tools.jetbot_status import ina219_bus_volts
+    from tools import jetbot_ssh
     ip = resolve(a.ip)
+    a.password = jetbot_ssh.password(a.password)
     c = _ssh(ip, a.user, a.password)
     try:
         robot_cal = json.loads(_sh(c, "cat %s 2>/dev/null" % CALIB_ON_ROBOT) or "{}")
@@ -148,7 +151,7 @@ def run_trials(a):
             if moving <= MIN_MOVING_S:
                 print("  no usable motion in the robot's log (R1 not held? command below min_pwm? robot_udp.py not writing %s?): not recorded, repeat this run" % LOG)
                 continue
-            volts = ina219_bus_volts(_sh(c, "echo %s | sudo -S -p '' i2cget -y 1 0x41 0x02 w" % a.password))
+            volts = ina219_bus_volts(jetbot_ssh.sudo(c, "i2cget -y 1 0x41 0x02 w", a.password))
             if a.kind == "straight":
                 fwd, lat, turn = _ask("  forward_m (start mark -> robot centre, metres): "), _ask("  lateral_m (left +, metres): "), 0.0
             else:
@@ -171,7 +174,7 @@ def main():
     r.add_argument("--max-speed", type=float, default=0.3, help="the --max-speed robot_udp.py runs with (recorded with every run)")
     r.add_argument("--ip", default="auto")
     r.add_argument("--user", default="jetbot")
-    r.add_argument("--password", default="jetbot")
+    r.add_argument("--password", help="default: JETBOT_PASSWORD, else asked")
     f = sub.add_parser("fit", help="fit the gains from the trials")
     for p in (r, f):
         p.add_argument("--csv", default="reports/DoanQuocKien/week-02/motion_runs.csv")
@@ -180,7 +183,7 @@ def main():
     f.add_argument("--force", action="store_true", help="write (and push) even when the fit failed")
     f.add_argument("--ip", default="auto")
     f.add_argument("--user", default="jetbot")
-    f.add_argument("--password", default="jetbot")
+    f.add_argument("--password", help="default: JETBOT_PASSWORD, else asked (only with --push)")
     a = ap.parse_args()
     if a.cmd == "run":
         if not 0 < a.seconds < float("inf"):
@@ -203,7 +206,8 @@ def main():
     print("written %s" % a.out)
     if a.push:
         from sentry.net.discover import resolve
-        c = _ssh(resolve(a.ip), a.user, a.password)
+        from tools import jetbot_ssh
+        c = _ssh(resolve(a.ip), a.user, jetbot_ssh.password(a.password))
         _sh(c, "mkdir -p /home/jetbot/sentry/calib")
         sftp = c.open_sftp()
         sftp.put(a.out, CALIB_ON_ROBOT)

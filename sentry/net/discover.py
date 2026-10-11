@@ -1,10 +1,10 @@
 """Find the JetBot and the ESP32-CAM on the laptop's current network (the hotspot hands out a new IP after every restart).
 
-resolve(ip) / resolve_esp32(ip) return ip unchanged unless it is "" / "auto", so config.toml can say jetbot_ip = "auto". Each scan runs once per process.
+resolve(ip) / resolve_esp32(ip) return ip unchanged unless it is "" / "auto", so config.toml can say jetbot_ip = "auto". A successful scan is
+remembered for the rest of the process; a scan that finds nothing is not, so a robot that boots late is found by the next call.
 """
 import socket
 from concurrent.futures import ThreadPoolExecutor
-from functools import lru_cache
 
 
 def _probe(ip):
@@ -21,10 +21,20 @@ def _probe(ip):
             pass
 
 
+def local_ipv4():
+    """This laptop's IPv4 addresses, without loopback and link-local (169.254: an adapter with no network). [] if unknown."""
+    try:
+        mine = socket.gethostbyname_ex(socket.gethostname())[2]
+    except OSError:
+        return []
+    return [ip for ip in mine if not ip.startswith(("127.", "169.254."))]
+
+
 def _candidates():
-    # ponytail: assumes a /24 on every local address (same as sentry/espcam.py)
-    mine = socket.gethostbyname_ex(socket.gethostname())[2]
-    return [p.rsplit(".", 1)[0] + "." + str(i) for p in mine if not p.startswith("127.") for i in range(1, 255) if p.rsplit(".", 1)[0] + "." + str(i) not in mine]
+    # assumes a /24 on every local address (the Windows hotspot is 192.168.137.0/24); same as sentry/espcam.py
+    mine = local_ipv4()
+    nets = sorted({ip.rsplit(".", 1)[0] for ip in mine})
+    return [n + "." + str(i) for n in nets for i in range(1, 255) if n + "." + str(i) not in mine]
 
 
 def _http81(ip):
@@ -36,8 +46,12 @@ def _http81(ip):
         return False
 
 
-@lru_cache(maxsize=1)
+_found = {}  # successful scans only
+
+
 def find(verbose=False):
+    if "jetbot" in _found:
+        return _found["jetbot"]
     # several matching hosts -> first, camera publisher preferred
     cand = _candidates()
     with ThreadPoolExecutor(128) as ex:
@@ -45,17 +59,22 @@ def find(verbose=False):
     hits.sort(key=lambda h: h[1] != "video")
     if verbose:
         print(hits)
+    if hits:
+        _found["jetbot"] = hits[0][0]
     return hits[0][0] if hits else None
 
 
-@lru_cache(maxsize=1)
 def find_esp32():
     """127.0.0.1 if tools/esp_mjpeg_relay.py is running here (GC2145 boards), else the first LAN host with port 81 open (OV2640 board)."""
     if _http81("127.0.0.1"):
         return "127.0.0.1"
+    if "esp32" in _found:
+        return _found["esp32"]
     cand = _candidates()
     with ThreadPoolExecutor(128) as ex:
         hits = [ip for ip, ok in zip(cand, ex.map(_http81, cand)) if ok]
+    if hits:
+        _found["esp32"] = hits[0]
     return hits[0] if hits else None
 
 

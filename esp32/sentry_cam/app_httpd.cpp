@@ -122,7 +122,6 @@ static esp_err_t bmp_handler(httpd_req_t *req) {
 
   httpd_resp_set_type(req, "image/x-windows-bmp");
   httpd_resp_set_hdr(req, "Content-Disposition", "inline; filename=capture.bmp");
-  httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
 
   char ts[32];
   // Cast to uint32_t is safe until year 2106.
@@ -183,7 +182,6 @@ static esp_err_t capture_handler(httpd_req_t *req) {
 
   httpd_resp_set_type(req, "image/jpeg");
   httpd_resp_set_hdr(req, "Content-Disposition", "inline; filename=capture.jpg");
-  httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
 
   char ts[32];
   // Cast to uint32_t is safe until year 2106.
@@ -232,7 +230,6 @@ static esp_err_t stream_handler(httpd_req_t *req) {
     return res;
   }
 
-  httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
   httpd_resp_set_hdr(req, "X-Framerate", "60");
 
 #if defined(LED_GPIO_NUM)
@@ -415,7 +412,6 @@ static esp_err_t cmd_handler(httpd_req_t *req) {
     return httpd_resp_send_500(req);
   }
 
-  httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
   return httpd_resp_send(req, NULL, 0);
 }
 
@@ -495,7 +491,6 @@ static esp_err_t status_handler(httpd_req_t *req) {
   *p++ = '}';
   *p++ = 0;
   httpd_resp_set_type(req, "application/json");
-  httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
   return httpd_resp_send(req, json_response, strlen(json_response));
 }
 
@@ -522,7 +517,6 @@ static esp_err_t xclk_handler(httpd_req_t *req) {
     return httpd_resp_send_500(req);
   }
 
-  httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
   return httpd_resp_send(req, NULL, 0);
 }
 
@@ -554,7 +548,6 @@ static esp_err_t reg_handler(httpd_req_t *req) {
     return httpd_resp_send_500(req);
   }
 
-  httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
   return httpd_resp_send(req, NULL, 0);
 }
 
@@ -584,7 +577,6 @@ static esp_err_t greg_handler(httpd_req_t *req) {
 
   char buffer[20];
   const char *val = itoa(res, buffer, 10);
-  httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
   return httpd_resp_send(req, val, strlen(val));
 }
 
@@ -620,7 +612,6 @@ static esp_err_t pll_handler(httpd_req_t *req) {
     return httpd_resp_send_500(req);
   }
 
-  httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
   return httpd_resp_send(req, NULL, 0);
 }
 
@@ -655,7 +646,6 @@ static esp_err_t win_handler(httpd_req_t *req) {
     return httpd_resp_send_500(req);
   }
 
-  httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
   return httpd_resp_send(req, NULL, 0);
 }
 
@@ -834,11 +824,13 @@ void startCameraServer() {
     httpd_register_uri_handler(camera_httpd, &capture_uri);
     httpd_register_uri_handler(camera_httpd, &bmp_uri);
 
+#ifdef SENTRY_DEBUG_ENDPOINTS  // raw sensor registers, clock and PLL: anyone on the hotspot could reprogram the camera; build with -DSENTRY_DEBUG_ENDPOINTS to debug
     httpd_register_uri_handler(camera_httpd, &xclk_uri);
     httpd_register_uri_handler(camera_httpd, &reg_uri);
     httpd_register_uri_handler(camera_httpd, &greg_uri);
     httpd_register_uri_handler(camera_httpd, &pll_uri);
     httpd_register_uri_handler(camera_httpd, &win_uri);
+#endif
   }
 
   config.server_port += 1;

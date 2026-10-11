@@ -63,3 +63,8 @@ def test_mixed_settings_and_unusable_rows_are_reported():
     out = fit(rows)
     assert not out["passed"] and any("different" in p for p in out["problems"])
     assert out["runs"]["dropped"] == 1
+
+
+def test_moving_seconds_across_midnight():
+    log = ["23:59:59.000 motors +0.20 +0.20", "00:00:01.500 motors +0.00 +0.00"]
+    assert abs(moving_seconds(log) - 2.5) < 1e-9

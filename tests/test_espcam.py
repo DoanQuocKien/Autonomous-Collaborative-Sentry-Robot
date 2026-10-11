@@ -71,3 +71,37 @@ def test_packets_before_the_header_and_garbage_are_ignored():
     rx.handle(b"XX" + bytes(30))
     rx.handle(_pkt(T_TILES, 1, 1, 0, struct.pack("<HH", 0, 4) + b"abcd"))  # no header yet
     assert rx.tiles == 0 and rx.latest()[0] is None
+
+
+def _tile_packet(idx, fid, value):
+    h, scan = _jpeg_parts(planar(np.full((TH, TW), value, np.uint8)))
+    return h, _pkt(T_TILES, fid, 1, 0, struct.pack("<HH", idx, len(scan)) + scan)
+
+
+def test_latest_shows_the_last_complete_frame_and_processes_it_once():
+    rx = TileReceiver(wb="gray")
+    h, tile = _tile_packet(0, 1, 200)
+    rx.handle(_pkt(T_HDR, 1, len(h), 0, h))
+    rx.handle(tile)
+    rx.handle(_pkt(T_END, 1, 1, 1))
+    first, fid, _ = rx.latest()
+    assert fid == 1 and first[0, 0].mean() > 150
+    _, half = _tile_packet(0, 2, 20)
+    rx.handle(half)                                   # frame 2 is only half there: no tearing
+    again, fid, _ = rx.latest()
+    assert again is first and fid == 1                # same cached result, not reprocessed
+    assert not again.flags.writeable
+    rx.handle(_pkt(T_END, 2, 1, 1))
+    assert rx.latest()[0][0, 0].mean() < 60 and rx.latest()[1] == 2
+
+
+def test_follows_one_source_and_bounds_pending_frames():
+    rx = TileReceiver(wb="none")
+    h, tile = _tile_packet(0, 1, 100)
+    esp, rogue = ("192.168.137.50", 5601), ("192.168.137.66", 5601)
+    rx.handle(_pkt(T_HDR, 1, len(h), 0, h), esp)
+    rx.handle(_pkt(T_HDR, 1, 3, 0, b"bad"), rogue)   # a second sender cannot replace the header
+    assert rx.header == h and rx.foreign == 1
+    for fid in range(1000):
+        rx.handle(_tile_packet(0, fid, 100)[1], esp)    # tiles, never a frame end
+    assert len(rx._got) <= TileReceiver.MAX_PENDING

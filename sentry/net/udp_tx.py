@@ -6,12 +6,23 @@ commands: if the control loop stops, the Jetson watchdog can stop the robot.
 Use as a context manager to send an immediate zero command on exit.
 """
 import math
+import numbers
 import socket
 import time
 
 from common.protocol import encode_control
 from sentry.config import load
 from sentry.net.discover import resolve
+
+
+_EPS = 1e-6  # rounding overshoot a controller may produce; clamped, not an error
+
+
+def _command(x):
+    """Any real number (numpy float32 included) in [-1, 1] -> float; a value off by rounding is clamped; else ValueError."""
+    if isinstance(x, bool) or not isinstance(x, numbers.Real) or not math.isfinite(x) or not -1 - _EPS <= x <= 1 + _EPS:
+        raise ValueError("v and w must be finite numbers in [-1, 1], got %r" % (x,))
+    return max(-1.0, min(1.0, float(x)))
 
 
 class UDPSender:
@@ -46,9 +57,7 @@ class UDPSender:
     def send(self, v, w):
         if self._closed:
             raise RuntimeError("sender is closed")
-        if not all(not isinstance(x, bool) and isinstance(x, (int, float))
-                   and math.isfinite(x) and -1 <= x <= 1 for x in (v, w)):
-            raise ValueError("v and w must be finite numbers in [-1, 1]")
+        v, w = _command(v), _command(w)
         now = self._clock()
         if self._last_attempt is not None and now - self._last_attempt < self.period_s:
             return False

@@ -36,7 +36,10 @@ def longest_still(times, diffs, thr=STILL_DIFF, smooth=SMOOTH):
 
 
 def small(path):
-    return cv2.resize(cv2.imread(str(path), cv2.IMREAD_GRAYSCALE), (80, 60), interpolation=cv2.INTER_AREA).astype(np.float32)
+    img = cv2.imread(str(path), cv2.IMREAD_GRAYSCALE)
+    if img is None:
+        raise SystemExit("cannot read %s (missing or corrupt frame; is the recording complete?)" % path)
+    return cv2.resize(img, (80, 60), interpolation=cv2.INTER_AREA).astype(np.float32)
 
 
 def epoch(s):
@@ -63,7 +66,8 @@ def main():
             if len(idx) < 10:
                 summary.append((r["position_id"], r["door_visible"], len(idx), 0, "too few frames"))
                 continue
-            diffs = [np.abs(small(d / "jetbot" / meta[idx[k + 1]]["file"]) - small(d / "jetbot" / meta[idx[k]]["file"])).mean() for k in range(len(idx) - 1)]
+            thumbs = [small(d / "jetbot" / meta[i]["file"]) for i in idx]  # each frame decoded once
+            diffs = [np.abs(thumbs[k + 1] - thumbs[k]).mean() for k in range(len(idx) - 1)]
             seg = longest_still(t[idx], diffs)
             if seg is None or seg[1] - seg[0] < 10:
                 summary.append((r["position_id"], r["door_visible"], len(idx), 0, "no still stretch"))

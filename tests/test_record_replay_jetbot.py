@@ -10,8 +10,8 @@ import zmq
 
 from common.protocol import encode_video_header
 from sentry.net.frame import VideoFrame
-from tools.record import record_jetbot
-from tools.replay import ReplayStream
+from tools.record import record_jetbot, split_jpegs, watch
+from tools.replay import ReplayStream, frame_gaps
 
 
 @pytest.mark.loopback
@@ -97,3 +97,36 @@ def test_corrupted_recorded_jpeg_is_rejected(tmp_path):
     (tmp_path / "jetbot_meta.jsonl").write_text(json.dumps(meta) + "\n", encoding="utf-8")
     with pytest.raises(ValueError, match="invalid JPEG"):
         ReplayStream(tmp_path).read()
+
+
+def test_a_dead_recorder_stops_the_session_loudly():
+    errors = []
+
+    def recorder():
+        try:
+            raise RuntimeError("video receiver failed")
+        except RuntimeError as exc:
+            errors.append(exc)
+
+    t = threading.Thread(target=recorder)
+    t.start()
+    t.join()
+    with pytest.raises(SystemExit, match="video receiver failed"):
+        watch(t, errors, sleep=lambda s: None)
+
+
+def test_mjpeg_split_survives_a_stray_end_marker_and_partial_frames():
+    a, b = b"\xff\xd8AAA\xff\xd9", b"\xff\xd8BBB\xff\xd9"
+    frames, rest = split_jpegs(b"tail of an old picture \xff\xd9 --frame\r\n" + a + b"\r\n--frame\r\n" + b + b"\xff\xd8CC")
+    assert frames == [a, b] and rest == b"\xff\xd8CC"   # the old parser stalled on the EOI before the first SOI
+    frames, rest = split_jpegs(rest + b"C\xff\xd9")
+    assert frames == [b"\xff\xd8CCC\xff\xd9"] and rest == b""
+    assert split_jpegs(b"no picture here") == ([], b"")
+
+
+def test_replay_paces_by_recorded_time():
+    frames = [{"t_cap": 10.0}, {"t_cap": 10.05}, {"t_cap": 2.0}, {"t_cap": 2.1}]   # 3rd: the source restarted
+    gaps = frame_gaps(frames, 20.0)
+    assert gaps[0] == pytest.approx(0.05) and gaps[1] == 0.05 and gaps[2] == pytest.approx(0.1)
+    assert gaps[3] == 0.05                     # loop wrap (2.1 -> 10.0 is a pause): default rate
+    assert frame_gaps([{"t_local": 1.0}, {"t_local": 1.2}], 15.0)[0] == pytest.approx(0.2)

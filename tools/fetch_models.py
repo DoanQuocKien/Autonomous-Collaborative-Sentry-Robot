@@ -11,6 +11,7 @@ trained for re-ID (torchreid model zoo). osnet_ain_x1_0 (multi-source, domain ge
 without seeing it) is the default choice for a new camera and new people; osnet_x0_25 (Market1501: 91 % same-domain,
 much lower across domains) is the small, fast alternative.
 """
+import hashlib
 import sys
 import time
 import urllib.request
@@ -29,8 +30,41 @@ HTTP = [  # (destination, url, what it is)
 ]
 
 
+# sha256 of every downloaded file. None = not pinned yet: the tool prints the hash of what it got; after checking that
+# download (e.g. two members get the same hash from different networks), paste it here so later downloads are verified.
+SHA256 = {
+    "osnet_ain_x1_0_dg.pth": None,
+    "osnet_x0_25_market1501.pth": None,
+    "det_500m.onnx": None,
+    "w600k_mbf.onnx": None,
+}
+
+
+def sha256(path):
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for block in iter(lambda: f.read(1 << 20), b""):
+            h.update(block)
+    return h.hexdigest()
+
+
+def verified(path, pins=SHA256):
+    """True when the file matches its pinned hash (or has no pin yet; its hash is printed). A mismatch is reported and
+    the file renamed to *.bad, so it is downloaded again and never loaded."""
+    digest = sha256(path)
+    pin = pins.get(path.name)
+    if pin is None:
+        print("   sha256 %s  %s (not pinned yet: pin it in tools/fetch_models.py SHA256)" % (digest, path.name))
+        return True
+    if digest != pin:
+        print("   HASH MISMATCH for %s: got %s, pinned %s; moved to %s.bad" % (path.name, digest, pin, path.name))
+        path.replace(path.with_name(path.name + ".bad"))
+        return False
+    return True
+
+
 def have(path):
-    return path.exists() and path.stat().st_size > 100_000
+    return path.exists() and path.stat().st_size > 100_000 and verified(path)
 
 
 def fetch_curl(dest, url, tries=6):
@@ -114,14 +148,14 @@ def main():
             continue
         print("fetch %-30s %s" % (name, what))
         # files under about 100 MB are served directly by Drive, without the virus-scan confirmation page
-        if not fetch_curl(dest, "https://drive.google.com/uc?export=download&id=" + gid):
+        if not fetch_curl(dest, "https://drive.google.com/uc?export=download&id=" + gid) or not verified(dest):
             failed.append(name)
     for dest, url, what in HTTP:
         if have(dest):
             print("have  %-30s %s" % (dest.name, what))
             continue
         print("fetch %-30s %s" % (dest.name, what))
-        if not fetch_http(dest, url):
+        if not fetch_http(dest, url) or not verified(dest):
             failed.append(dest.name)
     try:
         convert_weights()
@@ -129,7 +163,7 @@ def main():
         print("conversion failed: %s: %s" % (type(e).__name__, str(e)[:200]))
         failed.append("conversion")
     for p in sorted((ROOT / "weights").glob("*.pth")) + sorted((ROOT / "weights").glob("*.state.pt")) + [d for d, _, _ in HTTP]:
-        if have(p):
+        if p.exists():
             print("  %6.1f MB  %s" % (p.stat().st_size / 1e6, p))
     print("\nALL PRESENT" if not failed else "\nMISSING: " + ", ".join(failed))
     return 1 if failed else 0

@@ -63,3 +63,11 @@ def test_clock_roundtrip():
 def test_oversized_numbers_are_invalid_packets(decode, packet):
     with pytest.raises(ValueError):
         decode(packet)
+
+
+def test_seq_filter_refuses_a_huge_jump_while_the_stream_is_live():
+    f = p.SeqFilter(quiet_s=1.0, max_jump=3000)
+    assert f.accept(5, 0.0)
+    assert not f.accept(10 ** 9, 0.1)  # one stray packet must not lock the real sender out
+    assert f.accept(6, 0.2) and f.accept(3006, 0.3)
+    assert f.accept(10 ** 9, 2.0)      # after a quiet second anything is a restart

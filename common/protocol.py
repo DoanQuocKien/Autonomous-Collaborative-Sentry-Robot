@@ -1,4 +1,4 @@
-﻿"""Wire formats shared by the laptop and the Jetson.
+"""Wire formats shared by the laptop and the Jetson.
 
 Python 3.6-compatible and stdlib-only: this file is copied to the Jetson as-is.
 Every decoder raises ValueError on bad input, so a malformed or hostile UDP
@@ -69,15 +69,18 @@ class SeqFilter(object):
 
     After `quiet_s` seconds without an accepted packet the sender is assumed to have
     restarted (its seq starts again at 0), so any seq is accepted.
+    While the stream is live, a jump of more than `max_jump` ahead is refused too: one stray
+    or hostile packet with a huge seq must not lock out the real sender (30 Hz * 100 s = 3000).
     """
 
-    def __init__(self, quiet_s=1.0):
+    def __init__(self, quiet_s=1.0, max_jump=3000):
         self.quiet_s = quiet_s
+        self.max_jump = max_jump
         self.last = None
         self.last_time = None
 
     def accept(self, seq, now):
-        if self.last is None or now - self.last_time > self.quiet_s or seq > self.last:
+        if self.last is None or now - self.last_time > self.quiet_s or self.last < seq <= self.last + self.max_jump:
             self.last, self.last_time = seq, now
             return True
         return False

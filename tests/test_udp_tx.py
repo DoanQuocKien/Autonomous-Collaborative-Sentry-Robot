@@ -77,3 +77,12 @@ def test_invalid_commands_do_not_reach_socket(sender, v, w):
     with pytest.raises(ValueError):
         tx.send(v, w)
     assert not sock.packets
+
+
+def test_numpy_scalars_and_rounding_overshoot_are_sent(sender):
+    np = pytest.importorskip("numpy")
+    tx, sock, now = sender
+    assert tx.send(np.float32(0.5), np.float64(-0.25))
+    now[0] = 1
+    assert tx.send(1.0000001, -1.0000001)
+    assert [p[0] for p in sock.packets] == [{"seq": 0, "v": 0.5, "w": -0.25}, {"seq": 1, "v": 1.0, "w": -1.0}]
