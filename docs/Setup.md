@@ -70,7 +70,7 @@ python3 jetson/robot_udp.py --allow-ip <laptop-ip> --max-speed 0.3
 python3 jetson/camera_pub.py --source synthetic   # test pattern, same wire format as the camera
 python3 jetson/camera_pub.py                      # real camera
 ```
-**Safety interlock:** `robot_udp.py` refuses to move unless `jetson/estop.py` is running on the robot host (heartbeat file) and armed with the gamepad (hold Select+Start 2 s) **and then only while R1 is held** (dead-man); any other button is a hard stop. For dry-run development only, add `--no-estop`. See `docs/JetBot Notes.md`.
+**Safety interlock:** `robot_udp.py` refuses to move unless `jetson/estop.py` is running on the robot host (heartbeat file) and armed with the gamepad (hold Start 1.5 s) **and then only while R1 is held** (dead-man); any other button is a hard stop. For dry-run development only, add `--no-estop`. See `docs/JetBot Notes.md`.
 
 Robot SSH tools (`tools.jetbot_status`, `tools.calibrate_motion`): set `JETBOT_PASSWORD` in your shell (or answer the prompt). The first connection pins the robot's host key in `data/jetbot_host_key`; delete that file after re-flashing the robot.
 
@@ -86,7 +86,7 @@ ssh jetbot@<ip> "sudo sh /home/jetbot/sentry/jetson/systemd/install.sh"         
 ssh jetbot@<ip> "sudo sh /home/jetbot/sentry/jetson/systemd/install.sh --with-control"   # also robot_udp
 ```
 
-- `sentry-estop`: `estop.py --arm-buttons 10 11 --arm-hold 2.0` (Select+Start held 2 s arms, the documented rule; `tests/test_systemd_units.py` keeps the unit in line with `estop.py`'s defaults). Restarts itself and always comes back hard-stopped (fail-safe).
+- `sentry-estop`: `estop.py --arm-buttons 11 --arm-hold 1.5` (Start alone held 1.5 s arms, the default; `tests/test_systemd_units.py` keeps the unit in line with `estop.py`'s defaults). Restarts itself and always comes back hard-stopped (fail-safe).
 - `sentry-camera`: `camera_pub.py` in the container, restarted if it dies; waits for the container after boot.
 - `sentry-control` (optional): `robot_udp.py --max-speed 0.3`. It still refuses to move unless the e-stop is armed and R1 is held. It has no `--allow-ip` by default because the laptop's hotspot IP changes; to restrict it, put `ALLOW_ARGS="--allow-ip <laptop-ip>"` in `/etc/default/sentry-control` and `sudo systemctl restart sentry-control`.
 - Logs are the same files as before (`/home/jetbot/sentry/estop.log`, `camera_pub.log`, `robot_udp.log`); `systemctl status sentry-camera` and `journalctl -u sentry-camera` show the unit state.

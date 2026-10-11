@@ -74,7 +74,7 @@ Laptop-internal contract:
 
 **Safety (non-negotiable):**
 - The Jetson stops the motors if no control packet arrives for 300 ms.
-- The kit gamepad is a **dead-man switch plus e-stop** (`jetson/estop.py`, runs on the robot host): the robot moves only while R1 is held and the e-stop is armed (hold Select+Start 2 s); releasing R1 stops it, any other button or losing the pad is a hard stop, and every stop cuts the motor driver directly over I2C. `robot_udp.py` refuses to drive without the e-stop's heartbeat. Verified on the robot 2026-10-06 (wheels off the ground), including with `robot_udp.py` frozen. Details and limits in `docs/JetBot Notes.md`.
+- The kit gamepad is a **dead-man switch plus e-stop** (`jetson/estop.py`, runs on the robot host): the robot moves only while R1 is held and the e-stop is armed (hold Start 1.5 s); releasing R1 stops it, any other button or losing the pad is a hard stop, and every stop cuts the motor driver directly over I2C. `robot_udp.py` refuses to drive without the e-stop's heartbeat. Verified on the robot 2026-10-06 (wheels off the ground), including with `robot_udp.py` frozen. Details and limits in `docs/JetBot Notes.md`.
 - Speed is capped during all HIL tests by `robot_udp.py --max-speed` on the robot (0.3 in `jetson/systemd/sentry-control.service`; the Jetson cannot read `config.toml`). Commands are mapped onto [`min_pwm`, cap] (dead-zone compensation, `common/mixing.py`), so small commands still move the wheels and the evasion arc keeps both wheels turning; at a 0.3 cap, though, evasion reaches only 0.3 of full speed. Raising the cap for the Week 6 evasion trials is a safety decision for the team, recorded in the weekly log of whoever runs them.
 
 ## 4. Testing Policy

@@ -7,12 +7,10 @@ R1, SELECT, START = 7, 10, 11
 
 
 def arm(logic, t=0.0):
-    """Hold Select+Start for the full time; returns the events of the final tick."""
-    logic.button(SELECT, True, t)
-    logic.button(START, True, t + 0.1)
-    ev = logic.tick(t + 0.1 + 2.0)
-    logic.button(SELECT, False, t + 2.2)
-    logic.button(START, False, t + 2.2)
+    """Hold Start (the default arm key) for the full time; returns the events of the final tick."""
+    logic.button(START, True, t)
+    ev = logic.tick(t + 1.5)
+    logic.button(START, False, t + 1.7)
     return ev
 
 
@@ -24,25 +22,32 @@ def test_starts_hard_stopped_and_nothing_moves_until_armed():
     assert e.button(4, True, 0.1) == []           # other buttons are no-ops while already hard-stopped
 
 
-def test_arming_needs_both_buttons_held_for_the_full_time():
-    e = EstopLogic(arm_hold_s=2.0)
+def test_arming_needs_start_held_for_the_full_time():
+    e = EstopLogic()
     e.button(SELECT, True, 0.0)
-    assert e.tick(5.0) == [] and e.hard           # one button is never enough
+    assert e.tick(5.0) == [] and e.hard           # Select alone never arms
     e.button(START, True, 5.0)
-    assert e.tick(6.9) == [] and e.hard           # not long enough
-    assert e.tick(7.0) == ["ARM"] and not e.hard  # armed, but R1 not held yet, so still no motion
+    assert e.tick(6.4) == [] and e.hard           # not long enough
+    assert e.tick(6.5) == ["ARM"] and not e.hard  # armed, but R1 not held yet, so still no motion
     assert not e.motion_allowed
     assert e.tick(8.0) == []                      # arms once
 
 
-def test_releasing_the_chord_early_restarts_the_hold():
-    e = EstopLogic(arm_hold_s=2.0)
-    e.button(SELECT, True, 0.0)
+def test_releasing_the_arm_key_early_restarts_the_hold():
+    e = EstopLogic()
     e.button(START, True, 0.0)
-    e.button(START, False, 1.5)
+    e.button(START, False, 1.0)
     assert e.tick(2.5) == []
     e.button(START, True, 3.0)
-    assert e.tick(4.9) == [] and e.tick(5.0) == ["ARM"]
+    assert e.tick(4.4) == [] and e.tick(4.5) == ["ARM"]
+
+
+def test_a_two_key_chord_is_still_possible():
+    e = EstopLogic(arm_buttons=(SELECT, START), arm_hold_s=2.0)
+    e.button(SELECT, True, 0.0)
+    assert e.tick(5.0) == [] and e.hard           # one button is never enough
+    e.button(START, True, 5.0)
+    assert e.tick(6.9) == [] and e.hard and e.tick(7.0) == ["ARM"]
 
 
 def test_dead_man_hold_allows_motion_and_release_stops_it():
@@ -57,9 +62,8 @@ def test_dead_man_hold_allows_motion_and_release_stops_it():
 def test_arming_while_holding_r1_goes_straight_to_motion():
     e = EstopLogic()
     e.button(R1, True, 0.0)
-    e.button(SELECT, True, 0.0)
     e.button(START, True, 0.0)
-    assert e.tick(2.0) == ["ARM", "GO"] and e.motion_allowed
+    assert e.tick(1.5) == ["ARM", "GO"] and e.motion_allowed
 
 
 def test_any_other_button_is_a_hard_stop_that_needs_the_chord_again():
@@ -97,7 +101,6 @@ def test_device_lost_is_a_hard_stop_and_forgets_held_buttons():
     e.button(R1, True, 5.0)
     assert e.device_lost() == ["STOP"] and e.hard and e.reason == "gamepad lost"
     assert e.device_lost() == []                                # nothing more to report
-    e.button(SELECT, True, 6.0)
     e.button(START, True, 6.0)
     e.device_lost()                                             # held buttons are forgotten
     assert e.tick(20.0) == [] and e.hard
@@ -127,18 +130,6 @@ def test_motor_cut_and_rearm_write_the_expected_registers():
     assert motor_rearm(1, 0x60, fake)
     assert calls == [["0x60", "0xfa", "0x0"], ["0x60", "0xfb", "0x0"], ["0x60", "0xfc", "0x0"], ["0x60", "0xfd", "0x0"]]
     assert not motor_cut(1, 0x60, lambda cmd, **kw: 1)          # an i2cset failure is reported
-
-
-def test_single_key_arming_still_needs_the_full_hold_and_r1():
-    e = EstopLogic(arm_buttons=(START,), arm_hold_s=1.5)
-    e.button(START, True, 0.0)
-    assert e.tick(1.4) == [] and e.hard           # not held long enough
-    e.button(START, False, 1.45)
-    e.button(START, True, 2.0)
-    assert e.tick(3.6) == ["ARM"] and not e.motion_allowed   # armed, but R1 not held: no motion
-    assert e.button(R1, True, 3.7) == ["GO"]
-    assert e.button(4, True, 3.8) == ["STOP"] and e.hard     # any other key is still a hard stop
-
 
 
 def test_a_hung_i2c_bus_is_a_failed_write_not_a_hang():
