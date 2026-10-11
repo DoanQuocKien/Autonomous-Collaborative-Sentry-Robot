@@ -1,0 +1,7 @@
+[
+{"cat" : "Session","pid" :9576,"tid" :32528,"dur" :9878,"ts" :217,"ph" : "X","name" :"model_loading_array","args" : {}},
+{"cat" : "Session","pid" :9576,"tid" :32528,"dur" :121794,"ts" :236055,"ph" : "X","name" :"session_initialization","args" : {}},
+{"cat" : "Node","pid" :9576,"tid" :32528,"dur" :3182,"ts" :361731,"ph" : "X","name" :"Relu_0_kernel_time","args" : {"parameter_size" : "0","provider" : "CUDAExecutionProvider","op_name" : "Relu","input_type_shape" : [{"float":[1,4]}],"node_index" : "0","output_type_shape" : [{"float":[1,4]}],"activation_size" : "16","output_size" : "16","thread_scheduling_stats" : {"main_thread": {"thread_pool_name": "session-1-intra-op", "thread_id": "32528", "block_size": [], "core": -1, "Distribution": 0, "DistributionEnqueue": 0, "Run": 0, "Wait": 0, "WaitRevoke": 0}, "sub_threads": {"4456": {"num_run": 0, "core": -1},"27284": {"num_run": 0, "core": -1},"23108": {"num_run": 0, "core": -1},"11064": {"num_run": 0, "core": -1},"27016": {"num_run": 0, "core": -1},"10664": {"num_run": 0, "core": -1},"17112": {"num_run": 0, "core": -1},"13592": {"num_run": 0, "core": -1},"31844": {"num_run": 0, "core": -1},"31580": {"num_run": 0, "core": -1},"25680": {"num_run": 0, "core": -1},"22020": {"num_run": 0, "core": -1},"15352": {"num_run": 0, "core": -1}}}}},
+{"cat" : "Session","pid" :9576,"tid" :32528,"dur" :3409,"ts" :361697,"ph" : "X","name" :"SequentialExecutor::Execute","args" : {}},
+{"cat" : "Session","pid" :9576,"tid" :32528,"dur" :5930,"ts" :359307,"ph" : "X","name" :"model_run","args" : {}}
+]

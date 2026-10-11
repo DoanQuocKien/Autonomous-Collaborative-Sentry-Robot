@@ -23,6 +23,7 @@
 | T2 | Watchdog, 5 cycles (`robot_udp --dry-run` on the robot) | stop 305-315 ms after the last packet | week-01/link_test_2026-10-04.txt (section O) |
 | T2 (wheels off) | Dead-man / e-stop, including a frozen `robot_udp.py` | pass; motor cut works independently of the program | week-01/estop_test_2026-10-06.txt, estop_deadman_2026-10-06.txt |
 | T1 (gpu) | `tools/gpu_pipeline_check.py` | 3-model pipeline 37 FPS, about 300 MB VRAM; InsightFace about 7 ms, OSNet 11-13 ms | week-01/gpu_baseline_2026-10-06.txt |
+| T1 (gpu) | `tools.gpu_baseline --check-face` (HNHL's tool) on the target RTX 4050 6 GB | pass: YOLOv8n 110.6 FPS, YOLOv8s 106.3 FPS (batch 1, FP32, 640), peak allocated 33 / 79 MiB; onnxruntime-gpu 1.23.2, torch CUDA OK | week-01/gpu/gpu_baseline_rtx4050.json, .log |
 | T1 (trial) | Fisheye calibration on 58 checkerboard photos, 640x480 | RMS 1.39 px (0.95 px after dropping 5 outliers); target < 1.0 px in Week 2 | week-01/d1/ (this session; photos in data/D1/checkerboard/) |
 | T2 | ESP32-CAM stream, 68 s walk-through test | 14.4 FPS average, large motion 13.8 FPS; full-load worst case 9-10 FPS | week-01/esp32_gc2145_jpeg_2026-10-09.txt (sections 18-21) |
 

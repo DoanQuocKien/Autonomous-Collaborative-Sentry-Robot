@@ -13,6 +13,7 @@ import zmq
 
 from common.protocol import decode_video_header
 from sentry.config import load
+from sentry.net.discover import resolve
 from sentry.net.frame import VideoFrame
 
 
@@ -40,7 +41,7 @@ class ZMQReceiver:
     def __init__(self, ip=None, port=None, *, endpoint=None):
         cfg = load()["net"]
         self.endpoint = endpoint or "tcp://%s:%d" % (
-            cfg["jetbot_ip"] if ip is None else ip,
+            resolve(cfg["jetbot_ip"] if ip is None else ip),
             cfg["video_port"] if port is None else port)
         self._hwm = cfg["video_rcvhwm"]
         self._poll_ms = cfg["video_poll_ms"]

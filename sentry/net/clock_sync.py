@@ -6,6 +6,7 @@ import time
 
 from common.protocol import decode_clock_reply, encode_clock_request
 from sentry.config import load
+from sentry.net.discover import resolve
 
 
 @dataclass(frozen=True)
@@ -61,7 +62,7 @@ def synchronize(ip=None, port=None, samples=None, timeout_s=None):
     The connected UDP socket only accepts replies from the selected peer.
     """
     cfg = load()["net"]
-    ip = cfg["jetbot_ip"] if ip is None else ip
+    ip = resolve(cfg["jetbot_ip"] if ip is None else ip)
     port = cfg["clock_port"] if port is None else port
     samples = cfg["clock_samples"] if samples is None else samples
     timeout_s = cfg["clock_timeout_s"] if timeout_s is None else timeout_s

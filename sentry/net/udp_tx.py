@@ -11,12 +11,13 @@ import time
 
 from common.protocol import encode_control
 from sentry.config import load
+from sentry.net.discover import resolve
 
 
 class UDPSender:
     def __init__(self, ip=None, port=None, rate_hz=None, *, clock=time.perf_counter):
         cfg = load()["net"]
-        self.address = (cfg["jetbot_ip"] if ip is None else ip,
+        self.address = (resolve(cfg["jetbot_ip"] if ip is None else ip),
                         cfg["control_port"] if port is None else port)
         rate_hz = cfg["control_rate_hz"] if rate_hz is None else rate_hz
         if not math.isfinite(rate_hz) or rate_hz <= 0:
