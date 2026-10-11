@@ -1,0 +1,18 @@
+[Unit]
+Description=Sentry JetBot camera publisher (camera -> JPEG -> ZeroMQ 5555), runs inside the jetbot_jupyter container
+After=docker.service nvargus-daemon.service
+Requires=docker.service
+
+[Service]
+Type=simple
+# wait (up to 2 min) for the container, drop a stale copy started by hand, then run in the foreground so systemd supervises it
+ExecStartPre=/bin/sh -c 'for i in $$(seq 1 60); do docker inspect -f "{{.State.Running}}" jetbot_jupyter 2>/dev/null | grep -q true && exit 0; sleep 2; done; exit 1'
+ExecStartPre=-/usr/bin/docker exec jetbot_jupyter pkill -f jetson/camera_pub.py
+ExecStart=/bin/sh -c 'exec docker exec -w /workspace/sentry jetbot_jupyter python3 jetson/camera_pub.py >> /home/jetbot/sentry/camera_pub.log 2>&1'
+ExecStopPost=-/usr/bin/docker exec jetbot_jupyter pkill -f jetson/camera_pub.py
+Restart=always
+RestartSec=5
+TimeoutStartSec=150
+
+[Install]
+WantedBy=multi-user.target

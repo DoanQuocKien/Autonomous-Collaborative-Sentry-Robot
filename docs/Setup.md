@@ -74,6 +74,23 @@ python3 jetson/camera_pub.py                      # real camera
 
 Laptop-side command sender: `python -m tools.send_cmd --ip <jetbot-ip> --v 0.3 --seconds 2` (add `--silent-end` to test the 300 ms watchdog).
 
+### Start the robot's programs at boot (systemd)
+
+Without this, a reboot or power cycle stops the e-stop, the camera publisher and the motor receiver, and each has to be started by hand. Units are in `jetson/systemd/`; they assume the code is in `/home/jetbot/sentry` and the container is `jetbot_jupyter`:
+
+```
+scp -r jetson/systemd jetbot@<ip>:/home/jetbot/sentry/jetson/        # or copy the folder any other way
+ssh jetbot@<ip> "sudo sh /home/jetbot/sentry/jetson/systemd/install.sh"                  # estop + camera
+ssh jetbot@<ip> "sudo sh /home/jetbot/sentry/jetson/systemd/install.sh --with-control"   # also robot_udp
+```
+
+- `sentry-estop`: `estop.py --arm-buttons 11 --arm-hold 1.5` (Start alone arms). Restarts itself and always comes back hard-stopped (fail-safe).
+- `sentry-camera`: `camera_pub.py` in the container, restarted if it dies; waits for the container after boot.
+- `sentry-control` (optional): `robot_udp.py --max-speed 0.3`. It still refuses to move unless the e-stop is armed and R1 is held. It has no `--allow-ip` by default because the laptop's hotspot IP changes; to restrict it, put `ALLOW_ARGS="--allow-ip <laptop-ip>"` in `/etc/default/sentry-control` and `sudo systemctl restart sentry-control`.
+- Logs are the same files as before (`/home/jetbot/sentry/estop.log`, `camera_pub.log`, `robot_udp.log`); `systemctl status sentry-camera` and `journalctl -u sentry-camera` show the unit state.
+- Stop one for a test: `sudo systemctl stop sentry-camera`. Remove everything (return the robot): see the return checklist in `docs/JetBot Notes.md`.
+- Written 2026-10-11, **not yet tested on the robot** (it was charging).
+
 ## D. ESP32-CAM firmware (PlatformIO in VS Code)
 
 Install the PlatformIO IDE extension; it installs its own core on first start (several hundred MB, slow on bad Wi-Fi). Then `python -m tools.fetch_esp_jpeg`, copy `esp32/sentry_cam/secrets.example.h` to `secrets.h` (hotspot name and password; 2.4 GHz only), open `esp32/tile_stream` and build or upload. PlatformIO's `pio.exe` is not on the PATH of a normal terminal: use `~/.platformio/penv/Scripts/pio.exe` or the PlatformIO terminal. Never flash another person's board without asking: it overwrites their firmware. The serial port number can change after a replug (COM3 -> COM4). Full story, interface and limits: `docs/ESP32-CAM.md`.

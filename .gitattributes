@@ -1,0 +1,2 @@
+# systemd units and shell scripts must keep LF line endings (they run on the robot)
+jetson/systemd/* text eol=lf

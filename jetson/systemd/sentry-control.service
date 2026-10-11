@@ -1,0 +1,20 @@
+[Unit]
+Description=Sentry JetBot motor control receiver (UDP v,w -> motors), runs inside the jetbot_jupyter container
+After=docker.service sentry-estop.service
+Requires=docker.service
+
+[Service]
+Type=simple
+# OPTIONAL, not enabled by install.sh unless --with-control. It still refuses to move unless estop.py is armed and R1 is held.
+# The laptop IP changes with the hotspot, so no --allow-ip by default: put ALLOW_ARGS="--allow-ip <laptop-ip>" in /etc/default/sentry-control to restrict it.
+EnvironmentFile=-/etc/default/sentry-control
+ExecStartPre=/bin/sh -c 'for i in $$(seq 1 60); do docker inspect -f "{{.State.Running}}" jetbot_jupyter 2>/dev/null | grep -q true && exit 0; sleep 2; done; exit 1'
+ExecStartPre=-/usr/bin/docker exec jetbot_jupyter pkill -f jetson/robot_udp.py
+ExecStart=/bin/sh -c 'exec docker exec -w /workspace/sentry jetbot_jupyter python3 jetson/robot_udp.py --max-speed 0.3 $$ALLOW_ARGS >> /home/jetbot/sentry/robot_udp.log 2>&1'
+ExecStopPost=-/usr/bin/docker exec jetbot_jupyter pkill -f jetson/robot_udp.py
+Restart=always
+RestartSec=5
+TimeoutStartSec=150
+
+[Install]
+WantedBy=multi-user.target
