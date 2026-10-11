@@ -22,12 +22,12 @@ def _option(args, name):
     return rest[:next((i for i, a in enumerate(rest) if a.startswith("--")), len(rest))]
 
 
-def test_estop_unit_arms_with_select_start_held_2s():
+def test_estop_unit_arms_with_start_held_1_5s():
     args = _estop_args()
     buttons = _option(args, "--arm-buttons")
-    assert buttons is None or tuple(int(b) for b in buttons) == ARM_BUTTONS == (10, 11)
+    assert buttons is None or tuple(int(b) for b in buttons) == ARM_BUTTONS == (11,)
     hold = _option(args, "--arm-hold")
-    assert hold is None or float(hold[0]) == ARM_HOLD_S == 2.0
+    assert hold is None or float(hold[0]) == ARM_HOLD_S == 1.5
     deadman = _option(args, "--deadman")
     assert deadman is None or int(deadman[0]) == DEADMAN_BUTTON
     assert "--no-motor-cut" not in args
