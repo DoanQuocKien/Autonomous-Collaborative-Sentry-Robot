@@ -1,0 +1,3 @@
+obstacle_id,label,tape_distance_m,lateral_offset_m,robot_pose_note,start_time,end_time,notes
+1,box,0.30,0.0,"robot at the tape mark A, camera facing +x",12:30:00,12:30:05,
+2,chair leg,0.50,0.2,,,,

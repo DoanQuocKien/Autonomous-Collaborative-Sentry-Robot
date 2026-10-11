@@ -92,7 +92,7 @@ Laptop-internal contract:
 
 | ID | When | Recorded by | Content |
 | :-- | :-- | :-- | :-- |
-| D1 | End of W1 | DQK (all present) | Room sweeps with the JetBot; doorway seen from 10+ positions and distances (1-4 m); 20 obstacles at tape-measured distances 0.3-2.0 m (ground truth in a CSV); 30+ checkerboard images; ESP32 view of the door |
+| D1 | End of W1 (door data continues in W2) | DQK (all present) | Room sweeps with the JetBot; **doorway views of 3+ different doors (2026-10-11: the method matches a user-supplied `I_ref`, so it must work for any door; recorded: cafe glass door, classroom door, one more), each with its own `I_ref` photo (colour, front-on, about 2 m), 10+ positions at 1-4 m and about -45 to +45 deg, plus negatives (no door visible, and other doors as cross-door negatives); labels in `assets/d1/doorway_labels_template.csv` format**; 20 obstacles at tape-measured distances 0.3-2.0 m in the room that is mapped (ground truth in `assets/d1/obstacles_template.csv` format); 30+ checkerboard images (done 2026-10-10: 58); ESP32 view of each door (label the camera: GC2145 tile stream or OV2640) |
 | D2 | End of W3 | DQK + HNHL | ESP32 entries: each team member x 10 entries; 3+ consenting non-enrolled volunteers x 5 entries; logged walk direction (L/C/R) per entry for sector tests |
 | D3 | End of W5 | DQK | JetBot following one or two people: walking, stopping, occlusions, crossing paths |
 | D4 | End of W6 | DQK + KR labels | 20+ padded "lunges" (pillow on a stick, never a real strike) + 10 min of normal walking; onset timestamps labelled with `label_events.py` |
@@ -108,7 +108,7 @@ Privacy: face photos and recordings of volunteers stay in `data/` and the team D
 | Fisheye calibration | RMS reprojection error | < 1.0 px | T1 |
 | Obstacle distance | Relative error vs tape on D1 | median <= 10 %, p90 <= 20 % over 0.3-2.0 m | T1 |
 | Obstacle repulsion | Collisions in exploration runs | 0 collisions in 5 x 3-min runs | T2 |
-| ORB entrance | Frame-level TPR / FPR on D1 | TPR >= 90 %, FPR <= 5 % | T1 |
+| ORB entrance | Frame-level TPR / FPR on D1, pooled and **per door**; threshold tuned on one door and tested on the others (hold-out) | TPR >= 90 %, FPR <= 5 % pooled; report the worst door | T1 |
 | Motion calibration + dead reckoning | Position error after 3 m path | <= 15 cm with ArUco correction, <= 40 cm without | T2 |
 | Sweet-spot selection | Chosen spot satisfies the 3 spec conditions | 5/5 runs | T2 |
 | ESP32 handshake | I_ref detection when camera faces door / is turned away | 10/10 correct accepts, 10/10 correct rejects | T2 |

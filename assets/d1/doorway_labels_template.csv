@@ -1,0 +1,4 @@
+door_id,i_ref_file,position_id,distance_m,angle_deg,door_visible,start_time,end_time,notes
+cafe_glass,cafe_glass_iref.jpg,1,2.0,0,yes,12:03:10,12:03:25,"backlit, sun on the left"
+cafe_glass,cafe_glass_iref.jpg,2,3.0,-30,yes,12:03:40,12:03:55,
+cafe_glass,cafe_glass_iref.jpg,3,2.0,0,no,12:05:00,12:05:15,"facing the wall: a negative"
