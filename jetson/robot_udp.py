@@ -6,8 +6,8 @@ the robot (docs/JetBot Notes.md). `aplay` is NOT yet tested on the real robot.
 Try it without touching hardware:   python3 jetson/robot_udp.py --dry-run
 
 Safety: motors stop if no valid command arrives for --watchdog seconds, on exit, on any exception, and whenever
-jetson/estop.py is not running, not armed, or R1 is released. --max-speed caps every wheel value; commands map onto
-[min_pwm, max_speed] (dead-zone compensation, common.mixing.to_pwm). Out-of-range settings refuse to start.
+jetson/estop.py is not running, not armed, or R1 is released. --max-speed caps every wheel value; a wheel value below
+min_pwm after the cap is sent as 0 (common.mixing.deadzone). Out-of-range settings refuse to start.
 """
 import argparse
 import json
@@ -20,7 +20,7 @@ import threading
 import time
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from common.mixing import DEADBAND, check_drive, mix, to_pwm  # noqa: E402
+from common.mixing import check_drive, deadzone, mix  # noqa: E402
 from common.protocol import (PORT_CLOCK, PORT_CONTROL, SeqFilter, decode_clock_request,  # noqa: E402
                              decode_control, encode_clock_reply)
 
@@ -28,13 +28,11 @@ from common.protocol import (PORT_CLOCK, PORT_CONTROL, SeqFilter, decode_clock_r
 class Controller(object):
     """Pure logic (no sockets, no clock): easy to test."""
 
-    def __init__(self, k=1.0, min_pwm=0.0, max_speed=0.5, watchdog_s=0.3, deadband=DEADBAND):
+    def __init__(self, k=1.0, min_pwm=0.0, max_speed=0.5, watchdog_s=0.3):
         check_drive(max_speed, min_pwm, k)
         if isinstance(watchdog_s, bool) or not isinstance(watchdog_s, (int, float)) or not 0 < watchdog_s <= 1.0:
             raise ValueError("watchdog_s must be in (0, 1] s, got %r" % (watchdog_s,))
-        if isinstance(deadband, bool) or not isinstance(deadband, (int, float)) or not 0 <= deadband < 1:
-            raise ValueError("deadband must be in [0, 1), got %r" % (deadband,))
-        self.k, self.min_pwm, self.max_speed, self.watchdog_s, self.deadband = k, min_pwm, max_speed, watchdog_s, deadband
+        self.k, self.min_pwm, self.max_speed, self.watchdog_s = k, min_pwm, max_speed, watchdog_s
         self.seq = SeqFilter()
         self.peer = None  # source address of the stream being obeyed; another sender is ignored until it goes quiet
         self.last_cmd = None  # time of the last accepted motor command; None = motors already stopped
@@ -68,8 +66,8 @@ class Controller(object):
             return None
         self.last_cmd = now
         left, right = mix(msg["v"], msg["w"], self.k)
-        return ("motors", (to_pwm(left, self.max_speed, self.min_pwm, self.deadband),
-                           to_pwm(right, self.max_speed, self.min_pwm, self.deadband)))
+        left, right = left * self.max_speed, right * self.max_speed
+        return ("motors", (deadzone(left, self.min_pwm), deadzone(right, self.min_pwm)))
 
     def on_tick(self, now, estop=False):
         """While estop is engaged: send a stop right away and repeat it every 0.25 s. Otherwise the watchdog:
@@ -157,8 +155,7 @@ def main():
         with open(args.calib) as f:
             calib = json.load(f)
     try:
-        ctl = Controller(calib.get("k", 1.0), calib.get("min_pwm", 0.0), args.max_speed, args.watchdog,
-                         calib.get("deadband", DEADBAND))
+        ctl = Controller(calib.get("k", 1.0), calib.get("min_pwm", 0.0), args.max_speed, args.watchdog)
     except ValueError as e:
         raise SystemExit("refusing to start: %s (check --max-speed, --watchdog and %s)" % (e, args.calib))
     robot = None if args.dry_run else _make_robot()

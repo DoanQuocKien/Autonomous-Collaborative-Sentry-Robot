@@ -8,21 +8,23 @@ def test_command_is_mixed_capped_and_deadzoned():
     c = Controller(k=1.0, min_pwm=0.0, max_speed=0.5)
     assert c.on_packet(encode_control(1, 1.0, 0.0), now=0.0) == ("motors", (0.5, 0.5))
     assert c.on_packet(encode_control(2, 0.0, 1.0), now=0.0) == ("motors", (-0.5, 0.5))
-    # dead-zone compensation: a small command maps above min_pwm instead of stalling at 0.5 * 0.4 = 0.2 < 0.25
+    # a wheel value below min_pwm AFTER the cap is a clean stop: 0.5 * 0.4 = 0.2 < 0.25
     c = Controller(min_pwm=0.25, max_speed=0.5)
-    assert c.on_packet(encode_control(1, 0.4, 0.0), now=0.0) == ("motors", (0.35, 0.35))
-    assert c.on_packet(encode_control(2, 0.01, 0.0), now=0.0) == ("motors", (0.0, 0.0))   # deadband: no creep
+    assert c.on_packet(encode_control(1, 0.4, 0.0), now=0.0) == ("motors", (0.0, 0.0))
+    assert c.on_packet(encode_control(2, 0.6, 0.0), now=0.0) == ("motors", (0.3, 0.3))
 
 
-def test_v_at_the_cap_moves_the_robot():
-    # with the robot's settings (cap 0.3, min_pwm 0.12) v = 0.3 used to give (0, 0)
-    left, right = Controller(min_pwm=0.12, max_speed=0.3).on_packet(encode_control(1, 0.3, 0.0), now=0.0)[1]
-    assert left == right > 0.12
+def test_the_robots_settings_need_v_of_about_0_4_to_move():
+    # cap 0.3, min_pwm 0.12 (measured 2026-10-11: 0.09 veers, 0.12 and above runs straight): v < 0.4 is a stop
+    c = Controller(min_pwm=0.12, max_speed=0.3)
+    assert c.on_packet(encode_control(1, 0.3, 0.0), now=0.0) == ("motors", (0.0, 0.0))
+    left, right = c.on_packet(encode_control(2, 0.5, 0.0), now=0.0)[1]
+    assert left == right and abs(left - 0.15) < 1e-9
 
 
 @pytest.mark.parametrize("kwargs", [
     {"max_speed": -0.3}, {"max_speed": 2.0}, {"k": float("nan")}, {"min_pwm": 0.6, "max_speed": 0.5},
-    {"watchdog_s": 0}, {"watchdog_s": 300}, {"deadband": 1.5},
+    {"watchdog_s": 0}, {"watchdog_s": 300},
 ])
 def test_unsafe_settings_refuse_to_start(kwargs):
     with pytest.raises(ValueError):
