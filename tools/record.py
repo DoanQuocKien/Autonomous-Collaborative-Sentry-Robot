@@ -78,13 +78,14 @@ def record_esp32(ip, out_dir):
 def main():
     parser = argparse.ArgumentParser(description="Record Jetbot and ESP32 streams to disk")
     parser.add_argument("out_dir", help="Output directory name inside data/ (e.g. D1)")
+    parser.add_argument("--no-esp32", action="store_true", help="record the JetBot only (no ESP32 camera at hand)")
     args = parser.parse_args()
     
     config = load_config()
     from tools.find_jetbot import resolve  # jetbot_ip = "auto" scans the network
     jetbot_ip = resolve(config["net"]["jetbot_ip"])
     from sentry.net.discover import resolve_esp32  # esp32_ip = "auto": the local relay, else an OV2640 board on the LAN
-    esp32_ip = resolve_esp32(config["net"]["esp32_ip"])
+    esp32_ip = None if args.no_esp32 else resolve_esp32(config["net"]["esp32_ip"])
     video_port = config["net"]["video_port"]
     
     root_dir = Path(__file__).parent.parent
@@ -94,10 +95,11 @@ def main():
     
     stop_event = threading.Event()
     t1 = threading.Thread(target=record_jetbot, args=(jetbot_ip, video_port, data_dir, stop_event), daemon=True)
-    t2 = threading.Thread(target=record_esp32, args=(esp32_ip, data_dir), daemon=True)
+    t2 = None if esp32_ip is None else threading.Thread(target=record_esp32, args=(esp32_ip, data_dir), daemon=True)
     
     t1.start()
-    t2.start()
+    if t2:
+        t2.start()
     
     print(f"Recording to {data_dir}... Press Ctrl+C to stop.")
     try:

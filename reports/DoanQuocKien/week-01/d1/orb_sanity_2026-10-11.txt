@@ -1,0 +1,9 @@
+Rough ORB sanity check on the cafe glass door set, 2026-10-11. NOT the Week 2 detector: ORB 2000 features, BFMatcher Hamming, Lowe ratio 0.75, RANSAC homography (5 px), no fisheye undistortion, thresholds untuned. Inliers per frame; a frame with the door in view should score high.
+Reference 1 = phone photo data/D1/cafe_glass_iref.jpg (resized to 640x480):
+  positives (rows 6-9): 1.0 m -30 deg median 5 (max 7); 3.0 m 0 deg median 4 (max 5); 3.0 m -30 deg median 4 (max 6); 4.0 m 0 deg median 5 (max 6)
+  negatives (last 5 s row): median 4, max 6 (111 frames sampled, 0 with >= 15 inliers)
+Reference 2 = robot frame 005242.jpg (position 2, 2.0 m straight on):
+  positives: 1.0 m 0 deg median 6 (max 39); 1.0 m -30 median 7 (max 9); 2.0 m -30 median 9 (one degenerate fit with 651); 3.0 m 0 median 17 (min 13, max 23); 3.0 m -30 median 5; 4.0 m 0 median 6
+  negatives (rows 13-16): medians 7, 4, 5, 2 (max 10)
+Reading: only 3 m straight on with a robot-eye reference separates (17 vs <= 10); otherwise no usable separation. Plan risk 14.
+The dataset itself (frames, labels, manifest) is in data/D1/ (gitignored, contains customers' faces).
