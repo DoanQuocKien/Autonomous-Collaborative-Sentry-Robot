@@ -121,11 +121,11 @@ def i2c_write(bus, addr, reg, value, call=subprocess.call, timeout=1.0):
 
 
 def write_heartbeat(path, now):
-    """time.monotonic() into ESTOP_ALIVE, atomically (write + rename): jetson/robot_udp.py must never read a half-written file."""
+    """time.monotonic() into ESTOP_ALIVE, atomically (write + replace): jetson/robot_udp.py must never read a half-written file."""
     tmp = path + ".tmp"
     with open(tmp, "w") as f:
         f.write("%.3f\n" % now)
-    os.rename(tmp, path)
+    os.replace(tmp, path)  # os.rename fails on Windows when the target exists; replace is atomic on both
 
 
 def motor_cut(bus, addr, call=subprocess.call):
