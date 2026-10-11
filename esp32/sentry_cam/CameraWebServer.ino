@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include "esp_camera.h"
 #include <WiFi.h>
+#include "esp_wifi.h"
 
 // ===========================
 // Select camera model in board_config.h
@@ -42,32 +43,17 @@ void setup() {
   config.pin_pwdn = PWDN_GPIO_NUM;
   config.pin_reset = RESET_GPIO_NUM;
   config.xclk_freq_hz = 20000000;
-  config.frame_size = FRAMESIZE_UXGA;
-  config.pixel_format = PIXFORMAT_RGB565;  // DIAG: temporary, to identify the sensor (JPEG for streaming)
-  //config.pixel_format = PIXFORMAT_RGB565; // for face detection/recognition
-  config.grab_mode = CAMERA_GRAB_WHEN_EMPTY;
+  // OV2640 only (hardware JPEG). A GC2145 or OV3660/OV5640 module cannot do this: the init fails with 0x105/0x106 or the sensor check below prints a warning; use esp32/tile_stream for a GC2145.
+  config.pixel_format = PIXFORMAT_JPEG;
+  config.frame_size = FRAMESIZE_VGA;  // 640x480, the plan's interface
+  config.grab_mode = CAMERA_GRAB_LATEST;  // always the newest frame, never a stale queued one
   config.fb_location = CAMERA_FB_IN_PSRAM;
-  config.jpeg_quality = 12;
-  config.fb_count = 1;
-
-  // if PSRAM IC present, init with UXGA resolution and higher JPEG quality
-  //                      for larger pre-allocated frame buffer.
-  if (config.pixel_format == PIXFORMAT_JPEG) {
-    if (psramFound()) {
-      config.jpeg_quality = 10;
-      config.fb_count = 2;
-      config.grab_mode = CAMERA_GRAB_LATEST;
-    } else {
-      // Limit the frame size when PSRAM is not available
-      config.frame_size = FRAMESIZE_SVGA;
-      config.fb_location = CAMERA_FB_IN_DRAM;
-    }
-  } else {
-    // Best option for face detection/recognition
-    config.frame_size = FRAMESIZE_240X240;
-#if CONFIG_IDF_TARGET_ESP32S3
-    config.fb_count = 2;
-#endif
+  config.jpeg_quality = 12;  // 10-12; lower number = better quality but bigger frames
+  config.fb_count = 2;
+  if (!psramFound()) {
+    config.frame_size = FRAMESIZE_SVGA;
+    config.fb_count = 1;
+    config.fb_location = CAMERA_FB_IN_DRAM;
   }
 
 #if defined(CAMERA_MODEL_ESP_EYE)
@@ -90,10 +76,10 @@ void setup() {
     s->set_brightness(s, 1);   // up the brightness just a bit
     s->set_saturation(s, -2);  // lower the saturation
   }
-  // drop down frame size for higher initial frame rate
-  if (config.pixel_format == PIXFORMAT_JPEG) {
-    s->set_framesize(s, FRAMESIZE_QVGA);
+  if (s->id.PID != OV2640_PID) {
+    Serial.printf("WARNING: sensor PID 0x%04x is not an OV2640 (0x26): hardware JPEG may be missing. A GC2145 (0x2145) needs esp32/tile_stream\n", s->id.PID);
   }
+  s->set_framesize(s, config.frame_size);  // the web UI starts at VGA; the stock sketch dropped to QVGA here
 
 #if defined(CAMERA_MODEL_M5STACK_WIDE) || defined(CAMERA_MODEL_M5STACK_ESP32CAM)
   s->set_vflip(s, 1);
@@ -109,8 +95,13 @@ void setup() {
   setupLedFlash();
 #endif
 
-  WiFi.begin(ssid, password);
+  // same radio settings as esp32/tile_stream (worked on the phone hotspot): channels 1-13, 20 MHz, no power save. The hotspot hands out a new IP each time: tools/record.py finds this board by itself (esp32_ip = "auto", port 81).
+  WiFi.mode(WIFI_STA);
   WiFi.setSleep(false);
+  wifi_country_t country = {"VN", 1, 13, 20, WIFI_COUNTRY_POLICY_MANUAL};
+  esp_wifi_set_country(&country);
+  esp_wifi_set_bandwidth(WIFI_IF_STA, WIFI_BW_HT20);
+  WiFi.begin(ssid, password);
 
   Serial.print("WiFi connecting");
   while (WiFi.status() != WL_CONNECTED) {
@@ -118,13 +109,11 @@ void setup() {
     Serial.print(".");
   }
   Serial.println("");
-  Serial.println("WiFi connected");
+  Serial.printf("WiFi connected ip=%s rssi=%d channel=%d\n", WiFi.localIP().toString().c_str(), WiFi.RSSI(), WiFi.channel());
 
   startCameraServer();
 
-  Serial.print("Camera Ready! Use 'http://");
-  Serial.print(WiFi.localIP());
-  Serial.println("' to connect");
+  Serial.printf("Camera Ready! Stream: http://%s:81/stream  (page: http://%s/)\n", WiFi.localIP().toString().c_str(), WiFi.localIP().toString().c_str());
 }
 
 void loop() {

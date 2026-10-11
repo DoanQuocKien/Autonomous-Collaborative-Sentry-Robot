@@ -83,7 +83,8 @@ def main():
     config = load_config()
     from tools.find_jetbot import resolve  # jetbot_ip = "auto" scans the network
     jetbot_ip = resolve(config["net"]["jetbot_ip"])
-    esp32_ip = config["net"]["esp32_ip"]
+    from sentry.net.discover import resolve_esp32  # esp32_ip = "auto": the local relay, else an OV2640 board on the LAN
+    esp32_ip = resolve_esp32(config["net"]["esp32_ip"])
     video_port = config["net"]["video_port"]
     
     root_dir = Path(__file__).parent.parent
