@@ -2,7 +2,7 @@ import math
 
 import pytest
 
-from common.mixing import check_drive, mix, to_pwm
+from common.mixing import check_drive, deadzone, mix
 
 
 def test_straight_and_pivot_directions():
@@ -31,19 +31,10 @@ def test_non_finite_stops():
     assert mix(0, float("inf")) == (0.0, 0.0)
 
 
-def test_to_pwm_compensates_the_dead_zone():
-    assert to_pwm(0.0, 0.3, 0.12) == 0.0 and to_pwm(0.01, 0.3, 0.12) == 0.0      # zero and deadband noise: stop
-    assert math.isclose(to_pwm(1.0, 0.3, 0.12), 0.3) and math.isclose(to_pwm(-1.0, 0.3, 0.12), -0.3)  # full = the cap
-    assert math.isclose(to_pwm(0.3, 0.3, 0.12), 0.12 + 0.18 * 0.3)               # small commands still move the wheel
-    assert to_pwm(0.5, 0.5) == 0.25                                                # min_pwm 0: plain scaling
-
-
-def test_evasion_stays_a_reverse_arc_under_a_low_cap():
-    """Zeroing below min_pwm used to stop the inner wheel: (-0.3, 0.0). Both wheels must reverse, with the
-    above-stiction speeds in mix()'s ratio."""
-    left, right = (to_pwm(x, 0.3, 0.12) for x in mix(-1.0, 0.8))
-    assert left < right < 0
-    assert math.isclose((right + 0.12) / (left + 0.12), 0.2 / 1.8)
+def test_deadzone_zeroes_values_below_min_pwm_only():
+    assert deadzone(0.09, 0.12) == 0.0 and deadzone(-0.09, 0.12) == 0.0
+    assert deadzone(0.12, 0.12) == 0.12 and deadzone(-0.3, 0.12) == -0.3
+    assert deadzone(0.05, 0.0) == 0.05                               # min_pwm 0: nothing is zeroed
 
 
 @pytest.mark.parametrize("max_speed,min_pwm,k", [

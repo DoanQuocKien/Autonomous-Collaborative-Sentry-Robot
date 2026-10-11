@@ -27,7 +27,7 @@ sentry/                 # laptop package, Python 3.12 in sentry (see Setup.md)
 config.toml             # repo-root tunables (thresholds, gains, ports); stdlib tomllib
 common/                 # Python 3.6-compatible, stdlib only; used by BOTH laptop and Jetson
   protocol.py           # ports, packet encode/decode with validation, SeqFilter, video header, clock echo
-  mixing.py             # (v, w) -> wheel values: rescale-not-clip, dead-zone compensation, setting checks
+  mixing.py             # (v, w) -> wheel values: rescale-not-clip, dead zone (zero below `min_pwm`), setting checks
 tools/                  # DONE: check_env.py, send_cmd.py, make_markers.py, record.py, replay.py, sim_robot.py,
                         # calibrate_fisheye.py (calib/camera.json, RMS 0.83 px), calibrate_motion.py (no runs yet),
                         # plus network/ESP32/D1/GPU helpers

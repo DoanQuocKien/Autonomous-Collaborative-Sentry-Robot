@@ -20,9 +20,6 @@ def mix(v, w, k=1.0):
     return left, right
 
 
-DEADBAND = 0.02  # |wheel value| below this (before the cap) means "stop": PD noise around zero must not creep
-
-
 def check_drive(max_speed, min_pwm, k=1.0):
     """Raise ValueError unless 0 <= min_pwm < max_speed <= 1 and k is finite and positive (a typo must not drive)."""
     for name, x in (("max_speed", max_speed), ("min_pwm", min_pwm), ("k", k)):
@@ -34,15 +31,9 @@ def check_drive(max_speed, min_pwm, k=1.0):
         raise ValueError("k must be positive, got %r" % (k,))
 
 
-def to_pwm(x, max_speed, min_pwm=0.0, deadband=DEADBAND):
-    """Wheel value in [-1, 1] -> motor value, compensating the dead zone instead of zeroing below it.
+def deadzone(x, min_pwm):
+    """Motors do not turn below min_pwm: send 0 instead of a value that only whines (and veers: measured 2026-10-11, 0.09 veered left, 0.12 and above ran straight).
 
-    0 stays 0 (and |x| < deadband becomes 0); any other x maps to sign(x) * (min_pwm + (max_speed - min_pwm) * |x|).
-    Wheel speed is roughly proportional to (motor value - min_pwm), so this keeps the turn ratio that mix() kept:
-    the evasion command (v=-1, w=0.8) stays a reverse arc with both wheels turning, even under a low speed cap,
-    where zeroing every value below min_pwm used to stop the inner wheel. min_pwm is a property of the real wheel.
+    min_pwm is a property of the real wheel, so apply it to the FINAL value (after any speed cap).
     """
-    if abs(x) < deadband:
-        return 0.0
-    mag = min_pwm + (max_speed - min_pwm) * min(abs(x), 1.0)
-    return mag if x > 0 else -mag
+    return 0.0 if abs(x) < min_pwm else x
