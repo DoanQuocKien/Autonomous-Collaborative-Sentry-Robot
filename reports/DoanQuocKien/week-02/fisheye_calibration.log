@@ -1,0 +1,4 @@
+58 photos with the board (0 without), dropped 6: ['cb_010.jpg', 'cb_013.jpg', 'cb_012.jpg', 'cb_014.jpg', 'cb_011.jpg', 'cb_008.jpg']
+RMS 0.829 px on 52 views (all 58 views: 1.387 px)  fx 309.6 fy 306.2 cx 285.8 cy 239.1  D [-0.0329  0.0005 -0.0064  0.0017]
+odd / even halves: fx 308.9 / 309.9, cx 286.4 / 285.5, cy 238.1 / 240.2
+PASS (target RMS < 1.00 px) -> calib/camera.json
