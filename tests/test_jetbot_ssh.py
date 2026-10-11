@@ -44,3 +44,24 @@ def test_sudo_password_goes_to_stdin_not_the_command_line():
     c = Client()
     assert jetbot_ssh.sudo(c, "i2cget -y 1 0x41 0x02 w", "s3cr;et") == "0xd25d"
     assert "s3cr" not in c.cmd and c.stdin.written == "s3cr;et\n"
+
+
+def test_sudo_prompt_text_from_stderr_is_not_part_of_the_output():
+    class Stream(object):
+        def __init__(self, data=b""):
+            self.data = data
+
+        def read(self):
+            return self.data
+
+        def write(self, s):
+            pass
+
+        def flush(self):
+            pass
+
+    class Client(object):
+        def exec_command(self, cmd, timeout):
+            return Stream(), Stream(b"0xd25d\n"), Stream(b"[sudo] password for jetbot:")   # what the real robot printed
+
+    assert jetbot_ssh.sudo(Client(), "i2cget -y 1 0x41 0x02 w", "pw") == "0xd25d"
