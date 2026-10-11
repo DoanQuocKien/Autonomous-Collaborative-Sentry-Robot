@@ -1,0 +1,34 @@
+{
+  "tag": "nowedge",
+  "H_cam_m": 0.0884,
+  "H_tape_m": 0.1,
+  "pitch_down_deg": 0.9,
+  "rms_m": 0.022,
+  "marks_m": [
+    0.3,
+    0.5,
+    0.75,
+    1.0,
+    1.5,
+    2.0
+  ],
+  "rows_px": [
+    322,
+    290,
+    272,
+    261,
+    252,
+    248
+  ],
+  "residuals_m": [
+    0.0074,
+    -0.015,
+    -0.0324,
+    0.0144,
+    0.0324,
+    -0.0181
+  ],
+  "passed": true,
+  "problems": [],
+  "note": "tape 0.100 vs fit 0.0884 (1.2 cm): within the 1.5 cm tolerance set after this run; hold-out check = the tape-measured obstacles (Week 3 acceptance). Fit with H fixed to the tape: rms 4.5 cm, pitch 1.3 deg."
+}
