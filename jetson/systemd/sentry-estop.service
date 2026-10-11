@@ -1,0 +1,13 @@
+[Unit]
+Description=Sentry robot e-stop (gamepad dead-man + motor cut)
+After=local-fs.target
+
+[Service]
+Type=simple
+# Host process (needs root for the I2C motor cut). Starts hard-stopped; restarting it always returns to the hard-stopped state, which is the fail-safe: robot_udp.py stops when the heartbeat goes stale.
+ExecStart=/bin/sh -c 'exec /usr/bin/python3 /home/jetbot/sentry/jetson/estop.py --arm-buttons 11 --arm-hold 1.5 >> /home/jetbot/sentry/estop.log 2>&1'
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

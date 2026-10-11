@@ -105,7 +105,7 @@ Record the outputs in `reports/DoanQuocKien/week-01/`.
 | :-- | :-- |
 | Wi-Fi profile `DoanQuocKien` added on the SD card (`/etc/NetworkManager/system-connections/DoanQuocKien`, contains the hotspot password) | `sudo rm` that file. The original `Deco_One` profiles were left untouched. A backup of the original folder is in `C:\Users\admin\jetbot_card_backup` on the laptop |
 | Our code in `/home/jetbot/sentry/` (some `__pycache__` folders are owned by root) | `sudo rm -rf /home/jetbot/sentry` |
-| `/home/jetbot/sentry/` also holds `ESTOP`, `ESTOP_ALIVE`, `estop.log` while the e-stop runs; no systemd service installed | `sudo rm -rf /home/jetbot/sentry` removes everything (stop `estop.py` first) |
+| `/home/jetbot/sentry/` also holds `ESTOP`, `ESTOP_ALIVE`, `estop.log` while the e-stop runs. **systemd units** (`jetson/systemd/`, installed 2026-10-11 or later): `/etc/systemd/system/sentry-estop.service`, `sentry-camera.service`, optionally `sentry-control.service` and `/etc/default/sentry-control` | **Return checklist:** `sudo systemctl disable --now sentry-estop sentry-camera sentry-control; sudo rm -f /etc/systemd/system/sentry-*.service /etc/default/sentry-control; sudo systemctl daemon-reload`, then `sudo rm -rf /home/jetbot/sentry` (removes everything) |
 | Wi-Fi power save: permanent fix file `/etc/modprobe.d/8822ce-sentry.conf` (2026-10-06) | `sudo rm /etc/modprobe.d/8822ce-sentry.conf` and reboot restores the driver default |
 | Docker containers `jetbot_jupyter` / `jetbot_display` | Not modified; our scripts only ran inside the jupyter container and are stopped |
 | Antenna 0 missing (not caused by us as far as we know) | Tell the professor; replacement is cheap |
