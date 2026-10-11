@@ -52,7 +52,7 @@ def test_socket_creation_failure_wakes_readers_and_cleans_up(monkeypatch, fail_a
         return ctx
 
     monkeypatch.setattr("sentry.net.zmq_rx.zmq.Context", make_context)
-    rx = ZMQReceiver()
+    rx = ZMQReceiver("127.0.0.1")  # explicit: the default ip is "auto", which scans the network
     try:
         with pytest.raises(RuntimeError, match="video receiver failed") as error:
             rx.start()

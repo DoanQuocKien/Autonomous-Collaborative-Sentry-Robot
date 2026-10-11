@@ -54,11 +54,19 @@ It can be fed from `record.py` like any other stream by saving the frames `lates
 
 ## Using it with `record.py` / `replay.py` (D1 recording) and without the board
 
-- **Recording:** `tools/record.py` reads `http://<esp32_ip>:81/stream`. With the GC2145 boards run `python -m tools.esp_mjpeg_relay` first (it serves exactly that MJPEG stream from the tile stream; `config.toml` has `esp32_ip = "127.0.0.1"`), then `python -m tools.record D1`. Tested end to end with a simulated ESP32: 223 JPEGs in about 15 s at 14.9 fps. With an OV2640 board, put the board's IP in `config.toml` and skip the relay.
+- **Recording:** `tools/record.py` reads `http://<esp32_ip>:81/stream`. With the GC2145 boards run `python -m tools.esp_mjpeg_relay` first (it serves exactly that MJPEG stream from the tile stream; `config.toml` has `esp32_ip = "auto"`, which uses the relay when it runs on this laptop), then `python -m tools.record D1`. Tested end to end with a simulated ESP32: 223 JPEGs in about 15 s at 14.9 fps. With an OV2640 board, put the board's IP in `config.toml` and skip the relay.
 - **Replay** needs nothing new: `tools/replay.py` already serves the recorded ESP32 frames as MJPEG on port 81.
 - **No board at hand:** `python -m tools.esp_tile_sim` sends the same tile stream of a synthetic moving scene, so the receiver, the relay and the recorder can be developed and tested on any laptop.
 
-`esp32/sentry_cam` is the stock CameraWebServer (HTTP MJPEG) for an OV2640 module, patched to build on Arduino core 2.0.17 (`ledcAttach` guard). `esp32/experiments/` holds the measurement sketches behind the numbers above.
+`esp32/sentry_cam` is the stock CameraWebServer (HTTP MJPEG) for an OV2640 module, patched to build on Arduino core 2.0.17 (`ledcAttach` guard).
+
+### OV2640 module (ordered 2026-10-11, **firmware not tested on a board yet**)
+
+`esp32/sentry_cam` is set up for it (builds, 23% flash): JPEG, VGA 640x480, quality 12, two frame buffers, `GRAB_LATEST`, the same Wi-Fi settings as `tile_stream` (channels 1-13, 20 MHz, no power save), and a warning in the boot log if the sensor is not an OV2640 (`PID=0x26`). On arrival:
+1. Copy `secrets.example.h` to `secrets.h`, then `cd esp32/sentry_cam && pio run -t upload --upload-port COMx`.
+2. Boot log: expect `SENSOR PID=0x0026` and `Camera Ready! Stream: http://<ip>:81/stream`. A `0x2145` or a `Camera init failed 0x105/0x106` means it is a GC2145 again: send it back (or use `tile_stream`).
+3. Stop `esp_mjpeg_relay` (it also uses port 81 on the laptop) and run `python -m tools.record D1`: with `esp32_ip = "auto"` it finds the board on the LAN by its open port 81. Or put the IP in `config.toml`.
+4. Measure the frame rate (about 25 fps VGA is reported by others, not by us) and write it here and in the plan. `esp32/experiments/` holds the measurement sketches behind the numbers above.
 
 ## Known limits and things that went wrong
 
