@@ -44,7 +44,8 @@ def camera_frames(pipeline):
         cap.release()
 
 
-def synthetic_frames(w, h, fps):
+def synthetic_frames(w, h, fps, sleep=time.sleep):
+    """Yield a paced test pattern; tools can inject an interruptible sleep."""
     i = 0
     while True:
         frame = np.zeros((h, w, 3), np.uint8)
@@ -53,7 +54,7 @@ def synthetic_frames(w, h, fps):
         cv2.putText(frame, "synthetic %d" % i, (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
         yield frame
         i += 1
-        time.sleep(1.0 / fps)
+        sleep(1.0 / fps)
 
 
 def serve(sock, frames, quality=60, max_frames=None, clock=time.monotonic):

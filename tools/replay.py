@@ -1,38 +1,28 @@
 import argparse
 import time
 import json
+import math
 import threading
 from pathlib import Path
 import zmq
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from socketserver import ThreadingMixIn
 import cv2
-
-try:
-    import tomllib
-except ImportError:
-    try:
-        import tomli as tomllib
-    except ImportError:
-        pass
-
-def load_config():
-    root_dir = Path(__file__).parent.parent
-    config_path = root_dir / "config.toml"
-    with open(config_path, "rb") as f:
-        return tomllib.load(f)
+from common.protocol import encode_video_header
+from sentry.config import load as load_config
+from sentry.net.zmq_rx import decode_frame
 
 # ---- Replay Iterators for Unit Testing (Offline) ----
 
 class ReplayStream:
-    """Yields (frame_bgr, timestamp) exactly like live receivers for offline testing."""
+    """JetBot read() returns VideoFrame; iteration retains legacy (image, time)."""
     def __init__(self, data_dir, source="jetbot"):
         self.data_dir = Path(data_dir)
         self.source = source
         self.meta_path = self.data_dir / f"{source}_meta.jsonl"
         self.frames = []
         if self.meta_path.exists():
-            with open(self.meta_path, "r") as f:
+            with open(self.meta_path, "r", encoding="utf-8") as f:
                 for line in f:
                     self.frames.append(json.loads(line))
         self.idx = 0
@@ -41,6 +31,11 @@ class ReplayStream:
         return self
         
     def __next__(self):
+        if self.source == "jetbot":
+            frame = self.read()
+            if frame is None:
+                raise StopIteration
+            return frame.frame_bgr, frame.t_cap
         if self.idx >= len(self.frames):
             raise StopIteration
             
@@ -53,6 +48,26 @@ class ReplayStream:
         # Return frame and the original monotonic/local timestamp
         t = meta.get("t_cap", meta.get("t_local", 0.0))
         return frame, t
+
+    def read(self, timeout=None):
+        """Immediate offline read; source times/seq and recorded local times stay intact.
+
+        Older recordings lack t_rx/t_decode, so those local timestamps are taken
+        during replay. ESP32 recordings still use the legacy iterator: their
+        metadata has no JetBot monotonic capture clock.
+        """
+        if timeout is not None and (not math.isfinite(timeout) or timeout < 0):
+            raise ValueError("timeout must be nonnegative and finite")
+        if self.source != "jetbot":
+            raise ValueError("VideoFrame read() is for JetBot recordings only")
+        if self.idx >= len(self.frames):
+            return None
+        meta = self.frames[self.idx]
+        self.idx += 1
+        jpeg = (self.data_dir / self.source / meta["file"]).read_bytes()
+        header = encode_video_header(meta["seq"], meta["t_cap"], meta["w"], meta["h"])
+        return decode_frame([header, jpeg], meta.get("t_rx", time.perf_counter()),
+                            clock=lambda: meta.get("t_decode", time.perf_counter()))
 
 # ---- Network Server Mocking (HIL Replay) ----
 

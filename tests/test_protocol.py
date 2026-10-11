@@ -52,3 +52,14 @@ def test_clock_roundtrip():
     assert p.decode_clock_reply(p.encode_clock_reply(1.25, 99.5)) == (1.25, 99.5)
     with pytest.raises(ValueError):
         p.decode_clock_request(b'{"t0": "x"}')
+
+
+@pytest.mark.parametrize("decode,packet", [
+    (p.decode_control, p.encode_control(1, 10 ** 400, 0)),
+    (p.decode_video_header, p.encode_video_header(1, 10 ** 400, 640, 480)),
+    (p.decode_clock_request, p.encode_clock_request(10 ** 400)),
+    (p.decode_clock_reply, p.encode_clock_reply(0, 10 ** 400)),
+], ids=["control", "video", "clock_request", "clock_reply"])
+def test_oversized_numbers_are_invalid_packets(decode, packet):
+    with pytest.raises(ValueError):
+        decode(packet)

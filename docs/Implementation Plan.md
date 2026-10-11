@@ -19,12 +19,12 @@ Principles behind the split:
 ## 2. Repository Layout (target)
 
 ```
-sentry/                 # laptop package, runs in science_env (Python 3.14)
-  config.toml           # ALL tunables (thresholds, gains, ports); read with stdlib tomllib
+sentry/                 # laptop package, Python 3.12 in sentry (see Setup.md)
   net/                  # zmq_rx.py, udp_tx.py, mjpeg_rx.py, clock_sync.py
   perception/           # obstacle.py, entrance.py, face.py, reid.py, tracker.py, pose.py
   nav/                  # localization.py, gridmap.py, vantage.py, coverage.py, controllers.py
   app/                  # state_machine.py, target_queue.py, audio.py, main.py
+config.toml             # repo-root tunables (thresholds, gains, ports); stdlib tomllib
 common/                 # Python 3.6-compatible, stdlib only; used by BOTH laptop and Jetson
   protocol.py           # ports, packet encode/decode with validation, SeqFilter, video header, clock echo
   mixing.py             # (v, w) -> wheel values: rescale-not-clip, dead zone
@@ -51,12 +51,14 @@ Freezing these lets the three members work in parallel against the same contract
 
 | Link | Transport | Format |
 | :-- | :-- | :-- |
-| JetBot -> laptop video | ZeroMQ PUB/SUB, port 5555, `CONFLATE=1` on SUB (latest frame only) | multipart `[header_json, jpeg_bytes]`; header `{"seq": int, "t_cap": float (Jetson monotonic s), "w": int, "h": int}` |
+| JetBot -> laptop video | ZeroMQ PUB/SUB, port 5555; bounded SUB queue, drain complete messages and overwrite one latest-frame slot | multipart `[header_json, jpeg_bytes]`; header `{"seq": int, "t_cap": float (Jetson monotonic s), "w": int, "h": int}` |
 | Laptop -> JetBot control | UDP, port 5556, non-blocking | JSON `{"seq": int, "v": float, "w": float}` with v, w normalized to [-1, 1]; or `{"seq": int, "play": "<clip_name>"}` |
 | Clock sync | UDP echo, port 5557 | laptop sends `t0`, Jetson replies `{t0, t_jetson}`; offset by Cristian's algorithm (min-RTT of 20 samples) |
 | ESP32-CAM -> laptop | **UDP tiles, port 5600** (GC2145 module, no hardware JPEG): raw Bayer 640x480, changed 64x32 tiles only, laptop found by `HELO` broadcast; `sentry.espcam.TileReceiver.latest()` gives a BGR frame. **Proposed 2026-10-09, needs KR's and HNHL's approval** (section 3 rule). With an OV2640 module the original HTTP MJPEG `http://<esp32-ip>:81/stream` (VGA, 15 FPS) is used instead | 640x480 at 14.4 FPS average (fixed camera); see `docs/ESP32-CAM.md` |
 
 Laptop-internal contract:
+- JetBot video adapters use `read(timeout) -> VideoFrame | None`, single consumer, with `frame_bgr`, original `jpeg`, `seq`, source `t_cap`, laptop `t_rx` and `t_decode` (see `sentry/net/frame.py`). Latest-frame receivers deliberately skip old frames; record/replay preserves source timestamps. `tools.replay.ReplayStream.read()` implements this offline contract; legacy tuple iteration remains supported. The proposed ESP32 tile interface uses `latest()` as documented separately above.
+- Do not use `ZMQ_CONFLATE` on the multipart video link: [libzmq documents that it retains only one part](https://libzmq.readthedocs.io/en/latest/zmq_setsockopt.html#zmq-conflate-keep-only-last-message). The wire format stays unchanged; review this correction with the team before the W1 interface freeze.
 - Every perception module is a class with a `__call__(frame_bgr, t) -> dataclass` method and no global state.
 - Every module can be fed from `replay.py` exactly as from a live stream.
 - The state machine only consumes **events** (e.g. `ENTRANCE_FOUND`, `INTRUDER_QUEUED`, `TARGET_STATIONARY`, `STRIKE`, `TARGET_EXITED`, `TARGET_FOUND`, `SEARCH_EXHAUSTED`) and emits **commands**. It never touches sockets or models directly, so it is unit-testable on CPU.
@@ -141,7 +143,7 @@ Each week ends with a **Sunday integration session** hosted by DQK (in person or
   - `sentry/net/zmq_rx.py`: latest-frame receiver thread with JPEG decode.
   - `udp_tx.py`: rate-limited 30 Hz sender.
   - `clock_sync.py` and a latency logger that writes CSVs. **Use `time.perf_counter()` for Windows-side timestamps: `time.monotonic()` ticks only every 15.6 ms there, which corrupts RTT and offset estimates (measured 2026-10-04).**
-  - GPU baseline: YOLOv8n/s FPS and VRAM at 640 on the RTX 4050; confirm torch, insightface and onnxruntime-gpu run in `science_env`, and record versions.
+  - GPU baseline: YOLOv8n/s FPS and VRAM at 640 on the RTX 4050; confirm torch, insightface and onnxruntime-gpu run in `sentry` (Python 3.12, see Setup.md), and record versions. HNHL's RTX 5060 measurements must be labelled separately; they do not substitute for the RTX 4050 baseline.
   - Tests: T0 for clock-sync math with synthetic delays.
 - **KR**
   - `tools/record.py` + `tools/replay.py`: record both streams with timestamps; replay through the same interface as the live receivers.
@@ -299,7 +301,7 @@ reports/<handle>/week-NN/       # test evidence: pytest logs, metrics JSON/CSV, 
 | 2 | The spec does not say how "T1 exits" is detected | ESP32 re-ID + direction of motion toward the door (W7, HNHL) |
 | 3 | COCO classes miss walls, boxes and bags | Accept for W2; if exploration collisions occur, add a bottom-of-frame floor-edge check or fine-tune on D1 frames |
 | 4 | The L/C/R departure sector is in ESP32 camera coordinates, not world, and is now only an optional prior | Record the ESP32 placement pose in phase 1; KR maps it to a world bearing only if the planner uses the prior (W7) |
-| 5 | ~~Python support for torchreid / insightface 2.0~~ | **Resolved 2026-10-06** on the `sentry` env (Python 3.12): InsightFace detector + embedder run on CUDAExecutionProvider (about 7 ms), torchreid OSNet runs in 11-13 ms, 3-model pipeline 37 FPS and under 300 MB (`reports/DoanQuocKien/week-01/gpu_baseline_2026-10-06.txt`) |
+| 5 | Model package upgrades can change Python, CUDA or API compatibility | **Resolved for the recorded W1 environments:** Python 3.12 verified by HNHL; DQK's InsightFace CUDA detector + embedder about 7 ms, OSNet 11-13 ms and 3-model pipeline 37 FPS under 300 MB (`reports/DoanQuocKien/week-01/gpu_baseline_2026-10-06.txt`). Record versions and rerun checks after upgrades. |
 | 11 | torchreid `pretrained=True` gives ImageNet-only weights, not re-ID weights, which would make the 85 % Rank-1 target unreachable | Use the re-ID weights from `tools.fetch_models`; osnet_ain_x1_0 (domain-generalised) vs osnet_x0_25 (Market1501, same-domain) is decided by Rank-1 on D2/D3 |
 | 6 | All HIL depends on DQK's availability | Offline-first development; two scheduled sessions per week from W5 onward |
 | 8 | The room map only knows floor the robot has seen: YOLO misses walls and unclassified objects | Plan only over known-free cells with inflated obstacles; report the coverage fraction achieved; make sure the Week 4 exploration covers the room |

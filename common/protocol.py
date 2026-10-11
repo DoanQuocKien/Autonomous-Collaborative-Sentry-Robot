@@ -16,9 +16,15 @@ _CLIP = re.compile(r"^[a-z0-9_]{1,32}$")  # audio clip names; never reaches a sh
 
 
 def _num(x):
-    if isinstance(x, bool) or not isinstance(x, (int, float)) or not math.isfinite(x):
+    if isinstance(x, bool) or not isinstance(x, (int, float)):
         raise ValueError("not a finite number: %r" % (x,))
-    return float(x)
+    try:
+        value = float(x)
+    except OverflowError:
+        raise ValueError("number is outside the finite float range")
+    if not math.isfinite(value):
+        raise ValueError("not a finite number: %r" % (x,))
+    return value
 
 
 def _int(x):

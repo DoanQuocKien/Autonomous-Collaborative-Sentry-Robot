@@ -2,6 +2,9 @@
 
 Three machines, three install paths. Do the one for your machine, then run the check at the end of it.
 Versions below are the ones we actually verified (Windows 11, RTX 4050, driver 581, 2026-10-04).
+HNHL also verified Python 3.12.15 in a local `.venv` on RTX 5060 Laptop GPU
+(8 GB), driver 591.74, with torch 2.9.1+cu128 and ORT GPU 1.23.2; see the
+[W1 report](../reports/HuynhNguyenHoaiLoc/week-01.md) for versions and metrics.
 
 | Machine | Who | Path |
 | :-- | :-- | :-- |
@@ -11,7 +14,7 @@ Versions below are the ones we actually verified (Windows 11, RTX 4050, driver 5
 
 ## A. GPU laptop
 
-Needs Miniconda and an up-to-date NVIDIA driver (CUDA 12.8 wheels need a driver that supports CUDA 12.8; check `nvidia-smi`).
+Use Python 3.12 through Miniconda or a local virtual environment, and an NVIDIA driver compatible with CUDA 12.8 (check `nvidia-smi`). HNHL's existing environment is `.venv`; run `.venv\Scripts\python.exe` directly. The Conda commands below are the alternative for a new machine.
 
 ```powershell
 conda create -n sentry python=3.12 -y
@@ -47,7 +50,7 @@ You can do everything except GPU speed measurements. The `gpu` tests skip themse
 
 ## C. JetBot
 
-Ubuntu 18.04 / JetPack 4.5 / **Python 3.6**. Not verified on the device yet: record what you actually see in `reports/DoanQuocKien/week-01/robot_checks.md`.
+Ubuntu 18.04 / JetPack 4.5 / **Python 3.6**. Verified device facts and remaining checks are in `reports/DoanQuocKien/week-01/robot_checks.md` and `robot_remote_checks.txt`; use the recorded Docker deployment below for the team's robot.
 
 ```bash
 sudo apt update && sudo apt install -y python3-pip libzmq3-dev alsa-utils
@@ -97,6 +100,7 @@ Install the PlatformIO IDE extension; it installs its own core on first start (s
 | ONNX Runtime silently on CPU; log mentions `cudart64_13.dll` | onnxruntime-gpu 1.30+ wants CUDA 13. Pin 1.23.2 (step 3) |
 | `check_env` says two onnxruntime packages installed | step 3 above |
 | `ModuleNotFoundError: tensorboard` from torchreid | `pip install tensorboard` (already in `requirements-base.txt`) |
+| `ModuleNotFoundError: gdown` from torchreid | `pip install gdown` (already in `requirements-base.txt`; torchreid's dataset module imports it) |
 | pip stalls or fails on a slow/unstable connection | download the wheel with `curl.exe -L -C - --retry 30 --retry-all-errors -o x.whl <url>` and `pip install --no-deps x.whl` |
 | Video over ZeroMQ is slow or loses most frames, seconds of latency, big packets lost in `ping -f -l 1472` | **Wi-Fi power save on the Jetson** (Realtek RTL8822CE, driver default `rtw_power_mgnt=2`). Permanent fix on our robot: `/etc/modprobe.d/8822ce-sentry.conf` with `options rtl8822ce rtw_power_mgnt=0 rtw_ips_mode=0`, then reboot; check with `python -m tools.jetbot_status <ip>` (`iw get power_save` is misleading). Quick runtime alternative: `sudo iw dev wlan0 set power_save off` (reverts on reboot). Measured effect: 48 % frame loss to 0 %, p95 latency 21 s to 65 ms |
 | Models run 5-8x slower than expected (e.g. a 3-model pipeline at 5 FPS instead of 35), GPU clock stuck near 250-450 MHz | Windows throttles processes started from a background or hidden shell. Run from a normal foreground terminal, or opt the process out of power throttling and raise its priority (see `run_unthrottled()` in `tools/gpu_pipeline_check.py`). Measured 2026-10-06: 5.3 -> 34.9 FPS |

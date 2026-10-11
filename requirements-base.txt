@@ -8,5 +8,6 @@ ultralytics
 insightface
 torchreid
 tensorboard        # torchreid imports it but does not declare it
+gdown              # torchreid imports its dataset downloader but does not declare it
 paramiko          # tools/jetbot_status.py (SSH health check of the robot)
 pyserial          # tools/esp_serial.py (ESP32 serial capture)
