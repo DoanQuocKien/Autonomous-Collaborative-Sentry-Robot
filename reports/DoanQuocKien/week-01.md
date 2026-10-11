@@ -12,6 +12,8 @@
 - **MJPEG relay and fake ESP32 (2026-10-10):** `tools/esp_mjpeg_relay.py` serves the tile stream as `http://127.0.0.1:81/stream` so KR's `record.py` / `replay.py` work with the GC2145 boards (D1 recording needs it); `tools/esp_tile_sim.py` simulates the board; found and fixed a flaw where the full-refresh after `REFR` was discarded because the JPEG header had not arrived yet; the missing record-then-replay round-trip test for the ESP32 view added (`tests/test_record_replay_esp32.py`); change-detector improvements (thin edges, faster quiet refresh) – PR #2
 - **D1 checkerboard set (2026-10-10):** 58 photos (all detected, every cell of a 4x4 image grid has 58+ corners) taken with the new guided tool `tools/capture_checkerboard.py`, which shows the least-covered area and saves only photos that reach it; `tools/find_jetbot.py` finds the JetBot after every hotspot restart (`jetbot_ip = "auto"`); `.env` (hotspot password) added to `.gitignore` – PR #6. Trial `cv2.fisheye` calibration on the 640x480 stream: RMS 1.39 px on all 58, 0.95 px after dropping 5 early outliers (`cb_010`-`cb_014`), `fx` about 310 px, centre (286, 239), stable across odd/even half-splits (the real `tools/calibrate_fisheye.py` is Week 2). Photos are in `data/D1/checkerboard/` (not in git)
 - **Review:** approved HNHL's PR #5 (network telemetry, 121 tests pass on a clean checkout, merges cleanly with main); noted one interaction with `jetbot_ip = "auto"` to fix after both merge
+- **Floor driving and e-stop (2026-10-11):** first floor drive with the e-stop armed (battery 12.2 V, speed cap 0.3): every R1 hold moved the robot and every release stopped it in 3-7 ms. At a motor value of 0.09 the robot veered left (static friction); at 0.12 to 0.30 it drove straight (operator's observation), so no trim was added and `min_pwm` 0.12 was set in the robot's `calib/motion.json`. The arm key is configurable (`estop.py --arm-buttons 11 --arm-hold 1.5`, Start alone) - PR #10, `docs/JetBot Notes.md`
+- **D1 doorway set, cafe glass door (2026-10-11):** 16 labelled rows (7 positives at 1-4 m, 0 and -30 degrees, left side only because of people; 7 negatives), manifest of 1,419 frames (667 door visible, 752 not) from `tools.record` + the new `tools.d1_label` (timestamped labels) and `tools.d1_manifest` (cuts each row to the still stretch); reference photo `cafe_glass_iref.jpg`. One door only, people in view, customers' faces in the frames (kept local, `data/` is gitignored). Notes in `data/D1/README_cafe_glass.txt`
 - **ESP32-CAM (unplanned):** both camera modules turned out to be GC2145 (no hardware JPEG), so the planned HTTP MJPEG stream is impossible. Built a 640x480 stream in software (raw Bayer capture trick, sensor timing registers, changed-tile UDP stream), laptop receiver `sentry/espcam.py` with white balance, 5 tests, PlatformIO project for KR's CameraWebServer sketch, `docs/ESP32-CAM.md`, plan risks 12-13 – PR #2
 
 ## Tests run
@@ -24,6 +26,7 @@
 | T2 (wheels off) | Dead-man / e-stop, including a frozen `robot_udp.py` | pass; motor cut works independently of the program | week-01/estop_test_2026-10-06.txt, estop_deadman_2026-10-06.txt |
 | T1 (gpu) | `tools/gpu_pipeline_check.py` | 3-model pipeline 37 FPS, about 300 MB VRAM; InsightFace about 7 ms, OSNet 11-13 ms | week-01/gpu_baseline_2026-10-06.txt |
 | T1 (gpu) | `tools.gpu_baseline --check-face` (HNHL's tool) on the target RTX 4050 6 GB | pass: YOLOv8n 110.6 FPS, YOLOv8s 106.3 FPS (batch 1, FP32, 640), peak allocated 33 / 79 MiB; onnxruntime-gpu 1.23.2, torch CUDA OK | week-01/gpu/gpu_baseline_rtx4050.json, .log |
+| T1 (trial, rough) | ORB + RANSAC against `I_ref` on the cafe glass door, 640x480, default settings, no undistortion | **weak**: phone `I_ref`: 4-5 inliers median at 1-4 m, negatives 2-7; robot-eye `I_ref`: positives median 5-17, negatives 2-7 (clear only at 3 m straight, 17 inliers) | week-01/d1/orb_sanity_2026-10-11.txt |
 | T1 (trial) | Fisheye calibration on 58 checkerboard photos, 640x480 | RMS 1.39 px (0.95 px after dropping 5 outliers); target < 1.0 px in Week 2 | week-01/d1/ (this session; photos in data/D1/checkerboard/) |
 | T2 | ESP32-CAM stream, 68 s walk-through test | 14.4 FPS average, large motion 13.8 FPS; full-load worst case 9-10 FPS | week-01/esp32_gc2145_jpeg_2026-10-09.txt (sections 18-21) |
 
@@ -35,6 +38,7 @@
 - Not due this week: fisheye calibration, obstacle distance, entrance, localization, face/re-ID accuracy
 
 ## Blockers / risks
+- **ORB entrance matching on a glass door (new, plan risk 14):** a first look with default ORB found almost no separation between door-in-view and no-door frames from the robot's low fisheye view. The classroom door (solid, with frame and handle) is the real test; the TPR >= 90 % / FPR <= 5 % target is at risk for glass doors
 - **ESP32-CAM sensor (plan risk 12):** GC2145 has no JPEG; workaround works only for a fixed camera and needs the interface change approved by KR and HNHL (PR #2 comment). Fallback: buy an OV2640 module.
 - **Second ESP32-CAM board (risk 13):** loses its Wi-Fi uplink whenever the camera runs; cause unknown (not power, memory, encoder, channel width, clock, protocol). The first board works. KR's board is untested.
 - **Latency target missed by 3 ms (53 vs 50 ms)** on the JetBot video path; to re-measure with the final setup.
@@ -45,7 +49,7 @@
 - The weak hotspot password (8 characters) should be changed; update the robot's saved profile first while it is connected.
 
 ## Next week
-- Sunday: merge PR #5 (HNHL, approved) and PR #6, freeze the §3 interfaces (ESP32 row: needs KR's answer), record the rest of **D1** (room sweeps, doorway views, 20 tape-measured obstacles, ESP32 door view; **the 58 checkerboard photos are done**). Needs a tape measure. The camera publisher on the robot does not survive a reboot (restart it, or add a systemd service).
+- Monday: classroom door: reference photo, 10+ positions at 1-4 m on **both** sides, negatives, the 20 tape-measured obstacles and the room sweeps there (fewer people than the cafe); ESP32 door view when the OV2640 arrives; `tools.d1_manifest` after each door. PRs #5-#8 are merged, #9 (plan: D1 needs 3+ doors) and #10 (e-stop arm key) are open; the interface is frozen on the UDP tile stream (an OV2640 is on order). The camera publisher on the robot does not survive a reboot (restart it, or add a systemd service).
 - Week 2 (DQK): `tools/calibrate_fisheye.py` (target < 1.0 px) and `tools/calibrate_motion.py`; T1 reprojection error, T2 motion repeatability (5 runs each of straight 1 m and 90° turn).
 - Decide the camera: keep the GC2145 tile stream or order an OV2640; update the plan accordingly.
 - First floor driving with the e-stop armed, in daylight at low speed.
