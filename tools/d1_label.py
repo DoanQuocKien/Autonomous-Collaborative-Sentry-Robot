@@ -2,7 +2,7 @@
 
     python -m tools.d1_label --door cafe_glass --iref cafe_glass_iref.jpg
 Place the robot, then type one line:   <distance_m> <angle_deg> <y|n door visible> [notes]     e.g.   2.0 -30 y backlit
-Enter on an empty line = nothing; q = quit. A row ends when the next one starts (or on q), so hold each position for about 5 s before typing the next line.
+Hold the robot still for about 5 s, then press Enter on an empty line: that ends the row. Pick the robot up and place it at the next position; the carrying time stays unlabelled. A new line also closes an open row; q quits.
 Writes data/D1/doorway_labels_<door>.csv in the format of assets/d1/doorway_labels_template.csv (times as local 'YYYY-MM-DD HH:MM:SS.mmm').
 """
 import argparse
@@ -50,7 +50,11 @@ def main():
         print("type: <distance_m> <angle_deg> <y|n door visible> [notes]   (q = quit)   -> %s" % path)
         while True:
             line = input("pos %d> " % (pos + 1)).strip()
-            if line == "":
+            if line == "":  # end the row NOW: pick the robot up after this, the carrying time stays unlabelled
+                if open_row:
+                    close(stamp())
+                    open_row = None
+                    print("  position ended; move the robot, then type the next line")
                 continue
             if line.lower() == "q":
                 close(stamp())
