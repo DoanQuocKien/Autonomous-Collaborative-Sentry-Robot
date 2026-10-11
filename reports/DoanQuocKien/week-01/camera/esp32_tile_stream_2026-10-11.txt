@@ -1,0 +1,7 @@
+2026-10-11, esp32/tile_stream with the 2026-10-10 firmware changes (new detector, quiet refresh, header resent on REFR), flashed to COM3, hotspot "DoanQuocKien" 2.4 GHz.
+python -m tools.esp_tile_rx --seconds 45 (camera pointing at a ceiling lamp, scene still):
+  about 15 fps (13-16 per second), 4-5 tiles/frame when still, 0.06-0.2 Mbit/s, missing tiles: 4 in the first second (late-receiver refresh), then 0.
+  Serial: camera interval 64-69 ms, work 24 ms/frame, send-fail 0, rtt avg 91-99 ms, rssi -51..-55 dBm, heap about 109 kB.
+  Occasional "cam_hal: EV-VSYNC-OVF" lines (frame overflow, harmless at this rate); a burst of "send data: 12" errors for the first ~4 s after boot until Wi-Fi settles.
+python -m tools.esp_mjpeg_relay + GET http://127.0.0.1:81/jpg: HTTP 200, 29 kB, 640x480 BGR JPEG decoded.
+Not measured: motion test with the new detector (large motion, ghost slivers), 2nd board, KR's board.
