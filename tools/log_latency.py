@@ -9,6 +9,7 @@ from pathlib import Path
 import time
 
 from sentry.config import load
+from sentry.net.discover import resolve
 from sentry.net.clock_sync import synchronize
 from sentry.net.latency import LatencyLogger
 from sentry.net.zmq_rx import ZMQReceiver
@@ -17,7 +18,7 @@ from sentry.net.zmq_rx import ZMQReceiver
 def main():
     cfg = load()
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--ip", default=cfg["net"]["jetbot_ip"])
+    ap.add_argument("--ip", default=cfg["net"]["jetbot_ip"], help="JetBot IP, or auto to search the network")
     ap.add_argument("--video-port", type=int, default=cfg["net"]["video_port"])
     ap.add_argument("--clock-port", type=int, default=cfg["net"]["clock_port"])
     ap.add_argument("--seconds", type=float, default=cfg["telemetry"]["duration_s"])
@@ -26,6 +27,7 @@ def main():
     args = ap.parse_args()
     if not 0 < args.seconds < float("inf"):
         ap.error("--seconds must be positive and finite")
+    args.ip = resolve(args.ip)  # "auto" -> the IP found on this network, so the CSV records the real one
     estimate = synchronize(args.ip, args.clock_port)
     print("Clock sync:", json.dumps(asdict(estimate)))
     with ZMQReceiver(args.ip, args.video_port) as rx, LatencyLogger(args.out, estimate) as log:
