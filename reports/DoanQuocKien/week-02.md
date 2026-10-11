@@ -14,10 +14,10 @@
 ## Tests run
 | Tier | Command | Result | Evidence |
 | :-- | :-- | :-- | :-- |
-| T0 | `pytest -m "not gpu and not hil"` (this branch) | 197 passed | week-02/pytest.log (**TODO** save) |
+| T0 | `pytest -m "not gpu and not hil"` on main (without PR #22: 197 with its tests) | 192 passed | week-02/pytest.log |
 | T1 | `tools.calibrate_fisheye` on 58 photos | RMS 0.83 px (52 views) **pass** (< 1.0 px) | week-02/fisheye_metrics.json |
-| T2 | `tools.calibrate_motion run` 5x straight + 6x turn, then `fit` | fit **pass** (forward gain CV 0.7 %, turn gain CV 1.0 % – but see Risks), written to `calib/motion.json` and pushed to the robot | week-02/motion_runs.csv |
-| T1 | `tools.measure_camera_pose` (6 marks, 0.3-2.0 m, 1.5 m excluded) | H 0.101 m, pitch 2.6 deg, rms 0.8 cm | week-02/camera_pose_nowedge.json |
+| T2 | `tools.calibrate_motion run` 5x straight + 6x turn, then `fit` | fit passes on paper (forward gain CV 0.7 %, turn gain CV 1.0 %) but is **not accepted yet**: only v = 1.0 measured, turn angles unreliable (see Risks); written to `calib/motion.json` and pushed to the robot as a first estimate | week-02/motion_runs.csv |
+| T1 | `tools.measure_camera_pose` (6 marks, 0.3-2.0 m, 1.5 m excluded) | H 0.101 m, pitch 2.6 deg, rms 0.8 cm; **provisional** until the classroom obstacle distances confirm it | week-02/camera_pose_nowedge.json |
 | T2 | Reboot test of the three systemd units | pass | this log, Done |
 
 ## Acceptance criteria status (Implementation Plan §4.3)
