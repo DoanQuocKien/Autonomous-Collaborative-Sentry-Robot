@@ -1,0 +1,12 @@
+run_id,kind,v,w,seconds_commanded,moving_s,forward_m,lateral_m,turn_deg,battery_v,max_speed,k,min_pwm,notes
+1,straight,1.0,0.0,5.0,4.53,1.87,0.0,0.0,12.13,0.3,1.0,0.12,
+2,straight,1.0,0.0,5.0,5.03,2.08,-0.48,0.0,12.07,0.3,1.0,0.12,"a bit tilted to the right, might be because of uneven surface"
+3,straight,1.0,0.0,5.0,5.03,2.1,-0.41,0.0,12.06,0.3,1.0,0.12,"I meant -0.41 above, oops. If turning is your intention, then the second run lateral is wrong."
+4,straight,1.0,0.0,5.0,5.04,2.08,-0.53,0.0,12.06,0.3,1.0,0.12,"again, meant -0.53, it tilted right looking from behind like above"
+5,straight,1.0,0.0,5.0,5.03,2.11,-0.27,0.0,12.03,0.3,1.0,0.12,"again, -0.27"
+6,turn,0.0,1.0,2.0,2.02,0.0,0.0,750.0,11.82,0.3,1.0,0.12,"I started to think I added an extra 360 into other runs [corrected 390->750 after the 2-turn confirmation, run 11]"
+7,turn,0.0,1.0,2.0,2.02,0.0,0.0,750.0,11.82,0.3,1.0,0.12,"I think I added an extra 360 into other runs [corrected 390->750 after the 2-turn confirmation, run 11]"
+8,turn,0.0,1.0,2.0,2.04,0.0,0.0,750.0,11.79,0.3,1.0,0.12,"Definitely added an extra 360 for other runs [corrected 390->750 after the 2-turn confirmation, run 11]"
+9,turn,0.0,1.0,2.0,2.02,0.0,0.0,750.0,11.76,0.3,1.0,0.12,I definitely confirmed it ran for 2 rounds
+10,turn,0.0,1.0,2.0,2.01,0.0,0.0,750.0,11.72,0.3,1.0,0.12,still
+11,turn,0.0,1.0,2.0,2.07,0.0,0.0,750.0,11.70,0.3,1.0,0.12,can confirm this time

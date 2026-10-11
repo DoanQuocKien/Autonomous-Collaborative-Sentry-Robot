@@ -1,0 +1,26 @@
+{
+  "k": 1.0,
+  "min_pwm": 0.12,
+  "max_speed": 0.3,
+  "date": "2026-10-11",
+  "v_gain_m_per_s": 0.4135188866799205,
+  "w_gain_rad_per_s": 6.480182866315579,
+  "drift_rad_per_m": -0.18594104308390022,
+  "runs": {
+    "straight": 5,
+    "turn": 6,
+    "dropped": 0
+  },
+  "battery_v": {
+    "min": 11.7,
+    "max": 12.13
+  },
+  "repeatability": {
+    "forward_gain_cv": 0.006677983995007005,
+    "turn_gain_cv": 0.009745070654186906,
+    "turn_angle_std_deg": 0.0,
+    "forward_m_std": 0.08975522268926746
+  },
+  "passed": true,
+  "problems": []
+}
