@@ -1,0 +1,3 @@
+run_id,path,marker_ids_in_view,start_x_m,start_y_m,start_heading_deg,end_x_m,end_y_m,end_heading_deg,command_v,command_w,seconds,record_start,record_end,notes
+1,straight_3m,"0,1",0.0,0.0,0,3.02,-0.05,-2,1.0,0.0,10,17:30:00,17:30:20,"end measured with tape from the start mark"
+2,turn_90_left,,0.0,0.0,0,0.0,0.0,88,0.0,0.5,3,,,
