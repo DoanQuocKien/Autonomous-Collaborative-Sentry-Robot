@@ -30,18 +30,31 @@ def gst_pipeline(sensor_mode, cap_w, cap_h, fps, w, h):
             % (sensor_mode, cap_w, cap_h, fps, w, h))
 
 
-def camera_frames(pipeline):
-    cap = cv2.VideoCapture(pipeline, cv2.CAP_GSTREAMER)
-    if not cap.isOpened():
-        raise SystemExit("camera pipeline failed to open: " + pipeline)
-    try:
-        while True:
-            ok, frame = cap.read()
-            if not ok:
-                raise SystemExit("camera read failed")
-            yield frame
-    finally:
-        cap.release()
+def camera_frames(pipeline, open_capture=lambda p: cv2.VideoCapture(p, cv2.CAP_GSTREAMER), retries=5,
+                  sleep=time.sleep):
+    """Yield BGR frames. A failed read reopens the pipeline (nvargus hiccups happen) up to `retries` times in a row
+    before giving up, instead of exiting on the first bad frame and leaving systemd's 5 s restart gap."""
+    failures = 0
+    while True:
+        cap = open_capture(pipeline)
+        try:
+            if not cap.isOpened():
+                failures += 1
+            else:
+                while True:
+                    ok, frame = cap.read()
+                    if not ok:
+                        failures += 1
+                        break
+                    failures = 0
+                    yield frame
+        finally:
+            cap.release()
+        if failures > retries:
+            raise SystemExit("camera failed %d times in a row: %s" % (failures, pipeline))
+        print("camera read failed (%d of %d); reopening" % (failures, retries))
+        sys.stdout.flush()
+        sleep(min(2.0, 0.2 * failures))
 
 
 def synthetic_frames(w, h, fps, sleep=time.sleep):
@@ -70,6 +83,16 @@ def serve(sock, frames, quality=60, max_frames=None, clock=time.monotonic):
             break
 
 
+def _size(text):
+    try:
+        w, h = [int(s) for s in text.lower().split("x")]
+    except ValueError:
+        raise argparse.ArgumentTypeError("expected WxH, e.g. 1640x1232")
+    if w <= 0 or h <= 0:
+        raise argparse.ArgumentTypeError("sizes must be positive")
+    return w, h
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--source", choices=["camera", "synthetic"], default="camera")
@@ -79,11 +102,11 @@ def main():
     ap.add_argument("--fps", type=int, default=20)
     ap.add_argument("--quality", type=int, default=60)
     ap.add_argument("--sensor-mode", type=int, default=3)
-    ap.add_argument("--capture-size", default="1640x1232", help="sensor capture WxH (4:3 keeps the full fisheye FOV)")
+    ap.add_argument("--capture-size", type=_size, default="1640x1232", help="sensor capture WxH (4:3 keeps the full fisheye FOV)")
     args = ap.parse_args()
 
     if args.source == "camera":
-        cap_w, cap_h = [int(s) for s in args.capture_size.split("x")]
+        cap_w, cap_h = args.capture_size
         frames = camera_frames(gst_pipeline(args.sensor_mode, cap_w, cap_h, args.fps, args.width, args.height))
     else:
         frames = synthetic_frames(args.width, args.height, args.fps)

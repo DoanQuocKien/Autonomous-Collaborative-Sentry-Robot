@@ -3,6 +3,7 @@
     python -m tools.jetbot_status 192.168.137.62
 
 Run it at the start and end of every robot session (and between long tests). Needs `pip install paramiko`.
+Password: --password, the JETBOT_PASSWORD environment variable, or a prompt; host key pinned (tools/jetbot_ssh.py).
 Assumes the INA219 at I2C 0x41 measures the 3S Li-ion pack (about 12.6 V full). Thresholds are our rule of thumb:
   >= 11.1 V OK, 10.5-11.1 V LOW (charge soon), < 10.5 V CRITICAL (stop and charge).
 """
@@ -27,24 +28,21 @@ def battery_status(volts):
 
 def main():
     from tools.find_jetbot import resolve
-    import paramiko  # imported here so the pure functions above can be tested without it
+    from tools import jetbot_ssh
 
     ap = argparse.ArgumentParser()
     ap.add_argument("host", nargs="?", default="auto", help="IP, or auto to search the network")
     ap.add_argument("--user", default="jetbot")
-    ap.add_argument("--password", default="jetbot", help="documented default login of the JetBot image")
+    ap.add_argument("--password", help="default: JETBOT_PASSWORD, else asked")
     a = ap.parse_args()
 
-    c = paramiko.SSHClient()
-    c.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    c.connect(resolve(a.host), username=a.user, password=a.password, timeout=20, look_for_keys=False, allow_agent=False)
-    sudo = "echo %s | sudo -S -p '' " % a.password
+    pw = jetbot_ssh.password(a.password)
+    c = jetbot_ssh.connect(resolve(a.host), a.user, pw)
 
     def run(cmd):
-        _, o, e = c.exec_command(cmd, timeout=40)
-        return (o.read() + e.read()).decode(errors="replace").replace("[sudo] password for %s:" % a.user, "").strip()
+        return jetbot_ssh.run(c, cmd)
 
-    v = ina219_bus_volts(run(sudo + "i2cget -y 1 0x41 0x02 w"))
+    v = ina219_bus_volts(jetbot_ssh.sudo(c, "i2cget -y 1 0x41 0x02 w", pw))
     print("battery   : %.2f V -> %s" % (v, battery_status(v)))
     print("uptime    :", run("uptime -p"))
     print("wifi      :", run("iw dev wlan0 link | grep -E 'SSID|freq|signal'").replace("\n", " | "))
@@ -52,7 +50,7 @@ def main():
     print("antennas  :", " / ".join(x.strip() for x in chains), "(two paths; a gap over about 10 dB means one antenna is missing or poor)")
     ps = run("grep -E 'IPS mode|LPS mode' /proc/net/rtl88x2ce/wlan0/ps_info").replace("\n", " |")
     print("power save:", ps, "(want NO IPS / NO LPS; ignore what `iw ... get power_save` says)")
-    print("containers:", run(sudo + "docker ps --format '{{.Names}} {{.Status}}'").replace("\n", " ; "))
+    print("containers:", jetbot_ssh.sudo(c, "docker ps --format '{{.Names}} {{.Status}}'", pw).replace("\n", " ; "))
     c.close()
     return 0 if battery_status(v) != "CRITICAL - stop and charge" else 2
 

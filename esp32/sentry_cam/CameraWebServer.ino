@@ -104,9 +104,14 @@ void setup() {
   WiFi.begin(ssid, password);
 
   Serial.print("WiFi connecting");
+  uint32_t t0 = millis();
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
+    if (millis() - t0 > 30000) {  // hotspot off or on 5 GHz: restart and try again rather than wait forever
+      Serial.println("\nWiFi not connected after 30 s (is the hotspot on 2.4 GHz?); restarting");
+      ESP.restart();
+    }
   }
   Serial.println("");
   Serial.printf("WiFi connected ip=%s rssi=%d channel=%d\n", WiFi.localIP().toString().c_str(), WiFi.RSSI(), WiFi.channel());

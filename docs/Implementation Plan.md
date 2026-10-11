@@ -27,15 +27,19 @@ sentry/                 # laptop package, Python 3.12 in sentry (see Setup.md)
 config.toml             # repo-root tunables (thresholds, gains, ports); stdlib tomllib
 common/                 # Python 3.6-compatible, stdlib only; used by BOTH laptop and Jetson
   protocol.py           # ports, packet encode/decode with validation, SeqFilter, video header, clock echo
-  mixing.py             # (v, w) -> wheel values: rescale-not-clip, dead zone
-tools/                  # DONE: check_env.py, send_cmd.py, make_markers.py
-                        # TODO: record.py, replay.py, calibrate_fisheye.py, calibrate_motion.py,
-                        # enroll_whitelist.py, label_events.py, sim_robot.py
+  mixing.py             # (v, w) -> wheel values: rescale-not-clip, dead-zone compensation, setting checks
+tools/                  # DONE: check_env.py, send_cmd.py, make_markers.py, record.py, replay.py, sim_robot.py,
+                        # calibrate_fisheye.py (calib/camera.json, RMS 0.83 px), calibrate_motion.py (no runs yet),
+                        # plus network/ESP32/D1/GPU helpers
+                        # TODO: enroll_whitelist.py, label_events.py
 jetson/                 # Python 3.6, Ubuntu 18.04; own requirements.txt (see docs/Setup.md)
-  camera_pub.py         # CSI -> JPEG q60 -> ZeroMQ PUB; `--source synthetic` works without the robot (DRAFT, camera untested)
-  robot_udp.py          # UDP (v, omega) + audio commands -> motors / speaker, watchdog (DRAFT, motors untested; gamepad e-stop TODO)
+  camera_pub.py         # CSI -> JPEG q60 -> ZeroMQ PUB; `--source synthetic` works without the robot (tested on the robot 2026-10-06)
+  robot_udp.py          # UDP (v, omega) + audio commands -> motors / speaker, watchdog, e-stop interlock (motors tested; aplay untested)
+  estop.py              # gamepad dead-man + e-stop, robot host (tested wheels-off 2026-10-06, first floor drive 2026-10-11)
+  systemd/              # boot units for estop / camera / control (written 2026-10-11, not yet tested on the robot)
 assets/print/           # ArUco markers (ids 0-5, 10 cm) and 9x6 checkerboard PDFs, from tools/make_markers.py
-esp32/sentry_cam/       # Arduino sketch: MJPEG VGA @ 15 FPS
+esp32/tile_stream/      # GC2145 boards: raw Bayer changed-tile UDP stream (the frozen interface, section 3)
+esp32/sentry_cam/       # OV2640 boards only: stock HTTP MJPEG VGA sketch (not tested on a board)
 assets/audio/           # pre-generated WAV prompts (committed, small)
 calib/                  # calibration outputs (camera.json, motion.json); committed
 tests/                  # pytest; markers below
@@ -54,7 +58,7 @@ Freezing these lets the three members work in parallel against the same contract
 | JetBot -> laptop video | ZeroMQ PUB/SUB, port 5555; bounded SUB queue, drain complete messages and overwrite one latest-frame slot | multipart `[header_json, jpeg_bytes]`; header `{"seq": int, "t_cap": float (Jetson monotonic s), "w": int, "h": int}` |
 | Laptop -> JetBot control | UDP, port 5556, non-blocking | JSON `{"seq": int, "v": float, "w": float}` with v, w normalized to [-1, 1]; or `{"seq": int, "play": "<clip_name>"}` |
 | Clock sync | UDP echo, port 5557 | laptop sends `t0`, Jetson replies `{t0, t_jetson}`; offset by Cristian's algorithm (min-RTT of 20 samples) |
-| ESP32-CAM -> laptop | **UDP tiles, port 5600** (GC2145 module, no hardware JPEG): raw Bayer 640x480, changed 64x32 tiles only, laptop found by `HELO` broadcast; `sentry.espcam.TileReceiver.latest()` gives a BGR frame. **Frozen 2026-10-11 by DQK's decision: the UDP tile stream is the interface, no OV2640 purchase.** HNHL approved PR #2, which carried this row; KR was asked in the comments on PR #2 and #6 and had not answered by 2026-10-11, so KR may still object (a change then needs a PR all three approve). With an OV2640 module the original HTTP MJPEG `http://<esp32-ip>:81/stream` (VGA, 15 FPS) is used instead | 640x480 at 14.4 FPS average (fixed camera); see `docs/ESP32-CAM.md` |
+| ESP32-CAM -> laptop | **UDP tiles, port 5600** (GC2145 module, no hardware JPEG): raw Bayer 640x480, changed 64x32 tiles only, laptop found by `HELO` broadcast; `sentry.espcam.TileReceiver.latest()` gives a BGR frame. **Frozen 2026-10-11 by DQK's decision: the UDP tile stream is the interface.** An OV2640 module was nevertheless ordered the same day (`docs/ESP32-CAM.md`; firmware ready in `esp32/sentry_cam`, not tested on a board); switching the interface to it needs a PR all three approve. HNHL approved PR #2, which carried this row; KR was asked in the comments on PR #2 and #6 and had not answered by 2026-10-11, so KR may still object (a change then needs a PR all three approve). With an OV2640 module the original HTTP MJPEG `http://<esp32-ip>:81/stream` (VGA, 15 FPS) is used instead | 640x480 at 14.4 FPS average (fixed camera); see `docs/ESP32-CAM.md` |
 
 Laptop-internal contract:
 - JetBot video adapters use `read(timeout) -> VideoFrame | None`, single consumer, with `frame_bgr`, original `jpeg`, `seq`, source `t_cap`, laptop `t_rx` and `t_decode` (see `sentry/net/frame.py`). Latest-frame receivers deliberately skip old frames; record/replay preserves source timestamps. `tools.replay.ReplayStream.read()` implements this offline contract; legacy tuple iteration remains supported. The ESP32 tile interface uses `latest()` as documented separately above.
@@ -71,7 +75,7 @@ Laptop-internal contract:
 **Safety (non-negotiable):**
 - The Jetson stops the motors if no control packet arrives for 300 ms.
 - The kit gamepad is a **dead-man switch plus e-stop** (`jetson/estop.py`, runs on the robot host): the robot moves only while R1 is held and the e-stop is armed (hold Select+Start 2 s); releasing R1 stops it, any other button or losing the pad is a hard stop, and every stop cuts the motor driver directly over I2C. `robot_udp.py` refuses to drive without the e-stop's heartbeat. Verified on the robot 2026-10-06 (wheels off the ground), including with `robot_udp.py` frozen. Details and limits in `docs/JetBot Notes.md`.
-- Speed is capped in `config.toml` during all HIL tests.
+- Speed is capped during all HIL tests by `robot_udp.py --max-speed` on the robot (0.3 in `jetson/systemd/sentry-control.service`; the Jetson cannot read `config.toml`). Commands are mapped onto [`min_pwm`, cap] (dead-zone compensation, `common/mixing.py`), so small commands still move the wheels and the evasion arc keeps both wheels turning; at a 0.3 cap, though, evasion reaches only 0.3 of full speed. Raising the cap for the Week 6 evasion trials is a safety decision for the team, recorded in the weekly log of whoever runs them.
 
 ## 4. Testing Policy
 
@@ -160,7 +164,7 @@ Each week ends with a **Sunday integration session** hosted by DQK (in person or
   - `tools/calibrate_motion.py`: command fixed (v, w) for set durations, tape-measure the results, fit gains to `calib/motion.json`.
   - Tests: T1 reprojection error; T2 motion repeatability (5 runs each of straight 1 m and 90° turn).
 - **HNHL**
-  - `perception/obstacle.py`: YOLOv8 on undistorted frames, COCO furniture classes (chair, couch, bed, dining table, potted plant, tv, refrigerator, suitcase), bottom-centre ground distance `d = f*H/(y_max - c_y)`, repulsive angular term.
+  - `perception/obstacle.py`: YOLOv8 on undistorted frames, COCO furniture classes (chair, couch, bed, dining table, potted plant, tv, refrigerator, suitcase), bottom-centre ground distance `d = f*H/(y_max - c_y)` (valid for a level optical axis; with the optional 15° down-tilt wedge use the pitched ground-plane model instead, and skip boxes cut off by the bottom image border, whose `y_max` is not the ground contact), repulsive angular term.
   - `nav/gridmap.py`: occupancy grid (robot pose + obstacle ground points -> occupied, driven/seen floor -> free, rest unknown); saved at the end of Phase 1 for the Week 7 search.
   - `nav/vantage.py`: score candidate stops on the grid for line of sight, 1.5-3.0 m from the door, and nearness to a boundary.
   - Tests: T0 for the distance formula, repulsion sign and grid updates on synthetic data; T1 distance error and map-vs-tape error on D1.
@@ -308,6 +312,8 @@ reports/<handle>/week-NN/       # test evidence: pytest logs, metrics JSON/CSV, 
 | 9 | The effective detection radius `r_det` is unknown | Placeholder 3.0 m in `config.toml`; DQK measures it in W7 and the plan is recomputed from it |
 | 10 | Dead-reckoning drift along a long search path (no encoders) | Re-localize whenever an ArUco marker is seen; measure path-following error in W7; shorten the path by lowering the coverage target if error is too large |
 | 7 | Mid-term due date assumed to be Nov 1 | Confirm with the instructor in W1 |
-| 12 | The ESP32-CAM modules (both the Shopee and the local one) carry a GC2145, which has no hardware JPEG: the plan's HTTP MJPEG VGA 15 FPS is impossible with the stock sketch (1.7-7.7 FPS) | **Worked around in software on 2026-10-09:** raw Bayer + changed-tile UDP stream, 14.4 FPS average, 9-10 FPS worst case; needs a fixed camera. Alternative: buy an OV2640 module (about 25 FPS VGA, stock sketch). **Decision 2026-10-11 (DQK): keep the tile stream, do not buy an OV2640.** Details: `docs/ESP32-CAM.md` |
+| 12 | The ESP32-CAM modules (both the Shopee and the local one) carry a GC2145, which has no hardware JPEG: the plan's HTTP MJPEG VGA 15 FPS is impossible with the stock sketch (1.7-7.7 FPS) | **Worked around in software on 2026-10-09:** raw Bayer + changed-tile UDP stream, 14.4 FPS average, 9-10 FPS worst case; needs a fixed camera. Alternative: buy an OV2640 module (about 25 FPS VGA, stock sketch). **Decision 2026-10-11 (DQK): keep the tile stream as the interface.** An OV2640 was also ordered that day as an option (`docs/ESP32-CAM.md`); using it changes the frozen interface, so it needs a PR all three approve. Details: `docs/ESP32-CAM.md` |
 | 13 | The second ESP32-CAM board loses its Wi-Fi uplink while the camera runs (cause unknown); the first board is fine | Use the first board for the stream; ask KR to test their board; if a board shows send failures only while the camera runs, swap it |
 | 14 | ORB entrance matching on a frameless glass door is weak from the robot's low 160 deg fisheye view (cafe door, 2026-10-11: almost no inlier separation between door-in-view and no-door frames with default ORB; solid doors untested) | Test on the classroom door and at least one more; undistort with the fisheye calibration first; take `I_ref` from the robot's own camera as well as a phone; restrict to stable features (frame, handle, signs); fallback only with the team's approval: a marker on the door |
+| 15 | **Open, needs a team decision (audit 2026-10-11).** The full-loop criterion says "without manual help" (section 4.3), but the robot moves only while an operator holds R1 (section 3, Safety) | Decide before Week 5: either keep the operator holding R1 during every trial (and reword the criterion to "without steering or intervention"), or define a supervised mode with its own safety case. Do not loosen the dead-man without that |
+| 16 | **Open, needs a team decision (audit 2026-10-11).** The video target p95 < 50 ms is missed on the default 2.4 GHz hotspot (53-62 ms measured, `docs/JetBot Notes.md`), and the spec's simultaneous 2.4 + 5 GHz bands are not what the single-radio Windows hotspot provides | `docs/Hardware.md` section 2 has the router gate (ping p95 > 50 ms): decide whether it has triggered, or record the conditions under which the hotspot meets the target |

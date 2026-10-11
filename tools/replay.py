@@ -71,6 +71,18 @@ class ReplayStream:
 
 # ---- Network Server Mocking (HIL Replay) ----
 
+def frame_gaps(frames, default_fps):
+    """Seconds to wait after each frame: the recorded spacing (t_cap, else t_local), so a replay runs at the recorded
+    rate instead of a fixed FPS. Unknown, negative (source restart) or long (pause) gaps fall back to 1 / default_fps."""
+    default = 1.0 / default_fps
+    gaps = []
+    for a, b in zip(frames, frames[1:] + frames[:1]):
+        key = "t_cap" if "t_cap" in a and "t_cap" in b else "t_local"
+        dt = b.get(key, 0.0) - a.get(key, 0.0) if key in a and key in b else None
+        gaps.append(dt if dt is not None and 0.0 < dt <= 1.0 else default)
+    return gaps
+
+
 class ThreadingHTTPServer(ThreadingMixIn, HTTPServer):
     pass
 
@@ -95,8 +107,7 @@ class MJPEGHandler(BaseHTTPRequestHandler):
             if not frames:
                 return
                 
-            fps = 15.0
-            dt = 1.0 / fps
+            gaps = frame_gaps(frames, 15.0)
             idx = 0
             
             while True:
@@ -115,7 +126,7 @@ class MJPEGHandler(BaseHTTPRequestHandler):
                         self.wfile.write(b'\r\n')
                     except Exception:
                         break
-                time.sleep(dt)
+                time.sleep(gaps[idx])
                 idx = (idx + 1) % len(frames)
         else:
             self.send_response(404)
@@ -142,24 +153,22 @@ def replay_jetbot(port, data_dir):
     if not frames:
         return
         
-    fps = 20.0
-    dt = 1.0 / fps
-    idx = 0
+    gaps = frame_gaps(frames, 20.0)
+    idx = seq = 0
     print(f"[JetBot Replay] Mocking JetBot ZMQ PUB on tcp://0.0.0.0:{port}")
-    
+
     while True:
-        meta = frames[idx].copy()
+        meta = frames[idx]
         img_path = data_dir / "jetbot" / meta["file"]
         if img_path.exists():
             with open(img_path, "rb") as f:
                 jpeg = f.read()
-                
-            # Synthesize current monotonic time for realistic pipeline delays
-            meta["t_cap"] = time.monotonic()
-            header = json.dumps(meta).encode("utf-8")
+            # The wire format of jetson/camera_pub.py: a fresh monotonic t_cap for realistic pipeline delays, and a seq
+            # that keeps increasing when the recording loops (a reset would look like a publisher restart)
+            header = encode_video_header(seq, time.monotonic(), meta["w"], meta["h"])
             sock.send_multipart([header, jpeg])
-            
-        time.sleep(dt)
+            seq += 1
+        time.sleep(gaps[idx])
         idx = (idx + 1) % len(frames)
 
 def main():

@@ -37,7 +37,7 @@ jpeg_quality = 60
 
 [safety]
 watchdog_s = 0.3                 # Jetson stops motors after this much command silence
-max_speed_hil = 0.5              # wheel-value cap used during hardware-in-the-loop tests
+# The HIL speed cap is NOT here: the Jetson cannot read TOML. It is robot_udp.py --max-speed (0.3 in jetson/systemd/sentry-control.service).
 
 [thresholds]                     # from the spec; change only with a documented reason
 obstacle_explore_m = 0.6

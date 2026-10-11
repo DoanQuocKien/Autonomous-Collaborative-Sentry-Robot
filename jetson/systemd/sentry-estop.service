@@ -4,8 +4,10 @@ After=local-fs.target
 
 [Service]
 Type=simple
-# Host process (needs root for the I2C motor cut). Starts hard-stopped; restarting it always returns to the hard-stopped state, which is the fail-safe: robot_udp.py stops when the heartbeat goes stale.
-ExecStart=/bin/sh -c 'exec /usr/bin/python3 /home/jetbot/sentry/jetson/estop.py --arm-buttons 11 --arm-hold 1.5 >> /home/jetbot/sentry/estop.log 2>&1'
+# Host process (needs root for the I2C motor cut). Arming is the documented rule (CLAUDE.md, Implementation Plan section 3): Select+Start held 2 s.
+# Keep the arm buttons and hold time explicit here; tests/test_systemd_units.py checks they match estop.py's defaults.
+# Starts hard-stopped; restarting it always returns to the hard-stopped state, which is the fail-safe: robot_udp.py stops when the heartbeat goes stale.
+ExecStart=/bin/sh -c 'exec /usr/bin/python3 /home/jetbot/sentry/jetson/estop.py --arm-buttons 10 11 --arm-hold 2.0 >> /home/jetbot/sentry/estop.log 2>&1'
 Restart=always
 RestartSec=2
 

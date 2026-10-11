@@ -5,7 +5,9 @@ import numpy as np
 import zmq
 
 from common.protocol import decode_video_header
-from jetson.camera_pub import gst_pipeline, serve, synthetic_frames
+import pytest
+
+from jetson.camera_pub import camera_frames, gst_pipeline, serve, synthetic_frames
 
 
 def test_gst_pipeline_mentions_requested_sizes():
@@ -35,3 +37,29 @@ def test_synthetic_stream_loopback():
     assert heads[0]["t_cap"] < heads[2]["t_cap"]
     img = cv2.imdecode(np.frombuffer(got[0][1], np.uint8), cv2.IMREAD_COLOR)
     assert img.shape == (480, 640, 3)
+
+
+class FakeCapture(object):
+    def __init__(self, reads, opened=True):
+        self.reads, self.opened, self.released = list(reads), opened, False
+
+    def isOpened(self):
+        return self.opened
+
+    def read(self):
+        return self.reads.pop(0) if self.reads else (False, None)
+
+    def release(self):
+        self.released = True
+
+
+def test_camera_reopens_after_a_failed_read_and_gives_up_after_retries():
+    frame = np.zeros((2, 2, 3), np.uint8)
+    caps = [FakeCapture([(True, frame), (False, None)]), FakeCapture([], opened=False), FakeCapture([(True, frame)])]
+    opened = iter(caps)
+    gen = camera_frames("p", open_capture=lambda p: next(opened), retries=2, sleep=lambda s: None)
+    assert next(gen) is frame and next(gen) is frame    # second frame came from a reopened pipeline
+    assert caps[0].released and caps[1].released
+    always_bad = camera_frames("p", open_capture=lambda p: FakeCapture([]), retries=2, sleep=lambda s: None)
+    with pytest.raises(SystemExit):
+        next(always_bad)

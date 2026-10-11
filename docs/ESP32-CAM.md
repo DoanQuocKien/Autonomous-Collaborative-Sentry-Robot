@@ -24,7 +24,7 @@ The modules we bought (Shopee listing "OV3660, OV2640 or OV5640, random"; local 
 
 ## Interface (replaces the "ESP32-CAM -> laptop" row for the GC2145)
 
-UDP, little endian. The laptop broadcasts `HELO` to port 5601 once a second; the ESP32 sends to whoever announced (no IP is configured, the hotspot IP can change). `REFR` (port 5601) asks for a full picture. Packet = 16-byte header `'S' 'T' type flags frame_id u32 esp_ms u32 a u16 b u16` + payload to port **5600**:
+UDP, little endian. The laptop broadcasts `HELO` to port 5601 once a second; the ESP32 sends to whoever announced (no IP is configured, the hotspot IP can change). It follows one laptop: another host's `HELO` or `REFR` is ignored while the current laptop keeps announcing (5 s). The receiver likewise follows one ESP32, and `latest()` returns the picture as of the last frame end, read-only and shared by all callers. `REFR` (port 5601) asks for a full picture. Packet = 16-byte header `'S' 'T' type flags frame_id u32 esp_ms u32 a u16 b u16` + payload to port **5600**:
 
 | type | meaning |
 | :-- | :-- |

@@ -15,6 +15,8 @@ import time
 import cv2
 import numpy as np
 
+from sentry.net.discover import local_ipv4
+
 W, H, TW, TH = 640, 480, 64, 32
 TILES_X = W // TW
 HDR = struct.Struct("<2sBBIIHH")  # 'S' 'T' type flags frame_id esp_ms a b
@@ -72,14 +74,41 @@ def gamma_lut(gamma):
     return (255.0 * (np.arange(256) / 255.0) ** (1.0 / gamma)).astype(np.uint8)
 
 
+def colour_lut(gains, gamma=None):
+    """One 256-entry table per channel (shape 1 x 256 x 3, for cv2.LUT): white-balance gain, clipping and gamma in one lookup."""
+    lut = np.clip(np.arange(256, dtype=np.float32)[:, None] * np.asarray(gains, np.float32)[None, :], 0, 255).astype(np.uint8)
+    if gamma is not None:
+        lut = gamma[lut]
+    return lut.reshape(1, 256, 3)
+
+
+def broadcast_targets():
+    """Limited broadcast plus the /24 broadcast of every local address (the Windows hotspot is a /24)."""
+    return ["255.255.255.255"] + sorted({ip.rsplit(".", 1)[0] + ".255" for ip in local_ipv4()})
+
+
 class TileReceiver:
-    """Receives the tile stream, maintains the picture. Thread-based; start() / stop(). wb: 'gray' (gray-world, smoothed over time) or 'none'."""
+    """Receives the tile stream, maintains the picture. Thread-based; start() / stop(). wb: 'gray' (gray-world, smoothed over time) or 'none'.
+
+    latest() returns the picture as it was at the last frame end (no half-updated frames), processed once per frame and
+    shared by every caller. The receiver follows one ESP32: packets from another source are ignored until the current
+    one has been silent for SOURCE_QUIET_S (then the next sender is taken, e.g. the board rebooted with a new IP).
+    """
+
+    SOURCE_QUIET_S = 5.0
+    MAX_PENDING = 64  # frame ids with tiles but no frame end yet; bounded so stray packets cannot grow memory
 
     def __init__(self, port=PORT, pattern="BG", wb="gray", gamma=1.0, wb_smooth=0.05):
         self.port, self.wb, self.wb_smooth = port, wb, wb_smooth
         self.code = getattr(cv2, "COLOR_BAYER_%s2BGR" % pattern)
         self.lut = gamma_lut(gamma) if gamma != 1.0 else None
         self.raw = np.full((H, W), 128, np.uint8)
+        self.complete = None   # copy of raw at the last frame end
+        self.version = 0       # frame ends seen; latest() reprocesses only when it changes
+        self._cache = (-1, None)
+        self._out_lock = threading.Lock()
+        self.source, self._source_t = None, 0.0
+        self.foreign = 0
         self.gains = np.ones(3, np.float32)
         self._wb_init = False
         self.header = None
@@ -93,25 +122,38 @@ class TileReceiver:
 
     # -- picture ------------------------------------------------------------------------------------------------------------------
     def latest(self):
-        """(BGR frame, frame id, seconds since it was completed); frame is None until the first tiles arrived."""
-        with self._lock:
-            if self.header is None:
-                return None, -1, float("inf")
-            bgr = cv2.cvtColor(self.raw, self.code)
-            fid, t = self.last_frame_id, self.last_t
-        if self.wb == "gray":
-            g = gray_world_gains(bgr[::4, ::4])
-            self.gains = g if not self._wb_init else (1 - self.wb_smooth) * self.gains + self.wb_smooth * g  # the first measurement is taken as is
-            self._wb_init = True
-        if self.wb != "none":
-            bgr = np.clip(bgr.astype(np.float32) * self.gains, 0, 255).astype(np.uint8)
-        if self.lut is not None:
-            bgr = self.lut[bgr]
-        return bgr, fid, time.perf_counter() - t
+        """(BGR frame, frame id, seconds since it was completed); frame is None until the first tiles arrived.
+
+        The frame is shared by every caller and read-only: .copy() it before drawing on it. Check age_s: a stalled
+        stream keeps returning the last frame with a growing age."""
+        with self._out_lock:
+            with self._lock:
+                if self.header is None:
+                    return None, -1, float("inf")
+                version, fid, t = self.version, self.last_frame_id, self.last_t
+                if self._cache[0] != version or self._cache[1] is None:
+                    raw = self.complete if self.complete is not None else self.raw.copy()
+                else:
+                    raw = None
+            if raw is not None:  # a new frame: demosaic, white balance and gamma once, for every caller
+                bgr = cv2.cvtColor(raw, self.code)
+                if self.wb == "gray":
+                    g = gray_world_gains(bgr[::4, ::4])
+                    self.gains = g if not self._wb_init else (1 - self.wb_smooth) * self.gains + self.wb_smooth * g  # the first measurement is taken as is
+                    self._wb_init = True
+                if self.wb != "none":
+                    bgr = cv2.LUT(bgr, colour_lut(self.gains, self.lut))
+                elif self.lut is not None:
+                    bgr = self.lut[bgr]
+                bgr.setflags(write=False)  # shared between callers
+                self._cache = (version, bgr)
+            return self._cache[1], fid, time.perf_counter() - t
 
     def _paste(self, idx, jpg):
+        if idx >= TILES_X * (H // TH):
+            return False
         tile = cv2.imdecode(np.frombuffer(jpg, np.uint8), cv2.IMREAD_GRAYSCALE)
-        if tile is None or tile.shape != (TH, TW) or idx >= TILES_X * (H // TH):
+        if tile is None or tile.shape != (TH, TW):
             return False
         x, y = (idx % TILES_X) * TW, (idx // TILES_X) * TH
         with self._lock:
@@ -126,6 +168,12 @@ class TileReceiver:
         magic, typ, _, fid, esp_ms, p1, p2 = HDR.unpack_from(data)
         if magic != b"ST":
             return
+        if src is not None:
+            now = time.perf_counter()
+            if self.source is not None and src[0] != self.source and now - self._source_t < self.SOURCE_QUIET_S:
+                self.foreign += 1
+                return
+            self.source, self._source_t = src[0], now
         payload = data[HDR.size:]
         self.bytes += len(data)
         if typ == T_HDR:
@@ -138,34 +186,40 @@ class TileReceiver:
                 idx, ln = struct.unpack_from("<HH", payload, pos)
                 pos += 4
                 if self._paste(idx, self.header + payload[pos:pos + ln]):
-                    self._got[fid] = self._got.get(fid, 0) + 1
-                    self.tiles += 1
+                    self._count(fid)
                 pos += ln
         elif typ == T_TILE and self.header:
             if self._paste(p1, self.header + payload):
-                self._got[fid] = self._got.get(fid, 0) + 1
-                self.tiles += 1
+                self._count(fid)
         elif typ == T_FULL:
             if self._paste(p1, payload):
-                self._got[fid] = self._got.get(fid, 0) + 1
-                self.tiles += 1
+                self._count(fid)
         elif typ == T_END:
             self.frames += 1
             self.missing += max(0, p1 - self._got.pop(fid, 0))
-            for k in [k for k in self._got if k < fid - 50]:
+            for k in [k for k in self._got if k < fid - 50 or k > fid + 50]:
                 self._got.pop(k)
-            self.last_frame_id, self.last_t = fid, time.perf_counter()
+            with self._lock:
+                self.complete = self.raw.copy()
+                self.version += 1
+                self.last_frame_id, self.last_t = fid, time.perf_counter()
             if sock is not None and src is not None:
                 sock.sendto(b"ACK " + struct.pack("<II", fid, esp_ms), src)  # lets the ESP32 measure its round trip
+
+    def _count(self, fid):
+        self.tiles += 1
+        self._got[fid] = self._got.get(fid, 0) + 1
+        while len(self._got) > self.MAX_PENDING:
+            self._got.pop(min(self._got))
 
     # -- thread -------------------------------------------------------------------------------------------------------------------
     def _run(self):
         sock = self._sock
-        # ponytail: assumes a /24 on every local address; use the real netmask if a network is not /24
-        targets = ["255.255.255.255"] + [ip.rsplit(".", 1)[0] + ".255" for ip in socket.gethostbyname_ex(socket.gethostname())[2]]
-        t_hello, t_start = 0.0, time.perf_counter()
+        t_hello, t_targets, t_start, targets = 0.0, 0.0, time.perf_counter(), []
         while not self._stop.is_set():
             now = time.perf_counter()
+            if now >= t_targets:  # adapters come and go (hotspot restarts): recompute every 10 s; never crash the thread
+                targets, t_targets = broadcast_targets(), now + 10
             if now >= t_hello:  # the ESP32 sends to whoever announced
                 for t in targets:
                     try:

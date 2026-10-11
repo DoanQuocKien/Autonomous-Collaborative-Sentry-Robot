@@ -66,6 +66,8 @@ enum { T_TILE = 0, T_HDR = 1, T_END = 2, T_FULL = 3, T_TILES = 4 };
 WiFiUDP udp;
 IPAddress laptop;
 bool haveLaptop = false;
+uint32_t lastHeloMs = 0;
+static const uint32_t LAPTOP_QUIET_MS = 5000;  // another host's HELO is ignored while the current laptop keeps announcing (it does every second)
 static uint8_t sig[NT][128];  // internal RAM: a fingerprint of every tile as the laptop last received it (8 rows x 16 bytes sampled)
 uint8_t *tileBuf = NULL;  // internal RAM: one tile, copied row by row
 uint8_t *outBuf = NULL;
@@ -159,6 +161,12 @@ static void encoderTask(void *arg) {
   }
 }
 
+static void fail(const char *why) {  // a dead stream must not sit silently until someone power-cycles the board
+  Serial.printf("TILE %s; restarting in 5 s\n", why);
+  delay(5000);
+  ESP.restart();
+}
+
 static void initAll() {
   Serial.begin(115200);
   camera_config_t c = {};
@@ -175,7 +183,7 @@ static void initAll() {
   c.fb_location = CAMERA_FB_IN_PSRAM;
   c.fb_count = 2;
   c.grab_mode = CAMERA_GRAB_LATEST;
-  if (esp_camera_init(&c) != ESP_OK) { Serial.println("TILE camera init failed"); return; }
+  if (esp_camera_init(&c) != ESP_OK) fail("camera init failed (ribbon seated? GC2145?)");
   sensor_t *sen = esp_camera_sensor_get();
   sen->set_framesize(sen, FRAMESIZE_VGA);
   sen->set_reg(sen, 0xfe, 0xff, 0x00);      // register page 0
@@ -187,12 +195,12 @@ static void initAll() {
   // measured (esp32/cam_rate, Wi-Fi off): xclk 10 MHz + divx4 11 + divide_by 1 + vblank 12 = 15.7 fps clean; divx4 13 drops frames
   tileBuf = (uint8_t *)heap_caps_malloc((size_t)TW * TH, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
   outBuf = (uint8_t *)heap_caps_malloc(8000, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
-  if (!tileBuf || !outBuf) { Serial.println("TILE out of memory"); return; }
+  if (!tileBuf || !outBuf) fail("out of memory");
   memset(sig, 0, sizeof sig);
   jpeg_enc_config_t ec = DEFAULT_JPEG_ENC_CONFIG();
   ec.width = TW; ec.height = TH; ec.src_type = JPEG_PIXEL_FORMAT_GRAY; ec.subsampling = JPEG_SUBSAMPLE_GRAY; ec.quality = QUALITY;
   ec.task_enable = false;  // the Wi-Fi core stays free
-  if (jpeg_enc_open(&ec, &enc) != JPEG_ERR_OK) { Serial.println("TILE encoder open failed"); return; }
+  if (jpeg_enc_open(&ec, &enc) != JPEG_ERR_OK) fail("encoder open failed");
   jobQ = xQueueCreate(MAXJ, sizeof(uint8_t));
   resQ = xQueueCreate(MAXJ, sizeof(uint8_t));
   xTaskCreatePinnedToCore(encoderTask, "enc", 8192, NULL, 3, NULL, 1);
@@ -205,24 +213,36 @@ static void initAll() {
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   uint32_t t0 = millis();
   while (WiFi.status() != WL_CONNECTED && millis() - t0 < 20000) delay(250);
-  if (WiFi.status() != WL_CONNECTED) { Serial.println("TILE wifi failed (is the hotspot on 2.4 GHz?)"); return; }
-  Serial.printf("TILE wifi ok ip=%s rssi=%d channel=%d\n", WiFi.localIP().toString().c_str(), WiFi.RSSI(), WiFi.channel());
-  udp.begin(PORT + 1);  // HELO and acks come here
+  if (WiFi.status() != WL_CONNECTED) Serial.println("TILE wifi not connected yet (is the hotspot on 2.4 GHz?); still trying");
+  // the UDP socket is opened in step() once Wi-Fi is up, so a slow join (hotspot started after the board) still streams
 }
 
 static void step() {
   static uint32_t lastReport = 0, frames = 0, tilesSent = 0, dirtySum = 0, skipped = 0, sendFail = 0, acks = 0, rttSum = 0, rttMax = 0, workUs = 0, oversize = 0, grabUs = 0, ivUs = 0, ivN = 0, scoreUs = 0, copyUs = 0, encUs = 0, sendUs = 0, tileN = 0;
   static uint32_t lastTs = 0;
+  static bool udpUp = false;
+  static uint32_t lastJoinTry = 0;
+  if (enc && WiFi.status() != WL_CONNECTED && millis() - lastJoinTry > 10000) {  // do not rely on the core's auto-reconnect after a failed first join
+    lastJoinTry = millis();
+    WiFi.reconnect();
+  }
   if (!enc || WiFi.status() != WL_CONNECTED) { delay(500); return; }
+  if (!udpUp) {
+    udpUp = udp.begin(PORT + 1);  // HELO and acks come here
+    if (!udpUp) { Serial.println("TILE udp.begin failed; retrying"); delay(500); return; }
+    Serial.printf("TILE wifi ok ip=%s rssi=%d channel=%d\n", WiFi.localIP().toString().c_str(), WiFi.RSSI(), WiFi.channel());
+  }
 
   while (udp.parsePacket() > 0) {
     uint8_t a[12];
     IPAddress from = udp.remoteIP();
     int got = udp.read(a, 12);
     if (got >= 4 && memcmp(a, "HELO", 4) == 0) {
+      if (haveLaptop && from != laptop && millis() - lastHeloMs < LAPTOP_QUIET_MS) continue;  // follow one laptop: no hijack by another host
       if (!haveLaptop || from != laptop) Serial.printf("TILE laptop found at %s\n", from.toString().c_str());
-      laptop = from; haveLaptop = true;
-    } else if (got >= 4 && memcmp(a, "REFR", 4) == 0) {  // a receiver just started: forget what it has, so every tile is sent again
+      laptop = from; haveLaptop = true; lastHeloMs = millis();
+    } else if (got >= 4 && memcmp(a, "REFR", 4) == 0) {
+      if (haveLaptop && from != laptop) continue;  // only the laptop being served may ask for a full picture  // a receiver just started: forget what it has, so every tile is sent again
       memset(sig, 0xFF, sizeof sig);
       lastHdrMs = 0;  // and send the JPEG header again right away: a receiver cannot decode tiles without it
     } else if (got == 12 && memcmp(a, "ACK ", 4) == 0) {
@@ -256,14 +276,13 @@ static void step() {
   scoreUs += micros() - ts0;
   qsort(cand, n, sizeof(Cand), byScoreDesc);
   int extra = dirty < QUIET_DIRTY ? REFRESH_QUIET : REFRESH_PER_FRAME;  // spare time while quiet: heal lost tiles and ghost slivers faster
+  bool queued[NT] = {false};  // O(NT) per refresh pick instead of scanning the queue for every tile
+  for (int q = 0; q < n; q++) queued[cand[q].idx] = true;
   for (int k = 0; k < extra; k++) {  // the oldest tiles that are not already queued
     int best = -1;
-    for (int i = 0; i < NT; i++) {
-      bool queued = false;
-      for (int q = 0; q < n; q++) if (cand[q].idx == i) { queued = true; break; }
-      if (!queued && (best < 0 || lastSentFrame[i] < lastSentFrame[best])) best = i;
-    }
-    if (best >= 0) cand[n++] = {0, (uint16_t)best};
+    for (int i = 0; i < NT; i++)
+      if (!queued[i] && (best < 0 || lastSentFrame[i] < lastSentFrame[best])) best = i;
+    if (best >= 0) { cand[n++] = {0, (uint16_t)best}; queued[best] = true; }
   }
 
   if (hdrLen > 0 && millis() - lastHdrMs > 1000) { sendPkt(T_HDR, espMs, hdrLen, 0, hdr, hdrLen); lastHdrMs = millis(); }

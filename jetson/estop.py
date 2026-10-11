@@ -10,7 +10,8 @@ The robot may move ONLY while the operator holds R1 (the dead-man button) AND th
     report a release (measured 2026-10-06 for a power-off), so a dying pad stops the robot instead of silently disabling the e-stop.
   * ANY other button press, losing the gamepad, or starting up is a HARD stop that needs the arm buttons again.
   * Every stop also cuts the motor driver directly over I2C (about 10-15 ms).
-Files in --dir, read by jetson/robot_udp.py:  ESTOP = latch (exists whenever motion is NOT allowed),  ESTOP_ALIVE = heartbeat.
+Files in --dir, read by jetson/robot_udp.py:  ESTOP = latch (exists whenever motion is NOT allowed),  ESTOP_ALIVE = heartbeat
+(time.monotonic(), written atomically; the robot has no RTC, so wall-clock times can jump). Deploy estop.py and robot_udp.py together.
 robot_udp.py treats a missing or stale heartbeat as stopped, so it never drives without this program running.
 
 Pad: "TGZ Controller" (DragonRise), /dev/input/js0. Buttons inferred from a recording on 2026-10-06: Select = 10, Start = 11
@@ -110,9 +111,21 @@ class EstopLogic(object):
         return self._events(before)
 
 
-def i2c_write(bus, addr, reg, value, call=subprocess.call):
-    return call(["i2cset", "-y", str(bus), hex(addr), hex(reg), hex(value)],
-                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL) == 0
+def i2c_write(bus, addr, reg, value, call=subprocess.call, timeout=1.0):
+    """False on any failure, including a hung bus (timeout): the caller logs it and stays stopped."""
+    try:
+        return call(["i2cset", "-y", str(bus), hex(addr), hex(reg), hex(value)],
+                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=timeout) == 0
+    except (OSError, subprocess.TimeoutExpired):
+        return False
+
+
+def write_heartbeat(path, now):
+    """time.monotonic() into ESTOP_ALIVE, atomically (write + rename): jetson/robot_udp.py must never read a half-written file."""
+    tmp = path + ".tmp"
+    with open(tmp, "w") as f:
+        f.write("%.3f\n" % now)
+    os.rename(tmp, path)
 
 
 def motor_cut(bus, addr, call=subprocess.call):
@@ -151,14 +164,19 @@ def main():
     arm_name = "+".join({10: "Select", 11: "Start"}.get(b, "button %d" % b) for b in args.arm_buttons)
 
     def stop(why):
-        with open(latch, "w") as f:
-            f.write(why + "\n")
+        """Cut the motors FIRST (it does not depend on the file system), then write the latch for robot_udp.py."""
         if args.no_motor_cut:
             cut = "motor cut skipped (--no-motor-cut)"
         else:
             t0 = time.time()
             ok = motor_cut(args.bus, args.addr)
             cut = ("motors CUT in %.0f ms" % ((time.time() - t0) * 1000)) if ok else "MOTOR CUT FAILED (i2cset)"
+        try:
+            with open(latch, "w") as f:
+                f.write(why + "\n")
+        except OSError as e:  # robot_udp.py still stops: the heartbeat goes stale when this program exits
+            log("STOPPED (%s); %s; LATCH WRITE FAILED: %s, exiting" % (why, cut, e))
+            raise
         log("STOPPED (%s); %s" % (why, cut))
 
     def go():
@@ -207,8 +225,7 @@ def main():
                 log("gamepad lost (already stopped)")
         if now - last_alive > 0.5:
             last_alive = now
-            with open(alive, "w") as f:
-                f.write("%.3f\n" % time.time())
+            write_heartbeat(alive, now)
         r = select.select(list(devs), [], [], 0.05)[0] if devs else []
         if not devs:
             time.sleep(0.05)

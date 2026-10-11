@@ -30,22 +30,40 @@ def test_esp32_auto_uses_the_scan(monkeypatch):
 
 
 def test_esp32_prefers_local_relay(monkeypatch):
-    discover.find_esp32.cache_clear()
+    monkeypatch.setattr(discover, "_found", {})
     monkeypatch.setattr(discover, "_http81", lambda ip: ip == "127.0.0.1")
     monkeypatch.setattr(discover, "_candidates", lambda: pytest.fail("scanned the LAN"))
     assert discover.find_esp32() == "127.0.0.1"
-    discover.find_esp32.cache_clear()
 
 
 def test_esp32_lan_scan(monkeypatch):
-    discover.find_esp32.cache_clear()
+    monkeypatch.setattr(discover, "_found", {})
     monkeypatch.setattr(discover, "_http81", lambda ip: ip == "10.0.0.5")
     monkeypatch.setattr(discover, "_candidates", lambda: ["10.0.0.4", "10.0.0.5"])
     assert discover.find_esp32() == "10.0.0.5"
-    discover.find_esp32.cache_clear()
 
 
 def test_esp32_missing_exits(monkeypatch):
     monkeypatch.setattr(discover, "find_esp32", lambda: None)
     with pytest.raises(SystemExit):
         discover.resolve_esp32("auto")
+
+
+def test_a_failed_scan_is_retried_and_a_hit_is_remembered(monkeypatch):
+    monkeypatch.setattr(discover, "_found", {})
+    monkeypatch.setattr(discover, "_candidates", lambda: ["10.0.0.4"])
+    up = []
+    monkeypatch.setattr(discover, "_probe", lambda ip: "video" if up else None)
+    assert discover.find() is None          # robot still booting
+    up.append(1)
+    assert discover.find() == "10.0.0.4"    # the next call scans again
+    monkeypatch.setattr(discover, "_candidates", lambda: pytest.fail("scanned again"))
+    assert discover.find() == "10.0.0.4"
+
+
+def test_candidates_skip_loopback_link_local_and_self(monkeypatch):
+    monkeypatch.setattr(discover.socket, "gethostbyname_ex", lambda h: (h, [], ["127.0.1.1", "169.254.3.4", "192.168.137.1"]))
+    cand = discover._candidates()
+    assert len(cand) == 253 and "192.168.137.1" not in cand and all(c.startswith("192.168.137.") for c in cand)
+    monkeypatch.setattr(discover.socket, "gethostbyname_ex", lambda h: (_ for _ in ()).throw(OSError("no name")))
+    assert discover._candidates() == []

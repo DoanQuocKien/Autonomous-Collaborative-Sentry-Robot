@@ -34,6 +34,23 @@ def record_jetbot(ip, port, out_dir, stop_event=None):
             meta_f.flush()
             index += 1
 
+MAX_JPEG = 2 << 20  # an MJPEG buffer that grows past this without a complete picture is resynchronised
+
+
+def split_jpegs(buf):
+    """-> (complete JPEGs (SOI ... EOI) in an MJPEG byte buffer, the bytes left over). The EOI is searched AFTER the SOI,
+    so a stray EOI before it (joining mid-picture) cannot stall the parser; a runaway buffer is cut back."""
+    out, pos = [], 0
+    while True:
+        a = buf.find(b"\xff\xd8", pos)
+        b = buf.find(b"\xff\xd9", a + 2) if a >= 0 else -1
+        if b < 0:
+            rest = buf[a:] if a >= 0 else b""
+            return out, (rest if len(rest) <= MAX_JPEG else b"")
+        out.append(buf[a:b + 2])
+        pos = b + 2
+
+
 def record_esp32(ip, out_dir):
     url = f"http://{ip}:81/stream"
     meta_path = out_dir / "esp32_meta.jsonl"
@@ -50,16 +67,8 @@ def record_esp32(ip, out_dir):
                         chunk = stream.read(4096)
                         if not chunk:
                             break
-                        bytes_buf += chunk
-                        
-                        # Find JPEG boundaries
-                        a = bytes_buf.find(b'\xff\xd8')
-                        b = bytes_buf.find(b'\xff\xd9')
-                        
-                        if a != -1 and b != -1 and b > a:
-                            jpeg = bytes_buf[a:b+2]
-                            bytes_buf = bytes_buf[b+2:]
-                            
+                        jpegs, bytes_buf = split_jpegs(bytes_buf + chunk)
+                        for jpeg in jpegs:
                             t_local = time.time()
                             filename = f"{seq:06d}.jpg"
                             img_path = out_dir / "esp32" / filename
@@ -74,6 +83,13 @@ def record_esp32(ip, out_dir):
             except Exception as e:
                 print(f"[ESP32] Error: {e}. Retrying in 2s...")
                 time.sleep(2)
+
+def watch(thread, errors, sleep=time.sleep):
+    """Block while the JetBot recorder runs; when it dies (e.g. the ZMQ receiver failed), exit loudly with its error."""
+    while thread.is_alive():
+        sleep(1)
+    raise SystemExit("[JetBot] recorder stopped: %r. Nothing more is being recorded." % (errors[0] if errors else "unknown"))
+
 
 def main():
     parser = argparse.ArgumentParser(description="Record Jetbot and ESP32 streams to disk")
@@ -94,7 +110,15 @@ def main():
     (data_dir / "esp32").mkdir(parents=True, exist_ok=True)
     
     stop_event = threading.Event()
-    t1 = threading.Thread(target=record_jetbot, args=(jetbot_ip, video_port, data_dir, stop_event), daemon=True)
+    errors = []
+
+    def jetbot_worker():
+        try:
+            record_jetbot(jetbot_ip, video_port, data_dir, stop_event)
+        except BaseException as exc:  # reported by watch() in the main thread: never a silent dead recorder
+            errors.append(exc)
+
+    t1 = threading.Thread(target=jetbot_worker, daemon=True)
     t2 = None if esp32_ip is None else threading.Thread(target=record_esp32, args=(esp32_ip, data_dir), daemon=True)
     
     t1.start()
@@ -103,8 +127,7 @@ def main():
     
     print(f"Recording to {data_dir}... Press Ctrl+C to stop.")
     try:
-        while True:
-            time.sleep(1)
+        watch(t1, errors)
     except KeyboardInterrupt:
         print("\nRecording stopped.")
     finally:
