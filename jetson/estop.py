@@ -5,10 +5,10 @@ Runs on the Jetson HOST (not in the jetbot container) so it keeps working if jet
 Needs root for the I2C motor cut:  sudo python3 jetson/estop.py
 
 The robot may move ONLY while the operator holds R1 (the dead-man button) AND the e-stop is armed:
-  * Starts HARD-STOPPED. ARM by holding Select+Start for 2 s (proves the pad is awake). R1 must then be held to move.
+  * Starts HARD-STOPPED. ARM by holding the arm buttons (default Select+Start, see --arm-buttons) for 2 s (proves the pad is awake). R1 must then be held to move.
   * Releasing R1 stops the robot (soft stop); holding R1 again resumes. A pad that dies while R1 is held makes the receiver
     report a release (measured 2026-10-06 for a power-off), so a dying pad stops the robot instead of silently disabling the e-stop.
-  * ANY other button press, losing the gamepad, or starting up is a HARD stop that needs the Select+Start chord again.
+  * ANY other button press, losing the gamepad, or starting up is a HARD stop that needs the arm buttons again.
   * Every stop also cuts the motor driver directly over I2C (about 10-15 ms).
 Files in --dir, read by jetson/robot_udp.py:  ESTOP = latch (exists whenever motion is NOT allowed),  ESTOP_ALIVE = heartbeat.
 robot_udp.py treats a missing or stale heartbeat as stopped, so it never drives without this program running.
@@ -29,7 +29,7 @@ import subprocess
 import sys
 import time
 
-ARM_BUTTONS = (10, 11)
+ARM_BUTTONS = (10, 11)  # Select + Start; change with --arm-buttons (e.g. 11 for Start alone)
 ARM_HOLD_S = 2.0
 DEADMAN_BUTTON = 7
 JS_EVENT = struct.Struct("<IhBB")  # time ms, value, type, number
@@ -141,12 +141,14 @@ def main():
     ap.add_argument("--bus", type=int, default=1)
     ap.add_argument("--addr", type=lambda s: int(s, 0), default=0x60)
     ap.add_argument("--arm-hold", type=float, default=ARM_HOLD_S)
+    ap.add_argument("--arm-buttons", type=int, nargs="+", default=list(ARM_BUTTONS), help="button numbers held together to arm (Select = 10, Start = 11; one number = a single key)")
     ap.add_argument("--deadman", type=int, default=DEADMAN_BUTTON, help="dead-man button number (R1 = 7)")
     ap.add_argument("--no-motor-cut", action="store_true", help="logic and files only; never touch the motor driver (for first tests)")
     args = ap.parse_args()
 
     latch, alive = os.path.join(args.dir, "ESTOP"), os.path.join(args.dir, "ESTOP_ALIVE")
-    logic = EstopLogic(arm_hold_s=args.arm_hold, deadman=args.deadman)
+    logic = EstopLogic(arm_buttons=args.arm_buttons, arm_hold_s=args.arm_hold, deadman=args.deadman)
+    arm_name = "+".join({10: "Select", 11: "Start"}.get(b, "button %d" % b) for b in args.arm_buttons)
 
     def stop(why):
         with open(latch, "w") as f:
@@ -176,14 +178,14 @@ def main():
             if ev == "STOP":
                 stop(logic.reason)
             elif ev == "ARM":
-                log("ARMED (Select+Start held %.1f s); now hold R1 to move" % args.arm_hold)
+                log("ARMED (%s held %.1f s); now hold R1 to move" % (arm_name, args.arm_hold))
             elif ev == "GO":
                 go()
 
     stop("startup")
     devs = {}  # fd -> path
     had_pad, last_scan, last_alive = False, 0.0, 0.0
-    log("watching the gamepad; hold Select+Start %.1f s to arm, then hold R1 (button %d) to move; any other button = hard stop" % (args.arm_hold, args.deadman))
+    log("watching the gamepad; hold %s %.1f s to arm, then hold R1 (button %d) to move; any other button = hard stop" % (arm_name, args.arm_hold, args.deadman))
     while True:
         now = time.monotonic()
         if now - last_scan > 1.0:

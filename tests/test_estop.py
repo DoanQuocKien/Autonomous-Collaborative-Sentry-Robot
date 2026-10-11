@@ -124,3 +124,15 @@ def test_motor_cut_and_rearm_write_the_expected_registers():
     assert motor_rearm(1, 0x60, fake)
     assert calls == [["0x60", "0xfa", "0x0"], ["0x60", "0xfb", "0x0"], ["0x60", "0xfc", "0x0"], ["0x60", "0xfd", "0x0"]]
     assert not motor_cut(1, 0x60, lambda cmd, **kw: 1)          # an i2cset failure is reported
+
+
+def test_single_key_arming_still_needs_the_full_hold_and_r1():
+    e = EstopLogic(arm_buttons=(START,), arm_hold_s=1.5)
+    e.button(START, True, 0.0)
+    assert e.tick(1.4) == [] and e.hard           # not held long enough
+    e.button(START, False, 1.45)
+    e.button(START, True, 2.0)
+    assert e.tick(3.6) == ["ARM"] and not e.motion_allowed   # armed, but R1 not held: no motion
+    assert e.button(R1, True, 3.7) == ["GO"]
+    assert e.button(4, True, 3.8) == ["STOP"] and e.hard     # any other key is still a hard stop
+
