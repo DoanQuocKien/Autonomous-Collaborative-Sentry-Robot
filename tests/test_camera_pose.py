@@ -66,3 +66,32 @@ def test_end_to_end_on_a_rendered_marker():
     page = cv2.warpPerspective(m, cv2.getPerspectiveTransform(src, np.float32(px)), (640, 480), flags=cv2.INTER_LINEAR, borderValue=200)
     e = TiltFilter().update_frame(cv2.cvtColor(page, cv2.COLOR_GRAY2BGR), K, S, BOTTOM, marker_id=3, camera_h_m=0.10)
     assert e is not None and abs(e["pitch_deg"] - 2.6) < 1.5
+
+
+def fisheye_view(pitch_deg, D, **kw):
+    """The same view through the real fisheye model of calib/camera.json (equidistant + k1..k4), then undistorted back to pinhole pixels with P = K."""
+    import json
+    from pathlib import Path
+    cam = json.loads((Path(__file__).resolve().parent.parent / "calib" / "camera.json").read_text())
+    Kf, Df = np.array(cam["K"]), np.array(cam["D"])
+    p, w = math.radians(pitch_deg), math.radians(kw.get("yaw_deg", 0.0))
+    z = np.array([math.sin(w) * math.cos(p), -math.sin(p), -math.cos(w) * math.cos(p)])
+    x = np.cross(z, [0, 1, 0]); x /= np.linalg.norm(x)
+    R = np.array([x, np.cross(z, x), z])
+    t = -R @ np.array([kw.get("offset", 0.0), 0.10 - (BOTTOM + S / 2), D])
+    s = S / 2
+    obj = np.array([[-s, s, 0], [s, s, 0], [s, -s, 0], [-s, -s, 0]], np.float64).reshape(-1, 1, 3)
+    raw, _ = cv2.fisheye.projectPoints(obj, cv2.Rodrigues(R)[0], t, Kf, Df)
+    return cv2.fisheye.undistortPoints(raw, Kf, Df, P=Kf).reshape(4, 2), Kf
+
+
+def test_fisheye_round_trip_recovers_the_tilt():
+    rng = np.random.default_rng(1)
+    for pitch in (-2.3, 2.6):
+        px, Kf = fisheye_view(pitch, 1.5, yaw_deg=15, offset=0.1)
+        e = pose_from_corners(px, Kf, S, BOTTOM, camera_h_m=0.10)
+        assert abs(e["pitch_deg"] - pitch) < 0.05, (pitch, e)       # noise-free: the undistortion is the only difference
+        f = TiltFilter(max_distance_m=3.0)
+        for _ in range(15):
+            f.update(pose_from_corners(px + rng.normal(0, 0.3, (4, 2)), Kf, S, BOTTOM, camera_h_m=0.10))
+        assert abs(f.pitch_deg - pitch) < 1.2
