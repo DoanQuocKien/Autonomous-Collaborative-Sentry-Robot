@@ -12,6 +12,8 @@ Lessons from the cafe session (2026-10-11): `reports/DoanQuocKien/week-01.md`, `
 1. Hotspot on (2.4 GHz), phone battery saver OFF, phone close to the work area. Laptop on that hotspot.
 2. `python -m tools.jetbot_status` (battery). Start `estop.py` (arm key: Start held 1.5 s) and `camera_pub.py`, either by hand or with the systemd units (PR #12, untested: install and test them first, 5 min).
 3. `python -m tools.find_jetbot` finds the robot; `config.toml` has `jetbot_ip = "auto"`.
+4. **Pre-flight (added 2026-10-12):** `python -m tools.preflight` (battery, the three services, video fps, disk space; add `--marker-m 0.15 --bottom-h <m>` with a marker in view for the live tilt check). Fix every FAIL before driving.
+5. **Camera pose (the tilt moved 3.6 deg between two sessions):** lock the mount (tape across it + a pencil mark), then 3 floor strips at 0.5 / 1.0 / 2.0 m from the plumb spot under the lens: `python tools/measure_camera_pose.py --marks 0.5 1.0 2.0 --h-tape 0.100 --tag <session>` (PR #22; click the two ends of each strip, wide apart). One `calib/camera_pose_<session>.json` per session; repeat at the end of the session. Never touch the camera in between.
 
 ## 1. Doorway set (about 20 min, per door)
 1. Phone photo of the door (front-on, about 2 m, whole door and frame, no people): `data/D1/<door>_iref.jpg`.
@@ -22,6 +24,7 @@ Lessons from the cafe session (2026-10-11): `reports/DoanQuocKien/week-01.md`, `
 
 ## 2. Obstacle distances (about 25 min)
 20 obstacles at tape-measured distances 0.3-2.0 m **to the nearest cm** (this metric needs it: median error <= 10 %), in the room that is mapped. One CSV row each (`assets/d1/obstacles_template.csv`), robot still, a photo of each setup if possible.
+Method (from the 2026-10-12 setup): robot on a floor mark, the tape along its forward axis from the spot under the lens (plumb weight); 4 setups of 5 obstacles; measure the **forward** distance along the tape (not diagonal) to the nearest floor point the robot would hit first, and the sideways offset (left +); record `python -m tools.record D1_obstacles --no-esp32` while each setup is still (5 s, note the clock times); write the floor type in the notes (a polished floor mirrors low objects and makes them read 14-16 % too near, plan risk 23: do one setup on a matte surface too). Use classes YOLO knows (chair, backpack, suitcase, potted plant, bottle, tv); skip anything cut off by the image border. Obstacles must not overlap and no people in the frame (faces).
 
 ## 3. Room sweeps (about 10 min)
 Slow drive around the room with the e-stop armed (`tools.send_cmd --v 1.0`, hold R1), `tools.record D1_sweep`.

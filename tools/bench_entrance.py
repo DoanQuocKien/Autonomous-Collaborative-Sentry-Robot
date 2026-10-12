@@ -31,7 +31,12 @@ def load_rows(door, step):
     return out
 
 
-def reference_image(door, rows_all):
+PHONE_REFS = {"cafe_glass": "data/D1/cafe_glass_iref.jpg", "class_door": "data/D1/class_door_iref.jpg"}
+
+
+def reference_image(door, rows_all, kind="robot"):
+    if kind == "phone":        # the phone photo of the door, resized to the robot frame size (the robot sees it much lower, wider and tinted)
+        return cv2.resize(cv2.imread(PHONE_REFS[door]), (640, 480)), Path(PHONE_REFS[door]).name
     path, _ = REFS[door]
     if "{ref_frame}" in path:   # no saved robot-eye reference: the sharpest frame of the left-out position
         pos = [r for r in rows_all if int(r["position_id"]) == REFS[door][1]]
@@ -182,6 +187,7 @@ def main():
     ap.add_argument("--methods", nargs="+", default=["orb", "xfeat", "dino_s", "dino_b"])
     ap.add_argument("--step", type=int, default=3)
     ap.add_argument("--xfeat-dir", default=None)
+    ap.add_argument("--ref", choices=["robot", "phone"], default="robot", help="reference photo: the robot's own frame (hold-out position) or the phone photo of the door")
     ap.add_argument("--probe", action="store_true")
     ap.add_argument("--fusion", action="store_true", help="also score XFeat + DINOv2 together (needs both in --methods; xfeat as log1p(inliers))")
     ap.add_argument("--out", default="reports/DoanQuocKien/week-02/d1/entrance_bench.json")
@@ -191,7 +197,7 @@ def main():
         m = {"orb": lambda: Orb(), "xfeat": lambda: XFeatMatcher(a.xfeat_dir), "dino_s": lambda: Dino("s"), "dino_b": lambda: Dino("b")}[name]()
         for door in a.doors:
             rows_all = [r for r in csv.DictReader(open(D1 / ("manifest_%s.csv" % door), encoding="utf-8"))]
-            ref, ref_name = reference_image(door, rows_all)
+            ref, ref_name = reference_image(door, rows_all, a.ref)
             res, sc, lab = evaluate(m, door, load_rows(door, a.step), ref, REFS[door][1])
             kept[(name, door)] = (sc, lab)
             res["reference"] = ref_name
