@@ -1,0 +1,56 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.13.9, pytest-8.4.2, pluggy-1.5.0
+rootdir: C:\Users\toanl\OneDrive\Documents\jetbot\Autonomous-Collaborative-Sentry-Robot
+configfile: pytest.ini
+testpaths: tests
+plugins: anyio-4.11.0, langsmith-0.14.0
+collected 294 items / 1 deselected / 1 skipped / 293 selected
+
+tests\test_bench_entrance.py ...                                         [  1%]
+tests\test_calibrate_fisheye.py ..s                                      [  2%]
+tests\test_calibrate_motion.py ...........                               [  5%]
+tests\test_camera_pose.py .....                                          [  7%]
+tests\test_camera_pub.py ...                                             [  8%]
+tests\test_check_net.py ....                                             [  9%]
+tests\test_clock_sync.py .........                                       [ 12%]
+tests\test_config.py ...                                                 [ 13%]
+tests\test_controller.py .....................                           [ 21%]
+tests\test_d1_label.py .....                                             [ 22%]
+tests\test_d1_manifest.py ..                                             [ 23%]
+tests\test_discover.py ..........                                        [ 26%]
+tests\test_enroll_entrance.py .                                          [ 27%]
+tests\test_entrance.py .........ss.                                      [ 31%]
+tests\test_esp_mjpeg_relay.py ..                                         [ 32%]
+tests\test_espcam.py .......                                             [ 34%]
+tests\test_estop.py ..............                                       [ 39%]
+tests\test_fetch_models.py .                                             [ 39%]
+tests\test_gridmap.py ...............                                    [ 44%]
+tests\test_jetbot_status.py ..                                           [ 45%]
+tests\test_latency.py .....                                              [ 47%]
+tests\test_localization.py ......                                        [ 49%]
+tests\test_markers.py ....                                               [ 50%]
+tests\test_measure_camera_pose.py ....                                   [ 51%]
+tests\test_mixing.py ..................                                  [ 58%]
+tests\test_net_loopback.py ......                                        [ 60%]
+tests\test_obstacle.py ...............................                   [ 70%]
+tests\test_preflight.py ...                                              [ 71%]
+tests\test_prescan_replay.py ..........                                  [ 75%]
+tests\test_protocol.py ..........................                        [ 83%]
+tests\test_record_replay_esp32.py .                                      [ 84%]
+tests\test_record_replay_jetbot.py ......                                [ 86%]
+tests\test_sim_robot.py .........                                        [ 89%]
+tests\test_systemd_units.py ..                                           [ 90%]
+tests\test_tape_angle.py .                                               [ 90%]
+tests\test_tile_detect.py .....                                          [ 92%]
+tests\test_udp_tx.py .........                                           [ 95%]
+tests\test_vantage.py ....                                               [ 96%]
+tests\test_zmq_rx.py ..........                                          [100%]
+
+============================== warnings summary ===============================
+tests/test_bench_entrance.py::test_logistic_probe_separates_two_clouds_and_generalises_to_new_points
+  C:\Users\toanl\AppData\Roaming\Python\Python313\site-packages\torch\optim\lbfgs.py:457: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+  Consider using tensor.detach() first. (Triggered internally at C:\actions-runner\_work\pytorch\pytorch\pytorch\torch\csrc\autograd\generated\python_variable_methods.cpp:836.)
+    loss = float(closure())
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+========== 290 passed, 4 skipped, 1 deselected, 1 warning in 13.55s ===========

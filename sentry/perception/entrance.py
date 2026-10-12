@@ -61,6 +61,21 @@ class EntranceResult:
     bearing_rad: float = None          # of the door ROI centre, positive = left; None when no homography
     quad: list = None                  # polygon of the matched region in the frame: the projected door ROI when one was given, else the convex hull of the inliers
 
+    def estimate_door_world_xy(self, robot_pose, distance_m: float = 2.0):
+        """Estimate 2D global coordinate (x, y) of the door when in view.
+        Uses robot pose (x, y, yaw) and detected door bearing_rad.
+        """
+        if not self.in_view or self.bearing_rad is None:
+            return None
+        # Bearing convention in EntranceResult: positive = LEFT (+yaw)
+        yaw = getattr(robot_pose, "yaw_rad", getattr(robot_pose, "yaw", 0.0))
+        x = getattr(robot_pose, "x_m", getattr(robot_pose, "x", 0.0))
+        y = getattr(robot_pose, "y_m", getattr(robot_pose, "y", 0.0))
+        theta = yaw + self.bearing_rad
+        door_x = x + distance_m * math.cos(theta)
+        door_y = y + distance_m * math.sin(theta)
+        return (door_x, door_y)
+
 
 class Camera:
     """Fisheye intrinsics (calib/camera.json, OpenCV equidistant model) -> bearing of a raw pixel."""
@@ -295,3 +310,8 @@ class EntranceFilter:
                 self.bearings.clear()
                 return "ENTRANCE_LOST", None
         return None
+
+
+# Backward compatibility alias
+EntranceMatcher = EntranceDetector
+
