@@ -141,3 +141,17 @@ def test_play_clip_caps_concurrent_players(tmp_path):
     players = [Playing(), Playing()]
     assert play_clip(str(tmp_path), "alarm", players, popen=lambda cmd: Playing()).startswith("busy")
     assert len(players) == 2
+
+
+def test_trim_changes_the_wheel_ratio_of_a_straight_command():
+    def run(trim):
+        c = Controller(min_pwm=0.12, max_speed=0.3, trim=trim)
+        return c.on_packet(encode_control(1, 1.0, 0.0), now=0.0)[1]
+    assert run(0.0) == (0.3, 0.3)
+    left, right = run(0.02)
+    assert left < 0.3 and abs(left - 0.3 * 0.98 / 1.02) < 1e-9 and right == 0.3          # right wheel stays at the cap: both rescaled, cap holds
+    try:
+        Controller(trim=0.5)
+        assert False, "a trim of 0.5 must be refused"
+    except ValueError:
+        pass
