@@ -65,6 +65,44 @@ aruco_marker_m = 0.10                 # MEASURE the printed marker and update th
 detection_radius_m = 3.0         # PLACEHOLDER r_det; DQK measures it in W9
 coverage_target = 0.90           # fraction of known-free cells the planned viewpoints must cover
 
+[obstacle]
+weights = "data/models/yolov8n.pt" # existing local weights; inference never downloads implicitly
+device = "0"                    # use "cpu" for offline CPU work
+imgsz = 640
+confidence = 0.25
+class_ids = [56, 57, 58, 59, 60, 62, 72, 28] # chair,couch,plant,bed,table,tv,fridge,suitcase
+camera_calibration = "calib/camera.json"
+camera_pose = "calib/camera_pose_nowedge.json"
+max_ground_range_m = 5.0
+bottom_margin_px = 1.0           # reject boxes touching the bottom: contact point is not visible
+repulsion_gain = 1.0
+repulsion_max_w = 1.0            # normalized UDP w contribution, not rad/s
+centre_turn = 1                  # deterministic left turn for an exactly centred obstacle
+
+[gridmap]
+resolution_m = 0.10
+width_m = 20.0
+height_m = 20.0
+origin_x_m = -10.0
+origin_y_m = -10.0
+driven_radius_m = 0.12           # MEASURE robot footprint; this is a development default
+camera_forward_m = 0.0          # MEASURE offset lens -> localization origin before HIL
+camera_left_m = 0.0
+
+[vantage]
+robot_radius_m = 0.15           # MEASURE footprint + clearance margin before HIL
+boundary_weight = 1.0
+distance_weight = 0.2
+
+[w2_validation]
+min_obstacles = 20
+min_tape_m = 0.3
+max_tape_m = 2.0
+distance_median_relative_limit = 0.10
+distance_p90_relative_limit = 0.20
+map_error_limit_m = 0.20
+map_fraction_min = 0.80
+
 [sim]
 v_max_mps = 0.5                  # Simulated max linear velocity in m/s
 w_max_radps = 2.0                # Simulated max angular velocity in rad/s
