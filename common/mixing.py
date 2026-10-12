@@ -20,15 +20,27 @@ def mix(v, w, k=1.0):
     return left, right
 
 
-def check_drive(max_speed, min_pwm, k=1.0):
-    """Raise ValueError unless 0 <= min_pwm < max_speed <= 1 and k is finite and positive (a typo must not drive)."""
-    for name, x in (("max_speed", max_speed), ("min_pwm", min_pwm), ("k", k)):
+def apply_trim(left, right, trim):
+    """Compensate a constant drift (the wheels are not identical: measured 2026-10-11, 0.19 rad/m to the right at full command): left *= 1 - trim, right *= 1 + trim.
+    trim > 0 turns the robot left (it pulls to the right without trim). If a wheel would pass 1, both are rescaled (never clipped), so the speed cap still holds."""
+    left, right = left * (1.0 - trim), right * (1.0 + trim)
+    m = max(abs(left), abs(right))
+    if m > 1.0:
+        left, right = left / m, right / m
+    return left, right
+
+
+def check_drive(max_speed, min_pwm, k=1.0, trim=0.0):
+    """Raise ValueError unless 0 <= min_pwm < max_speed <= 1, k is finite and positive and |trim| <= 0.2 (a typo must not drive)."""
+    for name, x in (("max_speed", max_speed), ("min_pwm", min_pwm), ("k", k), ("trim", trim)):
         if isinstance(x, bool) or not isinstance(x, (int, float)) or not math.isfinite(x):
             raise ValueError("%s must be a finite number, got %r" % (name, x))
     if not 0.0 <= min_pwm < max_speed <= 1.0:
         raise ValueError("need 0 <= min_pwm < max_speed <= 1, got min_pwm=%r max_speed=%r" % (min_pwm, max_speed))
     if k <= 0:
         raise ValueError("k must be positive, got %r" % (k,))
+    if abs(trim) > 0.2:
+        raise ValueError("trim must be within +-0.2, got %r" % (trim,))
 
 
 def deadzone(x, min_pwm):

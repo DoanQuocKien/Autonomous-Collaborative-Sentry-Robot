@@ -20,7 +20,7 @@ import threading
 import time
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from common.mixing import check_drive, deadzone, mix  # noqa: E402
+from common.mixing import apply_trim, check_drive, deadzone, mix  # noqa: E402
 from common.protocol import (PORT_CLOCK, PORT_CONTROL, SeqFilter, decode_clock_request,  # noqa: E402
                              decode_control, encode_clock_reply)
 
@@ -28,11 +28,11 @@ from common.protocol import (PORT_CLOCK, PORT_CONTROL, SeqFilter, decode_clock_r
 class Controller(object):
     """Pure logic (no sockets, no clock): easy to test."""
 
-    def __init__(self, k=1.0, min_pwm=0.0, max_speed=0.5, watchdog_s=0.3):
-        check_drive(max_speed, min_pwm, k)
+    def __init__(self, k=1.0, min_pwm=0.0, max_speed=0.5, watchdog_s=0.3, trim=0.0):
+        check_drive(max_speed, min_pwm, k, trim)
         if isinstance(watchdog_s, bool) or not isinstance(watchdog_s, (int, float)) or not 0 < watchdog_s <= 1.0:
             raise ValueError("watchdog_s must be in (0, 1] s, got %r" % (watchdog_s,))
-        self.k, self.min_pwm, self.max_speed, self.watchdog_s = k, min_pwm, max_speed, watchdog_s
+        self.k, self.min_pwm, self.max_speed, self.watchdog_s, self.trim = k, min_pwm, max_speed, watchdog_s, trim
         self.seq = SeqFilter()
         self.peer = None  # source address of the stream being obeyed; another sender is ignored until it goes quiet
         self.last_cmd = None  # time of the last accepted motor command; None = motors already stopped
@@ -65,7 +65,7 @@ class Controller(object):
         if estop:
             return None
         self.last_cmd = now
-        left, right = mix(msg["v"], msg["w"], self.k)
+        left, right = apply_trim(*mix(msg["v"], msg["w"], self.k), trim=self.trim)
         left, right = left * self.max_speed, right * self.max_speed
         return ("motors", (deadzone(left, self.min_pwm), deadzone(right, self.min_pwm)))
 
@@ -143,7 +143,7 @@ def main():
     ap.add_argument("--allow-ip", help="only accept control packets from this IP (the laptop)")
     ap.add_argument("--max-speed", type=float, default=0.5, help="cap on every wheel value, 0-1")
     ap.add_argument("--watchdog", type=float, default=0.3, help="seconds of silence before stopping")
-    ap.add_argument("--calib", default="calib/motion.json", help='JSON {"k": .., "min_pwm": ..}')
+    ap.add_argument("--calib", default="calib/motion.json", help='JSON {"k": .., "min_pwm": .., "trim": ..} (trim optional, default 0)')
     ap.add_argument("--audio-dir", default="assets/audio")
     ap.add_argument("--dry-run", action="store_true", help="print motor values instead of driving")
     ap.add_argument("--estop-dir", default=".", help="folder with ESTOP and ESTOP_ALIVE written by jetson/estop.py")
@@ -155,7 +155,7 @@ def main():
         with open(args.calib) as f:
             calib = json.load(f)
     try:
-        ctl = Controller(calib.get("k", 1.0), calib.get("min_pwm", 0.0), args.max_speed, args.watchdog)
+        ctl = Controller(calib.get("k", 1.0), calib.get("min_pwm", 0.0), args.max_speed, args.watchdog, calib.get("trim", 0.0))
     except ValueError as e:
         raise SystemExit("refusing to start: %s (check --max-speed, --watchdog and %s)" % (e, args.calib))
     robot = None if args.dry_run else _make_robot()

@@ -102,3 +102,30 @@ def test_several_speeds_need_runs_at_every_speed():
 def test_one_speed_keeps_the_old_per_unit_gain():
     out = fit(synthetic_rows())
     assert "speed_model" not in out and abs(out["v_gain_m_per_s"] - 0.18) < 0.005
+
+def test_suggested_trim_cancels_the_measured_drift():
+    from tools.calibrate_motion import suggest_trim
+    out = {"drift_rad_per_m": -0.186, "v_gain_m_per_s": 0.4135, "w_gain_rad_per_s": 6.48, "k": 1.0}   # the real 2026-10-11 numbers: pulls right
+    t = suggest_trim(out)
+    assert 0.011 < t < 0.013                                   # left wheel slowed by about 1.2 %
+    assert suggest_trim(dict(out, drift_rad_per_m=0.186)) == -t   # pulls left -> the opposite sign
+    assert suggest_trim(dict(out, drift_rad_per_m=-50.0)) == 0.2  # clamped
+    assert suggest_trim(dict(out, w_gain_rad_per_s=None)) is None
+
+
+def test_trim_removes_the_drift_of_a_simulated_robot_with_mismatched_wheels():
+    """End to end on the sign convention: wheels with +-1.2 % gain mismatch -> measured drift -> suggest_trim -> Controller(trim) -> the simulated robot drives straight."""
+    from common.protocol import encode_control
+    from jetson.robot_udp import Controller
+    A, B, k, delta = 0.4135, 0.1276, 1.0, 0.01187           # m/s per unit command, effective track (m), mix k, left wheel 1.2 % fast, right 1.2 % slow
+
+    def heading_rate_per_m(trim, v=0.7):
+        left, right = Controller(min_pwm=0.12, max_speed=0.3, trim=trim).on_packet(encode_control(1, v, 0.0), now=0.0)[1]
+        sl, sr = A * (1 + delta) * left / 0.3, A * (1 - delta) * right / 0.3
+        return ((sr - sl) / B) / ((sl + sr) / 2)               # rad per metre, positive = turning left
+
+    drift = heading_rate_per_m(0.0)
+    assert -0.20 < drift < -0.17                               # pulls right, like the real robot (-0.186 rad/m)
+    from tools.calibrate_motion import suggest_trim
+    t = suggest_trim({"drift_rad_per_m": drift, "v_gain_m_per_s": A, "w_gain_rad_per_s": 2 * A * k / B, "k": k})
+    assert abs(heading_rate_per_m(t)) < 0.05 * abs(drift)      # at least 95 % of the drift is gone

@@ -44,3 +44,26 @@ def test_deadzone_zeroes_values_below_min_pwm_only():
 def test_check_drive_rejects_unsafe_settings(max_speed, min_pwm, k):
     with pytest.raises(ValueError):
         check_drive(max_speed, min_pwm, k)
+
+
+def test_trim_is_off_by_default_and_turns_left_when_positive():
+    from common.mixing import apply_trim
+    assert apply_trim(0.5, 0.5, 0.0) == (0.5, 0.5)
+    left, right = apply_trim(0.5, 0.5, 0.02)          # a robot that pulls to the right: slow the left wheel, speed up the right
+    assert left < 0.5 < right and abs(left - 0.49) < 1e-9 and abs(right - 0.51) < 1e-9
+    assert apply_trim(0.0, 0.0, 0.1) == (0.0, 0.0)    # no creeping when stopped
+
+
+def test_trim_keeps_the_speed_cap_and_the_turn_ratio_when_a_wheel_would_exceed_1():
+    from common.mixing import apply_trim
+    left, right = apply_trim(1.0, 1.0, 0.1)           # right would be 1.1: both are rescaled, nothing above 1
+    assert max(abs(left), abs(right)) == 1.0 and abs(left / right - 0.9 / 1.1) < 1e-9
+
+
+def test_check_drive_rejects_a_big_trim():
+    import pytest
+    from common.mixing import check_drive
+    check_drive(0.3, 0.12, 1.0, 0.05)
+    for bad in (0.3, -0.25, float("nan")):
+        with pytest.raises(ValueError):
+            check_drive(0.3, 0.12, 1.0, bad)

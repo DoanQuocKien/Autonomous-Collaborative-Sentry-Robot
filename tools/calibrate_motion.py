@@ -134,6 +134,16 @@ def fit(rows, max_gain_cv=0.10, min_runs=5, min_group_runs=3):
     return out
 
 
+def suggest_trim(out):
+    """The `trim` (common.mixing.apply_trim) that would cancel the measured drift. Heading error rate = drift * speed; a trim t makes the wheels differ by 2*t*v (normalised),
+    which turns the robot by 2*t*v * w_gain / (2*k) rad/s per unit command, so t = -drift * v_gain * k / w_gain (clamped to +-0.2). None when a value is missing.
+    The runs are recorded WITH the trim that was on the robot, so the suggestion is an increment: add it to the current `trim` in calib/motion.json."""
+    d, vg, wg, k = (out.get(x) for x in ("drift_rad_per_m", "v_gain_m_per_s", "w_gain_rad_per_s", "k"))
+    if None in (d, vg, wg, k) or not wg:
+        return None
+    return max(-0.2, min(0.2, -d * vg * k / wg))
+
+
 def read_rows(path):
     rows = []
     for r in csv.DictReader(Path(path).open(encoding="utf-8")):
@@ -228,6 +238,7 @@ def main():
     f.add_argument("--csv", nargs="+", default=["reports/DoanQuocKien/week-02/motion_runs.csv"], help="one or more run files (e.g. v = 1.0 plus the lower-speed runs)")
     f.add_argument("--out", default="calib/motion.json")
     f.add_argument("--push", action="store_true", help="also copy motion.json to the robot (restart robot_udp.py afterwards)")
+    f.add_argument("--apply-trim", action="store_true", help="add the suggested drift trim to the `trim` already in --out (robot_udp.py applies it; repeat the straight runs to check)")
     f.add_argument("--force", action="store_true", help="write (and push) even when the fit failed")
     f.add_argument("--ip", default="auto")
     f.add_argument("--user", default="jetbot")
@@ -249,6 +260,13 @@ def main():
     if not out["passed"] and not a.force:
         print("FAIL: " + "; ".join(out["problems"]) + " -> nothing written, nothing pushed (--force to write anyway)")
         raise SystemExit(1)
+    trim = suggest_trim(out)
+    out["trim_suggested"] = None if trim is None else round(trim, 4)
+    print("drift %s rad/m -> suggested trim increment %s" % (out["drift_rad_per_m"], out["trim_suggested"]))
+    if a.apply_trim and trim is not None:
+        old = json.loads(Path(a.out).read_text(encoding="utf-8")).get("trim", 0.0) if Path(a.out).exists() else 0.0
+        out["trim"] = round(max(-0.2, min(0.2, old + trim)), 4)
+        print("trim %.4f -> %.4f (written; push it and repeat the straight runs)" % (old, out["trim"]))
     Path(a.out).parent.mkdir(parents=True, exist_ok=True)
     Path(a.out).write_text(json.dumps(out, indent=2, allow_nan=False) + "\n", encoding="utf-8")
     print("written %s" % a.out)
