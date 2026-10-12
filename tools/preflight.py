@@ -83,12 +83,12 @@ def main():
                     try:
                         import cv2
                         import numpy as np
-                        from perception.camera_pose import TiltFilter
+                        from sentry.perception.camera_pose import TiltFilter
                         from tools.estimate_camera_tilt import undistorter
                         tilt = tilt or (TiltFilter(max_distance_m=3.0), *undistorter(json.load(open("calib/camera.json"))))
                         tilt[0].update_frame(tilt[2](f.frame_bgr), tilt[1], a.marker_m, a.bottom_h, None, a.camera_h)
                     except ImportError:
-                        report("tilt", "WARN", "perception/camera_pose.py not on this branch: skipped")
+                        report("tilt", "WARN", "sentry/perception/camera_pose.py not on this branch: skipped")
                         a.marker_m = None
             fps = frames / (time.perf_counter() - t0)
         report("video", "PASS" if fps >= a.min_fps else "FAIL", "%.1f fps over 3 s (>= %.0f)" % (fps, a.min_fps))

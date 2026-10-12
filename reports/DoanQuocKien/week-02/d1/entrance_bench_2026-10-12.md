@@ -34,8 +34,22 @@
 - Fine-tuning DINOv2 is not justified yet: with two doors there is nothing to validate it on beyond leave-one-door-out, and the frozen features plus a linear head already reach 0.93-1.00 AUC across doors. Revisit with a third door.
 
 ## Caveats (read before quoting these numbers)
-- Two doors, one room each, one session each: lighting, time of day, people walking and other similar doors in the same room are not tested; frames within a position are near-duplicates (positions, not frames, are the independent units: 6-11 positive positions per door).
+- Two doors, one room each, one session each: lighting, time of day and people walking are not tested; one entrance door per room is assumed (DQK, 2026-10-12), so a second door in the same room is out of scope; frames within a position are near-duplicates (positions, not frames, are the independent units: 6-11 positive positions per door).
 - The robot reference comes from the same session (a left-out position, same lighting); a reference taken on another day would be the honest test.
-- Negatives are other views of the same room; a second identical door would be the hard negative.
+- Negatives are other views of the same room (the door out of view).
 - Latencies were measured on the RTX 4050 (batched for DINOv2) while another job was running; XFeat on CPU only, same caveat: about 350-400 ms matching + 180 ms RANSAC per frame at top_k 1024-2048, so use it on demand, not per frame, on KR's CPU-only laptop (not re-measured on an idle machine).
 - XFeat weights are from the authors' repository (Apache-2.0), DINOv2 from torch hub (facebookresearch/dinov2, Apache-2.0 code; check the weights' license before the final submission).
+
+## Through the module (`sentry/perception/entrance.py`, `python -m tools.enroll_entrance`, added later on 2026-10-12)
+The bake-off thresholds were the 95th percentile of each door's own test negatives (optimistic). The module calibrates from a sweep of negatives and is tested on the other positions, with the reference position left out:
+| door | policy | negative positions used to calibrate | TPR (n) | FPR (n) |
+| :-- | :-- | :-- | :-- | :-- |
+| classroom | XFeat (`auto`), door box given | first 2 | **1.00** (210) | **0.00** (52) |
+| cafe glass | XFeat | 2 / 4 / 6 | 0.87 / 0.87 / 0.72 (114) | 0.055 / 0.081 / 0.00 (110 / 74 / 38) |
+| cafe glass | DINOv2 (robot + phone references) | 2 / 4 / 6 | 1.00 / 1.00 / 0.37 | 0.18 / 0.27 / 0.00 |
+| cafe glass | XFeat and DINOv2 | 2 / 4 / 6 | 0.87 / 0.87 / 0.31 | 0.055 / 0.081 / 0.00 |
+| cafe glass | XFeat or DINOv2 | 2 | 1.00 | 0.18 |
+
+- The classroom door meets the plan thresholds (TPR >= 90 %, FPR <= 5 %); the **cafe glass door does not** (0.87 / 0.06-0.08 with XFeat), and the DINOv2 threshold is brittle: a few more negative positions swing it between TPR 1.00 / FPR 0.27 and TPR 0.37 / FPR 0.00. XFeat is the primary method; DINOv2 stays optional.
+- Bearing with the door box (classroom): the door centre projects to within about 6 deg of the expected value at 1.5-3 m (reference door centre -1.6 deg; straight-on positions -1.3 / -5.1 / -7.1 deg at 1 / 1.5 / 3 m); at 1 m and +-30 deg it is unreliable (below the 1.5 m entrance range). There is no ground truth for the robot heading, so this is indicative only.
+- Time per frame through the module: about 230-300 ms for XFeat on the RTX 4050 including image decoding and RANSAC, 40-47 ms with DINOv2.
