@@ -1,0 +1,130 @@
+{
+  "kind": "inference smoke on camera-pose photo; not T1 D1 or T2 HIL",
+  "python": "3.12.15",
+  "torch": "2.9.1+cu128",
+  "opencv": "5.0.0",
+  "ultralytics": "8.4.172",
+  "cuda_runtime": "12.8",
+  "actual_device": "cuda:0",
+  "precision": "FP32",
+  "gpu": "NVIDIA GeForce RTX 5060 Laptop GPU",
+  "weights": "data/models/yolov8n.pt",
+  "weights_sha256": "f59b3d833e2ff32e194b5bb8e08d211dc7c5bdf144b90d2c8412c47ccfc83b36",
+  "image": "calib/camera_pose_nowedge_raw.jpg",
+  "image_sha256": "6533c0e53efdecba2bce418461e80375300a7e20c098bd035d27921099343a53",
+  "config_sha256": "991ee8fe488f5c898ac615100f02691a40f827e3aba7c87ee8f047cd07f54b2e",
+  "calibration_sha256": {
+    "calib/camera.json": "d172e9009f074785760c411a91548211ac83d766f220eb2d828d173c7491e90b",
+    "calib/camera_pose_nowedge.json": "777640488a6250989a070e4eafa3abefd9633c6bfa65e5f7b730dd5bc95b60d3"
+  },
+  "settings": {
+    "weights": "data/models/yolov8n.pt",
+    "device": "0",
+    "imgsz": 640,
+    "confidence": 0.25,
+    "class_ids": [
+      56,
+      57,
+      58,
+      59,
+      60,
+      62,
+      72,
+      28
+    ],
+    "camera_calibration": "calib/camera.json",
+    "camera_pose": "calib/camera_pose_nowedge.json",
+    "max_ground_range_m": 5.0,
+    "border_margin_px": 1.0,
+    "floor_type": "unknown",
+    "pose_max_rms_m": 0.03,
+    "reflection_window_px": 12,
+    "reflection_max_shift_px": 24,
+    "reflection_min_trim_px": 2,
+    "reflection_min_score": 0.85,
+    "reflection_min_std": 5.0,
+    "reflection_min_peak_margin": 0.1,
+    "reflection_peak_separation_px": 3.0,
+    "reflection_flank_px": 12,
+    "repulsion_gain": 1.0,
+    "repulsion_max_w": 1.0,
+    "centre_turn": 1
+  },
+  "warmup": 3,
+  "iterations": 10,
+  "latency_ms": [
+    9.848799963947386,
+    11.07499998761341,
+    9.477999992668629,
+    9.25860001007095,
+    11.010900023393333,
+    12.292600004002452,
+    17.821399960666895,
+    15.178400033619255,
+    13.105400023050606,
+    13.468399993143976
+  ],
+  "camera_session": "nowedge",
+  "camera_pose_status": "explicit_pass",
+  "latency_p50_ms": 11.68379999580793,
+  "latency_p95_ms": 16.632049993495453,
+  "result": {
+    "t": 409483.0684325,
+    "obstacles": [
+      {
+        "detection": {
+          "class_id": 56,
+          "confidence": 0.33248159289360046,
+          "xyxy": [
+            0.223602294921875,
+            115.89920043945312,
+            88.39265441894531,
+            238.18771362304688
+          ],
+          "flat_on_floor": false
+        },
+        "ground": null,
+        "rejection": "border_truncated",
+        "contact": null
+      },
+      {
+        "detection": {
+          "class_id": 56,
+          "confidence": 0.30196425318717957,
+          "xyxy": [
+            73.56937408447266,
+            17.178977966308594,
+            182.81460571289062,
+            250.81942749023438
+          ],
+          "flat_on_floor": false
+        },
+        "ground": null,
+        "rejection": "floor_type_unknown",
+        "contact": null
+      },
+      {
+        "detection": {
+          "class_id": 56,
+          "confidence": 0.2913441061973572,
+          "xyxy": [
+            0.29925537109375,
+            2.894439697265625,
+            182.03799438476562,
+            255.52890014648438
+          ],
+          "flat_on_floor": false
+        },
+        "ground": null,
+        "rejection": "border_truncated",
+        "contact": null
+      }
+    ],
+    "repulsive_w": 0.0,
+    "nearest_m": null,
+    "floor_type": "unknown",
+    "camera_session": "nowedge"
+  },
+  "motor_commands_sent": 0,
+  "passed": true
+}

@@ -31,7 +31,7 @@ class GroundPoint:
 
 
 class CameraGeometry:
-    def __init__(self, camera, pose, max_range_m=5.0):
+    def __init__(self, camera, pose, max_range_m=5.0, max_pose_rms_m=0.03):
         self.K = np.asarray(camera["K"], dtype=float)
         self.D = np.asarray(camera["D"], dtype=float)
         self.size = tuple(camera["image_size"])
@@ -39,8 +39,24 @@ class CameraGeometry:
         self.pitch = math.radians(float(pose["pitch_down_deg"]))
         self.roll = math.radians(float(pose.get("camera_roll_deg", 0)))
         self.max_range_m = float(max_range_m)
-        if pose.get("passed") is not True:
-            raise ValueError("camera pose calibration must pass")
+        if not math.isfinite(max_pose_rms_m) or max_pose_rms_m <= 0:
+            raise ValueError("positive finite pose RMS limit required")
+        self.session = pose.get("session", pose.get("tag", "unspecified"))
+        self.pose_status = "explicit_pass"
+        if "passed" in pose:
+            if pose["passed"] is not True:
+                raise ValueError("camera pose calibration must pass")
+        else:
+            # DQK classroom format records measured height/fit evidence, no passed flag.
+            marks, rows = pose.get("marks_m", []), pose.get("rows_px", [])
+            rms = pose.get("rms_m", math.inf)
+            if (not pose.get("session") or pose.get("H_fixed_by_tape") is not True
+                    or len(marks) < 3 or len(marks) != len(rows)
+                    or not all(math.isfinite(v) for v in (*marks, *rows, rms, max_pose_rms_m))
+                    or not 0 <= rms <= max_pose_rms_m or max_pose_rms_m <= 0
+                    or any(v <= 0 for v in marks)):
+                raise ValueError("session camera pose needs tape height and finite fit evidence")
+            self.pose_status = "measured_session_without_pass_flag"
         if (self.K.shape != (3, 3) or self.D.size != 4 or not np.isfinite(self.K).all()
                 or not np.isfinite(self.D).all() or self.K[0, 0] <= 0 or self.K[1, 1] <= 0
                 or not np.allclose(self.K[2], [0, 0, 1])
@@ -58,9 +74,9 @@ class CameraGeometry:
                       & (self.map_y >= 0) & (self.map_y < h - 1))
 
     @classmethod
-    def from_files(cls, camera_path, pose_path, max_range_m=5.0):
+    def from_files(cls, camera_path, pose_path, max_range_m=5.0, max_pose_rms_m=0.03):
         return cls(json.loads(Path(camera_path).read_text(encoding="utf-8-sig")),
-                   json.loads(Path(pose_path).read_text(encoding="utf-8-sig")), max_range_m)
+                   json.loads(Path(pose_path).read_text(encoding="utf-8-sig")), max_range_m, max_pose_rms_m)
 
     def undistort(self, frame_bgr):
         w, h = self.size
