@@ -1,6 +1,6 @@
 ﻿# Autonomous Collaborative Sentry Robot (CS532)
 
-Spec: `docs/Project Specification.md` (source of truth). Plan: `docs/Implementation Plan.md` (owners, interfaces, tests, acceptance thresholds). 8 weeks from 2026-10-05; Mid-Term Report (with the code) due Mon 2026-11-23; internal draft Sun 2026-11-01.
+Spec: `docs/Project Specification.md` (source of truth). Plan: `docs/Implementation Plan.md` (owners, interfaces, tests, acceptance thresholds). 13 weeks from 2026-10-05 (restructured 2026-10-12); Mid-Term Report (10-15 pages, with the code and a demo video) due Mon 2026-11-23, internal draft Wed 2026-11-18, see `docs/Mid-Term Report Plan.md`; final submission window 2026-12-28..2027-01-02, target Mon 2026-12-28.
 
 ## Environment
 - Laptop environments use Python 3.12 and torch 2.9.1+cu128. DQK uses Conda `sentry` cloned from UITRacingCar (never modify the original); HNHL uses the repo-local `.venv` and runs `.venv\Scripts\python.exe`. Follow `docs/Setup.md` for other machines; do not assume DQK's absolute interpreter path exists locally. Extra deps are in `requirements.txt`.
