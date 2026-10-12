@@ -24,7 +24,7 @@ Principles behind the split:
 ```
 sentry/                 # laptop package, Python 3.12 in sentry (see Setup.md)
   net/                  # zmq_rx.py, udp_tx.py, mjpeg_rx.py, clock_sync.py
-  perception/           # obstacle.py, entrance.py, face.py, reid.py, tracker.py, pose.py
+  perception/           # obstacle.py, entrance.py, face.py, reid.py, tracker.py, pose.py, camera_pose.py (live camera tilt)
   nav/                  # localization.py, gridmap.py, vantage.py, coverage.py, controllers.py
   app/                  # state_machine.py, target_queue.py, audio.py, main.py
 config.toml             # repo-root tunables (thresholds, gains, ports); stdlib tomllib
@@ -113,6 +113,7 @@ Privacy: face photos and recordings of volunteers stay in `data/` and the team D
 | Video uplink | Capture-to-laptop latency (clock-synced), FPS | p95 < 50 ms, >= 20 FPS at 640x480 | T2 |
 | Control link | Packet loss; watchdog stop | < 1 % at 30 Hz; motors stop <= 350 ms after link loss | T2 |
 | Fisheye calibration | RMS reprojection error | < 1.0 px | T1 |
+| Camera tilt self-calibration (extra, DQK) | Live tilt from an ArUco marker vs the tape-strip method (`tools/measure_camera_pose.py`), marker <= 2 m | <= 1.5 deg difference | T1 |
 | Obstacle distance | Relative error vs tape on D1 | median <= 10 %, p90 <= 20 % over 0.3-2.0 m | T1 |
 | Obstacle repulsion | Collisions in exploration runs | 0 collisions in 5 x 3-min runs | T2 |
 | ORB entrance | Frame-level TPR / FPR on D1, pooled and **per door**; threshold tuned on one door and tested on the others (hold-out) | TPR >= 90 %, FPR <= 5 % pooled; report the worst door | T1 |
@@ -184,6 +185,7 @@ Each week ends with a **Sunday integration session** hosted by DQK (in person or
   - `tools/calibrate_fisheye.py`: `cv2.fisheye` calibration on D1 checkerboards, writing `calib/camera.json`; measure `H_cam`.
   - `tools/calibrate_motion.py`: command fixed (v, w) for set durations, tape-measure the results, fit gains to `calib/motion.json`.
   - Tests: T1 reprojection error; T2 motion repeatability (5 runs each of straight 1 m and 90° turn).
+  - **Extra (added 2026-10-12, DQK volunteers this week): camera tilt self-calibration.** The camera mount is tiltable and moved by about 3.6° between two sessions (2.6° down on 2026-10-11, about 1° up on 2026-10-12), and a lunge or evasion can shake it. `perception/camera_pose.py`: detect an ArUco marker (known size, known height on the wall) on undistorted frames, `solvePnP` -> camera tilt and height above the floor; median of the last N frames, reject jumps over 5°, keep the last value (or the session's `calib/camera_pose_<session>.json`) when no marker is in view; `obstacle.py` takes `pitch` as an input (pitched ground-plane model). `tools/measure_camera_pose.py` (floor strips + tape) stays the reference and the end-of-session check. Tests: T0 synthetic marker renders recover the tilt; T1 live tilt vs the strip method on the D1 classroom data. Keep the mount locked meanwhile (tape + pencil mark).
 - **HNHL**
   - `perception/obstacle.py`: YOLOv8 on undistorted frames, COCO furniture classes (chair, couch, bed, dining table, potted plant, tv, refrigerator, suitcase), bottom-centre ground distance `d = f*H/(y_max - c_y)` (valid for a level optical axis; with the optional 15° down-tilt wedge use the pitched ground-plane model instead, and skip boxes cut off by the bottom image border, whose `y_max` is not the ground contact), repulsive angular term.
   - `nav/gridmap.py`: occupancy grid (robot pose + obstacle ground points -> occupied, driven/seen floor -> free, rest unknown); saved at the end of Phase 1 for the Week 9-10 search.
@@ -407,3 +409,4 @@ reports/<handle>/week-NN/       # test evidence: pytest logs, metrics JSON/CSV, 
 | 19 | Only one robot (DQK holds it): a motor, camera, SD card or battery failure stops every T2 and the video | Offline-first (section 1); record datasets early; back up the robot's SD card once the systemd setup is final; keep a replay-based demo path for every phase |
 | 20 | The school-owned robot's return date | **Resolved 2026-10-12 (DQK): the robot is returned after the final.** Keep the return checklist in `JetBot Notes.md` current; the final live demo can use the robot; back up its SD card before the final |
 | 21 | The final window 2026-12-28..2027-01-02 sits in the holidays (Dec 24-25, Jan 1; members may travel) | Report, presentation and live demo are all due, on a day we choose (subject to change): pick the day by the end of W9 and ask the instructor early; code freeze Wed Dec 23, package Sun Dec 27, W11 is the contingency week; rehearse the live demo on Sat Dec 26 |
+| 22 | The camera tilt changes between sessions (tiltable mount, 3.6° seen on 2026-10-12) and a wrong tilt gives a wrong ground distance (1.5° is about 10 % at 2 m) | Lock the mount mechanically and put a pencil mark on it; one `camera_pose_<session>.json` per D1 session; re-check with 3 strips at the end of each session; live tilt from an ArUco marker (Week 2 extra) with a fallback to the stored value. A 150 mm marker is about 15 px wide at 3 m, so trust the live value only within about 2 m or use a larger marker |

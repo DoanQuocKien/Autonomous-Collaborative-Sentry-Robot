@@ -50,7 +50,7 @@ Each figure is saved as PNG next to its evidence in `reports/<handle>/week-NN/`,
 | F2 | Data flow with ports, rates and formats | Implementation Plan section 3 | DQK | 3 | W4 |
 | F3 | Photo of the JetBot, gamepad and ESP32-CAM at the door | photo | DQK, KR | 1 | W5 |
 | F4 | Fisheye: raw vs undistorted frame; per-view reprojection error bars | `calib/camera.json`, `reports/DoanQuocKien/week-02/fisheye_metrics.json` (now) | DQK | 4 | W4 |
-| F5 | Camera pose fit: distance vs image row, marks vs model | `week-02/camera_pose_nowedge.json` (now, provisional; PR #22) | DQK | 4 | W4 |
+| F5 | Camera pose fit: distance vs image row, marks vs model; tilt over sessions (2.6° down -> 1° up) and, once built, live marker tilt vs strip tilt | `week-02/camera_pose_nowedge.json` (PR #22), `calib/camera_pose_classroom.json`, `perception/camera_pose.py` output | DQK | 4 | W4 |
 | F6 | Motion model: commanded vs measured speed and turn rate, drift | `week-02/motion_runs.csv` (now, v = 1.0 only), W3 runs, `calib/motion.json` | DQK | 4 | W4 |
 | F7 | Video latency CDF and FPS; watchdog and e-stop stop times (table) | `week-01/link_test_2026-10-04.txt`, `estop_*_2026-10-06.txt` (now); re-measure with `tools.log_latency` CSV | DQK, HNHL | 3 | W5 |
 | F8 | ESP32 tile stream: sample frame, FPS over time | `week-01/esp32_gc2145_jpeg_2026-10-09.txt` (now) | DQK, KR | 3 | W4 |
