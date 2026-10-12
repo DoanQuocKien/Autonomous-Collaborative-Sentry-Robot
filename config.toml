@@ -62,7 +62,7 @@ aruco_dict = "DICT_4X4_50"
 aruco_marker_m = 0.10                 # MEASURE the printed marker and update this
 
 [search]                        # map-based coverage search after the active intruder exits
-detection_radius_m = 3.0         # PLACEHOLDER r_det; DQK measures it in W7
+detection_radius_m = 3.0         # PLACEHOLDER r_det; DQK measures it in W9
 coverage_target = 0.90           # fraction of known-free cells the planned viewpoints must cover
 
 [sim]
