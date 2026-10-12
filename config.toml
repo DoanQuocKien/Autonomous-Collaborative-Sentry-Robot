@@ -61,6 +61,18 @@ checkerboard_square_m = 0.025         # MEASURE the printed board and update thi
 aruco_dict = "DICT_4X4_50"
 aruco_marker_m = 0.10                 # MEASURE the printed marker and update this
 
+[entrance]                      # perception/entrance.py: XFeat (+ DINOv2); defaults from the D1 bake-off 2026-10-12, one entrance door per room
+policy = "auto"                  # auto (XFeat with a robot-eye reference, else DINOv2) | xfeat | dino | and | or
+xfeat_top_k = 2048
+min_inliers = 27                 # XFeat RANSAC inliers; calibrate() raises it above the room's negatives
+ransac_px = 5.0
+min_area_ratio = 0.05            # hull of the inliers: frame area / reference area, rejects degenerate homographies
+max_area_ratio = 8.0
+dino_size = "b"                  # "s" on a CPU-only laptop
+dino_margin = 0.02               # added to the 99th percentile of the negatives' cosine similarity
+enter_frames = 3                 # EntranceFilter: ENTRANCE_FOUND after this many consecutive in-view frames
+exit_frames = 5                  # ENTRANCE_LOST after this many without
+
 [search]                        # map-based coverage search after the active intruder exits
 detection_radius_m = 3.0         # PLACEHOLDER r_det; DQK measures it in W9
 coverage_target = 0.90           # fraction of known-free cells the planned viewpoints must cover
