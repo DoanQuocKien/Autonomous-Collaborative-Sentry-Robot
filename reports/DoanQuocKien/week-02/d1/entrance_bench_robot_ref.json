@@ -1,0 +1,248 @@
+{
+  "step": 4,
+  "results": [
+    {
+      "door": "cafe_glass",
+      "method": "orb",
+      "n_pos": 142,
+      "n_neg": 188,
+      "auc": 0.913,
+      "tpr_at_5pct_fpr": 0.669,
+      "neg_p95": 8.0,
+      "pos_median": 12.0,
+      "neg_median": 5.0,
+      "ms_per_frame": 75.8,
+      "per_position_median": {
+        "1.0m -30.0": 13.0,
+        "1.0m 0.0": 56.0,
+        "2.0m -30.0": 7.0,
+        "3.0m -30.0": 7.0,
+        "3.0m 0.0": 28.0,
+        "4.0m 0.0": 10.0
+      },
+      "reference": "005124.jpg"
+    },
+    {
+      "door": "class_door",
+      "method": "orb",
+      "n_pos": 263,
+      "n_neg": 112,
+      "auc": 0.917,
+      "tpr_at_5pct_fpr": 0.646,
+      "neg_p95": 8.45,
+      "pos_median": 10.0,
+      "neg_median": 5.0,
+      "ms_per_frame": 69.4,
+      "per_position_median": {
+        "1.0m -30.0": 6.0,
+        "1.0m 0.0": 6.0,
+        "1.0m 30.0": 8.0,
+        "1.5m -30.0": 11.0,
+        "1.5m 0.0": 19.0,
+        "1.5m 30.0": 10.0,
+        "2.0m -30.0": 14.0,
+        "2.0m 30.0": 12.0,
+        "3.0m -30.0": 7.0,
+        "3.0m 0.0": 20.0,
+        "3.0m 30.0": 12.0
+      },
+      "reference": "class_door_iref_robot.jpg"
+    },
+    {
+      "door": "cafe_glass",
+      "method": "xfeat",
+      "n_pos": 142,
+      "n_neg": 188,
+      "auc": 0.991,
+      "tpr_at_5pct_fpr": 0.958,
+      "neg_p95": 27.0,
+      "pos_median": 79.0,
+      "neg_median": 16.0,
+      "ms_per_frame": 288.5,
+      "per_position_median": {
+        "1.0m -30.0": 87.0,
+        "1.0m 0.0": 172.0,
+        "2.0m -30.0": 45.0,
+        "3.0m -30.0": 29.0,
+        "3.0m 0.0": 135.0,
+        "4.0m 0.0": 70.0
+      },
+      "reference": "005124.jpg"
+    },
+    {
+      "door": "class_door",
+      "method": "xfeat",
+      "n_pos": 263,
+      "n_neg": 112,
+      "auc": 1.0,
+      "tpr_at_5pct_fpr": 1.0,
+      "neg_p95": 21.0,
+      "pos_median": 137.0,
+      "neg_median": 15.5,
+      "ms_per_frame": 259.1,
+      "per_position_median": {
+        "1.0m -30.0": 83.0,
+        "1.0m 0.0": 39.0,
+        "1.0m 30.0": 48.0,
+        "1.5m -30.0": 157.0,
+        "1.5m 0.0": 201.0,
+        "1.5m 30.0": 125.0,
+        "2.0m -30.0": 162.0,
+        "2.0m 30.0": 189.0,
+        "3.0m -30.0": 124.5,
+        "3.0m 0.0": 240.0,
+        "3.0m 30.0": 131.0
+      },
+      "reference": "class_door_iref_robot.jpg"
+    },
+    {
+      "door": "cafe_glass",
+      "method": "dino_s",
+      "n_pos": 142,
+      "n_neg": 188,
+      "auc": 0.947,
+      "tpr_at_5pct_fpr": 0.585,
+      "neg_p95": 0.918,
+      "pos_median": 0.92,
+      "neg_median": 0.767,
+      "ms_per_frame": 7.7,
+      "per_position_median": {
+        "1.0m -30.0": 0.918,
+        "1.0m 0.0": 0.939,
+        "2.0m -30.0": 0.895,
+        "3.0m -30.0": 0.857,
+        "3.0m 0.0": 0.955,
+        "4.0m 0.0": 0.918
+      },
+      "reference": "005124.jpg"
+    },
+    {
+      "door": "class_door",
+      "method": "dino_s",
+      "n_pos": 263,
+      "n_neg": 112,
+      "auc": 1.0,
+      "tpr_at_5pct_fpr": 1.0,
+      "neg_p95": 0.795,
+      "pos_median": 0.937,
+      "neg_median": 0.722,
+      "ms_per_frame": 9.2,
+      "per_position_median": {
+        "1.0m -30.0": 0.915,
+        "1.0m 0.0": 0.876,
+        "1.0m 30.0": 0.879,
+        "1.5m -30.0": 0.948,
+        "1.5m 0.0": 0.946,
+        "1.5m 30.0": 0.953,
+        "2.0m -30.0": 0.944,
+        "2.0m 30.0": 0.938,
+        "3.0m -30.0": 0.933,
+        "3.0m 0.0": 0.954,
+        "3.0m 30.0": 0.915
+      },
+      "reference": "class_door_iref_robot.jpg"
+    },
+    {
+      "door": "cafe_glass",
+      "method": "dino_b",
+      "n_pos": 142,
+      "n_neg": 188,
+      "auc": 0.979,
+      "tpr_at_5pct_fpr": 0.824,
+      "neg_p95": 0.894,
+      "pos_median": 0.91,
+      "neg_median": 0.737,
+      "ms_per_frame": 16.3,
+      "per_position_median": {
+        "1.0m -30.0": 0.897,
+        "1.0m 0.0": 0.906,
+        "2.0m -30.0": 0.902,
+        "3.0m -30.0": 0.908,
+        "3.0m 0.0": 0.948,
+        "4.0m 0.0": 0.92
+      },
+      "reference": "005124.jpg"
+    },
+    {
+      "door": "class_door",
+      "method": "dino_b",
+      "n_pos": 263,
+      "n_neg": 112,
+      "auc": 1.0,
+      "tpr_at_5pct_fpr": 1.0,
+      "neg_p95": 0.717,
+      "pos_median": 0.937,
+      "neg_median": 0.693,
+      "ms_per_frame": 15.8,
+      "per_position_median": {
+        "1.0m -30.0": 0.941,
+        "1.0m 0.0": 0.861,
+        "1.0m 30.0": 0.909,
+        "1.5m -30.0": 0.959,
+        "1.5m 0.0": 0.936,
+        "1.5m 30.0": 0.937,
+        "2.0m -30.0": 0.957,
+        "2.0m 30.0": 0.924,
+        "3.0m -30.0": 0.946,
+        "3.0m 0.0": 0.961,
+        "3.0m 30.0": 0.91
+      },
+      "reference": "class_door_iref_robot.jpg"
+    },
+    {
+      "door": "cafe_glass",
+      "method": "xfeat+dino_b",
+      "auc": 0.992,
+      "tpr_at_5pct_fpr": 0.972
+    },
+    {
+      "door": "class_door",
+      "method": "xfeat+dino_b",
+      "auc": 1.0,
+      "tpr_at_5pct_fpr": 1.0
+    }
+  ],
+  "threshold_transfer": {
+    "dino_b: threshold from cafe_glass -> applied to class_door": {
+      "tpr": 0.897,
+      "fpr": 0.0,
+      "threshold": 0.894
+    },
+    "dino_b: threshold from class_door -> applied to cafe_glass": {
+      "tpr": 1.0,
+      "fpr": 0.638,
+      "threshold": 0.717
+    },
+    "orb: threshold from cafe_glass -> applied to class_door": {
+      "tpr": 0.646,
+      "fpr": 0.054,
+      "threshold": 8.0
+    },
+    "orb: threshold from class_door -> applied to cafe_glass": {
+      "tpr": 0.669,
+      "fpr": 0.048,
+      "threshold": 8.45
+    },
+    "xfeat: threshold from cafe_glass -> applied to class_door": {
+      "tpr": 1.0,
+      "fpr": 0.0,
+      "threshold": 27.0
+    },
+    "xfeat: threshold from class_door -> applied to cafe_glass": {
+      "tpr": 1.0,
+      "fpr": 0.165,
+      "threshold": 21.0
+    },
+    "dino_s: threshold from cafe_glass -> applied to class_door": {
+      "tpr": 0.669,
+      "fpr": 0.0,
+      "threshold": 0.918
+    },
+    "dino_s: threshold from class_door -> applied to cafe_glass": {
+      "tpr": 1.0,
+      "fpr": 0.16,
+      "threshold": 0.795
+    }
+  },
+  "linear_probe": {}
+}
