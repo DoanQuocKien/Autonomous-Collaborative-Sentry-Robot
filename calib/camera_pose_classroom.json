@@ -1,0 +1,63 @@
+{
+  "tag": "classroom",
+  "H_cam_m": 0.1,
+  "H_tape_m": 0.1,
+  "pitch_down_deg": -1.02,
+  "rms_m": 0.027,
+  "marks_m": [
+    0.5,
+    1.0,
+    2.0
+  ],
+  "clicks_px": [
+    [
+      214,
+      304
+    ],
+    [
+      198,
+      305
+    ],
+    [
+      260,
+      274
+    ],
+    [
+      240,
+      274
+    ],
+    [
+      277,
+      260
+    ],
+    [
+      263,
+      260
+    ]
+  ],
+  "rows_px": [
+    304.5,
+    274.0,
+    260.0
+  ],
+  "camera_roll_deg": 0.0,
+  "strip_slopes_deg": [
+    -3.58,
+    0.0,
+    0.0
+  ],
+  "residuals_m": [
+    0.015,
+    -0.0114,
+    0.0018
+  ],
+  "passed": true,
+  "problems": [],
+  "fit_free_H": {
+    "H_cam_m": 0.089,
+    "pitch_down_deg": -1.35,
+    "rms_m": 0.0109
+  },
+  "H_fixed_by_tape": true,
+  "note": "H fixed to the taped 0.100 m (DQK: only the tilt changed since 2026-10-11); rows = mean y of the two clicks per strip (the tool extrapolated the 16 px wide 0.5 m strip to the image centre: 5 px error). Pitch -1.0 deg = looking up 1 deg; was +2.6 deg down on 2026-10-11, so the camera was tilted by about 3.6 deg between sessions. 3 marks only: pitch +-0.3 deg."
+}

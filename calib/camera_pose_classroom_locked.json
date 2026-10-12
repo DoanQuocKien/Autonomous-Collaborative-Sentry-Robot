@@ -1,0 +1,19 @@
+{
+  "session": "classroom 2026-10-12, after the mount was locked",
+  "H_cam_m": 0.1,
+  "H_fixed_by_tape": true,
+  "pitch_down_deg": -2.33,
+  "rms_m": 0.008,
+  "meaning": "pitch > 0 = camera looks DOWN; -2.33 = looking up 2.3 deg",
+  "marks_m": [
+    0.5,
+    1.0,
+    2.0
+  ],
+  "rows_px": [
+    313.5,
+    282.0,
+    267.0
+  ],
+  "note": "3 floor strips (0.5, 1.0, 2.0 m from the plumb spot under the lens), rows = mean y of the two clicks per strip, H fixed to the taped 0.100 m (free fit: H 0.098, pitch -2.38). Cross-check: a flat sheet with its near edge on the 1.0 m mark appeared at row ~284 (predicted 282.4). The tilt changed 3.6 deg between 2026-10-11 and 2026-10-12: always read the file of the session."
+}
