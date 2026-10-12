@@ -1,6 +1,7 @@
 """Fetch the pretrained models the project needs, skipping files that are already there.
 
-    python -m tools.fetch_models
+    python -m tools.fetch_models            # re-ID, face and XFeat (entrance matching) weights
+    python -m tools.fetch_models --dino b   # also the DINOv2 backbone (s = 22 M params / 84 MB, b = 86 M / 330 MB) for perception/entrance.py, via torch.hub at a pinned commit
 
 Re-ID weights go to weights/ (gitignored); the InsightFace face detector + embedder go to ~/.insightface/models/buffalo_s/.
 YOLO weights are downloaded by ultralytics on first use. The campus network can be very slow
@@ -24,7 +25,10 @@ DRIVE = [  # (file, Google Drive id, what it is)
     ("osnet_ain_x1_0_dg.pth", "1nIrszJVYSHf3Ej8-j6DTFdWz8EnO42PB", "OSNet-AIN x1.0, multi-source domain generalisation (default)"),
     ("osnet_x0_25_market1501.pth", "1z1UghYvOTtjx7kEoRfmqSMu-z62J6MAj", "OSNet x0.25, Market1501 (small and fast, same-domain)"),
 ]
+XFEAT_COMMIT = "e92685f57f8318b18725c5c8c0bd28c7fe188d9a"      # verlab/accelerated_features, 2025-01-15 (Apache-2.0)
+DINO_REPO = "facebookresearch/dinov2:7764ea0f912e53c92e82eb78a2a1631e92725fc8"   # torch.hub repo@commit: the code that runs is pinned too
 HTTP = [  # (destination, url, what it is)
+    (ROOT / "weights" / "xfeat.pt", "https://github.com/verlab/accelerated_features/raw/%s/weights/xfeat.pt" % XFEAT_COMMIT, "XFeat local features (entrance matching)"),
     (FACE_DIR / "det_500m.onnx", "https://huggingface.co/immich-app/buffalo_s/resolve/main/detection/model.onnx", "InsightFace face detector"),
     (FACE_DIR / "w600k_mbf.onnx", "https://huggingface.co/immich-app/buffalo_s/resolve/main/recognition/model.onnx", "InsightFace face embedder (MobileFaceNet)"),
 ]
@@ -37,6 +41,7 @@ SHA256 = {
     "osnet_x0_25_market1501.pth": None,
     "det_500m.onnx": None,
     "w600k_mbf.onnx": None,
+    "xfeat.pt": "0f5187fd7bedd26c7fe6acc9685444493a165a35ecc087b33c2db3627f3ea10b",   # same hash from the zip of main and from the pinned commit
 }
 
 
@@ -129,6 +134,12 @@ def safe_state_dict(path):
 def convert_weights():
     """weights/<name>.pth (pickle with metadata) -> weights/<name>.state.pt (tensors only, loads with weights_only=True)."""
     import torch
+    for size in dino_sizes(sys.argv):
+        try:
+            fetch_dino(size)
+        except Exception as e:  # noqa: BLE001
+            print("DINOv2 %s failed: %s: %s" % (size, type(e).__name__, str(e)[:200]))
+            failed.append("dinov2_" + size)
     for p in sorted((ROOT / "weights").glob("*.pth")):
         out = p.with_suffix("").with_suffix(".state.pt")
         if out.exists():
@@ -136,6 +147,21 @@ def convert_weights():
         sd = safe_state_dict(p)
         torch.save(sd, out)
         print("converted %-28s -> %s (%d tensors)" % (p.name, out.name, len(sd)))
+
+
+def dino_sizes(argv):
+    """['--dino', 'b'] -> ['b']; ['--dino', 'both'] -> ['s', 'b']; no flag -> []."""
+    if "--dino" not in argv:
+        return []
+    want = argv[argv.index("--dino") + 1:][:1]
+    return ["s", "b"] if want == ["both"] else [x for x in want if x in ("s", "b")]
+
+
+def fetch_dino(size):
+    """DINOv2 ViT-S/14 or ViT-B/14 through torch.hub at the pinned commit (weights land in ~/.cache/torch/hub/checkpoints, loaded as plain state dicts)."""
+    import torch
+    torch.hub.load(DINO_REPO, "dinov2_vit%s14" % size, trust_repo=True, verbose=False)
+    print("have  dinov2_vit%s14 (torch hub cache)" % size)
 
 
 def main():
