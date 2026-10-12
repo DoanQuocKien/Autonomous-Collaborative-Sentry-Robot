@@ -1,6 +1,6 @@
 # Mid-Term Report Plan
 
-**Due Mon 2026-11-23** (first day of Week 8). Deliverables: a 10-15 page report, the code (tag `midterm` + appendix), and a 2-4 min demo video (link). Schedule: `Implementation Plan.md` section 5, Weeks 4-7. Editor: KR; each chapter owner checks their own numbers.
+**Due Mon 2026-11-23** (first day of Week 8). Deliverables: a 10-15 page report, the code (tag `midterm` + appendix), and an **optional** 2-4 min demo video (link). Schedule: `Implementation Plan.md` section 5, Weeks 4-7. Editor: KR; each chapter owner checks their own numbers.
 
 Rules:
 - Every number cites its evidence file (`reports/<handle>/week-NN/...`, `calib/*.json`). No file, no number.
@@ -89,7 +89,9 @@ Each figure is saved as PNG next to its evidence in `reports/<handle>/week-NN/`,
 
 Optional, timebox 2 h, only if it installs without touching the robot's working setup: one detector running on the Jetson itself, as evidence for why the models run on the laptop. Skip it otherwise.
 
-## 5. Demo video (2-4 min)
+## 5. Demo video (2-4 min, optional)
+
+The video is optional: if pursuit slips, cut the W6 robot shots and keep the Phase 1 and calibration shots (or use the replay/`sim_robot` fallback, captioned as such).
 
 Who: DQK films the robot (phone on a tripod) and edits; HNHL screen-records the laptop overlays (OBS); KR films the door and the ESP32 view. When: each shot as soon as its feature works (W5-W6 sessions); pick-up session Sun Nov 15; cut by Wed Nov 18; spare re-shoot Sat Nov 21. Upload to the team Drive; the link goes in the report and appendix, never in git.
 
@@ -112,7 +114,8 @@ Rules: check the battery before every take (>= 11.1 V; stop below 10.5 V); the o
 1. PR freeze Fri Nov 20; all three review `main`; tag `midterm` on Sat Nov 21.
 2. Clean checkout test: fresh clone of the tag into an empty folder, environment per `docs/Setup.md`, `python tools/check_env.py`, `pytest -m "not gpu and not hil"` (and `-m "not hil"` on a CUDA laptop). Save the logs as `reports/<handle>/week-07/clean_checkout_pytest.log`.
 3. Contents check with `git ls-files`: **never** `data/`, recordings, face photos, `.env`, `esp32/*/secrets.h`, the host-key pin, model weights. Included: `calib/*.json`, evidence reports, README run steps.
-4. Appendix: module list with owners and tests, how to run, the tag link (or a `git archive --format=zip midterm` zip if the grader cannot reach the repo).
+4. Appendix: module list with owners and tests, how to run, and the **public repo link** at the tag (the repo is public: also check the history for secrets with `git log -p -S` on the Wi-Fi password and keys, and keep `data/` and faces out for good). The appendix counts toward the 10-15 pages.
+5. Fallback if the repo cannot be reached: `git archive --format=zip midterm`.
 
 ## 7. Countdown
 
