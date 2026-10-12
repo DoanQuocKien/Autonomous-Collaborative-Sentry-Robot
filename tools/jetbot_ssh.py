@@ -57,4 +57,6 @@ def sudo(c, cmd, pw, timeout=40):
     stdin, out, err = c.exec_command("sudo -S -p '' " + cmd, timeout=timeout)
     stdin.write(pw + "\n")
     stdin.flush()
-    return (out.read() + err.read()).decode(errors="replace").strip()
+    text = (out.read() + err.read()).decode(errors="replace")
+    # the robot's sudo prints "[sudo] password for jetbot:" on stderr even with -p '' (seen 2026-10-11): drop it, it would end up in parsed output
+    return "\n".join(line for line in text.splitlines() if not line.startswith("[sudo] password for")).strip()

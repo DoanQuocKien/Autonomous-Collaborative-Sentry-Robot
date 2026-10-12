@@ -129,7 +129,8 @@ def run_trials(a):
     path.parent.mkdir(parents=True, exist_ok=True)
     new = not path.exists()
     n = 0 if new else sum(1 for _ in path.open(encoding="utf-8")) - 1
-    done = 0
+    # runs of this kind already in the CSV count: a Ctrl-C + restart does not start the count at 0 again
+    done = 0 if new else sum(1 for r in csv.DictReader(path.open(encoding="utf-8")) if r["kind"] == a.kind)
     with path.open("a", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
         if new:
