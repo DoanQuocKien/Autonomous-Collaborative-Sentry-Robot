@@ -1,7 +1,7 @@
 # Implementation Plan
 
 Companion to `Project Specification.md` (the spec decides *what*; this file decides *who, how, and how we prove it works*).
-Week 1 starts **Mon 2026-10-05**. The Mid-Term Technical Report is due **Sun 2026-11-01** (end of Week 4); confirm the exact date with the instructor.
+Week 1 starts **Mon 2026-10-05**. The Mid-Term Technical Report is due **Mon 2026-11-23** (start of Week 8; date given by DQK on 2026-10-12, the earlier assumption was Sun 2026-11-01) and **must include the code** (see the submission package in Week 4). The Week 4 report work below is kept as the internal draft deadline.
 
 ## 1. Team & Roles
 
@@ -209,7 +209,8 @@ Each week ends with a **Sunday integration session** hosted by DQK (in person or
   - Phase 2 replay pipeline on D2, connected end to end.
   - Tests: T0 for the queue and sector classification; T1 sector accuracy on D2.
   - Report: localization, entrance matching, state machine and test methodology sections, plus editing and merging the full 15-20 pages.
-- **Milestone:** submit the Mid-Term Report by Sun 2026-11-01.
+- **Milestone:** Mid-Term Report draft complete (all sections, figures, merged document) by Sun 2026-11-01 as the internal deadline; **submission Mon 2026-11-23, with the code.**
+- **Submission package (code included):** tag the repo (`midterm`) on `main` after a review by all three; `pytest -m "not gpu and not hil"` passes from a clean checkout; a README section with the run steps (`docs/Setup.md`); `calib/*.json` and the evidence reports included; **never** `data/`, `.env`, `esp32/*/secrets.h`, faces or the host-key pin; list the code in the report appendix (modules, owners, tests) and link the tag.
 
 ### Week 5 (Nov 2-8): Pursuit & Obstacle Handling
 
@@ -311,7 +312,7 @@ reports/<handle>/week-NN/       # test evidence: pytest logs, metrics JSON/CSV, 
 | 8 | The room map only knows floor the robot has seen: YOLO misses walls and unclassified objects | Plan only over known-free cells with inflated obstacles; report the coverage fraction achieved; make sure the Week 4 exploration covers the room |
 | 9 | The effective detection radius `r_det` is unknown | Placeholder 3.0 m in `config.toml`; DQK measures it in W7 and the plan is recomputed from it |
 | 10 | Dead-reckoning drift along a long search path (no encoders) | Re-localize whenever an ArUco marker is seen; measure path-following error in W7; shorten the path by lowering the coverage target if error is too large |
-| 7 | Mid-term due date assumed to be Nov 1 | Confirm with the instructor in W1 |
+| 7 | Mid-term due date was assumed to be Nov 1 | **Resolved 2026-10-12 (DQK): due Mon 2026-11-23, includes the code.** The date now falls on the first day of Week 8, so keep Nov 1 as the internal draft date or the report will compete with the final integration |
 | 12 | The ESP32-CAM modules (both the Shopee and the local one) carry a GC2145, which has no hardware JPEG: the plan's HTTP MJPEG VGA 15 FPS is impossible with the stock sketch (1.7-7.7 FPS) | **Worked around in software on 2026-10-09:** raw Bayer + changed-tile UDP stream, 14.4 FPS average, 9-10 FPS worst case; needs a fixed camera. Alternative: buy an OV2640 module (about 25 FPS VGA, stock sketch). **Decision 2026-10-11 (DQK): keep the tile stream as the interface.** An OV2640 was also ordered that day as an option (`docs/ESP32-CAM.md`); using it changes the frozen interface, so it needs a PR all three approve. Details: `docs/ESP32-CAM.md` |
 | 13 | The second ESP32-CAM board loses its Wi-Fi uplink while the camera runs (cause unknown); the first board is fine | Use the first board for the stream; ask KR to test their board; if a board shows send failures only while the camera runs, swap it |
 | 14 | ORB entrance matching on a frameless glass door is weak from the robot's low 160 deg fisheye view (cafe door, 2026-10-11: almost no inlier separation between door-in-view and no-door frames with default ORB; solid doors untested) | Test on the classroom door and at least one more; undistort with the fisheye calibration first; take `I_ref` from the robot's own camera as well as a phone; restrict to stable features (frame, handle, signs); fallback only with the team's approval: a marker on the door |
