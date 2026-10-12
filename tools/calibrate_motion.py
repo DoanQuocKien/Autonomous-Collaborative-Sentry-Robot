@@ -12,6 +12,9 @@ Two steps (T2, wheels on the floor, e-stop armed, you hold R1 for the whole run)
        python -m tools.calibrate_motion fit --push        # data -> calib/motion.json (and onto the robot)
      A failed fit (too few runs, scatter over the limit, mixed settings) prints FAIL, writes nothing and pushes nothing; --force writes it anyway.
 
+Runs at several speeds (e.g. python -m tools.calibrate_motion fit --csv motion_runs.csv motion_runs_speed.csv) also give `speed_model`: speed = gain * command + offset for the forward and the turn
+rate. An offset (speed zero at a command above 0) is the motor dead zone; nav/localization.py should use it instead of the per-unit gain below min speed.
+
 Model used by nav/localization.py (per unit of the normalised command, at the recorded max_speed):
     forward speed [m/s] = v_gain * v      turn rate [rad/s] = w_gain * w      path curvature drift [rad/m] = drift_rad_per_m (heading changes by drift_rad_per_m * distance)
     A constant curvature kappa over a straight run of length d leaves a lateral offset of kappa * d^2 / 2, so kappa = 2 * lateral / forward^2.
@@ -55,31 +58,75 @@ def _cv(xs):
     return statistics.pstdev(xs) / abs(statistics.mean(xs))
 
 
-def fit(rows, max_gain_cv=0.10, min_runs=5):
-    """rows: dicts with the COLS keys (numbers already floats). -> motion.json dict; k / min_pwm / max_speed are the values the runs were recorded with."""
+def _ols(points):
+    """Least squares y = a*x + b over (x, y) points; None when x does not vary."""
+    n = len(points)
+    sx, sy = sum(x for x, _ in points), sum(y for _, y in points)
+    sxx, sxy = sum(x * x for x, _ in points), sum(x * y for x, y in points)
+    den = n * sxx - sx * sx
+    if n < 2 or not den:
+        return None
+    a = (n * sxy - sx * sy) / den
+    return a, (sy - a * sx) / n
+
+
+def _groups(rows, cmd, value):
+    """{|command|: [value, ...]}: runs at the same command are one group (the speed model needs more than one)."""
+    g = {}
+    for r in rows:
+        g.setdefault(round(abs(r[cmd]), 3), []).append(value(r))
+    return g
+
+
+def speed_model(groups):
+    """Affine model speed = gain * command + offset over all runs of several commands (a dead zone shows as an offset: speed 0 at command = x_at_zero). None with one command."""
+    pts = [(c, y) for c, ys in groups.items() for y in ys]
+    ab = _ols(pts) if len(groups) > 1 else None
+    if not ab:
+        return None
+    a, b = ab
+    return {"gain": a, "offset": b, "x_at_zero": -b / a if a else None,
+            "median_by_command": {"%g" % c: statistics.median(ys) for c, ys in sorted(groups.items())},
+            "max_residual_pct": max(100 * abs(y - (a * c + b)) / abs(a * c + b) for c, y in pts if a * c + b)}
+
+
+def fit(rows, max_gain_cv=0.10, min_runs=5, min_group_runs=3):
+    """rows: dicts with the COLS keys (numbers already floats). -> motion.json dict; k / min_pwm / max_speed are the values the runs were recorded with.
+    One command (e.g. v = 1.0 only): a gain per unit command, `min_runs` runs per kind. Several commands: also `speed_model` (affine, shows a dead-zone offset), the repeatability is
+    taken within each command and every command needs `min_group_runs` runs."""
     usable = [r for r in rows if r["moving_s"] > MIN_MOVING_S]
     straight = [r for r in usable if r["kind"] == "straight" and r["v"] > 0 and r["forward_m"] > 0]
     turn = [r for r in usable if r["kind"] == "turn" and r["w"]]
     settings = {(r["max_speed"], r["k"], r["min_pwm"]) for r in straight + turn}
     max_speed, k, min_pwm = sorted(settings)[0] if settings else (None, None, None)
+    v_groups = _groups(straight, "v", lambda r: r["forward_m"] / r["moving_s"])
+    w_groups = _groups(turn, "w", lambda r: abs(math.radians(r["turn_deg"])) / r["moving_s"])
+    sm = {"forward": speed_model(v_groups), "turn": speed_model(w_groups)}
     v_gains = [r["forward_m"] / (r["v"] * r["moving_s"]) for r in straight]
     w_gains = [math.radians(r["turn_deg"]) / (r["w"] * r["moving_s"]) for r in turn]
     drift = [2.0 * r["lateral_m"] / r["forward_m"] ** 2 for r in straight]
     batt = [r["battery_v"] for r in straight + turn if r["battery_v"]]
+    group_cv = lambda groups: max([c for c in (_cv(ys) for ys in groups.values()) if c is not None], default=None)
     out = {"k": k, "min_pwm": min_pwm, "max_speed": max_speed, "date": date.today().isoformat(),
-           "v_gain_m_per_s": statistics.median(v_gains) if v_gains else None,
-           "w_gain_rad_per_s": statistics.median(w_gains) if w_gains else None,
+           "v_gain_m_per_s": sm["forward"]["gain"] if sm["forward"] else (statistics.median(v_gains) if v_gains else None),
+           "w_gain_rad_per_s": sm["turn"]["gain"] if sm["turn"] else (statistics.median(w_gains) if w_gains else None),
            "drift_rad_per_m": statistics.median(drift) if drift else None,
            "runs": {"straight": len(straight), "turn": len(turn), "dropped": len(rows) - len(straight) - len(turn)},
            "battery_v": {"min": min(batt), "max": max(batt)} if batt else None,
-           "repeatability": {"forward_gain_cv": _cv(v_gains), "turn_gain_cv": _cv(w_gains),
-                             "turn_angle_std_deg": statistics.pstdev([r["turn_deg"] for r in turn]) if len(turn) > 1 else None,
-                             "forward_m_std": statistics.pstdev([r["forward_m"] for r in straight]) if len(straight) > 1 else None}}
+           "repeatability": {"forward_gain_cv": group_cv(v_groups), "turn_gain_cv": group_cv(w_groups),
+                             "turn_angle_std_deg": statistics.pstdev([r["turn_deg"] for r in turn]) if len(turn) > 1 and len(w_groups) == 1 else None,
+                             "forward_m_std": statistics.pstdev([r["forward_m"] for r in straight]) if len(straight) > 1 and len(v_groups) == 1 else None}}
+    if sm["forward"] or sm["turn"]:
+        out["speed_model"] = {k_: v_ for k_, v_ in sm.items() if v_}
+        out["drift_by_v"] = {"%g" % c: statistics.median([2.0 * r["lateral_m"] / r["forward_m"] ** 2 for r in straight if round(r["v"], 3) == c]) for c in sorted(v_groups)}
     rep, problems = out["repeatability"], []
     if len(settings) > 1:
         problems.append("runs were recorded with different max_speed / k / min_pwm: %s" % sorted(settings))
-    if len(straight) < min_runs or len(turn) < min_runs:
-        problems.append("fewer than %d straight / turn runs (%d / %d; %d rows unusable)" % (min_runs, len(straight), len(turn), out["runs"]["dropped"]))
+    for kind, groups, n in (("straight", v_groups, len(straight)), ("turn", w_groups, len(turn))):
+        need = min_runs if len(groups) <= 1 else min_group_runs
+        short = [c for c, ys in groups.items() if len(ys) < need] if groups else [None]
+        if short:
+            problems.append("fewer than %d %s runs%s (%d usable, %d rows unusable)" % (need, kind, "" if len(groups) <= 1 else " at command(s) %s" % short, n, out["runs"]["dropped"]))
     for name in ("forward_gain_cv", "turn_gain_cv"):
         if rep[name] is not None and rep[name] > max_gain_cv:
             problems.append("%s CV %.1f %% > %.0f %%" % (name.split("_")[0], 100 * rep[name], 100 * max_gain_cv))
@@ -177,8 +224,8 @@ def main():
     r.add_argument("--user", default="jetbot")
     r.add_argument("--password", help="default: JETBOT_PASSWORD, else asked")
     f = sub.add_parser("fit", help="fit the gains from the trials")
-    for p in (r, f):
-        p.add_argument("--csv", default="reports/DoanQuocKien/week-02/motion_runs.csv")
+    r.add_argument("--csv", default="reports/DoanQuocKien/week-02/motion_runs.csv")
+    f.add_argument("--csv", nargs="+", default=["reports/DoanQuocKien/week-02/motion_runs.csv"], help="one or more run files (e.g. v = 1.0 plus the lower-speed runs)")
     f.add_argument("--out", default="calib/motion.json")
     f.add_argument("--push", action="store_true", help="also copy motion.json to the robot (restart robot_udp.py afterwards)")
     f.add_argument("--force", action="store_true", help="write (and push) even when the fit failed")
@@ -197,7 +244,7 @@ def main():
             ap.error("a turn run needs --w != 0 and no --v (turn in place)")
         run_trials(a)
         return
-    out = fit(read_rows(a.csv))
+    out = fit([row for path in a.csv for row in read_rows(path)])
     print(json.dumps(out, indent=2, allow_nan=False))
     if not out["passed"] and not a.force:
         print("FAIL: " + "; ".join(out["problems"]) + " -> nothing written, nothing pushed (--force to write anyway)")

@@ -68,3 +68,37 @@ def test_mixed_settings_and_unusable_rows_are_reported():
 def test_moving_seconds_across_midnight():
     log = ["23:59:59.000 motors +0.20 +0.20", "00:00:01.500 motors +0.00 +0.00"]
     assert abs(moving_seconds(log) - 2.5) < 1e-9
+
+
+def multi_speed_rows(gain=0.5, v0=0.3, wgain=7.0, w0=0.2, n=3):
+    rows = []
+    for v in (0.4, 0.7, 1.0):
+        for i in range(n):
+            t = 5.0 + 0.1 * i
+            rows.append(row("straight", t, forward=gain * (v - v0) * t * (1 + 0.01 * (-1) ** i), lateral=0.05 * v, v=v))
+    for w, t in ((0.5, 1.5), (1.0, 0.5)):
+        for i in range(n):
+            rows.append(row("turn", t, turn=math.degrees(wgain * (w - w0) * t) * (1 + 0.01 * (-1) ** i), w=w))
+    return rows
+
+
+def test_several_speeds_give_an_affine_model_that_shows_the_dead_zone():
+    out = fit(multi_speed_rows())
+    f, t = out["speed_model"]["forward"], out["speed_model"]["turn"]
+    assert abs(f["gain"] - 0.5) < 0.02 and abs(f["x_at_zero"] - 0.3) < 0.03        # speed is zero at command 0.3, not at 0
+    assert abs(t["gain"] - 7.0) < 0.3 and abs(t["x_at_zero"] - 0.2) < 0.03
+    assert out["passed"], out["problems"]
+    assert set(out["drift_by_v"]) == {"0.4", "0.7", "1"} and out["v_gain_m_per_s"] == f["gain"]
+    json.dumps(out, allow_nan=False)
+
+
+def test_several_speeds_need_runs_at_every_speed():
+    rows = [r for r in multi_speed_rows() if not (r["kind"] == "straight" and r["v"] == 0.7)][:-1]   # lose one run of the lowest-count group
+    rows = [r for r in rows if not (r["kind"] == "turn" and r["w"] == 1.0)][:] + [r for r in multi_speed_rows() if r["kind"] == "turn" and r["w"] == 1.0][:2]
+    out = fit(rows)
+    assert not out["passed"] and any("fewer than 3" in p for p in out["problems"])
+
+
+def test_one_speed_keeps_the_old_per_unit_gain():
+    out = fit(synthetic_rows())
+    assert "speed_model" not in out and abs(out["v_gain_m_per_s"] - 0.18) < 0.005
