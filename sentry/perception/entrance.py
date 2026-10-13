@@ -61,16 +61,21 @@ class EntranceResult:
     bearing_rad: float = None          # of the door ROI centre, positive = left; None when no homography
     quad: list = None                  # polygon of the matched region in the frame: the projected door ROI when one was given, else the convex hull of the inliers
 
-    def estimate_door_world_xy(self, robot_pose, distance_m: float = 2.0):
+    def estimate_door_world_xy(self, robot_pose, distance_m: float | None = None):
         """Estimate 2D global coordinate (x, y) of the door when in view.
-        Uses robot pose (x, y, yaw) and detected door bearing_rad.
+        Uses robot pose and bearing plus a measured range from the same pose
+        origin. Bearing alone provides no world position: returns None without
+        a range. Caller must account for the camera-to-pose offset first.
         """
-        if not self.in_view or self.bearing_rad is None:
+        if not self.in_view or self.bearing_rad is None or distance_m is None:
             return None
         # Bearing convention in EntranceResult: positive = LEFT (+yaw)
-        yaw = getattr(robot_pose, "yaw_rad", getattr(robot_pose, "yaw", 0.0))
-        x = getattr(robot_pose, "x_m", getattr(robot_pose, "x", 0.0))
-        y = getattr(robot_pose, "y_m", getattr(robot_pose, "y", 0.0))
+        yaw = getattr(robot_pose, "yaw_rad", getattr(robot_pose, "theta", None))
+        x = getattr(robot_pose, "x_m", getattr(robot_pose, "x", None))
+        y = getattr(robot_pose, "y_m", getattr(robot_pose, "y", None))
+        values = (x, y, yaw, self.bearing_rad, distance_m)
+        if any(v is None or not math.isfinite(v) for v in values) or distance_m <= 0:
+            raise ValueError("finite pose/bearing and positive measured door range required")
         theta = yaw + self.bearing_rad
         door_x = x + distance_m * math.cos(theta)
         door_y = y + distance_m * math.sin(theta)
