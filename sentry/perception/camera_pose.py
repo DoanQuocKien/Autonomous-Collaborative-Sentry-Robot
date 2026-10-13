@@ -112,7 +112,7 @@ class TiltFilter:
 
     def update_corners(self, corners_px, K, marker_m, marker_bottom_h_m, camera_h_m=None):
         est = pose_from_corners(corners_px, K, marker_m, marker_bottom_h_m, camera_h_m)
-        if est and camera_h_m is not None and self.roll_hist and abs(est["bearing_rad"]) >= self.centred:
+        if est and camera_h_m is not None and abs(est["bearing_rad"]) >= self.centred:          # roll_deg is 0 until a centred marker gives a trusted one
             est = pose_from_corners(corners_px, K, marker_m, marker_bottom_h_m, camera_h_m, roll_deg=self.roll_deg)   # off-axis: trust the camera's roll, not the marker's
         self.update(est)
         return est
