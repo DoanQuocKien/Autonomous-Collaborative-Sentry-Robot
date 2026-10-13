@@ -110,7 +110,7 @@ class ObstacleDetector:
             raise ValueError("finite timestamp and explore/pursuit mode required")
         image = self.geometry.undistort(frame_bgr)
         if self.tilt is not None:
-            self.tilt(image)
+            self.tilt.raw(frame_bgr)                                     # raw frame: finds markers far off-axis
         w, h = self.geometry.size
         observations = []
         for detection in self.predictor(image):

@@ -68,6 +68,11 @@ class CameraGeometry:
             raise ValueError("invalid pitch")
         self.pitch = math.radians(deg)
 
+    def undistort_points(self, pts):
+        """Raw fisheye pixels -> the same-K rectified pixels (what undistort() would give), without remapping the image."""
+        p = np.asarray(pts, dtype=np.float64).reshape(-1, 1, 2)
+        return cv2.fisheye.undistortPoints(p, self.K, self.D, P=self.K).reshape(-1, 2)
+
     def undistort(self, frame_bgr):
         w, h = self.size
         if (not isinstance(frame_bgr, np.ndarray) or frame_bgr.shape != (h, w, 3)

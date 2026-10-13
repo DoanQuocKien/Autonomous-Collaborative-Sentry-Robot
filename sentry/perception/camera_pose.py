@@ -108,11 +108,12 @@ class TiltFilter:
 
     def update_frame(self, undistorted_bgr, K, marker_m, marker_bottom_h_m, marker_id=None, camera_h_m=None):
         found = [c for i, c in detect_corners(undistorted_bgr) if marker_id is None or i == marker_id]
-        if not found:
-            return None
-        est = pose_from_corners(found[0], K, marker_m, marker_bottom_h_m, camera_h_m)
+        return self.update_corners(found[0], K, marker_m, marker_bottom_h_m, camera_h_m) if found else None
+
+    def update_corners(self, corners_px, K, marker_m, marker_bottom_h_m, camera_h_m=None):
+        est = pose_from_corners(corners_px, K, marker_m, marker_bottom_h_m, camera_h_m)
         if est and camera_h_m is not None and self.roll_hist and abs(est["bearing_rad"]) >= self.centred:
-            est = pose_from_corners(found[0], K, marker_m, marker_bottom_h_m, camera_h_m, roll_deg=self.roll_deg)   # off-axis: trust the camera's roll, not the marker's
+            est = pose_from_corners(corners_px, K, marker_m, marker_bottom_h_m, camera_h_m, roll_deg=self.roll_deg)   # off-axis: trust the camera's roll, not the marker's
         self.update(est)
         return est
 
@@ -132,10 +133,20 @@ class LiveTilt:
 
     def __call__(self, undistorted_bgr):
         """-> the accepted estimate dict, or None."""
+        return self._step(lambda: self.filter.update_frame(undistorted_bgr, self.geometry.K, self.marker_m, self.bottom_h, None, self.geometry.height_m))
+
+    def raw(self, frame_bgr):
+        """Same, from the RAW fisheye frame: the marker is detected there and only its 4 corners are undistorted. Finds markers far off-axis that the remapped image loses."""
+        def go():
+            found = detect_corners(frame_bgr)
+            return self.filter.update_corners(self.geometry.undistort_points(found[0][1]), self.geometry.K, self.marker_m, self.bottom_h, self.geometry.height_m) if found else None
+        return self._step(go)
+
+    def _step(self, estimate):
         self.n += 1
         if (self.n - 1) % self.every:
             return None
-        est = self.filter.update_frame(undistorted_bgr, self.geometry.K, self.marker_m, self.bottom_h, None, self.geometry.height_m)
+        est = estimate()
         if est is None or not self.filter.hist or self.filter.hist[-1] is not est:
             return None
         self.geometry.set_pitch_deg(self.filter.pitch_deg)
