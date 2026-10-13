@@ -71,7 +71,9 @@ def pose_from_corners(corners_px, K, marker_m, marker_bottom_h_m, camera_h_m=Non
 
 def detect_corners(gray_or_bgr):
     """-> list of (marker_id, 4x2 corners) found in the image."""
-    det = cv2.aruco.ArucoDetector(cv2.aruco.getPredefinedDictionary(DICT), cv2.aruco.DetectorParameters())
+    prm = cv2.aruco.DetectorParameters()
+    prm.cornerRefinementMethod = cv2.aruco.CORNER_REFINE_SUBPIX          # default is whole pixels: 1 px = 0.19 deg of tilt
+    det = cv2.aruco.ArucoDetector(cv2.aruco.getPredefinedDictionary(DICT), prm)
     corners, ids, _ = det.detectMarkers(gray_or_bgr)
     return [] if ids is None else [(int(i), c.reshape(4, 2)) for i, c in zip(ids.ravel(), corners)]
 
