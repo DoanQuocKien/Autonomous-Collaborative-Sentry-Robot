@@ -9,7 +9,7 @@ Spec: `docs/Project Specification.md` (source of truth). Plan: `docs/Implementat
 - Target laptop: Windows 11, RTX 4050 6GB. HNHL's laptop has RTX 5060 8GB; label its measurements separately from the target baseline. Jetson Nano: Ubuntu 18.04, Python 3.6, so Jetson code lives in `jetson/` with its own minimal requirements; never share laptop environments with it.
 
 ## Architecture
-- Laptop runs ALL models (YOLOv8, YOLOv8-pose, InsightFace, OSNet) and the state machine. Jetson only captures frames and drives motors.
+- Laptop runs ALL models (YOLOv8, YOLOv8-pose, InsightFace, OSNet, XFeat + DINOv2 for the entrance) and the state machine. Assumption: one entrance door per room (`sentry/perception/entrance.py`, enrolment per room). Jetson only captures frames and drives motors.
 - JetBot -> laptop: ZeroMQ, JPEG q60 (5 GHz). Laptop -> JetBot: non-blocking UDP (v, omega). ESP32-CAM (2.4 GHz): OV2640 -> HTTP MJPEG VGA; our GC2145 boards (no JPEG) -> `esp32/tile_stream` UDP tile stream via `sentry.espcam.TileReceiver`, see `docs/ESP32-CAM.md`.
 - No encoders/IMU: pose = dead reckoning from calibrated (v, omega) + ArUco corrections. Camera is a 160deg fisheye: calibrate and undistort before the ground-distance formula.
 - Audio: USB speaker playing pre-generated WAVs (offline TTS rendered on the laptop).
@@ -27,4 +27,4 @@ Spec: `docs/Project Specification.md` (source of truth). Plan: `docs/Implementat
 - Safety: `jetson/robot_udp.py` refuses to drive unless `jetson/estop.py` (gamepad dead-man + e-stop, host) is running, armed (hold Start 1.5 s) and R1 is held; releasing R1 or pressing any other button stops it. Never use `--no-estop` with real motors. Motor tests only with wheels off the ground.
 - Robot sessions: run `python -m tools.jetbot_status <ip>` at start/end and between long tests; battery >= 11.1 V OK, < 10.5 V stop and charge (see `docs/JetBot Notes.md`). The robot is school property: keep the return checklist there up to date.
 - Keep seeds, logging and calibration knobs in research code. One small `test_*.py` for non-trivial logic.
-- Serena: set `languages: [python]` in `.serena/project.yml` once code exists. `.serena/` and `graphify-out/` are gitignored.
+- Serena (1.7): `.serena/project.yml` needs `language_servers:` with `- python` (it was empty when the MCP connection closed on 2026-10-12; the fix is unverified in a new session); check with `PYTHONIOENCODING=utf-8 serena project health-check`. The code base is small (about 6.5 k lines of Python), so grep/Read are enough; graphify only for broad cross-file questions. `.serena/` and `graphify-out/` are gitignored.

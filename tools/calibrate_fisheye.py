@@ -15,7 +15,10 @@ from pathlib import Path
 import cv2
 import numpy as np
 
-FLAGS = cv2.CALIB_RECOMPUTE_EXTRINSIC + cv2.CALIB_FIX_SKEW
+_fisheye = getattr(cv2, "fisheye", cv2)
+FLAGS = getattr(_fisheye, "CALIB_RECOMPUTE_EXTRINSIC", getattr(cv2, "CALIB_RECOMPUTE_EXTRINSIC", 2)) + getattr(
+    _fisheye, "CALIB_FIX_SKEW", getattr(cv2, "CALIB_FIX_SKEW", 8)
+)
 CRIT = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 100, 1e-6)
 
 

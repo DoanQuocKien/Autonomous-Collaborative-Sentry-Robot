@@ -1,0 +1,13 @@
+ORB / SIFT sanity check, classroom door (plain white double door, 2026-10-12). Rough, one door, every 8th manifest frame.
+Reference: robot-eye frame from the excluded reference row (2 m, 0 deg), sharpest of 28 = data/D1/class_door_iref_robot.jpg.
+The 2 m / 0 deg group is left out (same pose as the reference, not a hold-out). Inliers = RANSAC homography, ratio 0.75, 5 px.
+Phone reference (class_door_iref.jpg, resized to 640x360), plain ORB 2000, no undistortion: positives median 0, negatives max 2 -> unusable (a plain white door photographed from 2 m by a phone has nothing in common with the robot's fisheye view).
+
+variant                  positives median / p10   negatives median / p95 / max
+ORB + CLAHE              10.0 / 6.0               5.0 / 9.2 / 11
+SIFT + CLAHE              8.0 / 4.0               5.0 / 7.0 / 9
+ORB + CLAHE, undistorted  7.0 / 4.0               1.5 / 7.0 / 8
+SIFT + CLAHE, undistorted 6.0 / 2.1               0.0 / 6.0 / 13
+
+Plain ORB, robot reference, per position (median inliers): 1.5 m 0 deg 13; 3 m 0 deg 12; +-30 deg and 1 m: 3-9; negatives 2 (p95 5, max 15).
+Reading: no clean threshold in any variant (positives p10 is at or below the negatives' p95). The plain white door has few features, like the glass door (risk 14).

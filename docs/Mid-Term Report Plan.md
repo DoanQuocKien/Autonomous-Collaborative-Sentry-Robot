@@ -15,7 +15,7 @@ Rules:
 | 2 | Related work | Researched papers and what each one is used for (item 3) | 1.5 | KR compiles, all contribute |
 | 3 | System architecture | Laptop / Jetson / ESP32 split, network and interfaces, safety design | 2 | DQK |
 | 4 | Robot platform and calibration | Fisheye, camera pose, motion model, dead reckoning + ArUco | 1.5 | DQK (+KR localization) |
-| 5 | Perception | Obstacle distance, entrance (ORB), face verification, re-ID, tracking; models, GPU budget, optimization | 3 | HNHL (+KR for ORB) |
+| 5 | Perception | Obstacle distance, entrance (XFeat / DINOv2), face verification, re-ID, tracking; models, GPU budget, optimization | 3 | HNHL (+KR for entrance) |
 | 6 | Behaviour and control | State machine, Phase 1 deployment, queue, pursuit and hold | 1.5 | KR (+DQK controllers) |
 | 7 | Tests and results to date | T0/T1/T2 tiers, section 4.3 status table, the "what has run" table (section 4 below), real-robot runs | 1.5 | KR, rows by owners |
 | 8 | Expected results and remaining plan | Targets for evasion, search, full loop; Weeks 8-13; risks (item 2: expectation) | 1 | DQK |
@@ -50,14 +50,14 @@ Each figure is saved as PNG next to its evidence in `reports/<handle>/week-NN/`,
 | F2 | Data flow with ports, rates and formats | Implementation Plan section 3 | DQK | 3 | W4 |
 | F3 | Photo of the JetBot, gamepad and ESP32-CAM at the door | photo | DQK, KR | 1 | W5 |
 | F4 | Fisheye: raw vs undistorted frame; per-view reprojection error bars | `calib/camera.json`, `reports/DoanQuocKien/week-02/fisheye_metrics.json` (now) | DQK | 4 | W4 |
-| F5 | Camera pose fit: distance vs image row, marks vs model | `week-02/camera_pose_nowedge.json` (now, provisional; PR #22) | DQK | 4 | W4 |
+| F5 | Camera pose fit: distance vs image row, marks vs model; tilt over sessions (2.6° down -> 1° up) and, once built, live marker tilt vs strip tilt | `week-02/camera_pose_nowedge.json` (PR #22), `calib/camera_pose_classroom.json`, `perception/camera_pose.py` output | DQK | 4 | W4 |
 | F6 | Motion model: commanded vs measured speed and turn rate, drift | `week-02/motion_runs.csv` (now, v = 1.0 only), W3 runs, `calib/motion.json` | DQK | 4 | W4 |
 | F7 | Video latency CDF and FPS; watchdog and e-stop stop times (table) | `week-01/link_test_2026-10-04.txt`, `estop_*_2026-10-06.txt` (now); re-measure with `tools.log_latency` CSV | DQK, HNHL | 3 | W5 |
 | F8 | ESP32 tile stream: sample frame, FPS over time | `week-01/esp32_gc2145_jpeg_2026-10-09.txt` (now) | DQK, KR | 3 | W4 |
 | F9 | GPU: FPS and VRAM per model and combined (RTX 4050; RTX 5060 labelled separately) | `week-01/gpu/gpu_baseline_rtx4050.json`, `gpu_baseline_2026-10-06.txt` (now); W5 profile | HNHL | 5 | W5 |
 | F10 | Obstacle distance error vs tape (scatter, median, p90) | HNHL T1 metrics JSON on D1 classroom | HNHL | 5 | W4 |
 | F11 | Occupancy map with the chosen sweet spot | `gridmap` / `vantage` output on a D1 sweep | HNHL | 5 | W4 |
-| F12 | ORB inlier counts, door vs no door, per door; TPR/FPR | `week-01/d1/orb_sanity_2026-10-11.txt` (now, cafe), KR T1 metrics JSON | KR | 5 | W4 |
+| F12 | Entrance: ORB vs XFeat vs DINOv2 AUC and TPR at 5 % FPR per door, inlier / similarity distributions door vs no door | `week-02/d1/entrance_bench_2026-10-12.md` and `.json` (now, two doors), KR T1 metrics JSON | KR | 5 | W4 |
 | F13 | Face verification ROC on D2 with the chosen threshold | HNHL week-03 metrics | HNHL | 5 | W4 |
 | F14 | Re-ID CMC / ROC, both OSNet weights | HNHL week-04 metrics | HNHL | 5 | W5 |
 | F15 | Dead-reckoning path vs ground truth, with and without ArUco | KR/DQK T2 localization (W4) | KR | 4 | W5 |
@@ -78,7 +78,7 @@ Each figure is saved as PNG next to its evidence in `reports/<handle>/week-NN/`,
 | Motion model + localization | R command -> m/s, rad/s; E pose from dead reckoning + ArUco | R linear gains at v = 1.0; E speed-dependent fit + drift (W3) | E `nav/localization.py` | R `tools.calibrate_motion run/fit` | R 0.414 m/s, 6.48 rad/s, drift -0.19 rad/m (provisional); E 3 m path error (W4) | - | R first estimate on the robot; E final `calib/motion.json` |
 | Obstacle distance | E distance from the bbox foot point | E YOLOv8n furniture classes; R camera pose H 0.101 m, pitch 2.6 deg (provisional) | E `perception/obstacle.py`, pitched ground-plane model, repulsion | E replay of D1 | E error on D1 (W2-W3), exploration T2 0 collisions | R YOLOv8n 110 FPS (RTX 4050, FP32) | E laptop, live during exploration |
 | Map + vantage | E occupancy grid, sweet spot | - (geometry, scoring) | E `nav/gridmap.py`, `nav/vantage.py` | E from a D1 sweep | E map vs tape; sweet spot 5/5 (W4) | - | E map saved for the search |
-| Entrance (ORB) | E find the door from `I_ref` | E ORB + ratio test + RANSAC | E `perception/entrance.py` | E `I_ref` photo + replay per door | R weak on the cafe glass door (risk 14); E classroom door TPR/FPR | E undistort, stable features | E Phase 1 HIL (W4) |
+| Entrance (XFeat, DINOv2; ORB baseline) | E find the door from `I_ref` | E XFeat + RANSAC (robot reference, vendored) and DINOv2 (phone reference), per-room calibration, one door per room | E `perception/entrance.py` | E `I_ref` photo + replay per door | R D1 bake-off on 2 doors, 2026-10-12: XFeat AUC 0.99-1.00, DINOv2-B 1.00 (phone reference), ORB 0.91 (risk 14); E a third door and a second session | E undistort, stable features | E Phase 1 HIL (W4) |
 | ESP32-CAM stream | R fixed entrance camera to laptop | - | R GC2145 raw Bayer changed-tile UDP, `sentry.espcam.TileReceiver`; OV2640 MJPEG untested | R flash `esp32/tile_stream`, `tools.esp_tile_rx` | R 14.4 fps average (9-10 worst) | R camera on core 0, changed tiles only | E placed at the door, handshake T2 (W3) |
 | Deployment + audio | E stop, prompt, verify, standby | - | E `play` packets -> `aplay`; offline TTS WAVs | E Phase 1 run | E 5 runs (W3), Phase 1 5 runs (W4) | - | E USB speaker on the robot |
 | Face verification | E whitelist vs intruder | R `buffalo_s` runs on CUDA (about 7 ms); E threshold from ROC | E `perception/face.py`, max cosine over all enrolled embeddings | E `tools/enroll_whitelist.py` | E TAR/FAR on D2 (W3); live at the door (W5) | R onnxruntime CUDA | E laptop, Phase 2 live |

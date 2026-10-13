@@ -68,3 +68,64 @@ def test_mixed_settings_and_unusable_rows_are_reported():
 def test_moving_seconds_across_midnight():
     log = ["23:59:59.000 motors +0.20 +0.20", "00:00:01.500 motors +0.00 +0.00"]
     assert abs(moving_seconds(log) - 2.5) < 1e-9
+
+
+def multi_speed_rows(gain=0.5, v0=0.3, wgain=7.0, w0=0.2, n=3):
+    rows = []
+    for v in (0.4, 0.7, 1.0):
+        for i in range(n):
+            t = 5.0 + 0.1 * i
+            rows.append(row("straight", t, forward=gain * (v - v0) * t * (1 + 0.01 * (-1) ** i), lateral=0.05 * v, v=v))
+    for w, t in ((0.5, 1.5), (1.0, 0.5)):
+        for i in range(n):
+            rows.append(row("turn", t, turn=math.degrees(wgain * (w - w0) * t) * (1 + 0.01 * (-1) ** i), w=w))
+    return rows
+
+
+def test_several_speeds_give_an_affine_model_that_shows_the_dead_zone():
+    out = fit(multi_speed_rows())
+    f, t = out["speed_model"]["forward"], out["speed_model"]["turn"]
+    assert abs(f["gain"] - 0.5) < 0.02 and abs(f["x_at_zero"] - 0.3) < 0.03        # speed is zero at command 0.3, not at 0
+    assert abs(t["gain"] - 7.0) < 0.3 and abs(t["x_at_zero"] - 0.2) < 0.03
+    assert out["passed"], out["problems"]
+    assert set(out["drift_by_v"]) == {"0.4", "0.7", "1"} and out["v_gain_m_per_s"] == f["gain"]
+    json.dumps(out, allow_nan=False)
+
+
+def test_several_speeds_need_runs_at_every_speed():
+    rows = [r for r in multi_speed_rows() if not (r["kind"] == "straight" and r["v"] == 0.7)][:-1]   # lose one run of the lowest-count group
+    rows = [r for r in rows if not (r["kind"] == "turn" and r["w"] == 1.0)][:] + [r for r in multi_speed_rows() if r["kind"] == "turn" and r["w"] == 1.0][:2]
+    out = fit(rows)
+    assert not out["passed"] and any("fewer than 3" in p for p in out["problems"])
+
+
+def test_one_speed_keeps_the_old_per_unit_gain():
+    out = fit(synthetic_rows())
+    assert "speed_model" not in out and abs(out["v_gain_m_per_s"] - 0.18) < 0.005
+
+def test_suggested_trim_cancels_the_measured_drift():
+    from tools.calibrate_motion import suggest_trim
+    out = {"drift_rad_per_m": -0.186, "v_gain_m_per_s": 0.4135, "w_gain_rad_per_s": 6.48, "k": 1.0}   # the real 2026-10-11 numbers: pulls right
+    t = suggest_trim(out)
+    assert 0.011 < t < 0.013                                   # left wheel slowed by about 1.2 %
+    assert suggest_trim(dict(out, drift_rad_per_m=0.186)) == -t   # pulls left -> the opposite sign
+    assert suggest_trim(dict(out, drift_rad_per_m=-50.0)) == 0.2  # clamped
+    assert suggest_trim(dict(out, w_gain_rad_per_s=None)) is None
+
+
+def test_trim_removes_the_drift_of_a_simulated_robot_with_mismatched_wheels():
+    """End to end on the sign convention: wheels with +-1.2 % gain mismatch -> measured drift -> suggest_trim -> Controller(trim) -> the simulated robot drives straight."""
+    from common.protocol import encode_control
+    from jetson.robot_udp import Controller
+    A, B, k, delta = 0.4135, 0.1276, 1.0, 0.01187           # m/s per unit command, effective track (m), mix k, left wheel 1.2 % fast, right 1.2 % slow
+
+    def heading_rate_per_m(trim, v=0.7):
+        left, right = Controller(min_pwm=0.12, max_speed=0.3, trim=trim).on_packet(encode_control(1, v, 0.0), now=0.0)[1]
+        sl, sr = A * (1 + delta) * left / 0.3, A * (1 - delta) * right / 0.3
+        return ((sr - sl) / B) / ((sl + sr) / 2)               # rad per metre, positive = turning left
+
+    drift = heading_rate_per_m(0.0)
+    assert -0.20 < drift < -0.17                               # pulls right, like the real robot (-0.186 rad/m)
+    from tools.calibrate_motion import suggest_trim
+    t = suggest_trim({"drift_rad_per_m": drift, "v_gain_m_per_s": A, "w_gain_rad_per_s": 2 * A * k / B, "k": k})
+    assert abs(heading_rate_per_m(t)) < 0.05 * abs(drift)      # at least 95 % of the drift is gone

@@ -1,0 +1,119 @@
+{
+  "kind": "inference smoke on camera-pose photo; not T1 D1 or T2 HIL",
+  "python": "3.12.15",
+  "torch": "2.9.1+cu128",
+  "opencv": "5.0.0",
+  "ultralytics": "8.4.172",
+  "cuda_runtime": "12.8",
+  "actual_device": "cuda:0",
+  "precision": "FP32",
+  "gpu": "NVIDIA GeForce RTX 5060 Laptop GPU",
+  "weights": "data/models/yolov8n.pt",
+  "weights_sha256": "f59b3d833e2ff32e194b5bb8e08d211dc7c5bdf144b90d2c8412c47ccfc83b36",
+  "image": "calib/camera_pose_nowedge_raw.jpg",
+  "image_sha256": "6533c0e53efdecba2bce418461e80375300a7e20c098bd035d27921099343a53",
+  "config_sha256": "f84931f7c19a7ad0a002e63ae1902d1db1ad1a4e359e1ee913f1149bb48486aa",
+  "calibration_sha256": {
+    "calib/camera.json": "d172e9009f074785760c411a91548211ac83d766f220eb2d828d173c7491e90b",
+    "calib/camera_pose_nowedge.json": "777640488a6250989a070e4eafa3abefd9633c6bfa65e5f7b730dd5bc95b60d3"
+  },
+  "settings": {
+    "weights": "data/models/yolov8n.pt",
+    "device": "0",
+    "imgsz": 640,
+    "confidence": 0.25,
+    "class_ids": [
+      56,
+      57,
+      58,
+      59,
+      60,
+      62,
+      72,
+      28
+    ],
+    "camera_calibration": "calib/camera.json",
+    "camera_pose": "calib/camera_pose_nowedge.json",
+    "max_ground_range_m": 5.0,
+    "bottom_margin_px": 1.0,
+    "repulsion_gain": 1.0,
+    "repulsion_max_w": 1.0,
+    "centre_turn": 1
+  },
+  "warmup": 3,
+  "iterations": 10,
+  "latency_ms": [
+    8.172200003173202,
+    8.138199977111071,
+    7.707500015385449,
+    7.43609998608008,
+    7.66579998889938,
+    7.736100000329316,
+    7.957800000440329,
+    7.6006000163033605,
+    7.5511999893933535,
+    7.810199982486665
+  ],
+  "latency_p50_ms": 7.721800007857382,
+  "latency_p95_ms": 8.156899991445243,
+  "result": {
+    "t": 406274.468948,
+    "obstacles": [
+      {
+        "detection": {
+          "class_id": 56,
+          "confidence": 0.33248159289360046,
+          "xyxy": [
+            0.223602294921875,
+            115.89920043945312,
+            88.39265441894531,
+            238.18771362304688
+          ]
+        },
+        "ground": {
+          "forward_m": 2.3675124432921444,
+          "left_m": 1.8481419216351331
+        },
+        "rejection": null
+      },
+      {
+        "detection": {
+          "class_id": 56,
+          "confidence": 0.30196425318717957,
+          "xyxy": [
+            73.56937408447266,
+            17.178977966308594,
+            182.81460571289062,
+            250.81942749023438
+          ]
+        },
+        "ground": {
+          "forward_m": 1.203111645864339,
+          "left_m": 0.6140771546674537
+        },
+        "rejection": null
+      },
+      {
+        "detection": {
+          "class_id": 56,
+          "confidence": 0.2913441061973572,
+          "xyxy": [
+            0.29925537109375,
+            2.894439697265625,
+            182.03799438476562,
+            255.52890014648438
+          ]
+        },
+        "ground": {
+          "forward_m": 1.0162747780599541,
+          "left_m": 0.6410386205713178
+        },
+        "rejection": null
+      }
+    ],
+    "repulsive_w": 0.0,
+    "nearest_m": 1.2015593774694562
+  },
+  "motor_commands_sent": 0,
+  "passed": true
+}
