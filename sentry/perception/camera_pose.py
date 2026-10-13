@@ -122,7 +122,7 @@ class LiveTilt:
     Call it with each UNDISTORTED frame (ObstacleDetector does, after geometry.undistort); every `every`-th frame is searched for a marker, an accepted estimate
     sets geometry.pitch. Without a marker the last pitch stays. All pages share one layout, so one lower-edge height serves every id (config.toml [calibration])."""
 
-    def __init__(self, geometry, marker_m, square_bottom_h_m, every=3, n=5, **filter_kw):          # n=5: 0.3 s of frames; 15 lagged ~1 s behind a robot at 0.3 m/s (replay of a recorded run, 2026-10-14)
+    def __init__(self, geometry, marker_m, square_bottom_h_m, every=3, n=3, **filter_kw):          # n=3 (median of 3 frames): 15 lagged ~1 s behind a robot at 0.3 m/s. Replays of two recorded runs, 2026-10-14: moving error window15 / 5 / 3 = 0.061 / 0.036 / 0.037 m (v=0.7), 0.310 / 0.194 / 0.126 m (v=0.4)
         self.geometry, self.marker_m, self.bottom_h, self.every, self.n = geometry, marker_m, square_bottom_h_m, max(1, every), 0
         self.filter = TiltFilter(default_pitch_deg=math.degrees(geometry.pitch), n=n, min_samples=min(5, n), **filter_kw)
 
