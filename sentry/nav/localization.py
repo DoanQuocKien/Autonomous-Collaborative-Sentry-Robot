@@ -75,13 +75,16 @@ class RobotPose:
     def as_tuple(self) -> Tuple[float, float, float]:
         return (self.x, self.y, self.theta)
 
-    def calculate_door_world_xy(self, bearing_rad: float, distance_m: float = 2.0) -> Tuple[float, float]:
+    def calculate_door_world_xy(self, bearing_rad: float, distance_m: float) -> Tuple[float, float]:
         """Calculates world-frame (x, y) coordinates of the entrance given relative bearing and distance.
 
         Parameters:
             bearing_rad: horizontal angle in radians relative to robot heading (positive left).
-            distance_m: ground range to the door in meters (default 2.0 m).
+            distance_m: measured ground range from this pose origin to the door.
         """
+        if (not all(math.isfinite(v) for v in (self.x, self.y, self.theta, bearing_rad, distance_m))
+                or distance_m <= 0):
+            raise ValueError("finite pose/bearing and positive measured door range required")
         target_yaw = self.theta + bearing_rad
         door_x = self.x + distance_m * math.cos(target_yaw)
         door_y = self.y + distance_m * math.sin(target_yaw)

@@ -15,11 +15,12 @@ import time
 import cv2
 import numpy as np
 
-from sentry.config import DEFAULT_PATH, load
+from sentry.config import DEFAULT_PATH
 from sentry.perception.obstacle import ObstacleDetector
 
 
-def run(image_path, out_path, config_path=DEFAULT_PATH, warmup=3, iterations=10):
+def run(image_path, out_path, config_path=DEFAULT_PATH, warmup=3, iterations=10,
+        camera_pose_path=None, camera_path=None, floor_type="unknown"):
     if warmup < 0 or iterations < 1:
         raise ValueError("warmup >=0 and iterations >=1 required")
     image = cv2.imread(str(image_path))
@@ -27,7 +28,8 @@ def run(image_path, out_path, config_path=DEFAULT_PATH, warmup=3, iterations=10)
         raise ValueError("cannot read smoke image")
     import torch
     import ultralytics
-    detector = ObstacleDetector.from_config(config_path)
+    detector = ObstacleDetector.from_config(config_path, camera_pose_path=camera_pose_path,
+                                            camera_path=camera_path, floor_type=floor_type)
     for _ in range(warmup):
         detector(image, time.perf_counter())
     times, result = [], None
@@ -36,7 +38,7 @@ def run(image_path, out_path, config_path=DEFAULT_PATH, warmup=3, iterations=10)
         result = detector(image, start)
         # YOLO result is copied to CPU by the adapter, synchronizing output.
         times.append((time.perf_counter() - start) * 1000)
-    s = load(config_path)["obstacle"]
+    s = detector.settings
     root = Path(config_path).resolve().parent
     runtime = str(detector.predictor.model.predictor.model.device)
     fp16 = bool(detector.predictor.model.predictor.model.fp16)
@@ -56,6 +58,7 @@ def run(image_path, out_path, config_path=DEFAULT_PATH, warmup=3, iterations=10)
                     calibration_sha256={s[k]: hashlib.sha256((root / s[k]).read_bytes()).hexdigest()
                                         for k in ("camera_calibration", "camera_pose")},
                     settings=s, warmup=warmup, iterations=iterations, latency_ms=times,
+                    camera_session=detector.geometry.session, camera_pose_status=detector.geometry.pose_status,
                     latency_p50_ms=float(np.median(times)), latency_p95_ms=float(np.percentile(times, 95)),
                     result=asdict(result), motor_commands_sent=0, passed=True)
     path = Path(out_path)
@@ -71,8 +74,11 @@ def main():
     ap.add_argument("--config", default=str(DEFAULT_PATH))
     ap.add_argument("--warmup", type=int, default=3)
     ap.add_argument("--iterations", type=int, default=10)
+    ap.add_argument("--camera-pose")
+    ap.add_argument("--camera")
+    ap.add_argument("--floor-type", choices=("unknown","glossy","matte"), default="unknown")
     a = ap.parse_args()
-    evidence = run(a.image, a.out, a.config, a.warmup, a.iterations)
+    evidence = run(a.image, a.out, a.config, a.warmup, a.iterations,a.camera_pose,a.camera,a.floor_type)
     print(json.dumps({key: evidence[key] for key in ("actual_device", "gpu", "latency_p50_ms", "latency_p95_ms", "passed")}, indent=2))
 
 

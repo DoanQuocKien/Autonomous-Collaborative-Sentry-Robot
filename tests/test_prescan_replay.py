@@ -28,7 +28,7 @@ def recording(tmp_path):
 def test_recording_to_detector_to_map_without_network(tmp_path):
     d, poses = recording(tmp_path)
     predictor = lambda image: [Detection(56, 0.9, (280, 150, 300, 300))]
-    detector = ObstacleDetector.from_config(predictor=predictor)
+    detector = ObstacleDetector.from_config(predictor=predictor, floor_type="matte")
     out = tmp_path / "out"
     summary = run(d, poses, out, detector=detector)
     assert summary["frames"] == 2 and summary["motor_commands_sent"] == 0
@@ -72,12 +72,13 @@ def measurements(tmp_path, count=20, ratio=1.05, missing=False):
     with predictions.open("w", newline="") as p, truth.open("w", newline="") as t:
         pw, tw = csv.DictWriter(p, FIELDS), csv.writer(t)
         pw.writeheader()
-        tw.writerow(["obstacle_id", "frame_index", "detection_index", "tape_distance_m", "world_x_m", "world_y_m"])
+        tw.writerow(["obstacle_id", "frame_index", "detection_index", "tape_forward_m", "world_x_m", "world_y_m", "floor"])
         for i in range(count):
             x, y = 0.25 + (i % 5) * 0.5, 0.25 + (i // 5) * 0.5
             tape = 0.3 + 0.05 * i
-            pw.writerow(dict(frame_index=i, detection_index=0, distance_m="" if missing and i == 0 else tape * ratio))
-            tw.writerow([i, i, 0, tape, x, y])
+            pw.writerow(dict(frame_index=i, detection_index=0, forward_m="" if missing and i == 0 else tape * ratio,
+                             distance_m=tape*3))  # wrong range must not affect forward metric
+            tw.writerow([i, i, 0, tape, x, y, "glossy" if i%2 else "matte"])
             g.cells[g.world_to_cell(x, y)] = OCCUPIED
     path = tmp_path / "map.npz"
     g.save(path)
@@ -103,7 +104,7 @@ def test_map_failure_and_nonfinite_prediction(tmp_path):
     g.save(paths[2])
     result = evaluate(*paths)
     assert result["distance_pass"] and not result["map_pass"]
-    paths[0].write_text("frame_index,detection_index,distance_m\n0,0,nan\n")
+    paths[0].write_text("frame_index,detection_index,forward_m\n0,0,nan\n")
     with pytest.raises(ValueError, match="invalid predicted"):
         evaluate(*paths)
 
@@ -130,3 +131,49 @@ def test_multiple_missed_obstacles_in_same_frame_are_counted(tmp_path):
     assert len(result["missing_distance_ids"]) == 20
     assert result["distance_median_relative_error"] is None
     assert not result["distance_pass"]
+
+
+def test_forward_only_unconfirmed_lateral_not_in_map(tmp_path):
+    paths = measurements(tmp_path)
+    rows = list(csv.DictReader(paths[1].read_text().splitlines()))
+    with paths[1].open("w",newline="") as f:
+        writer = csv.DictWriter(f,[*rows[0],"use_in_metric"])
+        writer.writeheader()
+        for row in rows:
+            row["use_in_metric"] = "check"
+            writer.writerow(row)
+    result = evaluate(*paths)
+    assert result["distance_pass"] and result["map_eligible_ids"] == 0
+    assert not result["map_pass"]
+
+
+def test_glossy_and_matte_not_hidden_in_pooled_score(tmp_path):
+    paths = measurements(tmp_path)
+    rows = list(csv.DictReader(paths[0].read_text().splitlines()))
+    truth = list(csv.DictReader(paths[1].read_text().splitlines()))
+    with paths[0].open("w",newline="") as f:
+        writer = csv.DictWriter(f,FIELDS)
+        writer.writeheader()
+        for i,row in enumerate(rows):
+            row["forward_m"] = float(truth[i]["tape_forward_m"])*(1.16 if truth[i]["floor"]=="glossy" else 1.0)
+            writer.writerow(row)
+    result = evaluate(*paths)
+    assert result["distance_median_relative_error"] < 0.1
+    assert not result["by_floor"]["glossy"]["within_error_limits"]
+    assert result["by_floor"]["matte"]["within_error_limits"]
+    assert not result["distance_pass"]
+
+
+def test_missing_floor_is_reported_and_excluded_obstacle_not_scored(tmp_path):
+    paths = measurements(tmp_path)
+    rows = list(csv.DictReader(paths[1].read_text().splitlines()))
+    with paths[1].open("w",newline="") as f:
+        writer = csv.DictWriter(f,[*rows[0],"use_in_metric"])
+        writer.writeheader()
+        for i,row in enumerate(rows):
+            row["floor"] = "glossy tile"
+            row["use_in_metric"] = "no" if i==0 else "yes"
+            writer.writerow(row)
+    result = evaluate(*paths)
+    assert result["missing_floor_types"] == ["matte"] and result["excluded_ids"] == ["0"]
+    assert not result["passed"] and result["obstacle_ids"] == 19

@@ -1,0 +1,7 @@
+{
+  "actual_device": "cuda:0",
+  "gpu": "NVIDIA GeForce RTX 5060 Laptop GPU",
+  "latency_p50_ms": 16.51934999972582,
+  "latency_p95_ms": 23.125445004552596,
+  "passed": true
+}

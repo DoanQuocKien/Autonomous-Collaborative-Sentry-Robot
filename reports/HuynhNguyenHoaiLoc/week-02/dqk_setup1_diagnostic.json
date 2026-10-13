@@ -1,0 +1,30 @@
+{
+  "kind": "exploratory manual-ROI geometry/contact diagnostic on setup1; not detector accuracy or final T1",
+  "corrected_eligible_ids": 3,
+  "floor": "glossy",
+  "height_m": 0.1,
+  "pitch_down_deg": -2.33,
+  "raw_median_relative_error": 0.17365103030548995,
+  "raw_p90_relative_error": 0.19266738635048072,
+  "corrected_median_relative_error": 0.05991383956650966,
+  "corrected_p90_relative_error": 0.09523677703183495,
+  "floor_comparison_complete": false,
+  "missing_floor_types": [
+    "matte"
+  ],
+  "formal_t1_passed": false,
+  "map_world_truth_available": false,
+  "real_yolo_candidate_count": 2,
+  "real_yolo_valid_ground_count": 1,
+  "real_yolo_rejections": [
+    "border_truncated"
+  ],
+  "raw_frames_in_git": false,
+  "motor_commands_sent": 0,
+  "limitations": [
+    "3 selected manual regions only, thresholds explored on same frame",
+    "flat sleeve explicitly annotated; flatness not inferred automatically",
+    "COCO furniture model does not promise wooden block/sleeve recall",
+    "no matte set, no 20-object sample, no confirmed world poses"
+  ]
+}

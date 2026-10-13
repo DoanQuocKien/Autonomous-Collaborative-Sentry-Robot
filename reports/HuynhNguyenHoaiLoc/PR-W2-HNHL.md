@@ -1,39 +1,38 @@
-# HNHL W2: calibrated obstacle perception, room map and vantage selection
+# HNHL W2: session camera pose, reflection contact and merged-module integration
 
-## Mục tiêu
+## Mục tiêu và thay đổi
 
-Triển khai phần laptop tuần2 của HNHL: nhận diện furniture/ground distance với camera hiệu chuẩn, occupancy grid world frame và vị trí quan sát cửa. Các module chạy offline bằng replay và nhận pose/entrance từ KR khi tích hợp.
+Tape DQK là forward từ điểm dưới lens, còn evaluator cũ dùng planar range. Bbox sàn bóng cũng có thể chứa phản chiếu khiến khoảng cách bị ngắn. Bản bổ sung sau PR #27 sửa phép chấm và chỉ đưa contact đã xử lý vào map.
 
-## Thay đổi
-
-- `CameraGeometry` undistort với cùng K của phép đo DQK, ground projection có pitch/roll. Camera H_cam0,1013 m, pitch xuống2,63°; trả forward/left, planar range và bearing positive-left.
-- `ObstacleDetector(frame_bgr,t)` trả dataclass; YOLO furniture, thresholds cấu hình, weights local, FP32. Box cắt đáy/không có ground intersection giữ unresolved. Repulsive w chuẩn hóa dùng0,6 m exploration/0,5 m pursuit, quay tránh phía vật cản.
-- `OccupancyGrid` UNKNOWN/FREE/OCCUPIED; pose+camera offset; chỉ clear footprint/seen-floor xác nhận. Rays có occlusion, UNKNOWN chặn navigation. Xử lý corner/boundary và sai số số thực biên ô. Atomic NPZ save/load không pickle, có guarding pose/quy ước tọa độ.
-- `VantageSelector` chỉ xét FREE reachable với footprint clearance, LOS, cách cửa1,5–3 m, ưu tiên boundary quan sát. Trả None khi chưa đủ điều kiện.
-- `PreScanner`, replay export, evaluator T1 báo ID thiếu, GPU smoke kiểm tra CUDA/FP32 và hashes. Không gửi motor commands.
-- Thêm config, **60 CPU tests +1 GPU test**. PR/docs/evidence đặt trong `reports/HuynhNguyenHoaiLoc`.
+- Pose/floor theo session; hỗ trợ file lớp học H=0,100 m, pitch=−2,33° có tape/fit evidence nhưng không có `passed`. Undistort giữ K của phép đo DQK.
+- Reject bbox cắt mọi mép. Glossy dùng contact đối xứng phản chiếu kiểm tra texture/peak; không rõ thì unresolved. `flat_on_floor` cần caller xác nhận; floor mặc định unknown.
+- Evaluator dùng `forward_m` / `tape_forward_m`, tách glossy/matte, báo ID thiếu. World truth optional cho forward-only; lateral chưa xác nhận không chấm map.
+- Single-image/replay CLI nhận explicit pose/floor, xuất session/contact/rejection. Manual ROI chỉ là diagnostic hình học; raw D1 giữ trong data được Git ignore.
+- Tích hợp camera pose DQK và RobotPose KR với prescan/map/camera offset. Helper tọa độ cửa yêu cầu range đo được; bearing đơn lẻ không mặc định cửa ở 2 m.
+- Giữ grid UNKNOWN/FREE/OCCUPIED, confirmed-floor rays, clearance/LOS/reachability và vantage 1,5–3 m. Không gửi motor commands.
 
 ## Kiểm chứng — 2026-10-12
 
+Sau fast-forward W2 từ `318736f` tới `origin/main` **`8d8aeaa`** (gồm PR #32 DQK và #33 KR):
+
 ```powershell
-.venv/Scripts/python.exe -m pytest -m 'not gpu and not hil' --basetemp=data/pytest-w2-final -p no:cacheprovider -q -rs
 $env:YOLO_CONFIG_DIR = Join-Path (Get-Location) 'data/ultralytics'
-.venv/Scripts/python.exe -m tools.check_w2 --out reports/HuynhNguyenHoaiLoc/week-02/inference_smoke.json
-.venv/Scripts/python.exe -m pytest tests/test_w2_gpu.py --basetemp=data/pytest-w2-gpu-release -p no:cacheprovider -q
+.venv/Scripts/python.exe -m pytest -m 'not gpu and not hil' --basetemp=data/pytest-w2-merged-final -p no:cacheprovider -q -rs
+.venv/Scripts/python.exe -m tools.check_w2 --out reports/HuynhNguyenHoaiLoc/week-02/inference_merged_final.json
+.venv/Scripts/python.exe -m pytest tests/test_w2_gpu.py --basetemp=data/pytest-w2-merged-gpu -p no:cacheprovider -q
 ```
 
-- CPU/transport: **257 passed**,1 skipped (D1 checkerboard thiếu),1 GPU test deselected,12,43 s.
-- GPU: **1 passed**,3,73 s; YOLOv8n thực thi `cuda:0`, FP32 trên RTX5060 Laptop GPU.
-- Detector smoke: 3 warmup/10 mẫu trên ảnh camera-pose raw đã commit; p50 **7,722 ms**,p95 **8,157 ms**. Chưa gồm mapping/transport; không thay baseline RTX4050 hoặc T1D1.
-- CLI help và `git diff --check` đạt.
+- **321 passed**, 2 skipped (checkerboard và entrance replay D1 thiếu), 1 GPU test deselected; 27,44 s.
+- GPU **1 passed**, 5,06 s; YOLOv8n actual CUDA FP32 trên RTX 5060 Laptop.
+- Smoke 3 warmup/10 mẫu: p50 16,519 ms, p95 23,125 ms; ảnh/pose cũ đã commit, floor unknown. Chưa gồm map/vantage/transport; chưa thay RTX 4050 benchmark hoặc T1 accuracy.
+- XFeat weights khớp pinned SHA256; real warped-reference test đạt. Import package exports và AST Python 3.6 common/jetson đạt.
 
-Báo cáo: `reports/HuynhNguyenHoaiLoc/week-02.md`. API/protocol: `reports/HuynhNguyenHoaiLoc/W2-USAGE.md`. Logs/JSON: `reports/HuynhNguyenHoaiLoc/week-02/`.
+[Báo cáo](week-02.md), [Protocol/API](W2-USAGE.md), [CPU log](week-02/tests_merged_final.txt), [GPU log](week-02/tests_gpu_merged_final.txt), [smoke JSON](week-02/inference_merged_final.json).
 
-## Tích hợp tiếp theo
+## Giới hạn và nghiệm thu tiếp theo
 
-- KR cung cấp pose đồng thời frame và tọa độ cửa world; DQK xác nhận footprint/camera offset, controller xử lý unresolved/nearest.
-- Nhận D1+tape/world labels để đo median/p90 distance và80% map trong20 cm. Synthetic không thay dữ liệu thật.
-- T2 robot:0 collisions trong5×3 phút; vantage đủ3 điều kiện5/5. Chưa chạy các phép này.
-- Seen-floor là input xác nhận; không suy ra free floor từ YOLO absence. UNKNOWN có thể khiến chưa có vantage khi dữ liệu phòng chưa đủ.
+Diagnostic 3 manual ROIs glossy có median/p90 5,99%/9,52%, ngưỡng khảo sát trên chính ảnh đó. Không claim detector accuracy hoặc T1 PASS; YOLO chỉ có 1 valid ground candidate. Chờ ≥20 IDs, matte, confirmed world truth/pose, footprint/camera offset và robot. DINOv2 và live tilt vào obstacle detector chưa chạy/tích hợp trong bản này. Seen-floor vẫn cần xác nhận độc lập.
 
-Branch `HuynhNguyenHoaiLoc/w02-obstacles-map-vantage`; base `6dbf79a`; reviewer theo rotation: **DQK**.
+T2: 0 collisions trong 5×3 phút, vantage đủ 3 điều kiện 5/5 còn chờ robot. Raw ảnh/ROI riêng không nằm trong PR.
+
+Branch `HuynhNguyenHoaiLoc/w02-obstacles-map-vantage`; base PR bổ sung `8d8aeaa`; reviewer **DQK**. Sửa đổi bổ sung chưa commit/push trong phiên kiểm tra.

@@ -26,7 +26,7 @@ def project(forward, left, height, pitch_deg, roll_deg):
             240 + math.sin(roll) * du + math.cos(roll) * dv)
 
 
-@pytest.mark.parametrize("pitch,roll", [(0, 0), (2.63, 0), (15, 0), (8, 6)])
+@pytest.mark.parametrize("pitch,roll", [(0, 0), (2.63, 0), (-2.33, 0), (15, 0), (8, 6)])
 @pytest.mark.parametrize("forward,left", [(0.3, 0), (1, 0.2), (2, -0.4)])
 def test_ground_projection_roundtrip(pitch, roll, forward, left):
     p = geometry(pitch, roll).ground_point(*project(forward, left, 0.1, pitch, roll))
@@ -74,6 +74,7 @@ def test_reject_invalid_pose(change):
 
 def detector(detections):
     config = load()
+    config["obstacle"]["floor_type"] = "matte"
     return ObstacleDetector(geometry(), lambda image: detections, config["obstacle"], config["thresholds"])
 
 
