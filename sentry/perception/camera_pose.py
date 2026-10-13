@@ -31,10 +31,11 @@ def pitch_from_position(t_cam, marker_center_h_m, camera_h_m):
     return math.degrees(math.asin(max(-1.0, min(1.0, -(y / r) / math.hypot(a, b)))) - math.atan2(b, a))
 
 
-def pose_from_corners(corners_px, K, marker_m, marker_bottom_h_m, camera_h_m=None):
+def pose_from_corners(corners_px, K, marker_m, marker_bottom_h_m, camera_h_m=None, roll_deg=None):
     """corners_px: 4x2 pixel corners in ArUco order (top-left, top-right, bottom-right, bottom-left) of an undistorted image.
     -> dict(pitch_deg, roll_deg, height_m, distance_m, reproj_px, pitch_ori_deg) or None. `pitch_deg` comes from the marker's POSITION when the camera height
-    `camera_h_m` is given (accurate to a fraction of a degree up to ~2.5 m), else from its orientation (`pitch_ori_deg`, noisy: 3-10 deg at 1.5-2 m)."""
+    `camera_h_m` is given (accurate to a fraction of a degree up to ~2.5 m), else from its orientation (`pitch_ori_deg`, noisy: 3-10 deg at 1.5-2 m).
+    `roll_deg` overrides the roll that is undone before the position is used: the marker's own roll is poor off-axis (0.5 deg of tilt per deg of roll at 28 deg bearing)."""
     s = marker_m / 2.0
     obj = np.array([[-s, s, 0], [s, s, 0], [s, -s, 0], [-s, -s, 0]], np.float64)
     img = np.asarray(corners_px, np.float64).reshape(4, 2)
@@ -60,10 +61,11 @@ def pose_from_corners(corners_px, K, marker_m, marker_bottom_h_m, camera_h_m=Non
     if camera_h_m is None:
         pitch = pitch_ori
     else:                                                                            # undo the camera roll (measured from the orientation) before using the position
-        c, sn = math.cos(math.radians(ROLL_SIGN * roll)), math.sin(math.radians(ROLL_SIGN * roll))
+        r_use = roll if roll_deg is None else roll_deg
+        c, sn = math.cos(math.radians(ROLL_SIGN * r_use)), math.sin(math.radians(ROLL_SIGN * r_use))
         pitch = pitch_from_position((t[0] * c - t[1] * sn, t[0] * sn + t[1] * c, t[2]), marker_bottom_h_m + s, camera_h_m)
     return {"pitch_deg": pitch, "pitch_ori_deg": pitch_ori,
-            "roll_deg": roll,
+            "roll_deg": roll, "bearing_rad": math.atan2(float(t[0]), float(t[2])),
             "height_m": marker_bottom_h_m + s + float(C[1]),
             "distance_m": float(C[2]),
             "reproj_px": err}
@@ -82,10 +84,11 @@ class TiltFilter:
     """Median of the last `n` marker estimates; a jump of more than `max_jump_deg` from the current median is rejected as an outlier
     (after `min_samples` accepted ones). Without a marker the last value is kept: `pitch_deg` starts at `default_pitch_deg` (the session's calib value)."""
 
-    def __init__(self, default_pitch_deg=0.0, n=15, max_jump_deg=5.0, min_samples=5, max_reproj_px=2.0, max_distance_m=2.5):
+    def __init__(self, default_pitch_deg=0.0, n=15, max_jump_deg=5.0, min_samples=5, max_reproj_px=2.0, max_distance_m=2.5, centred_rad=0.10):
         self.pitch_deg, self.roll_deg, self.height_m = default_pitch_deg, 0.0, None
         self.hist, self.max_jump, self.min_samples = deque(maxlen=n), max_jump_deg, min_samples
-        self.max_reproj, self.max_distance = max_reproj_px, max_distance_m
+        self.max_reproj, self.max_distance, self.centred = max_reproj_px, max_distance_m, centred_rad
+        self.roll_hist = deque(maxlen=n)          # roll only from markers near the optical axis
         self.rejected = 0
 
     def update(self, est):
@@ -97,7 +100,9 @@ class TiltFilter:
             return False
         self.hist.append(est)
         self.pitch_deg = float(np.median([h["pitch_deg"] for h in self.hist]))
-        self.roll_deg = float(np.median([h["roll_deg"] for h in self.hist]))
+        if abs(est["bearing_rad"]) < self.centred:
+            self.roll_hist.append(est["roll_deg"])
+            self.roll_deg = float(np.median(self.roll_hist))
         self.height_m = float(np.median([h["height_m"] for h in self.hist]))
         return True
 
@@ -106,5 +111,7 @@ class TiltFilter:
         if not found:
             return None
         est = pose_from_corners(found[0], K, marker_m, marker_bottom_h_m, camera_h_m)
+        if est and camera_h_m is not None and self.roll_hist and abs(est["bearing_rad"]) >= self.centred:
+            est = pose_from_corners(found[0], K, marker_m, marker_bottom_h_m, camera_h_m, roll_deg=self.roll_deg)   # off-axis: trust the camera's roll, not the marker's
         self.update(est)
         return est

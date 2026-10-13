@@ -95,3 +95,24 @@ def test_fisheye_round_trip_recovers_the_tilt():
         for _ in range(15):
             f.update(pose_from_corners(px + rng.normal(0, 0.3, (4, 2)), Kf, S, BOTTOM, camera_h_m=0.10))
         assert abs(f.pitch_deg - pitch) < 1.2
+
+
+def test_off_axis_marker_uses_the_filters_roll_not_its_own():
+    f = TiltFilter(default_pitch_deg=5.0)
+    f.update(pose_from_corners(view(5.0, 0.10, 1.2, roll_deg=1.0), K, S, BOTTOM, 0.10))        # centred marker: trusted roll
+    assert abs(f.roll_deg - 1.0) < 0.05 and len(f.roll_hist) == 1
+    far = pose_from_corners(view(5.0, 0.10, 1.2, offset=0.5, roll_deg=1.0), K, S, BOTTOM, 0.10)
+    assert abs(far["bearing_rad"]) > f.centred
+    f.update(far)
+    assert len(f.roll_hist) == 1 and abs(f.roll_deg - 1.0) < 0.05             # off-axis roll not folded in
+    g = TiltFilter()
+    assert g.update(far) and not g.roll_hist                                     # no trusted roll yet: the marker's own roll is used, but not kept
+
+
+def test_camera_geometry_takes_a_live_pitch():
+    from sentry.perception.camera import CameraGeometry
+    import json
+    g = CameraGeometry(json.load(open("calib/camera.json")), {"H_cam_m": 0.1, "pitch_down_deg": 5.0, "passed": True})
+    a = g.ground_point(285, 300).forward_m
+    g.set_pitch_deg(6.0)
+    assert g.ground_point(285, 300).forward_m < a

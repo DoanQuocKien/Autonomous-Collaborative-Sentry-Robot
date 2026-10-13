@@ -62,6 +62,12 @@ class CameraGeometry:
         return cls(json.loads(Path(camera_path).read_text(encoding="utf-8-sig")),
                    json.loads(Path(pose_path).read_text(encoding="utf-8-sig")), max_range_m)
 
+    def set_pitch_deg(self, deg):
+        """Live tilt update (sentry.perception.camera_pose.TiltFilter.pitch_deg); the floor moves it by up to ~1.7 deg between spots."""
+        if not math.isfinite(deg) or abs(deg) >= 90:
+            raise ValueError("invalid pitch")
+        self.pitch = math.radians(deg)
+
     def undistort(self, frame_bgr):
         w, h = self.size
         if (not isinstance(frame_bgr, np.ndarray) or frame_bgr.shape != (h, w, 3)
