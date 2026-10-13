@@ -115,3 +115,28 @@ class TiltFilter:
             est = pose_from_corners(found[0], K, marker_m, marker_bottom_h_m, camera_h_m, roll_deg=self.roll_deg)   # off-axis: trust the camera's roll, not the marker's
         self.update(est)
         return est
+
+
+class LiveTilt:
+    """Keeps a CameraGeometry's pitch current from the ArUco pages in view (the floor tilts the chassis by up to ~1.7 deg between spots, measured 2026-10-14).
+    Call it with each UNDISTORTED frame (ObstacleDetector does, after geometry.undistort); every `every`-th frame is searched for a marker, an accepted estimate
+    sets geometry.pitch. Without a marker the last pitch stays. All pages share one layout, so one lower-edge height serves every id (config.toml [calibration])."""
+
+    def __init__(self, geometry, marker_m, square_bottom_h_m, every=3, **filter_kw):
+        self.geometry, self.marker_m, self.bottom_h, self.every, self.n = geometry, marker_m, square_bottom_h_m, max(1, every), 0
+        self.filter = TiltFilter(default_pitch_deg=math.degrees(geometry.pitch), **filter_kw)
+
+    @classmethod
+    def from_config(cls, geometry, calibration, **kw):
+        return cls(geometry, calibration["aruco_marker_m"], calibration["aruco_page_bottom_h_m"] + calibration["aruco_square_above_page_m"], **kw)
+
+    def __call__(self, undistorted_bgr):
+        """-> the accepted estimate dict, or None."""
+        self.n += 1
+        if (self.n - 1) % self.every:
+            return None
+        est = self.filter.update_frame(undistorted_bgr, self.geometry.K, self.marker_m, self.bottom_h, None, self.geometry.height_m)
+        if est is None or not self.filter.hist or self.filter.hist[-1] is not est:
+            return None
+        self.geometry.set_pitch_deg(self.filter.pitch_deg)
+        return est

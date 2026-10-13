@@ -127,3 +127,20 @@ def test_marker_height_on_the_printed_page_matches_config():
     cfg = load()["calibration"]
     assert abs((pg.shape[0] - (rows.max() + 1)) / 10000 - cfg["aruco_square_above_page_m"]) < 1e-6
     assert abs((rows.max() + 1 - rows.min()) / 10000 - cfg["aruco_marker_m"]) < 1e-6
+
+
+def test_live_tilt_moves_the_geometry_pitch_to_the_marker_tilt():
+    import json
+    from sentry.perception.camera import CameraGeometry
+    from sentry.perception.camera_pose import LiveTilt
+    g = CameraGeometry(json.load(open("calib/camera.json")), {"H_cam_m": 0.10, "pitch_down_deg": 3.0, "passed": True})
+    px = view(5.0, 0.10, 1.2)
+    m = cv2.aruco.generateImageMarker(cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50), 0, 200)
+    m = cv2.copyMakeBorder(m, 20, 20, 20, 20, cv2.BORDER_CONSTANT, value=255)
+    src = np.float32([[20, 20], [219, 20], [219, 219], [20, 219]])
+    page = cv2.cvtColor(cv2.warpPerspective(m, cv2.getPerspectiveTransform(src, np.float32(px)), (640, 480), flags=cv2.INTER_LINEAR, borderValue=200), cv2.COLOR_GRAY2BGR)
+    lt = LiveTilt(g, S, BOTTOM, every=2)
+    assert lt(page) is not None and abs(math.degrees(g.pitch) - 5.0) < 0.5            # frame 1: searched, pitch follows the marker
+    p = g.pitch
+    assert lt(np.zeros_like(page)) is None and g.pitch == p                           # frame 2: skipped (every=2)
+    assert lt(np.zeros_like(page)) is None and g.pitch == p                           # frame 3: searched, no marker: the last pitch stays

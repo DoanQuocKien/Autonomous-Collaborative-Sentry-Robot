@@ -84,8 +84,8 @@ class YOLOPredictor:
 
 
 class ObstacleDetector:
-    def __init__(self, geometry: CameraGeometry, predictor: Callable, settings, thresholds):
-        self.geometry, self.predictor = geometry, predictor
+    def __init__(self, geometry: CameraGeometry, predictor: Callable, settings, thresholds, tilt=None):
+        self.geometry, self.predictor, self.tilt = geometry, predictor, tilt     # tilt: camera_pose.LiveTilt, updates geometry.pitch from ArUco pages
         self.settings, self.thresholds = dict(settings), dict(thresholds)
         if (not math.isfinite(settings["confidence"]) or not 0 <= settings["confidence"] <= 1
                 or not math.isfinite(settings["bottom_margin_px"]) or settings["bottom_margin_px"] < 1):
@@ -109,6 +109,8 @@ class ObstacleDetector:
         if not math.isfinite(t) or mode not in ("explore", "pursuit"):
             raise ValueError("finite timestamp and explore/pursuit mode required")
         image = self.geometry.undistort(frame_bgr)
+        if self.tilt is not None:
+            self.tilt(image)
         w, h = self.geometry.size
         observations = []
         for detection in self.predictor(image):
