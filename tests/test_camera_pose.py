@@ -116,3 +116,14 @@ def test_camera_geometry_takes_a_live_pitch():
     a = g.ground_point(285, 300).forward_m
     g.set_pitch_deg(6.0)
     assert g.ground_point(285, 300).forward_m < a
+
+
+def test_marker_height_on_the_printed_page_matches_config():
+    """A marker page standing on the floor: the square's lower edge height follows from the A4 layout (tools/make_markers.py), no tape measure needed."""
+    from sentry.config import load
+    from tools.make_markers import marker_pages
+    pg = marker_pages([0], size_mm=150)[0]
+    rows = np.where((pg[:1800] < 128).sum(axis=1) > 400)[0]                      # the square only, not the footer text
+    cfg = load()["calibration"]
+    assert abs((pg.shape[0] - (rows.max() + 1)) / 10000 - cfg["aruco_square_above_page_m"]) < 1e-6
+    assert abs((rows.max() + 1 - rows.min()) / 10000 - cfg["aruco_marker_m"]) < 1e-6

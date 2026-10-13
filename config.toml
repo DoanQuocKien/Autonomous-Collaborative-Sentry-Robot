@@ -59,7 +59,9 @@ evade_duration_s = 0.4
 checkerboard_inner_corners = [9, 6]   # columns, rows (10 x 7 squares)
 checkerboard_square_m = 0.025         # MEASURE the printed board and update this
 aruco_dict = "DICT_4X4_50"
-aruco_marker_m = 0.10                 # MEASURE the printed marker and update this
+aruco_marker_m = 0.15                 # the 150 mm prints (assets/print/*150mm.pdf); measured 0.15 on 2026-10-14
+aruco_square_above_page_m = 0.132     # black square lower edge above the A4 page bottom: fixed by tools/make_markers.py (tests/test_camera_pose.py checks it)
+aruco_page_bottom_h_m = 0.0           # pages stand on the floor against the wall; raise if a page is mounted higher (square lower edge = this + the line above)
 
 [entrance]                      # perception/entrance.py: XFeat (+ DINOv2); defaults from the D1 bake-off 2026-10-12, one entrance door per room
 policy = "auto"                  # auto (XFeat with a robot-eye reference, else DINOv2) | xfeat | dino | and | or
