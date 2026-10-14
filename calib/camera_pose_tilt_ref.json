@@ -1,0 +1,59 @@
+{
+  "tag": "tilt_ref",
+  "H_cam_m": 0.097,
+  "H_tape_m": 0.1,
+  "pitch_down_deg": 5.03,
+  "rms_m": 0.0152,
+  "marks_m": [
+    0.5,
+    1.0,
+    1.5
+  ],
+  "clicks_px": [
+    [
+      249,
+      269
+    ],
+    [
+      278,
+      269
+    ],
+    [
+      268,
+      243
+    ],
+    [
+      299,
+      242
+    ],
+    [
+      259,
+      233
+    ],
+    [
+      285,
+      232
+    ]
+  ],
+  "rows_px": [
+    269.0,
+    242.4,
+    232.0
+  ],
+  "camera_roll_deg": 1.1,
+  "strip_slopes_deg": [
+    0.0,
+    -1.85,
+    -2.2
+  ],
+  "residuals_m": [
+    0.0183,
+    -0.0181,
+    0.0055
+  ],
+  "passed": true,
+  "problems": [],
+  "strip_roll_deg_unused": -1.85,
+  "roll_source": "marker roll, median of 688 centred frames from 4 drive runs (PnP roll +1.05..+1.12, vertical marker edges +1.08..+1.17 deg), 2026-10-14; the tape-strip slope value (-1.85) was click noise. ground_point must use the roll the pitch was estimated with.",
+  "session": "2026-10-14 classroom, mount locked"
+}
