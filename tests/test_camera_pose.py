@@ -95,3 +95,73 @@ def test_fisheye_round_trip_recovers_the_tilt():
         for _ in range(15):
             f.update(pose_from_corners(px + rng.normal(0, 0.3, (4, 2)), Kf, S, BOTTOM, camera_h_m=0.10))
         assert abs(f.pitch_deg - pitch) < 1.2
+
+
+def test_off_axis_marker_uses_the_filters_roll_not_its_own():
+    f = TiltFilter(default_pitch_deg=5.0)
+    f.update(pose_from_corners(view(5.0, 0.10, 1.2, roll_deg=1.0), K, S, BOTTOM, 0.10))        # centred marker: trusted roll
+    assert abs(f.roll_deg - 1.0) < 0.05 and len(f.roll_hist) == 1
+    far = pose_from_corners(view(5.0, 0.10, 1.2, offset=0.5, roll_deg=1.0), K, S, BOTTOM, 0.10)
+    assert abs(far["bearing_rad"]) > f.centred
+    f.update(far)
+    assert len(f.roll_hist) == 1 and abs(f.roll_deg - 1.0) < 0.05             # off-axis roll not folded in
+    g = TiltFilter()
+    assert g.update(far) and not g.roll_hist                                     # no trusted roll yet: the marker's own roll is used, but not kept
+
+
+def test_camera_geometry_takes_a_live_pitch():
+    from sentry.perception.camera import CameraGeometry
+    import json
+    g = CameraGeometry(json.load(open("calib/camera.json")), {"H_cam_m": 0.1, "pitch_down_deg": 5.0, "passed": True})
+    a = g.ground_point(285, 300).forward_m
+    g.set_pitch_deg(6.0)
+    assert g.ground_point(285, 300).forward_m < a
+
+
+def test_marker_height_on_the_printed_page_matches_config():
+    """A marker page standing on the floor: the square's lower edge height follows from the A4 layout (tools/make_markers.py), no tape measure needed."""
+    from sentry.config import load
+    from tools.make_markers import marker_pages
+    pg = marker_pages([0], size_mm=150)[0]
+    rows = np.where((pg[:1800] < 128).sum(axis=1) > 400)[0]                      # the square only, not the footer text
+    cfg = load()["calibration"]
+    assert abs((pg.shape[0] - (rows.max() + 1)) / 10000 - cfg["aruco_square_above_page_m"]) < 1e-6
+    assert abs((rows.max() + 1 - rows.min()) / 10000 - cfg["aruco_marker_m"]) < 1e-6
+
+
+def test_live_tilt_moves_the_geometry_pitch_to_the_marker_tilt():
+    import json
+    from sentry.perception.camera import CameraGeometry
+    from sentry.perception.camera_pose import LiveTilt
+    g = CameraGeometry(json.load(open("calib/camera.json")), {"H_cam_m": 0.10, "pitch_down_deg": 3.0, "passed": True})
+    px = view(5.0, 0.10, 1.2)
+    m = cv2.aruco.generateImageMarker(cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50), 0, 200)
+    m = cv2.copyMakeBorder(m, 20, 20, 20, 20, cv2.BORDER_CONSTANT, value=255)
+    src = np.float32([[20, 20], [219, 20], [219, 219], [20, 219]])
+    page = cv2.cvtColor(cv2.warpPerspective(m, cv2.getPerspectiveTransform(src, np.float32(px)), (640, 480), flags=cv2.INTER_LINEAR, borderValue=200), cv2.COLOR_GRAY2BGR)
+    lt = LiveTilt(g, S, BOTTOM, every=2)
+    assert lt(page) is not None and abs(math.degrees(g.pitch) - 5.0) < 0.5            # frame 1: searched, pitch follows the marker
+    p = g.pitch
+    assert lt(np.zeros_like(page)) is None and g.pitch == p                           # frame 2: skipped (every=2)
+    assert lt(np.zeros_like(page)) is None and g.pitch == p                           # frame 3: searched, no marker: the last pitch stays
+
+
+def test_live_tilt_from_the_raw_fisheye_frame_follows_the_marker_far_off_axis():
+    import json
+    from sentry.perception.camera import CameraGeometry
+    from sentry.perception.camera_pose import LiveTilt
+    g = CameraGeometry(json.load(open("calib/camera.json")), {"H_cam_m": 0.10, "pitch_down_deg": 3.0, "passed": True})
+    def distort(p):                                                                # rectified pixels -> raw fisheye pixels, via the rays
+        p = np.asarray(p, np.float64).reshape(-1, 2)
+        rays = np.c_[(p[:, 0] - g.K[0, 2]) / g.K[0, 0], (p[:, 1] - g.K[1, 2]) / g.K[1, 1], np.ones(len(p))].reshape(-1, 1, 3)
+        return cv2.fisheye.projectPoints(rays, np.zeros(3), np.zeros(3), g.K, g.D)[0].reshape(-1, 2)
+    probe = [[100, 100], [400, 300], [30, 240]]
+    assert np.abs(g.undistort_points(distort(probe)) - probe).max() < 0.05          # distort then undistort round trip
+    px = view(5.0, 0.10, 1.2, yaw_deg=20, offset=0.7)                              # the marker about 28 deg off the optical axis
+    raw_px = distort(px)
+    m = cv2.aruco.generateImageMarker(cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50), 0, 200)
+    m = cv2.copyMakeBorder(m, 20, 20, 20, 20, cv2.BORDER_CONSTANT, value=255)
+    src = np.float32([[20, 20], [219, 20], [219, 219], [20, 219]])
+    page = cv2.cvtColor(cv2.warpPerspective(m, cv2.getPerspectiveTransform(src, np.float32(raw_px)), (640, 480), flags=cv2.INTER_LINEAR, borderValue=200), cv2.COLOR_GRAY2BGR)
+    lt = LiveTilt(g, S, BOTTOM, every=1)
+    assert lt.raw(page) is not None and abs(math.degrees(g.pitch) - 5.0) < 1.5
