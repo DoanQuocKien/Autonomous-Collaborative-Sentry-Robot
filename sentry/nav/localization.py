@@ -16,6 +16,8 @@ from typing import Any, Dict, List, Optional, Tuple
 import cv2
 import numpy as np
 
+from common.mixing import deadzone, mix
+
 
 def wrap_angle(rad: float) -> float:
     """Wraps an angle in radians to [-pi, pi)."""
@@ -126,15 +128,19 @@ class LocalizationTracker:
         self,
         motion_calib: dict[str, Any] | str | Path | None = "calib/motion.json",
         camera_calib: dict[str, Any] | str | Path | None = "calib/camera.json",
-        aruco_dict_name: str = "DICT_4X4_50",
-        marker_size_m: float = 0.10,
+        aruco_dict_name: str | None = None,
+        marker_size_m: float | None = None,
         initial_pose: RobotPose | None = None,
+        config_path: str | Path | None = "config.toml",
+        max_marker_distance_m: float = 1.5,
     ) -> None:
         # Motion gains default to baseline values
         self.v_gain: float = 0.4135188866799205
         self.w_gain: float = 6.480182866315579
         self.drift_rad_per_m: float = -0.18594104308390022
         self.apply_drift_compensation: bool = True
+        self.min_pwm: float = 0.12 if motion_calib is not None else 0.0
+        self.max_speed: float = 0.3 if motion_calib is not None else 1.0
 
         if motion_calib is not None:
             self._load_motion_calib(motion_calib)
@@ -151,9 +157,27 @@ class LocalizationTracker:
         if camera_calib is not None:
             self._load_camera_calib(camera_calib)
 
+        # Load config tunables if available
+        config_marker_m = 0.15
+        config_dict = "DICT_4X4_50"
+        if config_path is not None:
+            cp = Path(config_path)
+            if cp.is_file():
+                try:
+                    import tomllib
+                    with open(cp, "rb") as f:
+                        cfg = tomllib.load(f)
+                    calib_cfg = cfg.get("calibration", {})
+                    config_marker_m = float(calib_cfg.get("aruco_marker_m", config_marker_m))
+                    config_dict = str(calib_cfg.get("aruco_dict", config_dict))
+                except Exception:
+                    pass
+
         # ArUco detector setup
-        self.marker_size_m = marker_size_m
-        dict_id = getattr(cv2.aruco, aruco_dict_name, cv2.aruco.DICT_4X4_50)
+        self.marker_size_m = float(marker_size_m if marker_size_m is not None else config_marker_m)
+        self.max_marker_distance_m = float(max_marker_distance_m)
+        dict_name = aruco_dict_name if aruco_dict_name is not None else config_dict
+        dict_id = getattr(cv2.aruco, dict_name, cv2.aruco.DICT_4X4_50)
         self.dictionary = cv2.aruco.getPredefinedDictionary(dict_id)
         if hasattr(cv2.aruco, "ArucoDetector"):
             params = cv2.aruco.DetectorParameters()
@@ -183,6 +207,10 @@ class LocalizationTracker:
                 self.w_gain = float(data["w_gain_rad_per_s"])
             if "drift_rad_per_m" in data:
                 self.drift_rad_per_m = float(data["drift_rad_per_m"])
+            if "min_pwm" in data:
+                self.min_pwm = float(data["min_pwm"])
+            if "max_speed" in data:
+                self.max_speed = float(data["max_speed"])
 
     def _load_camera_calib(self, calib_source: dict[str, Any] | str | Path) -> None:
         data: dict[str, Any] | None = None
@@ -236,6 +264,12 @@ class LocalizationTracker:
         v = float(np.clip(v, -1.0, 1.0))
         w = float(np.clip(w, -1.0, 1.0))
 
+        # Dead zone per WHEEL on the final value, exactly as the robot does (common/mixing.py: mix -> speed cap -> deadzone).
+        # Applying it to v and w separately would drop steering while driving: v 0.6, w 0.065 really turns the robot.
+        if self.min_pwm > 0.0:
+            left, right = (deadzone(x * self.max_speed, self.min_pwm) / self.max_speed for x in mix(v, w))
+            v, w = (left + right) / 2.0, (right - left) / 2.0
+
         v_mps = self.v_gain * v
         w_radps = self.w_gain * w
         delta_s = v_mps * dt
@@ -286,11 +320,11 @@ class LocalizationTracker:
             [s, s, 0.0],
             [s, -s, 0.0],
             [-s, -s, 0.0],
-        ], dtype=np.float32)
+        ], dtype=np.float64)
 
         detections: List[MarkerDetection] = []
         for i, mid in enumerate(ids.ravel()):
-            corner_pts = corners[i].reshape(4, 2).astype(np.float32)
+            corner_pts = corners[i].reshape(4, 2).astype(np.float64)
 
             if self.is_fisheye:
                 pts_undist = cv2.fisheye.undistortPoints(
@@ -300,28 +334,70 @@ class LocalizationTracker:
                     R=np.eye(3),
                     P=self.K,
                 ).reshape(-1, 2)
-                success, rvec, tvec = cv2.solvePnP(
-                    obj_pts, pts_undist, self.K, None, flags=cv2.SOLVEPNP_IPPE_SQUARE
-                )
+                img_pts = pts_undist
+                dist_coeffs = None
             else:
-                success, rvec, tvec = cv2.solvePnP(
-                    obj_pts, corner_pts, self.K, self.D, flags=cv2.SOLVEPNP_IPPE_SQUARE
-                )
+                img_pts = corner_pts
+                dist_coeffs = self.D
 
-            if not success:
+            res = cv2.solvePnPGeneric(
+                obj_pts,
+                img_pts,
+                self.K,
+                dist_coeffs,
+                flags=cv2.SOLVEPNP_IPPE_SQUARE,
+            )
+            n_sol = res[0]
+            rvecs = res[1] if n_sol else ()
+            tvecs = res[2] if n_sol else ()
+            errs = res[3] if len(res) > 3 and n_sol else ()
+
+            cands = []
+            for j in range(len(rvecs)):
+                rv = rvecs[j]
+                tv = tvecs[j]
+                err = float(np.asarray(errs[j]).ravel()[0]) if len(errs) > j else 0.0
+                if np.isfinite(err) and np.all(np.isfinite(rv)) and np.all(np.isfinite(tv)):
+                    cands.append((err, rv, tv))
+
+            # OpenCV 5.0's IPPE can return NaN on exact noise-free views: fall back to iterative solver
+            if not cands:
+                ok, rv_iter, tv_iter = cv2.solvePnP(
+                    obj_pts,
+                    img_pts,
+                    self.K,
+                    dist_coeffs,
+                    flags=cv2.SOLVEPNP_ITERATIVE,
+                )
+                if ok and np.all(np.isfinite(rv_iter)) and np.all(np.isfinite(tv_iter)):
+                    cands = [(0.0, rv_iter, tv_iter)]
+
+            best = None
+            for err, rv, tv in cands:
+                R, _ = cv2.Rodrigues(rv)
+                tv_flat = tv.reshape(3)
+                P_cam = -R.T @ tv_flat
+                # Camera must be in front of marker wall (Z > 0 in marker frame)
+                if P_cam[2] <= 0:
+                    continue
+                if best is None or err < best[0]:
+                    best = (err, rv.reshape(3, 1), tv.reshape(3, 1))
+
+            if best is None:
                 continue
 
-            dist = float(np.linalg.norm(tvec))
+            _, best_rvec, best_tvec = best
+            dist = float(np.linalg.norm(best_tvec))
             # Camera optical frame: X is right, Z is forward
             # Bearing is angle to the optical axis (positive left -> -X)
-            bearing = math.atan2(-float(tvec[0][0]), float(tvec[2][0]))
+            bearing = math.atan2(-float(best_tvec[0][0]), float(best_tvec[2][0]))
 
             detections.append(
                 MarkerDetection(
                     marker_id=int(mid),
                     corners=corner_pts,
-                    tvec=tvec,
-                    rvec=rvec,
+                    tvec=best_tvec,
+                    rvec=best_rvec,
                     distance_m=dist,
                     bearing_rad=bearing,
                 )
@@ -352,6 +428,10 @@ class LocalizationTracker:
         # Process first known anchor detected
         for det in detections:
             if det.marker_id in self.anchors:
+                # Reject markers beyond maximum reliable range (noisy beyond 1.5 m)
+                if det.distance_m > self.max_marker_distance_m:
+                    continue
+
                 anchor = self.anchors[det.marker_id]
 
                 # R_cm: rotation from marker to camera
@@ -366,8 +446,6 @@ class LocalizationTracker:
                 # Marker coordinate frame has Z normal pointing outwards.
                 # Transform camera position in marker frame to room coordinates:
                 theta_m = anchor.yaw_rad
-                # Marker normal is theta_m; X_m points sideways along the wall (theta_m - pi/2)
-                # Z_m points along normal (theta_m)
                 x_rel = float(P_cam_in_marker[0][0])
                 z_rel = float(P_cam_in_marker[2][0])
 
@@ -377,15 +455,31 @@ class LocalizationTracker:
 
                 # Camera heading:
                 # Normal of marker seen in camera frame is R_cm[:, 2].
-                # Yaw difference between camera and marker
                 yaw_cam = wrap_angle(anchor.yaw_rad + math.pi - math.atan2(R_cm[0, 2], R_cm[2, 2]))
 
-                # Filter update (alpha blend)
-                alpha = float(np.clip(alpha, 0.0, 1.0))
-                new_x = (1.0 - alpha) * self.pose.x + alpha * x_cam_world
-                new_y = (1.0 - alpha) * self.pose.y + alpha * y_cam_world
+                # Filter update (alpha blend with range falloff beyond 0.8 m)
+                base_alpha = float(np.clip(alpha, 0.0, 1.0))
+                near_range_m = 0.8
+                if det.distance_m > near_range_m:
+                    range_decay = max(
+                        0.0,
+                        (self.max_marker_distance_m - det.distance_m) / (self.max_marker_distance_m - near_range_m),
+                    )
+                else:
+                    range_decay = 1.0
+                effective_alpha = base_alpha * range_decay
+
+                if effective_alpha <= 0.0:
+                    continue
+
                 d_theta = angle_diff(yaw_cam, self.pose.theta)
-                new_theta = wrap_angle(self.pose.theta + alpha * d_theta)
+                # Outlier jump rejection: once tracking is established, reject erratic heading jumps > 25 deg
+                if self.corrections_count >= 3 and abs(d_theta) > math.radians(25.0):
+                    continue
+
+                new_x = (1.0 - effective_alpha) * self.pose.x + effective_alpha * x_cam_world
+                new_y = (1.0 - effective_alpha) * self.pose.y + effective_alpha * y_cam_world
+                new_theta = wrap_angle(self.pose.theta + effective_alpha * d_theta)
 
                 self.pose = RobotPose(x=new_x, y=new_y, theta=new_theta, t=self.pose.t)
                 self.corrections_count += 1

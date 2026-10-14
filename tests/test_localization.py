@@ -151,3 +151,88 @@ def test_aruco_pose_correction_fusion():
     assert tracker.corrections_count == 1
     # Pose should have updated towards the marker anchor observation
     assert tracker.pose.x > 0.0
+
+
+def test_marker_size_loaded_from_config():
+    """Review point 1: Marker size defaults to config.toml [calibration] aruco_marker_m (0.15 m)."""
+    tracker = LocalizationTracker()
+    assert math.isclose(tracker.marker_size_m, 0.15, abs_tol=1e-5)
+
+    # Explicit override is preserved
+    tracker_custom = LocalizationTracker(marker_size_m=0.10)
+    assert math.isclose(tracker_custom.marker_size_m, 0.10, abs_tol=1e-5)
+
+
+def test_dead_reckoning_motor_deadzone():
+    """Review point 4: Motors stop when command after speed cap is below min_pwm."""
+    tracker = LocalizationTracker(
+        motion_calib={
+            "min_pwm": 0.12,
+            "max_speed": 0.3,
+            "v_gain_m_per_s": 0.4135,
+            "w_gain_rad_per_s": 6.48,
+            "drift_rad_per_m": 0.0,
+        },
+        camera_calib=None,
+    )
+    tracker.set_pose(0.0, 0.0, 0.0)
+
+    # At speed cap 0.3, v = 0.3 -> 0.3 * 0.3 = 0.09 < min_pwm 0.12 -> zero motion
+    p = tracker.update_odometry(v=0.3, w=0.0, dt=1.0)
+    assert math.isclose(p.x, 0.0, abs_tol=1e-6)
+    assert math.isclose(p.y, 0.0, abs_tol=1e-6)
+
+    # v = 0.5 -> 0.5 * 0.3 = 0.15 >= min_pwm 0.12 -> moves forward
+    p = tracker.update_odometry(v=0.5, w=0.0, dt=1.0)
+    assert p.x > 0.0
+
+    # Angular deadzone test
+    tracker.set_pose(0.0, 0.0, 0.0)
+    p = tracker.update_odometry(v=0.0, w=0.3, dt=0.1)
+    assert math.isclose(p.theta, 0.0, abs_tol=1e-6)
+
+    p = tracker.update_odometry(v=0.0, w=0.6, dt=0.1)
+    assert p.theta > 0.0
+
+
+def test_dead_zone_is_per_wheel_so_steering_while_driving_is_kept():
+    """Review of PR #37: the robot applies the dead zone to each wheel's final value (common/mixing.py), not to v and w separately."""
+    def step(v, w):
+        tracker = LocalizationTracker(
+            motion_calib={"min_pwm": 0.12, "max_speed": 0.3, "v_gain_m_per_s": 0.4135, "w_gain_rad_per_s": 6.48, "drift_rad_per_m": 0.0},
+            camera_calib=None, config_path=None)
+        tracker.set_pose(0.0, 0.0, 0.0)
+        p = tracker.update_odometry(v=v, w=w, dt=0.1)
+        return p.x / 0.1 / 0.4135, p.theta / 0.1 / 6.48            # effective (v, w) in command units, small dt: no arc error
+
+    v, w = step(0.6, 0.065)                       # steering while driving: both wheels above the dead zone, the turn must stay
+    assert math.isclose(v, 0.6, rel_tol=0.02) and math.isclose(w, 0.065, rel_tol=0.02)
+    v, w = step(0.5, 0.15)                        # left wheel 0.35 * 0.3 = 0.105 < 0.12 stops: v 0.325, w 0.325
+    assert math.isclose(v, 0.325, rel_tol=0.03) and math.isclose(w, 0.325, rel_tol=0.03)
+    assert step(0.0, 0.3) == (0.0, 0.0)           # wheels at 0.09: stands still
+    assert step(0.3, 0.0) == (0.0, 0.0)
+    v, w = step(0.0, 0.5)                         # wheels at 0.15: spins
+    assert v == 0.0 and math.isclose(w, 0.5, rel_tol=0.02)
+
+
+def test_marker_distance_gating_and_alpha_decay():
+    """Review point 2: Reject markers beyond max_marker_distance_m (1.5 m) to suppress noise."""
+    tracker = LocalizationTracker(max_marker_distance_m=0.20)
+    tracker.add_anchor(MarkerAnchor(marker_id=3, x=1.5, y=0.0, yaw_rad=math.pi))
+
+    d = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
+    marker_img = cv2.aruco.generateImageMarker(d, 3, 100)
+    frame = np.full((480, 640, 3), 255, dtype=np.uint8)
+    y_off, x_off = (480 - 100) // 2, (640 - 100) // 2
+    frame[y_off:y_off + 100, x_off:x_off + 100] = cv2.cvtColor(marker_img, cv2.COLOR_GRAY2BGR)
+
+    # Distance of small 100px marker on 640x480 is > 0.20 m
+    dets = tracker.detect_markers(frame)
+    assert len(dets) == 1
+    assert dets[0].distance_m > 0.20
+
+    # With max_marker_distance_m = 0.20, detection should be rejected in update_with_markers
+    tracker.set_pose(0.0, 0.0, 0.0)
+    pose, _ = tracker.update_with_markers(frame, alpha=0.5)
+    assert tracker.corrections_count == 0
+    assert math.isclose(pose.x, 0.0, abs_tol=1e-6)
