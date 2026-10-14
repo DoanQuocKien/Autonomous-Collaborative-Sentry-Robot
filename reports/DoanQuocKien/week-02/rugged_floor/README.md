@@ -15,7 +15,7 @@ Average speed per wheel second = net marker range change / wheel seconds from th
 | 0.6 | marker-steered, gain 2.5 | 0.782 m | 4.00 s | 0.195 m/s | 0.218 |
 | 0.7 | open loop | 0.87 m | 3.98 s | 0.219 m/s | 0.266 |
 | 0.85 | open loop, **hit a bean bag** | 0.92 m | 4.04 s | (0.228, cut short, not used) | 0.338 |
-(`rugged_v0.7_disturbed.csv`: the robot was moved before the recording ended; not used.) Rugged / glossy about **0.75-0.9, typically 0.8**. The averages include roughly 5 % of start-up lag (about 0.2 s).
+(`rugged_v0.7_disturbed.csv`: the robot was moved before the recording ended; not used.) Rugged / glossy about **0.75-0.9, typically 0.8, for the 4 s average from rest**. **Caveat added 2026-10-15:** replaying the same runs through `sentry/nav/motion_estimator.py` (PR #40), the *steady* speed on the rugged floor comes out at 0.9-1.08x the glossy line (v 0.5: 0.154 m/s; the two marker-steered v = 0.6 runs: 0.233 and 0.236 m/s against 0.218). So the lower averages are probably a start-up lag of 0.5-1 s (static friction), not a lower steady speed. Not shown yet: the duration test (v = 0.7 for 2 s and 6 s) is in the 2026-10-15 session plan.
 The glossy-floor line comes from marker-range fits of the classroom drive runs (steady speed 0.122 / 0.212 / 0.260 m/s at v 0.4 / 0.6 / 0.7, battery 10.97-11.3 V) plus the cafe v = 1.0 gain 0.4135 m/s: all four points lie on speed = 0.48 x (v - 0.146); the proportional model `v_gain * v` over-predicts by 35 % at v 0.4, 16 % at 0.6, 9 % at 0.7.
 
 ## Heading: open question
