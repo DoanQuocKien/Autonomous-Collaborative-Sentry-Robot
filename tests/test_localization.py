@@ -195,6 +195,26 @@ def test_dead_reckoning_motor_deadzone():
     assert p.theta > 0.0
 
 
+def test_dead_zone_is_per_wheel_so_steering_while_driving_is_kept():
+    """Review of PR #37: the robot applies the dead zone to each wheel's final value (common/mixing.py), not to v and w separately."""
+    def step(v, w):
+        tracker = LocalizationTracker(
+            motion_calib={"min_pwm": 0.12, "max_speed": 0.3, "v_gain_m_per_s": 0.4135, "w_gain_rad_per_s": 6.48, "drift_rad_per_m": 0.0},
+            camera_calib=None, config_path=None)
+        tracker.set_pose(0.0, 0.0, 0.0)
+        p = tracker.update_odometry(v=v, w=w, dt=0.1)
+        return p.x / 0.1 / 0.4135, p.theta / 0.1 / 6.48            # effective (v, w) in command units, small dt: no arc error
+
+    v, w = step(0.6, 0.065)                       # steering while driving: both wheels above the dead zone, the turn must stay
+    assert math.isclose(v, 0.6, rel_tol=0.02) and math.isclose(w, 0.065, rel_tol=0.02)
+    v, w = step(0.5, 0.15)                        # left wheel 0.35 * 0.3 = 0.105 < 0.12 stops: v 0.325, w 0.325
+    assert math.isclose(v, 0.325, rel_tol=0.03) and math.isclose(w, 0.325, rel_tol=0.03)
+    assert step(0.0, 0.3) == (0.0, 0.0)           # wheels at 0.09: stands still
+    assert step(0.3, 0.0) == (0.0, 0.0)
+    v, w = step(0.0, 0.5)                         # wheels at 0.15: spins
+    assert v == 0.0 and math.isclose(w, 0.5, rel_tol=0.02)
+
+
 def test_marker_distance_gating_and_alpha_decay():
     """Review point 2: Reject markers beyond max_marker_distance_m (1.5 m) to suppress noise."""
     tracker = LocalizationTracker(max_marker_distance_m=0.20)

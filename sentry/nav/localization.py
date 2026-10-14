@@ -16,6 +16,8 @@ from typing import Any, Dict, List, Optional, Tuple
 import cv2
 import numpy as np
 
+from common.mixing import deadzone, mix
+
 
 def wrap_angle(rad: float) -> float:
     """Wraps an angle in radians to [-pi, pi)."""
@@ -262,12 +264,11 @@ class LocalizationTracker:
         v = float(np.clip(v, -1.0, 1.0))
         w = float(np.clip(w, -1.0, 1.0))
 
-        # Dead-zone check: motors do not move if command magnitude after speed cap is below min_pwm
+        # Dead zone per WHEEL on the final value, exactly as the robot does (common/mixing.py: mix -> speed cap -> deadzone).
+        # Applying it to v and w separately would drop steering while driving: v 0.6, w 0.065 really turns the robot.
         if self.min_pwm > 0.0:
-            if abs(v) * self.max_speed < self.min_pwm:
-                v = 0.0
-            if abs(w) * self.max_speed < self.min_pwm:
-                w = 0.0
+            left, right = (deadzone(x * self.max_speed, self.min_pwm) / self.max_speed for x in mix(v, w))
+            v, w = (left + right) / 2.0, (right - left) / 2.0
 
         v_mps = self.v_gain * v
         w_radps = self.w_gain * w
