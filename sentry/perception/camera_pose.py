@@ -31,10 +31,11 @@ def pitch_from_position(t_cam, marker_center_h_m, camera_h_m):
     return math.degrees(math.asin(max(-1.0, min(1.0, -(y / r) / math.hypot(a, b)))) - math.atan2(b, a))
 
 
-def pose_from_corners(corners_px, K, marker_m, marker_bottom_h_m, camera_h_m=None):
+def pose_from_corners(corners_px, K, marker_m, marker_bottom_h_m, camera_h_m=None, roll_deg=None):
     """corners_px: 4x2 pixel corners in ArUco order (top-left, top-right, bottom-right, bottom-left) of an undistorted image.
     -> dict(pitch_deg, roll_deg, height_m, distance_m, reproj_px, pitch_ori_deg) or None. `pitch_deg` comes from the marker's POSITION when the camera height
-    `camera_h_m` is given (accurate to a fraction of a degree up to ~2.5 m), else from its orientation (`pitch_ori_deg`, noisy: 3-10 deg at 1.5-2 m)."""
+    `camera_h_m` is given (accurate to a fraction of a degree up to ~2.5 m), else from its orientation (`pitch_ori_deg`, noisy: 3-10 deg at 1.5-2 m).
+    `roll_deg` overrides the roll that is undone before the position is used: the marker's own roll is poor off-axis (0.5 deg of tilt per deg of roll at 28 deg bearing)."""
     s = marker_m / 2.0
     obj = np.array([[-s, s, 0], [s, s, 0], [s, -s, 0], [-s, -s, 0]], np.float64)
     img = np.asarray(corners_px, np.float64).reshape(4, 2)
@@ -60,10 +61,11 @@ def pose_from_corners(corners_px, K, marker_m, marker_bottom_h_m, camera_h_m=Non
     if camera_h_m is None:
         pitch = pitch_ori
     else:                                                                            # undo the camera roll (measured from the orientation) before using the position
-        c, sn = math.cos(math.radians(ROLL_SIGN * roll)), math.sin(math.radians(ROLL_SIGN * roll))
+        r_use = roll if roll_deg is None else roll_deg
+        c, sn = math.cos(math.radians(ROLL_SIGN * r_use)), math.sin(math.radians(ROLL_SIGN * r_use))
         pitch = pitch_from_position((t[0] * c - t[1] * sn, t[0] * sn + t[1] * c, t[2]), marker_bottom_h_m + s, camera_h_m)
     return {"pitch_deg": pitch, "pitch_ori_deg": pitch_ori,
-            "roll_deg": roll,
+            "roll_deg": roll, "bearing_rad": math.atan2(float(t[0]), float(t[2])),
             "height_m": marker_bottom_h_m + s + float(C[1]),
             "distance_m": float(C[2]),
             "reproj_px": err}
@@ -71,7 +73,9 @@ def pose_from_corners(corners_px, K, marker_m, marker_bottom_h_m, camera_h_m=Non
 
 def detect_corners(gray_or_bgr):
     """-> list of (marker_id, 4x2 corners) found in the image."""
-    det = cv2.aruco.ArucoDetector(cv2.aruco.getPredefinedDictionary(DICT), cv2.aruco.DetectorParameters())
+    prm = cv2.aruco.DetectorParameters()
+    prm.cornerRefinementMethod = cv2.aruco.CORNER_REFINE_SUBPIX          # default is whole pixels: 1 px = 0.19 deg of tilt
+    det = cv2.aruco.ArucoDetector(cv2.aruco.getPredefinedDictionary(DICT), prm)
     corners, ids, _ = det.detectMarkers(gray_or_bgr)
     return [] if ids is None else [(int(i), c.reshape(4, 2)) for i, c in zip(ids.ravel(), corners)]
 
@@ -80,10 +84,11 @@ class TiltFilter:
     """Median of the last `n` marker estimates; a jump of more than `max_jump_deg` from the current median is rejected as an outlier
     (after `min_samples` accepted ones). Without a marker the last value is kept: `pitch_deg` starts at `default_pitch_deg` (the session's calib value)."""
 
-    def __init__(self, default_pitch_deg=0.0, n=15, max_jump_deg=5.0, min_samples=5, max_reproj_px=2.0, max_distance_m=2.5):
+    def __init__(self, default_pitch_deg=0.0, n=15, max_jump_deg=5.0, min_samples=5, max_reproj_px=2.0, max_distance_m=2.5, centred_rad=0.10):
         self.pitch_deg, self.roll_deg, self.height_m = default_pitch_deg, 0.0, None
         self.hist, self.max_jump, self.min_samples = deque(maxlen=n), max_jump_deg, min_samples
-        self.max_reproj, self.max_distance = max_reproj_px, max_distance_m
+        self.max_reproj, self.max_distance, self.centred = max_reproj_px, max_distance_m, centred_rad
+        self.roll_hist = deque(maxlen=n)          # roll only from markers near the optical axis
         self.rejected = 0
 
     def update(self, est):
@@ -95,14 +100,54 @@ class TiltFilter:
             return False
         self.hist.append(est)
         self.pitch_deg = float(np.median([h["pitch_deg"] for h in self.hist]))
-        self.roll_deg = float(np.median([h["roll_deg"] for h in self.hist]))
+        if abs(est["bearing_rad"]) < self.centred:
+            self.roll_hist.append(est["roll_deg"])
+            self.roll_deg = float(np.median(self.roll_hist))
         self.height_m = float(np.median([h["height_m"] for h in self.hist]))
         return True
 
     def update_frame(self, undistorted_bgr, K, marker_m, marker_bottom_h_m, marker_id=None, camera_h_m=None):
         found = [c for i, c in detect_corners(undistorted_bgr) if marker_id is None or i == marker_id]
-        if not found:
-            return None
-        est = pose_from_corners(found[0], K, marker_m, marker_bottom_h_m, camera_h_m)
+        return self.update_corners(found[0], K, marker_m, marker_bottom_h_m, camera_h_m) if found else None
+
+    def update_corners(self, corners_px, K, marker_m, marker_bottom_h_m, camera_h_m=None):
+        est = pose_from_corners(corners_px, K, marker_m, marker_bottom_h_m, camera_h_m)
+        if est and camera_h_m is not None and abs(est["bearing_rad"]) >= self.centred:          # roll_deg is 0 until a centred marker gives a trusted one
+            est = pose_from_corners(corners_px, K, marker_m, marker_bottom_h_m, camera_h_m, roll_deg=self.roll_deg)   # off-axis: trust the camera's roll, not the marker's
         self.update(est)
+        return est
+
+
+class LiveTilt:
+    """Keeps a CameraGeometry's pitch current from the ArUco pages in view (the floor tilts the chassis by up to ~1.7 deg between spots, measured 2026-10-14).
+    Call it with each UNDISTORTED frame (ObstacleDetector does, after geometry.undistort); every `every`-th frame is searched for a marker, an accepted estimate
+    sets geometry.pitch. Without a marker the last pitch stays. All pages share one layout, so one lower-edge height serves every id (config.toml [calibration])."""
+
+    def __init__(self, geometry, marker_m, square_bottom_h_m, every=3, n=3, **filter_kw):          # n=3 (median of 3 frames): 15 lagged ~1 s behind a robot at 0.3 m/s. Replays of two recorded runs, 2026-10-14: moving error window15 / 5 / 3 = 0.061 / 0.036 / 0.037 m (v=0.7), 0.310 / 0.194 / 0.126 m (v=0.4)
+        self.geometry, self.marker_m, self.bottom_h, self.every, self.n = geometry, marker_m, square_bottom_h_m, max(1, every), 0
+        self.filter = TiltFilter(default_pitch_deg=math.degrees(geometry.pitch), n=n, min_samples=min(5, n), **filter_kw)
+
+    @classmethod
+    def from_config(cls, geometry, calibration, **kw):
+        return cls(geometry, calibration["aruco_marker_m"], calibration["aruco_page_bottom_h_m"] + calibration["aruco_square_above_page_m"], **kw)
+
+    def __call__(self, undistorted_bgr):
+        """-> the accepted estimate dict, or None."""
+        return self._step(lambda: self.filter.update_frame(undistorted_bgr, self.geometry.K, self.marker_m, self.bottom_h, None, self.geometry.height_m))
+
+    def raw(self, frame_bgr):
+        """Same, from the RAW fisheye frame: the marker is detected there and only its 4 corners are undistorted. Finds markers far off-axis that the remapped image loses."""
+        def go():
+            found = detect_corners(frame_bgr)
+            return self.filter.update_corners(self.geometry.undistort_points(found[0][1]), self.geometry.K, self.marker_m, self.bottom_h, self.geometry.height_m) if found else None
+        return self._step(go)
+
+    def _step(self, estimate):
+        self.n += 1
+        if (self.n - 1) % self.every:
+            return None
+        est = estimate()
+        if est is None or not self.filter.hist or self.filter.hist[-1] is not est:
+            return None
+        self.geometry.set_pitch_deg(self.filter.pitch_deg)
         return est
