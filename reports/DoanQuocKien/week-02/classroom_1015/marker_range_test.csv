@@ -5,5 +5,5 @@ tape_m,board_yaw_deg,frames,found,rate,median_range_m,range_error_m,side_px,bear
 1.5,0.0,53,53,1.000,1.518,0.018,29.7,-32.9,"MISLABELLED as board yaw: the robot was rotated, the board stayed frontal (side 30 px): marker -32.9 deg off the camera axis"
 1.5,0.0,24,24,1.000,1.522,0.022,29.7,-58.5,"MISLABELLED as board yaw: the robot was rotated, the board stayed frontal (side 30 px): marker -58.5 deg off the camera axis"
 1.5,0.0,20,20,1.000,1.534,0.034,29.7,-58.9,"MISLABELLED as board yaw: the robot was rotated, the board stayed frontal (side 30 px): marker -58.9 deg off the camera axis"
-1.5,45.0,54,54,1.000,1.570,0.070,27.2,-58.6,"board turned 45 deg about its vertical axis, robot straight in front"
+1.5,45.0,54,54,1.000,1.570,0.070,27.2,-58.6,"WORST CASE: board turned 45 deg AND the robot rotated, marker 59 deg off the camera axis (the interrupted run)"
 1.5,45.0,57,57,1.000,1.478,-0.022,27.8,-0.1,"board turned 45 deg about its vertical axis, robot straight in front"

@@ -39,6 +39,7 @@ Model vs measured steady speeds (v 0.4 / 0.5 / 0.6 / 0.7 / 0.85 / 1.0): 0.135 / 
 | 1.5 m, marker 33 deg off the camera axis (robot turned) | 53 / 53 (100 %) | +1.2 % | 30 px |
 | 1.5 m, marker 59 deg off the axis (two runs) | 24 / 24 and 20 / 20 (100 %) | +1.5 %, +2.3 % | 30 px |
 | 1.5 m, board turned 45 deg (oblique), robot straight | 57 / 57 (100 %) | -1.4 % | 28 px |
+| 1.5 m, board turned 45 deg AND the marker 59 deg off the axis (worst case) | 54 / 54 (100 %) | +4.7 % | 27 px |
 The marker is **detected in every frame** out to 3 m, at 59 deg off the camera axis (the edge of the fisheye view) and on a board seen at 45 deg; the **range is good to about 2 % out to 2 m** and 8.5 % short at 3 m (15 px: the corners are too small for the pose; the apparent size gives about 3.1 m). So an anchor is usable for correction within about 2 m (KR's gate: 1.5 m, fading from 0.8 m), and visible out to 3 m. Two rows of this test were first labelled as board yaw: the robot was rotated, not the board (apparent side unchanged), now corrected in the CSV.
 
 ## Camera pose
