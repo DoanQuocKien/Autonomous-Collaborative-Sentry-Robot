@@ -30,3 +30,10 @@ Marker board (ArUco `DICT_4X4_50` id 0, black square 0.150 m, page standing on t
 
 ## After the session
 Fit and profile (`calibrate_motion fit --csv ...` with the affine speed model), the per-floor numbers into `reports/DoanQuocKien/week-02.md` and the hours; copy `data/speed_runs/` next to the log.
+
+## Demo-room check (before the presentation, about 20 minutes; added 2026-10-15)
+The demo room has a different floor and texture, so one room's data does not show that the method transfers. The same steps there are the generalisation evidence (a pure test, no tuning):
+1. `python -m tools.preflight --marker-m 0.15 --bottom-h 0.132` (battery 11.8 V or more; the live tilt must agree with the stored pose within 1.5 deg, else three strips).
+2. Marker pages up (rigid vertical surface, ids 0-5, 0.05-0.25 m high); start check: `python -m tools.speed_trial 0.7 4 --label demo_room` once and one turn `python -m tools.turn_trial 0.5 0.4 --label demo_room`; compare with `sentry/nav/wheel_model.py` (speed within 15 %, turn rate within 15 %) and note the heading at rest.
+3. Three empty-floor clips and one obstacle set (chairs, tape truth, one session pose) with `python -m tools.record_clip`; run the obstacle pipeline untouched and report distance error, `reflection_unresolved` count, false alarms on the empty clips.
+4. Report the numbers as they are (glossy or matte, which floor), next to the tile results of 2026-10-15.
