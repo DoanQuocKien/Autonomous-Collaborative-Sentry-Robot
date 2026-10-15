@@ -57,3 +57,17 @@ def test_heading_track_follows_a_turn_through_several_markers_without_drift():
     assert abs(out[-1][1] - 200.0) < 3.0 and max(abs(h - 200.0 * k / 59) for k, (_, h, _) in enumerate(out)) < 3.0
     gap = [(0.0, {0: 10.0}), (0.1, {}), (0.2, {7: 5.0})]                     # all known markers gone, then only an unknown one: no heading is invented
     assert [h for _, h, _ in heading_track(gap)][1:] == [None, None]
+
+
+def test_a_mapping_pass_makes_a_fast_spin_measurable_from_the_rest_frames_alone():
+    from tools.turn_trial import heading_track
+    dirs = {i: 60.0 * i for i in range(6)}                                   # 6 markers, 60 deg apart around the robot
+    def seen(theta):
+        return {i: ((d - theta + 180.0) % 360.0) - 180.0 for i, d in dirs.items() if abs(((d - theta + 180.0) % 360.0) - 180.0) < 45}
+    slow = [(k / 17.0, seen(370.0 * k / 399)) for k in range(400)]           # a slow hand-turned circle (370 deg)
+    track, phi = heading_track(slow, return_map=True)
+    assert len(phi) == 6
+    spin = [(0.0, seen(10.0)), (0.1, seen(10.0)), (0.2, seen(10.0)), (3.0, seen(200.0)), (3.1, seen(200.0)), (3.2, seen(200.0))]   # fast spin of 190 deg: no frames in between
+    out = heading_track(spin, phi0=phi)
+    pre, post = out[0][1], out[-1][1]
+    assert abs(((post - pre) % 360.0) - 190.0) < 3.0 and abs(((pre - post) % 360.0) - 170.0) < 3.0
