@@ -38,7 +38,9 @@ Each member adds 3+ papers from their area in Week 3. Candidates below are the m
 | 7 | Zhang et al., "ByteTrack", ECCV 2022 | Tracking | 5 | HNHL |
 | 8 | Ultralytics YOLOv8 (software, cite the repository) | Detection, pose | 5 | HNHL |
 | 9 | Galceran and Carreras, "A survey on coverage path planning for robotics", RAS 2013 | Search (expected) | 8 | KR |
-| 10+ | ... | | | |
+| 10 | Potje, Cadar, Araujo, Martins and Nascimento, "XFeat: Accelerated Features for Lightweight Image Matching", CVPR 2024, arXiv:2404.19174 (reference verified against arXiv on 2026-10-15; **read in full on 2026-10-15**: sparse XFeat 27.1 FPS on an i5-1135G7 CPU at VGA, MegaDepth-1500 AUC@5/10/20 42.6/56.4/67.7 against ORB 17.9/27.6/39.0; the paper does not test in-plane rotation, fisheye images or repeated doors, so our inlier threshold stays empirical; code vendored in `third_party/xfeat/`, Apache-2.0) | Entrance matching (primary method after the bake-off, `sentry/perception/entrance.py`) | 5 | DQK |
+| 11 | Oquab et al., "DINOv2: Learning Robust Visual Features without Supervision", TMLR 2024, arXiv:2304.07193 (reference verified against the paper text on 2026-10-15; torch hub, pinned commit) | Entrance matching with a phone reference (`sentry/perception/entrance.py`); cosine similarity of cls + GeM descriptors is our choice, the paper does not specify pooling for retrieval | 5 | DQK |
+| 12+ | ... | | | |
 
 ## 3. Figures and charts
 
