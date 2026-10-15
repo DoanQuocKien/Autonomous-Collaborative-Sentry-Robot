@@ -22,5 +22,40 @@
     "forward_m_std": 0.08975522268926746
   },
   "passed": true,
-  "problems": []
+  "problems": [],
+  "wheel_model": {
+    "k_m_per_s_per_motor": 1.64,
+    "motor_offset": 0.038,
+    "track_m": 0.137,
+    "max_speed": 0.3,
+    "min_pwm": 0.12,
+    "law": "wheel speed = k * (|motor| - motor_offset); motor = mix(v, w) * max_speed after the per-wheel dead zone; v = (vL + vR) / 2, omega = (vR - vL) / track",
+    "code": "sentry/nav/wheel_model.py",
+    "floor": "glossy tile, classroom",
+    "battery_v": [
+      11.8,
+      12.2
+    ],
+    "date": "2026-10-15",
+    "source": "reports/DoanQuocKien/week-02/classroom_1015/README.md (marker-measured; one floor, one battery state; the offset is larger at 11 V)"
+  },
+  "speed_model_steady": {
+    "form": "m/s = slope * (v - v0)",
+    "slope": 0.491,
+    "v0": 0.124,
+    "residual_m_per_s": 0.006
+  },
+  "turn_model": {
+    "form": "rad/s = slope * (w - w0)",
+    "slope": 7.2,
+    "w0": 0.13,
+    "residual_rad_per_s": 0.03
+  },
+  "heading_open_loop": {
+    "bias_rad_per_m": 0.17,
+    "spread_rad_per_m": 0.17,
+    "sign": "left +",
+    "note": "10 of 11 runs left or none, one right; random per run; do not use as a fixed drift (the old drift_rad_per_m above is the cafe floor at v = 1.0 and has the opposite sign)"
+  },
+  "legacy_note": "v_gain / w_gain / drift above are the 2026-10-11 cafe measurements at command 1.0 only; prefer wheel_model (2026-10-15)"
 }

@@ -38,7 +38,8 @@ Each member adds 3+ papers from their area in Week 3. Candidates below are the m
 | 7 | Zhang et al., "ByteTrack", ECCV 2022 | Tracking | 5 | HNHL |
 | 8 | Ultralytics YOLOv8 (software, cite the repository) | Detection, pose | 5 | HNHL |
 | 9 | Galceran and Carreras, "A survey on coverage path planning for robotics", RAS 2013 | Search (expected) | 8 | KR |
-| 10+ | ... | | | |
+| 10 | Potje, Cadar, Araujo, Martins and Nascimento, "XFeat: Accelerated Features for Lightweight Image Matching", CVPR 2024, arXiv:2404.19174 (reference verified against arXiv on 2026-10-15; **not yet read in full: DQK reads it before the report**; code vendored in `third_party/xfeat/`, Apache-2.0) | Entrance matching (primary method after the bake-off, `sentry/perception/entrance.py`) | 5 | DQK |
+| 11+ | ... | | | |
 
 ## 3. Figures and charts
 
