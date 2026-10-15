@@ -30,6 +30,17 @@ Average = net marker range change / wheel seconds from the robot's log. Steady =
 wheel speed = 1.64 x (|motor| - 0.038) m/s, motor = mix(v, w) x 0.3 after the per-wheel dead zone (0.12); v = (vL + vR) / 2, omega = (vR - vL) / 0.137 m. The speed offset (0.037 motor units) and the turn offset (0.039) agree, and the two slopes are consistent with a wheel track of 0.137 m (0.128 m from the first calibration).
 Model vs measured steady speeds (v 0.4 / 0.5 / 0.6 / 0.7 / 0.85 / 1.0): 0.135 / 0.184 / 0.233 / 0.282 / 0.356 / 0.430 vs 0.139 / 0.185 / 0.238 / 0.276 / 0.357 / 0.435; turn rates (w 0.4 / 0.5 / 1.0): 1.96 / 2.68 / 6.28 vs 1.98 / 2.62 / 6.27 rad/s.
 
+## Marker visibility (`marker_range_test.csv`, `tools/marker_range_test.py`): how far and at which angle is a 150 mm anchor usable?
+| Test | Frames found | Range error vs tape | Marker side |
+| :-- | :-- | :-- | :-- |
+| 1.0 m, frontal | 41 / 41 (100 %) | -0.5 % | 46 px |
+| 2.0 m, frontal | 58 / 58 (100 %) | +1.6 % | 22 px |
+| 3.0 m, frontal | 52 / 52 (100 %) | **-8.5 %** | 15 px |
+| 1.5 m, marker 33 deg off the camera axis (robot turned) | 53 / 53 (100 %) | +1.2 % | 30 px |
+| 1.5 m, marker 59 deg off the axis (two runs) | 24 / 24 and 20 / 20 (100 %) | +1.5 %, +2.3 % | 30 px |
+| 1.5 m, board turned 45 deg (oblique), robot straight | 57 / 57 (100 %) | -1.4 % | 28 px |
+The marker is **detected in every frame** out to 3 m, at 59 deg off the camera axis (the edge of the fisheye view) and on a board seen at 45 deg; the **range is good to about 2 % out to 2 m** and 8.5 % short at 3 m (15 px: the corners are too small for the pose; the apparent size gives about 3.1 m). So an anchor is usable for correction within about 2 m (KR's gate: 1.5 m, fading from 0.8 m), and visible out to 3 m. Two rows of this test were first labelled as board yaw: the robot was rotated, not the board (apparent side unchanged), now corrected in the CSV.
+
 ## Camera pose
 `camera_pose_classroom_1015.json` / `.jpg`: 3 strips (0.5 / 1.0 / 1.5 m), one click each (`measure_camera_pose --one-click`), rms 2 mm, **H 0.109 m, pitch -12.2 deg (looking UP)**, roll 0. The mount tilted during transport and is readjusted by hand each time: 5 deg down on 2026-10-14, 12 deg up today. This is why the pose is estimated live from a marker (`LiveTilt`, PR #35 merged, roll fix PR #38). **End-of-session check (11:50, `tools.preflight`, marker in view): live tilt -13.27 deg against -12.20 deg from the strips, a 1.1 deg difference (limit 1.5): the mount held for the session and the marker method agrees with the strips.**
 
