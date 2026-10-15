@@ -119,7 +119,7 @@ def main():
 
     with ZMQReceiver() as rx:
         r0 = None
-        for _ in range(8):
+        for _ in range(30):                                  # about 2 s: people may walk in front of the board
             f = rx.read(timeout=5)
             r0 = marker_range(g, obj, f.frame_bgr) if f is not None else None
             if r0:
