@@ -58,7 +58,7 @@ def servo(measure, pulse, settle, nominal, log=print):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--ip", default="10.35.172.160")
+    ap.add_argument("--ip", default="auto", help="the robot's address, or auto to search the network")
     ap.add_argument("--user", default="jetbot")
     ap.add_argument("--password", default=os.environ.get("JETBOT_PASSWORD"))
     ap.add_argument("--motion", default="calib/motion.json")
@@ -75,6 +75,8 @@ def main():
     from tools.speed_trial import beep
 
     nominal = nominal_deg(json.load(open(a.motion))["w_gain_rad_per_s"])
+    from sentry.net.discover import resolve
+    a.ip = resolve(a.ip)
     password = jetbot_ssh.password(a.password)
     geo = CameraGeometry.from_files(a.camera, a.pose)
     K = geo.K

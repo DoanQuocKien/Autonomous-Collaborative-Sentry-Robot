@@ -74,7 +74,7 @@ def main():
     ap.add_argument("--steer", action="store_true", help="steer toward the marker (off by default)")
     ap.add_argument("--wait", type=float, default=5.0, help="seconds between the beeps and the command: time to hold R1")
     ap.add_argument("--stop-at", type=float, default=0.8, help="stop the commands when the marker is closer than this (m)")
-    ap.add_argument("--ip", default="10.35.172.160")
+    ap.add_argument("--ip", default="auto", help="the robot's address, or auto to search the network")
     ap.add_argument("--user", default="jetbot")
     ap.add_argument("--password", default=os.environ.get("JETBOT_PASSWORD"))
     ap.add_argument("--camera", default="calib/camera.json")
@@ -85,6 +85,8 @@ def main():
         ap.error("v in (0, 1], seconds in (0, 8]")
     if a.v < MIN_PWM / MAX_SPEED:
         print("note: v < %.2f is a clean stop at speed cap %.1f (motor value below min_pwm %.2f): the robot will not move" % (MIN_PWM / MAX_SPEED, MAX_SPEED, MIN_PWM))
+    from sentry.net.discover import resolve
+    a.ip = resolve(a.ip)
     password = jetbot_ssh.password(a.password)
     marker_m = load()["calibration"]["aruco_marker_m"]
     S = marker_m / 2

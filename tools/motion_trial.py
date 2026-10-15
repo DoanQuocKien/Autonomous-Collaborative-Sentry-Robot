@@ -26,6 +26,8 @@ MAX_SPEED = 0.3
 
 
 def trial(a):
+    from sentry.net.discover import resolve
+    a.ip = resolve(a.ip)
     password = jetbot_ssh.password(a.password)
     c = jetbot_ssh.connect(a.ip, a.user, password)
     try:
@@ -85,7 +87,7 @@ def main():
     t.add_argument("w", type=float)
     t.add_argument("seconds", type=float)
     t.add_argument("--wait", type=float, default=5.0, help="seconds between the beeps and the command: time to hold R1")
-    t.add_argument("--ip", default="10.35.172.160")
+    t.add_argument("--ip", default="auto", help="the robot's address, or auto to search the network")
     t.add_argument("--user", default="jetbot")
     t.add_argument("--password", default=os.environ.get("JETBOT_PASSWORD"))
     r = sub.add_parser("record")
