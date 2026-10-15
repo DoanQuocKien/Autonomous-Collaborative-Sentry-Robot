@@ -1,4 +1,9 @@
-"""One in-place turn trial measured with the ArUco board: the robot turns for --seconds at constant w, the marker bearing before and after (at rest) is the turn angle (the robot rotates about its centre, the camera is about 7 cm off the axis: under 2 deg of error at 1.8 m). No protractor.
+"""One in-place turn trial measured with ArUco markers: the robot turns for --seconds at constant w and the heading change is followed through the whole turn. No protractor.
+
+MULTI-MARKER (several ids placed around the robot, e.g. taped to chairs, 1.5-2.5 m away, about 40-60 deg apart over the arc of the turn, upright, at 0.05-0.25 m height): a marker is a fixed direction in
+the room, so the heading is (marker direction - its bearing in the image). The first frame is the reference (heading 0); a marker seen together with a known one gets its direction from it, then carries the
+heading on when the known one leaves the view (the camera sees about +-45 deg). Frames where no known marker is visible have no heading; if the chain breaks (only an unknown marker is seen after a gap) the run is
+flagged. With ONE marker this is the earlier method: it works while the marker stays in view (turns up to about 80 deg). The camera is about 7 cm off the rotation axis: under 2 deg of parallax at 1.8 m.
 
   python -m tools.turn_trial 1.0 0.15 --label classroom         # w = 1.0 (left positive) for 0.15 s: about 55 deg on a smooth floor (turn gain 6.48 rad/s)
   python -m tools.turn_trial 0.5 0.4 --label classroom
@@ -6,7 +11,7 @@
 SETUP: the board 1.0-3.0 m away; rotate the robot BY HAND first so the marker starts on the side the robot turns AWAY from: for a left turn (w > 0) the robot points about 30 deg to the RIGHT of the board
 (marker on the left, bearing about +30), so that the marker ends on the right after about 60 deg. Keep the turn under about 80 deg (the marker must stay detectable). E-stop armed (arm once); press R1 whenever
 you are ready within --wait seconds after the beeps (the tool starts once R1 has been held for 0.5 s) and keep it down until the two short beeps.
-OUTPUT: data/turn_runs/<label>_w<w>_<seconds>s_<n>.csv (t, bearing_deg, range_m, cmd_w) and a summary: turned angle (left +) = bearing before - bearing after, wheel seconds from the robot's log,
+OUTPUT: data/turn_runs/<label>_w<w>_<seconds>s_<n>.csv (t, heading_deg, known_markers, cmd_w, visible_ids) and a summary: turned angle (left +) = bearing before - bearing after, wheel seconds from the robot's log,
 degrees per wheel second and the turn gain in rad/s per unit of w.
 """
 import argparse
@@ -25,7 +30,35 @@ from sentry.perception.camera import CameraGeometry
 from tools import jetbot_ssh
 from tools.calibrate_motion import LOG, _sh, moving_seconds
 from tools.jetbot_status import ina219_bus_volts
-from tools.speed_trial import ESTOP_LATCH, beep, marker_range
+from tools.speed_trial import ESTOP_LATCH, beep
+from sentry.perception.camera_pose import detect_corners
+
+
+def heading_track(frames):
+    """frames: list of (t, {marker_id: bearing_deg}) (bearing positive = marker to the left). -> list of (t, heading_deg or None, number_of_known_markers), heading = change since the first frame (left +)."""
+    phi, out, broken = {}, [], False
+    for t, d in frames:
+        if not d:
+            out.append((t, None, 0))
+            continue
+        if not phi:
+            for i, b in d.items():
+                phi[i] = b                                  # the first frame is heading 0: the direction of a marker is its bearing
+        known = [i for i in d if i in phi]
+        if not known:
+            out.append((t, None, 0))                        # only unknown markers: no heading (the chain is broken until a known one returns)
+            broken = True
+            continue
+        th = sum(phi[i] - d[i] for i in known) / len(known)
+        for i, b in d.items():
+            if i not in phi:
+                phi[i] = th + b                             # first sighting together with a known marker
+        for i in known:                                     # refine a direction from the others (slow average)
+            others = [j for j in known if j != i]
+            if others:
+                phi[i] += 0.1 * (sum(phi[j] - d[j] for j in others) / len(others) + d[i] - phi[i])
+        out.append((t, th, len(known)))
+    return out
 
 
 def main():
@@ -46,9 +79,7 @@ def main():
     from sentry.net.discover import resolve
     a.ip = resolve(a.ip)
     password = jetbot_ssh.password(a.password)
-    S = load()["calibration"]["aruco_marker_m"] / 2
     g = CameraGeometry.from_files(a.camera, a.pose)
-    obj = np.array([[-S, S, 0], [S, S, 0], [S, -S, 0], [-S, -S, 0]], np.float64)
     c = jetbot_ssh.connect(a.ip, a.user, password)
     before = int(_sh(c, "wc -l < %s" % LOG).strip() or 0)
     cmd = {"w": 0.0}
@@ -65,24 +96,25 @@ def main():
 
     th = threading.Thread(target=sender)
     th.start()
-    rows = []
+    frames = []
     with ZMQReceiver() as rx:
-        r0 = None
+        seen_ids = {}
         for _ in range(8):
             f = rx.read(timeout=5)
-            r0 = marker_range(g, obj, f.frame_bgr) if f is not None else None
-            if r0:
+            if f is None:
+                continue
+            for mid, corners in detect_corners(f.frame_bgr):
+                ctr = g.undistort_points(corners).mean(0)
+                seen_ids[int(mid)] = -math.degrees(math.atan((ctr[0] - g.K[0, 2]) / g.K[0, 0]))
+            if seen_ids:
                 break
-        if r0 is None or not 1.0 <= r0[0] <= 3.0 or abs(r0[1]) > 55:
+        if not seen_ids:
             done.set()
             th.join()
-            print("ABORT: start check failed (%s)" % ("marker not seen" if r0 is None else "marker %.2f m away at %+.0f deg: need 1-3 m and within 55 deg" % r0))
+            print("ABORT: start check failed (no marker seen)")
             raise SystemExit(1)
-        want = "left" if a.w > 0 else "right"
-        print("start: marker %.2f m away, bearing %+.1f deg. The robot will turn %s: the marker should start on the %s side (bearing %s) so that it stays in view." % (
-            r0[0], r0[1], want, want, "+" if a.w > 0 else "-"), flush=True)
-        if (a.w > 0) != (r0[1] > 10) and abs(r0[1]) < 10:
-            print("  note: the marker is near the centre: after the turn it may leave the view; rotate the robot by hand first and rerun if the result says so")
+        print("start: markers seen %s (bearing, deg: left +). One marker = turns under about 80 deg; several markers all around = any angle. The robot will turn %s." % (
+            {k: round(v, 1) for k, v in seen_ids.items()}, "left" if a.w > 0 else "right"), flush=True)
         t0 = time.time()
         for _ in range(3):
             beep(1500, 300)
@@ -114,9 +146,11 @@ def main():
             f = rx.read(timeout=5)
             if f is None:
                 break
-            mr = marker_range(g, obj, f.frame_bgr)
-            if mr is not None:
-                rows.append((time.time() - t0, mr[1], mr[0], cmd["w"]))
+            dets = {}
+            for mid, corners in detect_corners(f.frame_bgr):
+                ctr = g.undistort_points(corners).mean(0)
+                dets[int(mid)] = -math.degrees(math.atan((ctr[0] - g.K[0, 2]) / g.K[0, 0]))
+            frames.append((time.time() - t0, dets, cmd["w"]))
     done.set()
     th.join()
     time.sleep(0.6)
@@ -125,20 +159,31 @@ def main():
     os.makedirs(a.out, exist_ok=True)
     n = 1 + len([x for x in os.listdir(a.out) if x.startswith("%s_w%g_%gs_" % (a.label, a.w, a.seconds))])
     path = os.path.join(a.out, "%s_w%g_%gs_%d.csv" % (a.label, a.w, a.seconds, n))
+    track = heading_track([(t, d) for t, d, _ in frames])
     with open(path, "w", newline="") as fh:
-        csv.writer(fh).writerows([("t", "bearing_deg", "range_m", "cmd_w")] + [("%.3f" % t, "%.2f" % b, "%.3f" % r, w) for t, b, r, w in rows])
-    arr = np.array(rows)
-    print("TURN w=%+.2f for %.2f s | the wheels turned %.2f s | battery %.2f V | %d frames" % (a.w, a.seconds, moving, volts, len(arr)))
-    if len(arr) < 8 or moving < 0.05:
-        print("  no usable turn (R1 not held in time, or the marker was not seen): repeat")
+        csv.writer(fh).writerows([("t", "heading_deg", "known_markers", "cmd_w", "visible_ids")] + [
+            ("%.3f" % t, "" if h is None else "%.2f" % h, k, w, " ".join(str(i) for i in sorted(d))) for (t, h, k), (_, d, w) in zip(track, frames)])
+    print("TURN w=%+.2f for %.2f s | the wheels turned %.2f s | battery %.2f V | %d frames, markers seen: %s" % (
+        a.w, a.seconds, moving, volts, len(frames), sorted({i for _, d, _ in frames for i in d})))
+    valid = [(t, h) for t, h, _ in track if h is not None]
+    on = [t for t, _, w in frames if w != 0.0]
+    if len(valid) < 12 or moving < 0.05 or not on:
+        print("  no usable turn (R1 not held in time, or no marker was seen): repeat")
     else:
-        pre = arr[arr[:, 3] == 0][:8, 1] if (arr[:, 3] == 0).any() else arr[:5, 1]
-        post = arr[-10:, 1]
-        turned = float(np.median(pre) - np.median(post))                    # left turn: the marker moves to the right: bearing decreases
-        print("  bearing %+.1f -> %+.1f deg: TURNED %+.1f deg (left +) in %.2f wheel seconds = %.0f deg/s = %.2f rad/s (per unit of w: %.2f rad/s; old gain 6.48)" % (
-            np.median(pre), np.median(post), turned, moving, turned / moving, math.radians(turned) / moving, math.radians(turned) / moving / a.w))
-        if abs(np.median(post)) > 60 or abs(np.median(pre)) > 60:
-            print("  warning: the marker was near the edge of the view; the angle may be off")
+        t_a, t_b = min(on), max(on)
+        pre = [h for t, h in valid if t < t_a][:8]
+        post = [h for t, h in valid if t > t_b + 0.8][-10:]
+        gaps = sum(1 for t, h, _ in track if h is None and t_a - 0.2 <= t <= t_b + 0.8)
+        if not pre or not post:
+            print("  no heading before the command or at rest afterwards: the markers were not visible at both ends; repeat with markers all around")
+        else:
+            turned = float(np.median(post) - np.median(pre))
+            hs = np.array(valid)
+            peak = max((hs[k + 3, 1] - hs[k, 1]) / max(hs[k + 3, 0] - hs[k, 0], 1e-3) for k in range(len(hs) - 3))
+            print("  TURNED %+.1f deg (left +) in %.2f wheel seconds = %.0f deg/s = %.2f rad/s per wheel second (per unit of w: %.2f rad/s; old gain 6.48); peak rate %.0f deg/s; per COMMANDED second %.2f rad/s" % (
+                turned, moving, turned / moving, math.radians(turned) / moving, math.radians(turned) / moving / a.w, peak, math.radians(turned) / a.seconds))
+            if gaps:
+                print("  note: %d frames during the turn had no known marker in view (the heading was bridged through them only if a known marker returned): trust this less, add markers" % gaps)
     print("  saved", path)
     beep(1000, 300)
     beep(1000, 300)

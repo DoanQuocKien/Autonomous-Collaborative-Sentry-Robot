@@ -42,3 +42,18 @@ def test_pulses_the_robot_log_says_did_not_move_are_not_counted():
     logs = []
     cy = servo(lambda: st["b"], pulse, lambda: None, nom, log=logs.append)
     assert any("R1 not held" in s for s in logs) and all(c[3] > 0.5 * nom for c in cy)
+
+
+def test_heading_track_follows_a_turn_through_several_markers_without_drift():
+    import math
+    from tools.turn_trial import heading_track
+    dirs = {0: 0.0, 1: 55.0, 2: 110.0, 3: 165.0, 4: 220.0}                  # room directions of 5 markers (deg, left +)
+    frames = []
+    for k in range(60):                                                      # a left turn of 200 deg in 60 frames, the camera sees +-45 deg
+        th = 200.0 * k / 59
+        frames.append((k / 17.0, {i: d - th for i, d in dirs.items() if abs(d - th) < 45}))
+    out = heading_track(frames)
+    assert all(h is not None for _, h, _ in out)
+    assert abs(out[-1][1] - 200.0) < 3.0 and max(abs(h - 200.0 * k / 59) for k, (_, h, _) in enumerate(out)) < 3.0
+    gap = [(0.0, {0: 10.0}), (0.1, {}), (0.2, {7: 5.0})]                     # all known markers gone, then only an unknown one: no heading is invented
+    assert [h for _, h, _ in heading_track(gap)][1:] == [None, None]
