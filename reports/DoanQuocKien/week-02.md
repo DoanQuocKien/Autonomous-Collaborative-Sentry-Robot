@@ -89,4 +89,13 @@
 - Week 3 (DQK): USB speaker playback and the deployment behaviour; both need the motion model above.
 
 ## Hours
-- **TODO**: estimate from chat timestamps at the end of the week.
+- From the chat timestamps (session transcripts, UTC+7; a gap of up to 30 minutes between messages counts as work, a longer one as a break), counted on 2026-10-15 at 11:53 and **not including Friday to Sunday**:
+  | Day | Active chat time |
+  | :-- | :-- |
+  | Sun 2026-10-11 (evening: D1 prep, the cafe door set) | 4.7 h |
+  | Mon 2026-10-12 | 4.3 h |
+  | Tue 2026-10-13 | no chat activity |
+  | Wed 2026-10-14 | 4.2 h |
+  | Thu 2026-10-15 (classroom 08:00-12:00, up to 11:53) | 3.2 h |
+  | **Mon-Thu** | **11.7 h** (16.4 h with Sunday evening) |
+  Caveats: chat time only; it includes the robot runs (the assistant's tool calls and the waiting for R1 count as active) and not offline work that left no messages (printing, moving furniture, reading papers). Update on Sunday with the rest of the week.
