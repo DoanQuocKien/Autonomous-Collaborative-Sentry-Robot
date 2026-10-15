@@ -71,12 +71,17 @@ def heading_track(frames, phi0=None, return_map=False):
     return (out, phi) if return_map else out
 
 
+ALLOWED_IDS = frozenset(range(6))                       # the printed pages are ids 0-5; anything else is a false detection (id 37 appeared on 2026-10-15)
+
+
 def bearings_from_axle(g, S, frame_bgr, cam_offset_m):
     """{marker_id: bearing in deg from the WHEEL AXLE (left +)} for the markers in a raw frame. The camera is cam_offset_m ahead of the axle: the marker position from the PnP translation is shifted by it,
     which removes the parallax (up to 4 deg at 1 m for 7 cm). With cam_offset_m = 0 it is the bearing from the camera."""
     out = {}
     obj = np.array([[-S, S, 0], [S, S, 0], [S, -S, 0], [-S, -S, 0]], np.float64)
     for mid, corners in detect_corners(frame_bgr):
+        if int(mid) not in ALLOWED_IDS:
+            continue
         c = g.undistort_points(corners)
         n, rv, tv, er = cv2.solvePnPGeneric(obj, c, g.K, None, flags=cv2.SOLVEPNP_IPPE)
         best = None
