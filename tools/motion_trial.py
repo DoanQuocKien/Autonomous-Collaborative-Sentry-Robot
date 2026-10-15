@@ -23,6 +23,7 @@ from tools.speed_trial import beep
 
 STATE = Path("data/motion_trial_state.json")
 MAX_SPEED = 0.3
+ESTOP_LATCH = "/home/jetbot/sentry/ESTOP"
 
 
 def trial(a):
@@ -39,10 +40,23 @@ def trial(a):
     try:
         for _ in range(3):
             beep(1500, 300)
-        end = time.perf_counter() + a.wait
+        end = time.perf_counter() + a.wait                       # wait for R1: the e-stop latch file exists whenever motion is NOT allowed
+        held_since, last_poll, started = None, 0.0, False
         while time.perf_counter() < end:
             sender.send(0.0, 0.0)
+            now = time.perf_counter()
+            if now - last_poll >= 0.25:
+                last_poll = now
+                held = _sh(c, "test -e %s && echo no || echo yes" % ESTOP_LATCH).strip() == "yes"
+                held_since = (held_since or now) if held else None
+                if held_since and now - held_since >= 0.5:
+                    started = True
+                    break
             time.sleep(sender.period_s)
+        if not started:
+            print("ABORT: R1 was not held (and the e-stop armed) within %.0f s of the beeps" % a.wait)
+            return
+        print("R1 held: starting the command", flush=True)
         end = time.perf_counter() + a.seconds
         while time.perf_counter() < end:
             sender.send(a.v, a.w)
@@ -86,7 +100,7 @@ def main():
     t.add_argument("v", type=float)
     t.add_argument("w", type=float)
     t.add_argument("seconds", type=float)
-    t.add_argument("--wait", type=float, default=5.0, help="seconds between the beeps and the command: time to hold R1")
+    t.add_argument("--wait", type=float, default=20.0, help="seconds to wait for R1 after the beeps; the command starts once R1 has been held for 0.5 s")
     t.add_argument("--ip", default="auto", help="the robot's address, or auto to search the network")
     t.add_argument("--user", default="jetbot")
     t.add_argument("--password", default=os.environ.get("JETBOT_PASSWORD"))

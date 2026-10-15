@@ -5,7 +5,7 @@
 
 SETUP: the board (id 0, 150 mm, `aruco_marker_m` in config.toml) upright at the far end, facing the robot, 1.4-2.6 m away (the start check refuses otherwise); the floor CLEAR for 1 m on both
 sides of the path (on 2026-10-15 an open-loop run veered 1 m sideways into a bean bag); e-stop armed.
-SEQUENCE: start check -> 3 beeps -> zero commands for --wait seconds (HOLD R1 NOW and keep it down) -> v for --seconds -> stop -> 1.5 s of rest -> 2 short beeps (only then touch the robot).
+SEQUENCE: start check -> 3 beeps -> HOLD R1 (any time within --wait seconds; the tool polls the robot's e-stop latch and starts the command once R1 has been held for 0.5 s) -> v for --seconds -> stop -> 1.5 s of rest -> 2 short beeps (only then release R1 and touch the robot).
 GUARDS: the commands stop when the marker is closer than --stop-at m, not seen for 0.4 s, or more than 25 deg off the heading. The robot moves only while R1 is held; the real wheel seconds come
 from the robot's log, so a late or early R1 does not spoil the speed (distance / wheel seconds).
 OUTPUT: data/speed_runs/<label>_v<v>_<n>.csv (t, range_m, bearing_deg, cmd_v, cmd_w) and a printed summary: net displacement / wheel seconds = AVERAGE SPEED (robust), plus the steady speed and
@@ -33,6 +33,7 @@ from tools.jetbot_status import ina219_bus_volts
 from tools.speedfit import fit_start
 
 LOST_S, MAX_BEARING = 0.4, 25.0
+ESTOP_LATCH = "/home/jetbot/sentry/ESTOP"
 KP, W_GAIN = 2.5, 6.48                                   # --steer: w = KP * bearing(rad) / W_GAIN
 MIN_PWM, MAX_SPEED = 0.12, 0.3
 
@@ -72,7 +73,7 @@ def main():
     ap.add_argument("seconds", type=float)
     ap.add_argument("--label", default="run")
     ap.add_argument("--steer", action="store_true", help="steer toward the marker (off by default)")
-    ap.add_argument("--wait", type=float, default=5.0, help="seconds between the beeps and the command: time to hold R1")
+    ap.add_argument("--wait", type=float, default=20.0, help="seconds to wait for R1 after the beeps; the command starts once R1 has been held for 0.5 s")
     ap.add_argument("--stop-at", type=float, default=0.8, help="stop the commands when the marker is closer than this (m)")
     ap.add_argument("--ip", default="auto", help="the robot's address, or auto to search the network")
     ap.add_argument("--user", default="jetbot")
@@ -132,11 +133,26 @@ def main():
         t0 = time.time()
         for _ in range(3):
             beep(1500, 300)
-        t_go = time.time() + a.wait
+        t_wait_end = time.time() + a.wait
+        t_go = None                                                  # set when R1 has been held for 0.5 s
+        r1_since = None
+        last_poll = 0.0
         seen = time.time()
         while True:
             now = time.time()
-            if t_cmd0 is None and now >= t_go:
+            if t_go is None and now - last_poll >= 0.25:             # the e-stop latch file exists whenever motion is NOT allowed (R1 up or not armed)
+                last_poll = now
+                held = _sh(c, "test -e %s && echo no || echo yes" % ESTOP_LATCH).strip() == "yes"
+                r1_since = (r1_since or now) if held else None
+                if r1_since and now - r1_since >= 0.5:
+                    t_go = now
+                    print("R1 held: starting the command", flush=True)
+                elif now > t_wait_end:
+                    done.set()
+                    th.join()
+                    print("ABORT: R1 was not held (and the e-stop armed) within %.0f s of the beeps" % a.wait)
+                    raise SystemExit(1)
+            if t_cmd0 is None and t_go is not None and now >= t_go:
                 cmd["v"] = a.v
                 t_cmd0 = now
             if t_cmd0 is not None and t_cmd1 is None and now - t_cmd0 >= a.seconds:
