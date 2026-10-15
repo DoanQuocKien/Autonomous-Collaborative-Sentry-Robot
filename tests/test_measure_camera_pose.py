@@ -40,3 +40,11 @@ def test_click_order_does_not_matter():
     a = centre_rows([(100, 210), (500, 190), (600, 300), (50, 300)], 300, 240)   # second strip clicked right end first
     b = centre_rows([(500, 190), (100, 210), (50, 300), (600, 300)], 300, 240)
     assert a[0] == b[0] and all(abs(x) < 15 for x in a[1])
+
+
+def test_one_click_rows_take_the_clicks_y_and_warn_far_from_the_centre_line():
+    from tools.measure_camera_pose import one_click_rows
+    rows, warn = one_click_rows([(290, 269.0), (280, 242.0), (300, 232.0)], 285.8)
+    assert rows == [269.0, 242.0, 232.0] and warn == []
+    rows, warn = one_click_rows([(290, 269.0), (60, 242.0)], 285.8)
+    assert rows == [269.0, 242.0] and len(warn) == 1 and "[2]" in warn[0]

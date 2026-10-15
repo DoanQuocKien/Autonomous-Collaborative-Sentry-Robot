@@ -56,7 +56,14 @@ def centre_rows(pts, cx, cy=None):
     return rows, slopes, roll
 
 
-def click_rows(img, n):
+def one_click_rows(pts, cx, max_off_px=150):
+    """--one-click: one click per strip, on its near edge close to the blue centre line. -> rows (the clicks' y) and warnings for clicks far from the centre column (the camera roll would shift their row)."""
+    rows = [float(y) for _, y in pts]
+    far = [i + 1 for i, (x, _) in enumerate(pts) if abs(x - cx) > max_off_px]
+    return rows, ["click %s is more than %d px from the centre line: its row is shifted by the camera roll" % (far, max_off_px)] if far else []
+
+
+def click_rows(img, n, per=2):
     import cv2
     pts, shown = [], img.copy()
     cv2.line(shown, (int(img.shape[1] / 2), 0), (int(img.shape[1] / 2), img.shape[0]), (255, 0, 0), 1)
@@ -65,12 +72,14 @@ def click_rows(img, n):
         shown[:] = img
         for i, (x, y) in enumerate(pts):
             cv2.circle(shown, (x, y), 3, (0, 255, 0), -1)
-            if i % 2:
+            if per == 1:
+                cv2.putText(shown, str(i + 1), (x + 6, y - 4), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+            elif i % 2:
                 cv2.line(shown, pts[i - 1], (x, y), (0, 255, 0), 1)
                 cv2.putText(shown, str(i // 2 + 1), (x + 4, y - 4), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
 
     def on(ev, x, y, *_):
-        if ev == cv2.EVENT_LBUTTONDOWN and len(pts) < 2 * n:
+        if ev == cv2.EVENT_LBUTTONDOWN and len(pts) < per * n:
             pts.append((x, y))
             draw()
 
@@ -82,7 +91,7 @@ def click_rows(img, n):
         if k == ord("u") and pts:
             pts.pop()
             draw()
-        elif k in (13, 32) and len(pts) == 2 * n:
+        elif k in (13, 32) and len(pts) == per * n:
             break
         elif k == ord("q"):
             raise SystemExit("aborted")
@@ -98,6 +107,7 @@ def main():
     ap.add_argument("--image", help="use this photo instead of grabbing a frame from the robot")
     ap.add_argument("--camera", default="calib/camera.json")
     ap.add_argument("--max-rms-m", type=float, default=0.03)
+    ap.add_argument("--one-click", action="store_true", help="ONE click per strip (its near edge, close to the blue centre line) instead of the two ends; no strip slope, camera_roll_deg is written as 0 (the roll comes from the marker)")
     a = ap.parse_args()
     import cv2
     cam = json.load(open(a.camera))
@@ -111,11 +121,16 @@ def main():
     und = undistorted(img, cam)
     Path("calib").mkdir(exist_ok=True)
     cv2.imwrite("calib/camera_pose_%s_raw.jpg" % a.tag, img)   # the untouched frame, so a run can be redone with --image
-    pts, shown = click_rows(und, len(a.marks))
+    pts, shown = click_rows(und, len(a.marks), 1 if a.one_click else 2)
     fy, cx, cy = cam["K"][1][1], cam["K"][0][2], cam["K"][1][2]
-    rows, slopes, roll = centre_rows(pts, cx, cy)
+    if a.one_click:
+        rows, warn = one_click_rows(pts, cx)
+        slopes, roll = [0.0] * len(rows), 0.0
+    else:
+        rows, slopes, roll = centre_rows(pts, cx, cy)
+        warn = []
     H, pitch, rms, res = fit_pose(rows, a.marks, fy, cy)
-    problems = []
+    problems = list(warn)
     if max(slopes) - min(slopes) > 6:   # strips are only ~30 px wide in the image: 1 px of click error = 2 deg
         problems.append("the strips slope by different angles (%.1f to %.1f deg): not laid parallel, or marks not square to the camera" % (min(slopes), max(slopes)))
     if abs(H - a.h_tape) > 0.015:
