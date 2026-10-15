@@ -150,4 +150,5 @@ class LiveTilt:
         if est is None or not self.filter.hist or self.filter.hist[-1] is not est:
             return None
         self.geometry.set_pitch_deg(self.filter.pitch_deg)
+        self.geometry.roll = math.radians(self.filter.roll_deg)         # pitch and roll are a coupled pair: ground_point must use the roll the pitch was estimated with (mismatch: 15-70 % off at bearings above 20 deg)
         return est

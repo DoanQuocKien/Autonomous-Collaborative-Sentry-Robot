@@ -165,3 +165,18 @@ def test_live_tilt_from_the_raw_fisheye_frame_follows_the_marker_far_off_axis():
     page = cv2.cvtColor(cv2.warpPerspective(m, cv2.getPerspectiveTransform(src, np.float32(raw_px)), (640, 480), flags=cv2.INTER_LINEAR, borderValue=200), cv2.COLOR_GRAY2BGR)
     lt = LiveTilt(g, S, BOTTOM, every=1)
     assert lt.raw(page) is not None and abs(math.degrees(g.pitch) - 5.0) < 1.5
+
+
+def test_live_tilt_keeps_the_geometry_roll_with_its_pitch():
+    import json
+    from sentry.perception.camera import CameraGeometry
+    from sentry.perception.camera_pose import LiveTilt
+    g = CameraGeometry(json.load(open("calib/camera.json")), {"H_cam_m": 0.10, "pitch_down_deg": 3.0, "camera_roll_deg": -1.85, "passed": True})
+    px = view(5.0, 0.10, 1.2, roll_deg=1.0)
+    m = cv2.aruco.generateImageMarker(cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50), 0, 200)
+    m = cv2.copyMakeBorder(m, 20, 20, 20, 20, cv2.BORDER_CONSTANT, value=255)
+    src = np.float32([[20, 20], [219, 20], [219, 219], [20, 219]])
+    page = cv2.cvtColor(cv2.warpPerspective(m, cv2.getPerspectiveTransform(src, np.float32(px)), (640, 480), flags=cv2.INTER_LINEAR, borderValue=200), cv2.COLOR_GRAY2BGR)
+    lt = LiveTilt(g, S, BOTTOM, every=1)
+    assert lt(page) is not None
+    assert abs(math.degrees(g.roll) - 1.0) < 1.0 and abs(g.roll - math.radians(lt.filter.roll_deg)) < 1e-12      # the pose file's -1.85 is replaced by the marker roll (rendered image: about 0.5 deg of corner noise)
