@@ -1,0 +1,90 @@
+[
+ {
+  "model": "yolov8n-pose_320_op11",
+  "upload_s": 5,
+  "build_s": 626,
+  "exit": "exit=0",
+  "passed": true,
+  "gpu_ms": 15.7097,
+  "engine_mb": "9.1"
+ },
+ {
+  "model": "osnet_x0_25_256x128",
+  "upload_s": 0,
+  "build_s": 235,
+  "exit": "exit=0",
+  "passed": true,
+  "gpu_ms": 9.31481,
+  "engine_mb": "1.5"
+ },
+ {
+  "model": "osnet_ain_x1_0_256x128",
+  "upload_s": 3,
+  "build_s": 284,
+  "exit": "exit=0",
+  "passed": true,
+  "gpu_ms": 26.5549,
+  "errors": [
+   "[TRT] ../builder/cudnnBuilderUtils.cpp (414) - Cuda Error in findFastestTactic: 1 (invalid argument)",
+   "[TRT] ../builder/cudnnBuilderUtils.cpp (414) - Cuda Error in findFastestTactic: 1 (invalid argument)",
+   "[TRT] ../builder/cudnnBuilderUtils.cpp (414) - Cuda Error in findFastestTactic: 1 (invalid argument)"
+  ],
+  "engine_mb": "6.6"
+ },
+ {
+  "model": "xfeat_backbone_480x640",
+  "upload_s": 1,
+  "build_s": 343,
+  "exit": "exit=0",
+  "passed": true,
+  "gpu_ms": 37.216,
+  "errors": [
+   "[TRT] ../builder/cudnnBuilderUtils.cpp (414) - Cuda Error in findFastestTactic: 1 (invalid argument)"
+  ],
+  "engine_mb": "5.0"
+ },
+ {
+  "model": "det_500m",
+  "upload_s": 2,
+  "build_s": 169,
+  "exit": "exit=0",
+  "passed": true,
+  "gpu_ms": 7.94961,
+  "engine_mb": "2.4"
+ },
+ {
+  "model": "w600k_mbf",
+  "upload_s": 4,
+  "build_s": 237,
+  "exit": "exit=0",
+  "passed": true,
+  "gpu_ms": 14.7818,
+  "engine_mb": "7.6"
+ },
+ {
+  "model": "dinov2_vits14_336x448",
+  "upload_s": 31,
+  "build_s": 2,
+  "exit": "exit=1",
+  "passed": false,
+  "errors": [
+   "ERROR: builtin_op_importers.cpp:2519 In function importResize:",
+   "Failed to parse onnx file",
+   "Parsing model failed"
+  ],
+  "engine_mb": ""
+ },
+ {
+  "model": "dinov2_vitb14_336x448",
+  "upload_s": 110,
+  "build_s": 3,
+  "exit": "exit=1",
+  "passed": false,
+  "errors": [
+   "ERROR: builtin_op_importers.cpp:2519 In function importResize:",
+   "Failed to parse onnx file",
+   "Parsing model failed"
+  ],
+  "engine_mb": ""
+ }
+]
