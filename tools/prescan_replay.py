@@ -24,6 +24,7 @@ from tools.replay import ReplayStream
 FIELDS = ["frame_index", "seq", "t_cap", "detection_index", "class_id", "confidence",
           "x1", "y1", "x2", "y2", "rejection", "forward_m", "left_m", "distance_m", "world_x_m", "world_y_m",
           "floor_type", "camera_session", "contact_u", "contact_v", "contact_method", "contact_confidence"]
+FIELDS += ["source", "semantic_label", "label"]
 
 
 def read_poses(path):
@@ -40,7 +41,7 @@ def read_poses(path):
 
 
 def run(recording, poses_path, out, config_path=DEFAULT_PATH, door_xy=None, detector=None,
-        camera_pose_path=None, floor_type=None, camera_path=None):
+        camera_pose_path=None, floor_type=None, camera_path=None, semantic_floor=None, open_vocabulary=None):
     stream = ReplayStream(recording)
     if not stream.frames:
         raise ValueError("recording has no JetBot frames")
@@ -50,7 +51,8 @@ def run(recording, poses_path, out, config_path=DEFAULT_PATH, door_xy=None, dete
     if door_xy is not None and (len(door_xy) != 2 or not all(math.isfinite(q) for q in door_xy)):
         raise ValueError("door must be finite world coordinates")
     scanner = PreScanner(detector if detector is not None else ObstacleDetector.from_config(
-                             config_path, camera_pose_path=camera_pose_path, floor_type=floor_type, camera_path=camera_path),
+                             config_path, camera_pose_path=camera_pose_path, floor_type=floor_type, camera_path=camera_path,
+                             semantic_floor=semantic_floor, open_vocabulary=open_vocabulary),
                          OccupancyGrid.from_config(config_path), VantageSelector.from_config(config_path), door_xy)
     out = Path(out)
     out.mkdir(parents=True, exist_ok=True)
@@ -76,7 +78,8 @@ def run(recording, poses_path, out, config_path=DEFAULT_PATH, door_xy=None, dete
                     ground = [p.forward_m, p.left_m, p.distance_m, *scanner.grid.ground_to_world(pose, p)] if p else [""] * 5
                     writer.writerow([index, frame.seq, frame.t_cap, oi, d.class_id, d.confidence,
                                      *d.xyxy, o.rejection or "", *ground, obs.floor_type, obs.camera_session,
-                                     *([o.contact.u, o.contact.v, o.contact.method, o.contact.confidence] if o.contact else [""]*4)])
+                                     *([o.contact.u, o.contact.v, o.contact.method, o.contact.confidence] if o.contact else [""]*4),
+                                     d.source, d.semantic_label if d.semantic_label is not None else "", d.label or ""])
                 count += 1
     scanner.grid.save(out / "room_map.npz")
     summary = dict(frames=count, unresolved_frames=unresolved, motor_commands_sent=0,
@@ -101,10 +104,13 @@ def main():
     ap.add_argument("--camera-pose", required=True, help="pose JSON for THIS recording session")
     ap.add_argument("--camera", help="override intrinsics JSON")
     ap.add_argument("--floor-type", required=True, choices=("glossy", "matte"))
+    ap.add_argument("--semantic-floor", action="store_true", default=None)
+    ap.add_argument("--open-vocabulary", action="store_true", default=None)
     a = ap.parse_args()
     try:
         print(json.dumps(run(a.recording, a.poses, a.out, a.config, a.door,
-                             camera_pose_path=a.camera_pose, floor_type=a.floor_type, camera_path=a.camera), indent=2))
+                             camera_pose_path=a.camera_pose, floor_type=a.floor_type, camera_path=a.camera,
+                             semantic_floor=a.semantic_floor, open_vocabulary=a.open_vocabulary), indent=2))
     except (ValueError, FileNotFoundError) as e:
         ap.error(str(e))
 

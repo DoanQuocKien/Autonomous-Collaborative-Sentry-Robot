@@ -1,0 +1,2 @@
+# Optional Issue #43 semantic-floor backend; install after the CUDA torch setup.
+transformers==4.57.1

@@ -19,7 +19,7 @@ from tools.prescan_replay import FIELDS
 
 
 def run(image_path, camera_pose_path, floor_type, out, config_path=DEFAULT_PATH,
-        camera_path=None, manual_regions=None):
+        camera_path=None, manual_regions=None, semantic_floor=None, open_vocabulary=None):
     image = cv2.imread(str(image_path))
     if image is None:
         raise ValueError("cannot read raw image")
@@ -28,7 +28,8 @@ def run(image_path, camera_pose_path, floor_type, out, config_path=DEFAULT_PATH,
         regions = json.loads(Path(manual_regions).read_text(encoding="utf-8-sig"))
         detections = tuple(Detection(-1, 1.0, tuple(r["xyxy"]), r.get("flat_on_floor", False)) for r in regions)
         predictor = lambda image: detections
-    detector = ObstacleDetector.from_config(config_path, predictor, camera_pose_path, camera_path, floor_type)
+    detector = ObstacleDetector.from_config(config_path, predictor, camera_pose_path, camera_path, floor_type,
+                                            semantic_floor=semantic_floor, open_vocabulary=open_vocabulary)
     if regions is not None:
         detector.class_ids = detector.class_ids | {-1}  # explicitly manual geometry, never YOLO class filtering
     result = detector(image, 0.0)
@@ -41,7 +42,8 @@ def run(image_path, camera_pose_path, floor_type, out, config_path=DEFAULT_PATH,
             p, d, c = o.ground, o.detection, o.contact
             ground = [p.forward_m,p.left_m,p.distance_m,"",""] if p else [""]*5
             writer.writerow([0,0,0,index,d.class_id,d.confidence,*d.xyxy,o.rejection or "",*ground,
-                             result.floor_type,result.camera_session,*([c.u,c.v,c.method,c.confidence] if c else [""]*4)])
+                             result.floor_type,result.camera_session,*([c.u,c.v,c.method,c.confidence] if c else [""]*4),
+                             d.source,d.semantic_label if d.semantic_label is not None else "",d.label or ""])
     summary = dict(source="manual_regions_geometric_diagnostic" if regions is not None else "YOLO",
                    camera_session=result.camera_session, camera_pose_status=detector.geometry.pose_status,
                    image_sha256=hashlib.sha256(Path(image_path).read_bytes()).hexdigest(),
@@ -65,8 +67,11 @@ def main():
     ap.add_argument("--manual-regions")
     ap.add_argument("--config", default=str(DEFAULT_PATH))
     ap.add_argument("--out", required=True)
+    ap.add_argument("--semantic-floor", action="store_true", default=None)
+    ap.add_argument("--open-vocabulary", action="store_true", default=None)
     a = ap.parse_args()
-    result = run(a.image,a.camera_pose,a.floor_type,a.out,a.config,a.camera,a.manual_regions)
+    result = run(a.image,a.camera_pose,a.floor_type,a.out,a.config,a.camera,a.manual_regions,
+                 a.semantic_floor,a.open_vocabulary)
     print(json.dumps({k:result[k] for k in ("source","camera_session","camera_pose_status","motor_commands_sent")},indent=2))
 
 

@@ -1,5 +1,19 @@
 # HNHL tuần 2 — bàn giao trạng thái
 
+## Phiên mới nhất: 2026-10-17 — issue #43
+
+Đã đọc GitHub issue/comment bằng API với credential Git hiện có; chỉ đọc, không đăng comment/đóng issue. Issue mở giao HNHL là #43. Đã fast-forward branch W2 tới origin/main b7d19be rồi tạo branch `HuynhNguyenHoaiLoc/w02-issue43-obstacles`. HNHL đã yêu cầu commit/push nhánh này sau khi xem kết quả; khi tiếp tục, kiểm tra git status/log/upstream để xác định trạng thái thực tế.
+
+Đã thêm floor.py (local SegFormer-B0/ADE20K, semantic non-floor proposals và image-edge contact), world.py (offline prompt-bound YOLO-World + tiled floor crops/NMS), optional requirements, pinned tools.fetch_floor_model, tools.bench_obstacles, CLI flags/source exports, CPU/GPU tests. Cả hai backend mới mặc định tắt; bật --semantic-floor và --open-vocabulary. Không đổi motor/controller hoặc tự suy ra map FREE.
+
+Private ZIP 15/10 có tại Downloads và đã giải nén an toàn trong data/dqk-obstacles-2026-10-15. Private boxes tại data/issue43/mixed_boxes.json, ảnh/overlay thử nghiệm trong data/issue43; không stage các file này. Weights SegFormer và bound World ở data/models, CLIP cache ở weights/clip, tất cả gitignored. requirements-floor.txt/runtime Transformers4.57.1, requirements-world.txt chỉ cho chuẩn bị vocabulary; CUDA torch giữ nguyên.
+
+Kết quả cuối: 360 CPU passed, 2 data skips, 2 deselected; 2 GPU passed (network blocked trong inference), check_env ALL GOOD. pip check có cảnh báo tên requirement onnxruntime của InsightFace vì đã dùng onnxruntime-gpu theo Setup, không cài thêm CPU package. JSON/logs ở reports/HuynhNguyenHoaiLoc/week-02/issue-43.
+
+Ghế 86 frames: baseline distance 0/9; semantic 8/9, còn ID21 border-truncated. Held-out chairs_c 3/3 có estimate, median/p90 5.37/17.11%; chưa formal T1. Mixed259frames: all80 detects7/15 (stable2); hybrid12/15 (stable10), distance10/15 (stable6), median/p9011.27/27.80%. Charger10, stand13, phone15 vẫn missed; vài ID có detection nhưng không có distance ổn định. FPS semantic/hybrid11.45/7.80 trên RTX5060, không thay RTX4050 hoặc 20FPS target. Issue chưa đủ để đóng; cần reviewed dense labels/false-positive eval, matte/rugged images, pitch validation và optimization/HIL.
+
+Đọc **ISSUE-43-HNHL.md** và **PR-I43-HNHL.md** khi tiếp tục. Không dùng chữ Closes #43 trong PR; hiện Refs #43. Nội dung dưới đây là bàn giao lịch sử phiên 12/10.
+
 Cập nhật 2026-10-12, Asia/Bangkok, sau yêu cầu kiểm tra code DQK vừa merge.
 
 Nhánh HuynhNguyenHoaiLoc/w02-obstacles-map-vantage đã fast-forward an toàn tới 8d8aeaa, cùng origin/main khi kiểm tra. Upstream vẫn origin/HuynhNguyenHoaiLoc/w02-obstacles-map-vantage. W2 ban đầu đã merge PR #27. DQK camera pose/entrance và KR localization đã có local. Merge --ff-only --autostash giữ đầy đủ sửa đổi chưa commit, không có conflict. Chưa commit/push sửa đổi bổ sung.

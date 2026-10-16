@@ -103,6 +103,38 @@ repulsion_gain = 1.0
 repulsion_max_w = 1.0            # normalized UDP w contribution, not rad/s
 centre_turn = 1                  # deterministic left turn for an exactly centred obstacle
 
+[floor_segmentation]             # optional Issue #43 backend: enable explicitly after fetching weights
+enabled = false                 # opt in via --semantic-floor; inference stays offline
+model_path = "data/models/segformer-b0-ade"
+device = "cuda:0"
+floor_ids = [3, 28]              # ADE20K floor, rug; carpet belongs to these labels
+ignore_label_ids = [0, 1, 2, 5, 6, 8, 9, 13, 14, 21, 26, 27] # stuff/sky/glass are not small-object proposals
+floor_confidence = 0.60
+object_confidence = 0.45
+min_component_px = 16
+max_component_fraction = 0.35
+contact_search_px = 20
+contact_above_px = 35
+contact_strip_px = 3
+contact_min_contrast = 5.0
+contact_min_columns = 3
+contact_cluster_px = 4
+contact_background_px = 15
+contact_floor_fraction = 0.6
+candidate_overlap = 0.5          # skip semantic proposals already covered by a YOLO box
+
+[open_vocabulary]                # optional Issue #43 offline prompt-bound YOLO-World
+enabled = false
+weights = "data/models/obstacles-world.pt"
+device = "0"
+imgsz = 960
+confidence = 0.10                # exploratory proposals; evaluate missed and unmatched boxes
+nms_iou = 0.50
+floor_crop_fraction = 0.55
+tiles = 2
+tile_overlap = 0.2
+prompts = ["shoe", "bag", "laptop sleeve", "charger", "cup", "computer mouse", "laptop stand", "power strip", "phone", "bottle", "keys", "book", "jacket", "laptop", "cable"]
+
 [gridmap]
 resolution_m = 0.10
 width_m = 20.0
