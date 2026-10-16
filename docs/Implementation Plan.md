@@ -217,11 +217,11 @@ Effort estimate (desk study, to be re-estimated at G1): Stage A about 4 person-d
   - Tests: T0 for pose integration (closed square path returns to the origin in sim) and ArUco pose on synthetic renders; T1 entrance TPR/FPR on D1.
 - **Status (Fri 2026-10-16):** merged: fisheye calibration (RMS 0.83 px), the motion calibration tools and the affine speed / turn fits and wheel law (`calib/motion.json`, `docs/Classroom Session 2026-10-15.md`), live camera tilt with roll (`LiveTilt`, PRs #35, #38), the entrance detector (PR #31; the classroom door, the primary demo door, passes at TPR 1.00 / FPR 0.00; the cafe glass door is optional), HNHL's obstacle detector with reflection handling (PR #34), KR's dead reckoning and ArUco correction (PRs #33, #37), the D1 classroom data and the 24-row obstacle pack for HNHL (PR #42). Still open: see the list below (this is Week 2: everything on it is due before the Sunday Oct 18 meet-up).
 - **Still open before the Sunday Oct 18 meet-up (this is Week 2; checked at the session):**
-  - DQK: the T2 exploration with obstacle repulsion, connected end to end (the Week 2 session item; needs HNHL's obstacle layer, KR's pose and the floor cleared first); the PR for the 2026-10-15 evidence log (`DoanQuocKien/w02-log`, not merged; `calib/motion.json` cites it); the Week 2 log with the Fri-Sun hours. Not a Week 2 blocker: the random heading error needs online correction from the marker, which is Week 3 work.
+  - DQK: the T2 exploration with obstacle repulsion, connected end to end, and the T2 3 m dead-reckoning path with KR (the Week 2 session items; needs HNHL's obstacle layer, KR's pose and the floor cleared first); the PR for the 2026-10-15 evidence log (`DoanQuocKien/w02-log`, not merged; `calib/motion.json` cites it); the Week 2 log with the Fri-Sun hours. Not a Week 2 blocker: the random heading error needs online correction from the marker, which is Week 3 work.
   - HNHL: issue #43 (chairs on the glossy floor get no distance, small or low objects are not detected); the T1 obstacle-distance result (median <= 10 %, p90 <= 20 %, 0.3-2.0 m) on the 24-row pack of 2026-10-15; the week-02 report is dated 2026-10-12.
   - KR: issue #41 (switch `localization.py` to the new wheel model); the week-02 report still describes the old ORB `entrance.py` (it is XFeat + DINOv2 now and KR owns it): update it and re-run the T1 entrance check on the classroom door, the primary demo door.
   - All: review PR #45 (one reviewer) and decide G0.
-- **Session:** T2 exploration with obstacle repulsion, connected end to end.
+- **Session:** T2 exploration with obstacle repulsion, connected end to end; T2 dead reckoning over a 3 m path with ArUco correction (DQK with KR; position error <= 15 cm with the correction, <= 40 cm without, section 4.3; moved here from Week 4 on 2026-10-16).
 
 ### Week 3 (Oct 19-25): HCI Deployment & Biometrics
 
@@ -252,7 +252,7 @@ Effort estimate (desk study, to be re-estimated at G1): Stage A about 4 person-d
 
 - **DQK**
   - Phase 1 end-to-end HIL: explore -> find entrance -> sweet spot -> prompt -> camera placed -> verified -> standby. Make sure the exploration covers the room (risk 8).
-  - Tests: T2, 5 runs; T2 dead reckoning over a 3 m path (with KR).
+  - Tests: T2, 5 runs.
 - **HNHL**
   - `perception/reid.py`: person crop from YOLO on ESP32 frames -> OSNet via torchreid with **re-ID-trained weights from `python -m tools.fetch_models`** (`osnet_ain_x1_0` domain-generalised, and `osnet_x0_25` Market1501); compare both on D2/D3 and keep the better one. Not `pretrained=True`: that is ImageNet-only.
   - Tests: T1 rank-1 and ROC on D2.
@@ -345,7 +345,7 @@ Effort estimate (desk study, to be re-estimated at G1): Stage A about 4 person-d
   - T2 padded-lunge trials (the speed-cap decision of section 3 is recorded first).
   - Follow a planned path on the robot (waypoint following with the obstacle override and ArUco pose corrections) and the slow in-place 360° scan at each viewpoint.
   - Measure the effective detection radius `r_det` (distance at which OSNet still matches reliably; 3 people) and write it to `config.toml`.
-  - Tests: T2 strike evasion (latency part); path-following error over the 3 m protocol.
+  - Tests: T2 strike evasion (latency part); path-following error over the 3 m protocol of the Week 2 dead-reckoning test.
 - **HNHL**
   - Tune the lunge detector on D4.
   - Exit-event detection on the ESP32 (re-ID matches T1 at the door and motion is toward the door).
