@@ -1,6 +1,6 @@
 # Week 02 – DoanQuocKien (2026-10-12 to 2026-10-18)
 
-*Started Monday 2026-10-12 (work done on Sunday 2026-10-11 evening and Monday). Updated Monday afternoon after the first classroom session and again on the night of Wednesday 2026-10-14 (live tilt, drive runs, merged PRs); items marked **TODO** are not done yet. The live-tilt runs are dated 2026-10-13/14.*
+*Started Monday 2026-10-12 (work done on Sunday 2026-10-11 evening and Monday). Updated Monday afternoon after the first classroom session and again on the night of Wednesday 2026-10-14 (live tilt, drive runs, merged PRs); items marked **TODO** are not done yet. The live-tilt runs are dated 2026-10-13/14. Updated Saturday 2026-10-17 (about 01:10): Friday's on-robot inference work and the SD-card incident (PR #45), the merged PRs, the open list for the Sunday meet-up, the camera pose of Saturday's mount, hours to Saturday.*
 
 ## Done
 - **Fisheye calibration (T1):** `tools/calibrate_fisheye.py` (+ `tests/test_calibrate_fisheye.py`: synthetic recovery, corrupted-view drop, real-photo replay test). 58 checkerboard photos, 52 used (6 early views dropped for reprojection error > 2.5 px, limit 15 %), **RMS 0.83 px** (target < 1.0 px), odd/even half-splits stable. `fx 309.6, fy 306.2, cx 285.8, cy 239.1`, `calib/camera.json`. Evidence: `week-02/fisheye_metrics.json`, `fisheye_calibration.log`.
@@ -37,6 +37,12 @@
 - **Mid-term and plan:** the mid-term report is due Mon 2026-11-23 (10-15 pages, with the code), final window 2026-12-28..2027-01-02; 13-week plan and `docs/Mid-Term Report Plan.md` by an Opus agent, reviewed (PR #24, #25).
 - **D1 prep (Sunday):** cafe door set finished (16 rows, 1,419 manifest frames, see week 01), classroom checklist `docs/D1 Classroom Checklist.md`, `assets/d1/*_template.csv`. ESP32: OV2640 build of `esp32/sentry_cam` (JPEG VGA q12, builds, untested on a board), GC2145 tile stream kept as the working path (about 15 fps).
 
+- **Friday 2026-10-16, on-robot inference (extra, proposed; PR #45, open):** eight models converted to TensorRT 7.1 FP16 engines built on the robot and checked against ONNX Runtime (cosine >= 0.9999 on the checked models). The pursuit model mix runs at 20 FPS on live frames with a capture-to-result time of 51 ms (p95) with nobody in view and 72 ms with the door pipeline in its own thread, 2.1 GB RAM, 36-50 % GPU, and a 10-minute soak on battery was stable (12.14 -> 11.93 V, 40 C). A silent TensorRT 7.1 bug was found and fixed: the SCRFD `Resize` nodes gave a cosine of 0.88-0.99 against ONNX Runtime in FP32 and FP16 alike (face scores 0.72 instead of 0.81) until they were rewritten as a grouped ConvTranspose (`tools/export_edge_onnx.py`, tested). Evidence: `reports/DoanQuocKien/week-02/edge_deploy/`, `docs/Edge Deployment.md`, the `jetson/` modules; all in PR #45. Not measured: a person in view, ESP32 frames, accuracy on our own data, driving under load.
+- **SD card incident and root grow (2026-10-16):** the card was removed twice without a clean shutdown (unreplayed journal); a repair from the laptop through a USB card reader and `usbipd` ran at 3.5 MB/s and silently dropped writes (the same fixes were applied in three rounds and never stuck), while the robot's own SD interface wrote at 68 MB/s with correct read-back. The filesystem was repaired, the partition grown from 24 to 58 GB and `resize2fs` finished online on the robot (34 GB free). Rules: shut down with `sudo shutdown now`, never write the card through that reader, check any new card with `e2fsck -n` (a second card from the same image showed far more errors). Written up in `docs/JetBot Notes.md` (PR #45) and as risk 28.
+- **Plans (PR #45):** the spec's 8-week roadmap is now the 13-week calendar; the classroom door is the only entrance door with a pass threshold (the cafe door is optional); the Week 2 section lists what is open per member; the 3 m dead-reckoning test moved from Week 4 to the Week 2 session; exploration and that test are the Sunday session's T2 protocols (hosted by DQK), not personal DQK tasks; issues #41 and #43 stay with KR and HNHL.
+- **Camera pose of Saturday's mount (2026-10-17, about 01:00):** three strips at 0.5 / 1.0 / 2.0 m, lens height by tape 0.100 m: fit H 0.0947 m, pitch 0.68 deg down, rms 1.57 cm, passed (`reports/DoanQuocKien/week-02/camera_pose_classroom_1017.json`). The preflight marker reading (+16.2 deg against 5.0 deg stored) did not agree with the strips: the marker's height setting no longer applied after the board was moved; the strips are the reference.
+- **Exploration runner (preparation for the Sunday session, in no PR):** a policy module, a live runner with a dry-run mode, start checks, R1 wait and stop rules, and 12 tests (closed loop with the measured wheel model: at least 0.37 m clear of every obstacle surface with 60 % of detections missed and 0.3 s latency). Only dry runs on the robot (detector about 55 ms per frame, 105-130 ms with the glossy contact estimator); nothing was driven. It sits on the local branch `DoanQuocKien/w02-explore-driver`.
+
 ## Tests run
 | Tier | Command | Result | Evidence |
 | :-- | :-- | :-- | :-- |
@@ -49,6 +55,10 @@
 | T2 | Classroom 2026-10-15: 7 open-loop speed runs (+1 at low battery) and 4 marker turns, marker as the ruler | speed = 0.491 (v - 0.124), turn = 7.20 (w - 0.130); wheel model within 6 % / 8 % of every point | `week-02/classroom_1015/` |
 | T1 | Obstacle distance on the 2026-10-15 data (current detector, glossy) | **0 of 9 chairs get a distance** (`reflection_unresolved`); 0 of 15 small objects detected | PR #42, issue #43 |
 | T2 | Live tilt drive runs 1-5 and steering runs, marker-pose truth | not pass / fail: the fixed tilt is 14-39 % off; the live tilt is 0.5-6 % off standing and about 3-20 % moving, depending on window and run | `week-02/live_tilt/` |
+| T1 | TensorRT FP16 engines on the robot against ONNX Runtime FP32 on the same input (YOLOv8n, pose, OSNet x2, XFeat backbone, MobileFaceNet, SCRFD after the Resize fix) | cosine >= 0.9999 on every checked output; detector boxes IoU 0.96-0.999, same counts | PR #45 `edge_deploy/`, `docs/Edge Deployment.md` |
+| T2 | On-robot bench on the live camera stream, Stage B and Stage C, wheels still, on battery | 20 FPS; capture-to-result p95 51 ms (Stage B), 72 ms with the door pipeline in its own thread; 10-minute soak stable | PR #45 `edge_deploy/` |
+| T1 | `tools.measure_camera_pose --one-click` on Saturday's mount (3 strips) | H 0.0947 m (tape 0.100), pitch 0.68 deg down, rms 1.57 cm: **pass** (< 3 cm) | `week-02/camera_pose_classroom_1017.json` |
+| T0 | `pytest` on `DoanQuocKien/w02-edge-deploy` (and the 12 exploration tests on the local branch) | 339 passed (before the last doc edits); 12 passed | run 2026-10-16 / 2026-10-17 |
 
 ## Acceptance criteria status (Implementation Plan §4.3)
 - Fisheye calibration RMS < 1.0 px: **pass** (0.83 px)
@@ -70,32 +80,36 @@
 - **Turn angles by eye:** two full turns in 2 s; use short turns (about 190 deg) for the next set.
 - **Camera pose is one run** with one mark dropped after seeing the data; the obstacle metric on the classroom data is the independent check of H_cam. Do not move the camera screw.
 - **Battery:** 11.14 V on Monday morning; 12.31 V at the start of the drive tests on 2026-10-14, 10.97 V at the last run (LOW, above the 10.5 V stop line). The turn gain was calibrated at 11.7-12.1 V, so low-battery runs bias it. Charge overnight (target 12.4 V).
-- **Live tilt code is not on `main`:** PR #32 merged only the first part. Seven commits (config, sub-pixel corners, `LiveTilt`, raw detection, roll rule, `set_pitch_deg`, `ObstacleDetector` hook) are on `DoanQuocKien/w02-camera-pose-live2` only and merge cleanly into the current `main` (5 files, +144 / -14); **a new PR is needed**. HNHL's open PR #34 ("align DQK camera pose, reflection contact and integration") touches `config.toml` and `localization.py`: check the overlap before merging.
-- **Camera roll** in `calib/camera_pose_*.json` (-1.85 deg) is wrong and large off-axis (see the live-tilt bullet).
+- **Live tilt code is merged:** PRs #35 and #38 (2026-10-14/15). Still to agree with HNHL: whether `ObstacleDetector` turns the tilt hook on.
+- **Camera roll:** measured +1.1 deg and handled with PR #38 (the strip-click value of -1.85 deg was wrong).
 - **Camera mount** is tiltable and moved by 3.6 deg between sessions (risk 22): lock it, one pose file per session, re-check at the end of each session.
 - **Glossy floor reflections** bias low obstacles 14-16 % too near (risk 23): HNHL's `obstacle.py` must find the contact between object and reflection (or use masks); report glossy and matte floors separately.
-- **Entrance bake-off** is on two doors from one session each: a third door and a second session decide the threshold and the method.
-- **PRs:** merged by 2026-10-14: #21, #22, #24, #25, #26, #27 (HNHL), #28, #29, #30, #31 (entrance), #32 (camera pose, first part), #33 (KR: dead reckoning + ArUco localization). Open: #34 (HNHL fix); #20 (sudo prompt) status to check; #23 (this log) was closed until the calibration is complete: **this branch is pushed but has no open PR**. KR sent #33 with a week-2 report; the sensor PID answer is still missing.
+- **Entrance:** the classroom door is the primary demo door and the only one with a pass threshold (decision 2026-10-12, confirmed 2026-10-16; Implementation Plan section 4.3 and risk 14, in PR #45); the cafe door is optional. A second session on the classroom door decides how robust the result is.
+- **PRs:** merged by 2026-10-16, among others: #31 (entrance), #33 and #37 (KR: localization), #34 (HNHL: obstacle detector), #35 and #38 (live tilt and roll), #39 (plan), #40 (session tools), #42 (obstacle data), #44 (wheel model block); open: #45 (edge deployment, plans). This log's branch is opened as a PR on 2026-10-17 (it carries the evidence `calib/motion.json` cites).
 - Open from week 1: ORB entrance matching on a glass door (risk 14; classroom door is the real test), OV2640 not arrived (ESP32 door view), the second ESP32 board's Wi-Fi problem (risk 13).
 
-## Still open in week 2 (rewritten after the 2026-10-15 session; the 2026-10-14 list is partly done: roll measured, preflight run, tools in a PR, motion model measured)
-- **DQK, motion:** done: the speed and turn model on glossy tile (see Done). Still open: write `calib/motion.json` (or a per-floor profile) from the wheel model and the fit (`calibrate_motion fit` does not know the offset law yet), heading: a left bias of about 10 deg per metre plus a random spread (see Done): a trim would only remove the mean, so online correction, the `MotionEstimator` wired into the robot loop (week 3), KR's localization switched to `WheelModel` (issue #41), and a battery-dependent offset (one more point at a full battery).
-- **DQK, camera:** done: live tilt merged (#35), roll measured (+1.1 deg, PR #38 open), plan row and risk 22 (#39 merged), preflight run on the robot (passed on 2026-10-14/15). Still open: agree with HNHL whether `ObstacleDetector` turns the tilt hook on; a marker tilt check against the strips at the end of a session (not done on 2026-10-15).
-- **D1 / classroom:** done: 24 obstacle rows (PR #42). Still open: a matte-floor control, empty-floor clips (negatives for a floor segmenter), the room sweep, back up `data/D1*` (and `data/D1_obstacles_1015`), the return checklist.
-- **HNHL:** PR #34 review; obstacle distance error (T1) and map-vs-tape error on the full D1 set; reflection handling (risk 23).
-- **KR:** review of #31 (entrance), localization T0 / T2 numbers (3 m path error), weekly log, sensor PID answer.
-- **Session task:** T2 exploration with obstacle repulsion, connected end to end: not started (needs the motion fit and the tilt / roll decisions above).
-- **Other:** OV2640 arrival and flashing; `docs/Implementation Plan.md` and the localization text still say "10 cm markers" (the prints are 150 mm); hours (below).
-- Week 3 (DQK): USB speaker playback and the deployment behaviour; both need the motion model above.
+## Still open in week 2 (rewritten Saturday 2026-10-17, before the Sunday 2026-10-18 meet-up)
+- **DQK:** this log's PR (opened with this update) and the hours below. Not a Week 2 blocker: the random heading error (a left bias of about 10 deg/m plus a random spread) needs online correction from the marker, the `MotionEstimator` wired into the robot loop and a battery-dependent offset; all Week 3.
+- **Sunday session (hosted by DQK, run with HNHL and KR; the session's T2 protocols, not personal tasks):** T2 exploration with obstacle repulsion, connected end to end (needs HNHL's obstacle layer, KR's pose, a cleared floor, a camera pose measured for that day's mount, and a runner: a prepared one is on the local branch `DoanQuocKien/w02-explore-driver`, not in the repo); T2 dead reckoning over a 3 m path with ArUco correction (DQK with KR; needs the markers on rigid boards and issue #41 done first). The pose of Saturday's mount is measured (see Done); re-measure if the robot is moved or tilted.
+- **Camera:** done: live tilt merged, roll measured and handled, plan row and risk 22, preflight run. Open: agree with HNHL whether `ObstacleDetector` turns the tilt hook on; a marker tilt check against the strips at the end of a session.
+- **D1 / classroom:** done: 24 obstacle rows (PR #42). Dropped on purpose (DQK): the matte-floor control, the empty-floor clips and the room sweep. Open: back up `data/D1*` and `data/D1_obstacles_1015` (the plan names `data/` and the team Drive as the places for face data), the return checklist.
+- **HNHL:** issue #43 (chairs on the glossy floor get no distance, small or low objects are not detected); the T1 obstacle-distance result on the 24-row pack; the week-02 report is dated 2026-10-12.
+- **KR:** issue #41 (localization on the new wheel model); the week-02 report still describes the old ORB `entrance.py`; the T1 entrance check on the classroom door.
+- **All:** review PR #45 and decide G0 (the on-robot inference extra task, agreed or rejected on Sunday; nothing in it is due before Week 3).
+- **Other:** OV2640 arrival and flashing.
+- **Week 3 (DQK):** USB speaker playback and the deployment behaviour; wiring `MotionEstimator`; the demo-room check from `docs/Classroom Session 2026-10-15.md`; if G0 passes, closing the on-robot bench (gate G1, Sun Oct 25).
 
 ## Hours
-- From the chat timestamps (session transcripts, UTC+7; a gap of up to 30 minutes between messages counts as work, a longer one as a break), counted on 2026-10-15 at 11:53 and **not including Friday to Sunday**:
+- From the chat timestamps (session transcripts, UTC+7; a gap of up to 30 minutes between messages counts as work, a longer one as a break), counted on Saturday 2026-10-17 at about 01:10:
   | Day | Active chat time |
   | :-- | :-- |
   | Sun 2026-10-11 (evening: D1 prep, the cafe door set) | 4.7 h |
   | Mon 2026-10-12 | 4.3 h |
   | Tue 2026-10-13 | no chat activity |
   | Wed 2026-10-14 | 4.2 h |
-  | Thu 2026-10-15 (classroom 08:00-12:00, up to 11:53) | 3.2 h |
-  | **Mon-Thu** | **11.7 h** (16.4 h with Sunday evening) |
+  | Thu 2026-10-15 (classroom 08:00-12:00, the packaging, the evening) | 4.5 h |
+  | Fri 2026-10-16 (on-robot inference, the SD card, the plans and PR #45, from 19:40) | 4.3 h |
+  | Sat 2026-10-17 (so far: the camera pose, the exploration runner prep) | 0.6 h |
+  | **Mon-Fri** | **17.2 h** (21.9 h with Sunday evening; 22.4 h with Saturday so far) |
   Caveats: chat time only; it includes the robot runs (the assistant's tool calls and the waiting for R1 count as active) and not offline work that left no messages (printing, moving furniture, reading papers). Update on Sunday with the rest of the week.
+  Saturday after about 01:10 and Sunday are still to add.
