@@ -25,6 +25,7 @@
 | T0 | `python -m pytest -m "not gpu and not hil"` | 342 passed, 4 skipped, 1 deselected in 16.07 s | [pytest.log](week-02/pytest.log) |
 | T0 | `python -m pytest tests/test_entrance.py -v` | 10 passed, 2 skipped in 3.75 s | [pytest.log](week-02/pytest.log) |
 | T0 | `python -m pytest tests/test_localization.py tests/test_wheel_model.py -v` | 15 passed in 3.39 s (WheelModel odometry, closed square path & ArUco fusion) | [pytest.log](week-02/pytest.log) |
+| T0 | `pytest tests/test_localization.py tests/test_wheel_model.py tests/test_entrance.py` | 25 passed, 2 skipped (reviewed by DQK on `main` + PR #48, 2026-10-17); full log `week-02/pytest.log` | `reports/kouun-rokku/week-02/pytest.log` |
 | T1 | Classroom door evaluation (`sentry/perception/entrance.py`, XFeat `auto`) | TPR 1.00 (210/210), FPR 0.00 (0/52) | [entrance_bench_2026-10-12.md](../DoanQuocKien/week-02/d1/entrance_bench_2026-10-12.md) |
 
 ## Acceptance criteria status (Implementation Plan §4.3)
