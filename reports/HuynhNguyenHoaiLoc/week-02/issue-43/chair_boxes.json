@@ -1,0 +1,11 @@
+[
+  {"clip":"chairs_a","obstacle_id":21,"xyxy":[464,0,640,404]},
+  {"clip":"chairs_a","obstacle_id":22,"xyxy":[123,78,290,342]},
+  {"clip":"chairs_a","obstacle_id":23,"xyxy":[304,165,394,333]},
+  {"clip":"chairs_b","obstacle_id":24,"xyxy":[378,91,639,365]},
+  {"clip":"chairs_b","obstacle_id":25,"xyxy":[139,125,246,335]},
+  {"clip":"chairs_b","obstacle_id":26,"xyxy":[294,168,369,331]},
+  {"clip":"chairs_c","obstacle_id":27,"xyxy":[95,70,246,341]},
+  {"clip":"chairs_c","obstacle_id":28,"xyxy":[310,122,450,340]},
+  {"clip":"chairs_c","obstacle_id":29,"xyxy":[244,186,322,333]}
+]

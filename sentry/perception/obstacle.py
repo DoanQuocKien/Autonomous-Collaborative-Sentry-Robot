@@ -17,6 +17,9 @@ class Detection:
     confidence: float
     xyxy: tuple[float, float, float, float]
     flat_on_floor: bool = False  # explicit annotation/adapter fact, never inferred from class ID
+    source: str = "yolo"
+    semantic_label: int | None = None  # ADE20K ID, never a COCO class ID
+    label: str | None = None
 
 
 @dataclass(frozen=True)
@@ -89,9 +92,11 @@ class YOLOPredictor:
 
 
 class ObstacleDetector:
-    def __init__(self, geometry: CameraGeometry, predictor: Callable, settings, thresholds, tilt=None):
+    def __init__(self, geometry: CameraGeometry, predictor: Callable, settings, thresholds, tilt=None, floor=None, world=None):
         self.geometry, self.predictor, self.tilt = geometry, predictor, tilt     # tilt: camera_pose.LiveTilt, updates geometry.pitch from ArUco pages
         self.settings, self.thresholds = dict(settings), dict(thresholds)
+        self.floor = floor
+        self.world = world
         if (not math.isfinite(settings["confidence"]) or not 0 <= settings["confidence"] <= 1
                 or not math.isfinite(settings["border_margin_px"]) or settings["border_margin_px"] < 1):
             raise ValueError("invalid detection thresholds")
@@ -103,7 +108,7 @@ class ObstacleDetector:
 
     @classmethod
     def from_config(cls, config_path=DEFAULT_PATH, predictor=None, camera_pose_path=None,
-                    camera_path=None, floor_type=None):
+                    camera_path=None, floor_type=None, semantic_floor=None, floor_predictor=None, open_vocabulary=None):
         config = load(config_path)
         root = Path(config_path).resolve().parent
         s = dict(config["obstacle"])
@@ -115,8 +120,21 @@ class ObstacleDetector:
             s["floor_type"] = floor_type
         geometry = CameraGeometry.from_files(root / s["camera_calibration"], root / s["camera_pose"],
                                              s["max_ground_range_m"], s["pose_max_rms_m"])
+        floor = None
+        fs = config.get("floor_segmentation", {})
+        enabled = fs.get("enabled", False) if semantic_floor is None else semantic_floor
+        if enabled or floor_predictor is not None:
+            from .floor import SegformerFloorPredictor, SemanticFloorAnalyzer
+            backend = floor_predictor if floor_predictor is not None else SegformerFloorPredictor(root / fs["model_path"], fs)
+            floor = SemanticFloorAnalyzer(backend, fs)
+        ws = config.get("open_vocabulary", {})
+        world = None
+        world_enabled = ws.get("enabled", False) if open_vocabulary is None else open_vocabulary
+        if world_enabled:
+            from .world import WorldPredictor
+            world = WorldPredictor(root / ws["weights"], ws)
         return cls(geometry, predictor if predictor is not None else YOLOPredictor(root / s["weights"], s),
-                   s, config["thresholds"])
+                   s, config["thresholds"], floor=floor, world=world)
 
     def __call__(self, frame_bgr, t, mode="explore", floor_type=None):
         floor_type = self.settings["floor_type"] if floor_type is None else floor_type
@@ -128,12 +146,27 @@ class ObstacleDetector:
             self.tilt.raw(frame_bgr)                                     # raw frame: finds markers far off-axis
         w, h = self.geometry.size
         observations = []
+        detections = []
         for detection in self.predictor(image):
             if detection.class_id not in self.class_ids:
                 continue
             if (not math.isfinite(detection.confidence) or not 0 <= detection.confidence <= 1
                     or detection.confidence < self.settings["confidence"]):
                 continue
+            detections.append((detection, None))
+        if self.world is not None:
+            detections.extend((d, None) for d in self.world(image))
+            from .world import merge_proposals
+            detections = [(d, None) for d in merge_proposals([d for d, _ in detections], self.world.settings["nms_iou"])]
+        evidence = self.floor(image) if self.floor is not None else None
+        if evidence is not None:
+            existing_boxes = [d.xyxy for d, _ in detections if len(d.xyxy) == 4
+                              and all(math.isfinite(q) for q in d.xyxy)]
+            for box, contact, label, confidence in self.floor.proposals(image, evidence, self.geometry.valid, existing_boxes):
+                if self.geometry.ground_point((box[0] + box[2]) / 2, box[3]) is None:
+                    continue  # non-floor above the ground horizon is not a floor hazard
+                detections.append((Detection(-1, confidence, box, source="semantic_nonfloor", semantic_label=label), contact))
+        for detection, suggested_contact in detections:
             box = detection.xyxy
             point, reason, contact = None, None, None
             margin = self.settings["border_margin_px"]
@@ -145,13 +178,18 @@ class ObstacleDetector:
             elif box[0] <= margin or box[1] <= margin or box[2] >= w - margin:
                 reason = "border_truncated"
             else:
-                if floor_type == "matte" or detection.flat_on_floor:
+                if detection.source == "semantic_nonfloor":
+                    contact = suggested_contact if floor_type != "unknown" else None
+                elif floor_type == "matte" or detection.flat_on_floor:
                     contact = ContactEstimate((box[0] + box[2]) / 2, box[3],
                                               "bbox_known_flat" if detection.flat_on_floor else "bbox_matte", 1.0)
                 elif floor_type == "glossy":
                     contact = self.contact_estimator(image, box, self.geometry.valid)
+                    if contact is None and evidence is not None:
+                        contact = self.floor.contact(image, box, evidence, self.geometry.valid)
                 if contact is None:
-                    reason = "reflection_unresolved" if floor_type == "glossy" else "floor_type_unknown"
+                    reason = ("floor_type_unknown" if floor_type == "unknown" else "semantic_contact_unresolved"
+                              if detection.source == "semantic_nonfloor" else "reflection_unresolved")
                 elif not self.geometry.valid[min(int(contact.v), h - 1), min(int(contact.u), w - 1)]:
                     reason = "invalid_rectified_pixel"
                 else:

@@ -1,0 +1,2 @@
+# Used only to prepare the offline YOLO-World vocabulary (after CUDA torch setup).
+git+https://github.com/ultralytics/CLIP.git@7ffa84b3bfa40c42ecc1c77147a855e69cb2dd40
