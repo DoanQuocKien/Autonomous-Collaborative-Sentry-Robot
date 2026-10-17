@@ -91,4 +91,4 @@ Replay có cùng flags `--semantic-floor --open-vocabulary`; vẫn bắt buộc 
 3. Kiểm chứng pitch bằng marker đầu/cuối session và đánh giá sai số pose; không chỉnh pitch bằng tape của chính vật đang chấm.
 4. Tối ưu và đo trên RTX 4050/full pipeline trước khi bật mặc định; sau đó T1 map và T2 robot DQK. Phiên này không gửi motor commands.
 
-Nội dung PR bổ sung: [PR-I43-HNHL.md](PR-I43-HNHL.md). Đề xuất review dưới dạng **Refs #43**, giữ issue mở cho các tiêu chí còn thiếu.
+Nội dung PR bổ sung: xem mô tả PR #46. Đề xuất review dưới dạng **Refs #43**, giữ issue mở cho các tiêu chí còn thiếu.

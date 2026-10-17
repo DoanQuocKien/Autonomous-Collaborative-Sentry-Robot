@@ -226,36 +226,27 @@ class LocalizationTracker:
             return
 
         wm = data.get("wheel_model") if isinstance(data.get("wheel_model"), dict) else None
-        if wm is not None:
-            k = float(wm.get("k_m_per_s_per_motor", wm.get("k", self.wheel_model.k)))
-            m0 = float(wm.get("motor_offset", wm.get("m0", self.wheel_model.m0)))
-            track = float(wm.get("track_m", wm.get("track", self.wheel_model.track)))
-            max_speed = float(wm.get("max_speed", data.get("max_speed", self.wheel_model.max_speed)))
-            min_pwm = float(wm.get("min_pwm", data.get("min_pwm", self.wheel_model.min_pwm)))
-            scale = float(wm.get("scale", data.get("scale", self.wheel_model.scale)))
-            k_mix = float(wm.get("k_mix", data.get("k", self.wheel_model.k_mix)))
-            self.wheel_model = WheelModel(
-                k=k, m0=m0, track=track, max_speed=max_speed,
-                min_pwm=min_pwm, scale=scale, k_mix=k_mix,
-            )
-            if "drift_rad_per_m" in wm:
-                self.drift_rad_per_m = float(wm["drift_rad_per_m"])
-                self.apply_drift_compensation = self.drift_rad_per_m != 0.0
-        else:
-            k = float(data.get("k_m_per_s_per_motor", self.wheel_model.k))
-            m0 = float(data.get("motor_offset", data.get("m0", self.wheel_model.m0)))
-            track = float(data.get("track_m", data.get("track", self.wheel_model.track)))
-            max_speed = float(data.get("max_speed", self.wheel_model.max_speed))
-            min_pwm = float(data.get("min_pwm", self.wheel_model.min_pwm))
-            scale = float(data.get("scale", self.wheel_model.scale))
-            k_mix = float(data.get("k_mix", data.get("k", self.wheel_model.k_mix)))
-            self.wheel_model = WheelModel(
-                k=k, m0=m0, track=track, max_speed=max_speed,
-                min_pwm=min_pwm, scale=scale, k_mix=k_mix,
-            )
-            if "drift_rad_per_m" in data:
-                self.drift_rad_per_m = float(data["drift_rad_per_m"])
-                self.apply_drift_compensation = self.drift_rad_per_m != 0.0
+        src = wm if wm is not None else data  # keys in the wheel_model block win, top-level keys are the fallback
+        d = self.wheel_model
+
+        def get(name, default, *aliases):
+            for key in (name,) + aliases:
+                if key in src:
+                    return float(src[key])
+            return float(data.get(name, default)) if src is not data else float(default)
+
+        self.wheel_model = WheelModel(
+            k=get("k_m_per_s_per_motor", d.k, *(("k",) if wm is not None else ())),
+            m0=get("motor_offset", d.m0, "m0"),
+            track=get("track_m", d.track, "track"),
+            max_speed=get("max_speed", d.max_speed),
+            min_pwm=get("min_pwm", d.min_pwm),
+            scale=get("scale", d.scale),
+            k_mix=get("k_mix", data.get("k", d.k_mix)),
+        )
+        if "drift_rad_per_m" in src:
+            self.drift_rad_per_m = float(src["drift_rad_per_m"])
+            self.apply_drift_compensation = self.drift_rad_per_m != 0.0
 
     def _load_camera_calib(self, calib_source: dict[str, Any] | str | Path) -> None:
         data: dict[str, Any] | None = None

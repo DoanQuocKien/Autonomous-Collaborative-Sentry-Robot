@@ -1,6 +1,6 @@
 # HNHL — Báo cáo tuần 2: vật cản, bản đồ, vị trí quan sát
 
-**Cập nhật 2026-10-17:** đã xử lý thử nghiệm [issue #43](ISSUE-43-HNHL.md) trên dữ liệu DQK 15/10, bổ sung semantic floor và tiled YOLO-World; có kết quả và giới hạn mới. [Nội dung PR bổ sung](PR-I43-HNHL.md). Các mục dưới đây lưu kết quả phiên 12/10, không thay báo cáo issue mới.
+**Cập nhật 2026-10-17:** đã xử lý thử nghiệm [issue #43](ISSUE-43-HNHL.md) trên dữ liệu DQK 15/10, bổ sung semantic floor và tiled YOLO-World; có kết quả và giới hạn mới. Nội dung PR bổ sung: mô tả PR #46. Các mục dưới đây lưu kết quả phiên 12/10, không thay báo cáo issue mới.
 
 Kiểm chứng **2026-10-12**, Asia/Bangkok. Nhánh `HuynhNguyenHoaiLoc/w02-obstacles-map-vantage` đã fast-forward tới **`8d8aeaa`**, cùng `origin/main`, gồm PR #32 DQK và #33 KR. W2 ban đầu đã merge qua PR #27; các sửa đổi bổ sung bên dưới **chưa commit/push**. T1/T2 chưa nghiệm thu đầy đủ.
 
