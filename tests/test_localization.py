@@ -59,20 +59,18 @@ def test_robot_pose_dataclass():
 
 def test_dead_reckoning_straight_and_turn():
     tracker = LocalizationTracker(motion_calib=None, camera_calib=None)
-    tracker.v_gain = 0.5
-    tracker.w_gain = 2.0
-    tracker.drift_rad_per_m = 0.0
-    tracker.apply_drift_compensation = False
+    v_fwd, _ = tracker.wheel_model.body_speeds(1.0, 0.0)
+    _, w_turn = tracker.wheel_model.body_speeds(0.0, 1.0)
 
-    # 1 second forward at full speed: 0.5 m forward
+    # 1 second forward at full speed: v_fwd m forward (~0.430 m)
     tracker.set_pose(0.0, 0.0, 0.0)
     p = tracker.update_odometry(v=1.0, w=0.0, dt=1.0)
-    assert math.isclose(p.x, 0.5, abs_tol=1e-5)
+    assert math.isclose(p.x, v_fwd, abs_tol=1e-5)
     assert math.isclose(p.y, 0.0, abs_tol=1e-5)
     assert math.isclose(p.theta, 0.0, abs_tol=1e-5)
 
     # Turn in place: 90 degrees left (pi/2 rad)
-    dt_turn = (math.pi / 2.0) / tracker.w_gain
+    dt_turn = (math.pi / 2.0) / w_turn
     p = tracker.update_odometry(v=0.0, w=1.0, dt=dt_turn)
     assert math.isclose(p.theta, math.pi / 2.0, abs_tol=1e-5)
 
@@ -80,15 +78,13 @@ def test_dead_reckoning_straight_and_turn():
 def test_dead_reckoning_closed_square_path():
     """T0 requirement: closed square path returns to the origin in simulation."""
     tracker = LocalizationTracker(motion_calib=None, camera_calib=None)
-    tracker.v_gain = 0.4
-    tracker.w_gain = 1.5
-    tracker.drift_rad_per_m = 0.0
-    tracker.apply_drift_compensation = False
     tracker.set_pose(0.0, 0.0, 0.0)
 
+    v_fwd, _ = tracker.wheel_model.body_speeds(0.7, 0.0)
+    _, w_turn = tracker.wheel_model.body_speeds(0.0, 0.5)
     side_length = 1.0  # 1 meter
-    dt_fwd = side_length / tracker.v_gain
-    dt_turn = (math.pi / 2.0) / tracker.w_gain
+    dt_fwd = side_length / v_fwd
+    dt_turn = (math.pi / 2.0) / w_turn
 
     # Discretize into small 50 Hz steps like sim_robot
     step_dt = 0.02
@@ -97,14 +93,14 @@ def test_dead_reckoning_closed_square_path():
         t_accum = 0.0
         while t_accum < dt_fwd:
             dt = min(step_dt, dt_fwd - t_accum)
-            tracker.update_odometry(v=1.0, w=0.0, dt=dt)
+            tracker.update_odometry(v=0.7, w=0.0, dt=dt)
             t_accum += dt
 
         # Turn left 90 deg
         t_accum = 0.0
         while t_accum < dt_turn:
             dt = min(step_dt, dt_turn - t_accum)
-            tracker.update_odometry(v=0.0, w=1.0, dt=dt)
+            tracker.update_odometry(v=0.0, w=0.5, dt=dt)
             t_accum += dt
 
     # After 4 legs of a square, robot must return to (0, 0, 0)
@@ -166,13 +162,7 @@ def test_marker_size_loaded_from_config():
 def test_dead_reckoning_motor_deadzone():
     """Review point 4: Motors stop when command after speed cap is below min_pwm."""
     tracker = LocalizationTracker(
-        motion_calib={
-            "min_pwm": 0.12,
-            "max_speed": 0.3,
-            "v_gain_m_per_s": 0.4135,
-            "w_gain_rad_per_s": 6.48,
-            "drift_rad_per_m": 0.0,
-        },
+        motion_calib={"min_pwm": 0.12, "max_speed": 0.3},
         camera_calib=None,
     )
     tracker.set_pose(0.0, 0.0, 0.0)
@@ -197,22 +187,52 @@ def test_dead_reckoning_motor_deadzone():
 
 def test_dead_zone_is_per_wheel_so_steering_while_driving_is_kept():
     """Review of PR #37: the robot applies the dead zone to each wheel's final value (common/mixing.py), not to v and w separately."""
-    def step(v, w):
-        tracker = LocalizationTracker(
-            motion_calib={"min_pwm": 0.12, "max_speed": 0.3, "v_gain_m_per_s": 0.4135, "w_gain_rad_per_s": 6.48, "drift_rad_per_m": 0.0},
-            camera_calib=None, config_path=None)
+    def step(v, w, dt=0.01):
+        tracker = LocalizationTracker(camera_calib=None, config_path=None)
         tracker.set_pose(0.0, 0.0, 0.0)
-        p = tracker.update_odometry(v=v, w=w, dt=0.1)
-        return p.x / 0.1 / 0.4135, p.theta / 0.1 / 6.48            # effective (v, w) in command units, small dt: no arc error
+        p = tracker.update_odometry(v=v, w=w, dt=dt)
+        return math.hypot(p.x, p.y) / dt, p.theta / dt
 
-    v, w = step(0.6, 0.065)                       # steering while driving: both wheels above the dead zone, the turn must stay
-    assert math.isclose(v, 0.6, rel_tol=0.02) and math.isclose(w, 0.065, rel_tol=0.02)
-    v, w = step(0.5, 0.15)                        # left wheel 0.35 * 0.3 = 0.105 < 0.12 stops: v 0.325, w 0.325
-    assert math.isclose(v, 0.325, rel_tol=0.03) and math.isclose(w, 0.325, rel_tol=0.03)
+    v_mps, w_radps = step(0.6, 0.065)             # steering while driving: both wheels above the dead zone, the turn must stay
+    assert abs(v_mps - 0.2325) < 0.01 and w_radps > 0.3
+    v_mps, w_radps = step(0.5, 0.15)              # left wheel 0.35 * 0.3 = 0.105 < 0.12 stops: an arc, faster turn than the command alone
+    assert 0.0 < v_mps < step(0.5, 0.0)[0] and w_radps > 1.5
     assert step(0.0, 0.3) == (0.0, 0.0)           # wheels at 0.09: stands still
     assert step(0.3, 0.0) == (0.0, 0.0)
-    v, w = step(0.0, 0.5)                         # wheels at 0.15: spins
-    assert v == 0.0 and math.isclose(w, 0.5, rel_tol=0.02)
+    v_mps, w_radps = step(0.0, 0.5)               # wheels at 0.15: spins
+    assert v_mps == 0.0 and abs(w_radps - 2.62) / 2.62 < 0.08
+
+
+def test_localization_uses_wheel_model_from_motion_json():
+    """Issue #41: LocalizationTracker uses WheelModel (k=1.64, m0=0.038, track=0.137) from calib/motion.json."""
+    tracker = LocalizationTracker(camera_calib=None, config_path=None)
+    assert math.isclose(tracker.wheel_model.k, 1.64)
+    assert math.isclose(tracker.wheel_model.m0, 0.038)
+    assert math.isclose(tracker.wheel_model.track, 0.137)
+    assert math.isclose(tracker.min_pwm, 0.12)
+    assert math.isclose(tracker.max_speed, 0.3)
+
+    measured_speeds = {0.4: 0.139, 0.5: 0.185, 0.6: 0.238, 0.7: 0.276, 0.85: 0.357, 1.0: 0.435}
+    for v_cmd, s_meas in measured_speeds.items():
+        tracker.set_pose(0.0, 0.0, 0.0)
+        p = tracker.update_odometry(v=v_cmd, w=0.0, dt=1.0)
+        assert abs(p.x - s_meas) / s_meas < 0.06, (v_cmd, p.x, s_meas)
+        assert math.isclose(p.y, 0.0, abs_tol=1e-7)
+        assert math.isclose(p.theta, 0.0, abs_tol=1e-7)
+
+    measured_turns = {0.4: 1.98, 0.5: 2.62, 1.0: 6.27}
+    for w_cmd, r_meas in measured_turns.items():
+        tracker.set_pose(0.0, 0.0, 0.0)
+        p = tracker.update_odometry(v=0.0, w=w_cmd, dt=0.2)
+        om = p.theta / 0.2
+        assert abs(om - r_meas) / r_meas < 0.08, (w_cmd, om, r_meas)
+
+    # Online scale knob adjusts integrated distance
+    tracker.scale = 0.8
+    tracker.set_pose(0.0, 0.0, 0.0)
+    p_scaled = tracker.update_odometry(v=0.7, w=0.0, dt=1.0)
+    expected_unscaled = (1.64 * (0.7 * 0.3 - 0.038))
+    assert math.isclose(p_scaled.x, 0.8 * expected_unscaled, abs_tol=1e-6)
 
 
 def test_marker_distance_gating_and_alpha_decay():
