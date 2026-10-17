@@ -1,51 +1,46 @@
 # Week 02 – kouun-rokku (2026-10-12 to 2026-10-18)
 
-*Focus: ORB entrance detection & bearing estimation, motion model dead reckoning, ArUco fiducial localization, and T0 test suite.*
+*Focus: XFeat + DINOv2 entrance detection & bearing estimation, per-wheel motion model (`WheelModel`) dead reckoning (issue #41), ArUco fiducial localization, and T0/T1 test suite.*
 
 ## Done
 
-- **ORB Entrance Feature Matching (`sentry/perception/entrance.py`):**
-  - Implemented `EntranceMatcher` class conforming to the CPU callable contract `__call__(frame_bgr, t) -> EntranceResult` with no global state.
-  - Extracts ORB descriptors (2000 features), performs Hamming Brute-Force KNN matching with Lowe's ratio test (threshold 0.75), and estimates robust RANSAC homography.
-  - Calculates entrance centroid in frame pixel space and converts it to continuous horizontal bearing angle (`bearing_rad`, `bearing_deg`) using calibrated camera intrinsics from `calib/camera.json`.
-  - Respects coordinate convention: positive yaw indicates target is on the left (yaw left / +w to face entrance).
-  - Designed for reuse in Week 3 ESP32 camera placement verification.
-- **Dead Reckoning & ArUco Localization (`sentry/nav/localization.py`):**
-  - Implemented `LocalizationTracker` integrating normalized `(v, w)` commands with exact unicycle kinematics and circular arc integration.
-  - Ingests empirical motion parameters from `calib/motion.json` (`v_gain_m_per_s = 0.4135`, `w_gain_rad_per_s = 6.4802`, curvature drift `drift_rad_per_m = -0.1859`).
-  - Detects `DICT_4X4_50` ArUco markers using `cv2.aruco`, computes 6-DoF pose (`solvePnP` with fisheye point undistortion), and estimates range and horizontal bearing.
-  - Implemented anchor fusion: updates dead-reckoned robot pose in room coordinates when known marker anchors (`MarkerAnchor`) are observed.
-  - **Interoperability with HNHL (PR #27):** added `x_m`, `y_m`, `yaw_rad` property aliases to `RobotPose` to match `Pose2D`, and implemented `calculate_door_world_xy` / `estimate_door_world_xy` to supply `VantageSelector` with world-frame doorway coordinates.
-- **Unit Testing Suite (`tests/test_entrance.py`, `tests/test_localization.py`):**
-  - `test_entrance.py`: validates match detection on rich synthetic doorframes, bearing shifts for off-center targets, rejection of blank/noise frames, strict threshold enforcement, and world-coordinate estimation.
-  - `test_localization.py`: validates pose integration, angle normalization, exact closed-square path closure (error < 1 mm in simulation), synthetic ArUco pose estimation, anchor filter fusion, and Pose2D attribute compatibility.
-- **Compatibility & Bug Fixes:**
-  - Resolved `AttributeError: module 'cv2' has no attribute 'CALIB_RECOMPUTE_EXTRINSIC'` in `tools/calibrate_fisheye.py` by supporting both `cv2.fisheye` and top-level OpenCV module attributes.
-  - Re-exported nav and perception classes gracefully in `sentry/nav/__init__.py` and `sentry/perception/__init__.py`.
+- **Entrance Detection & Bearing Estimation (`sentry/perception/entrance.py`, `tools/enroll_entrance.py`):**
+  - Replaced the initial ORB baseline with `EntranceDetector(camera)(frame_bgr, t) -> EntranceResult(in_view, inliers, similarity, bearing_rad, quad)` using **XFeat** (vendored in `third_party/xfeat/`, `top_k = 2048`, mutual nearest-neighbour matching, RANSAC homography, hull scale check) and **DINOv2** (CLS + GeM patch tokens, cosine similarity for phone-photo reference / secondary check).
+  - Implemented `EntranceFilter` with hysteresis debouncing (`enter = 3`, `exit = 5`) and median bearing smoothing to emit `ENTRANCE_FOUND` / `ENTRANCE_LOST` events for the state machine.
+  - Per-room calibration (`EntranceDetector.calibrate`, `save` / `load`) sets the XFeat inlier threshold above a sweep of room negatives (minimum 27 inliers) and projects the enrolled door ROI through the homography to compute horizontal bearing (`bearing_rad`, positive = left / `+w` via calibrated fisheye intrinsics from `calib/camera.json`).
+  - **D1 Classroom Door Evaluation (T1, `reports/DoanQuocKien/week-02/d1/entrance_bench_2026-10-12.md`):** On the primary demo door (classroom white door, reference position excluded), `EntranceDetector` with XFeat achieves **TPR 1.00 (210/210) and FPR 0.00 (0/52)**, passing the plan target ($\text{TPR} \ge 90\%$, $\text{FPR} \le 5\%$), with projected door-centre bearing within $\sim 6^\circ$ at 1.5–3.0 m. On the secondary/optional cafe glass door, XFeat reaches TPR 0.87 / FPR 0.055–0.081.
+- **Dead Reckoning on `WheelModel` & ArUco Localization (`sentry/nav/localization.py`, Issue #41):**
+  - Switched `LocalizationTracker` dead reckoning from the legacy single-speed proportional gains (`v_gain * v`, `w_gain * w`) to the per-wheel motion law **`WheelModel`** (`sentry/nav/wheel_model.py`, `calib/motion.json`: $v_{\text{wheel}} = \text{scale} \cdot 1.64 \cdot (|\text{motor}| - 0.038)\text{ m/s}$ above `min_pwm = 0.12` at `max_speed = 0.3`, wheel track $0.137\text{ m}$), matching the 2026-10-15 classroom marker measurements across $v \in [0.4, 1.0]$ and $w \in [0.4, 1.0]$ while preserving steering while driving (e.g. $v = 0.6, w = 0.065$).
+  - Exposed online tuning knobs (`scale`, `min_pwm`, `max_speed`) on `LocalizationTracker` delegating directly to `self.wheel_model`.
+  - Addressed PR #36 / #37 review items: default marker size read from `config.toml` (`aruco_marker_m = 0.15 m`, `DICT_4X4_50`), `solvePnPGeneric` (`SOLVEPNP_IPPE_SQUARE`) with iterative fallback and positive-$Z$ front-of-wall validation, anchor range gating (`max_marker_distance_m = 1.5 m` with linear alpha decay beyond `0.8 m`), and heading jump rejection ($> 25^\circ$ after convergence).
+  - **Interoperability with HNHL (PR #27):** `x_m`, `y_m`, `yaw_rad` aliases on `RobotPose` to match `Pose2D`, and `calculate_door_world_xy` to supply `VantageSelector` with world-frame doorway coordinates.
+- **Unit Testing Suite (`tests/test_entrance.py`, `tests/test_localization.py`, `tests/test_wheel_model.py`):**
+  - `test_entrance.py`: validates XFeat homography & bearing sign, degenerate hull rejection, negative-sweep threshold calibration, DINOv2 phone-reference calibration, `and`/`or` policies, save/load round-trip, `EntranceFilter` debouncing, and equidistant fisheye bearing symmetry.
+  - `test_localization.py`: validates `WheelModel` speed/turn integration against the 2026-10-15 marker measurements (issue #41), per-wheel deadzone during simultaneous steering and driving, closed-square path closure (error $< 1\text{ mm}$ in simulation), synthetic ArUco pose estimation, range gating & alpha decay, and `Pose2D` compatibility.
 
 ## Tests run
 
 | Tier | Command | Result | Evidence |
 | :-- | :-- | :-- | :-- |
-| T0 | `pytest -m "not gpu and not hil"` | 290 passed, 4 skipped, 1 deselected in 13.55 s | [pytest.log](week-02/pytest.log) |
-| T0 | `pytest tests/test_entrance.py -v` | 10 passed, 2 skipped in 2.3 s | [pytest.log](week-02/pytest.log) |
-| T0 | `pytest tests/test_localization.py -v` | 6 passed in 1.6 s (including closed square path & ArUco detection) | [pytest.log](week-02/pytest.log) |
-
+| T0 | `python -m pytest -m "not gpu and not hil"` | 342 passed, 4 skipped, 1 deselected in 16.07 s | [pytest.log](week-02/pytest.log) |
+| T0 | `python -m pytest tests/test_entrance.py -v` | 10 passed, 2 skipped in 3.75 s | [pytest.log](week-02/pytest.log) |
+| T0 | `python -m pytest tests/test_localization.py tests/test_wheel_model.py -v` | 15 passed in 3.39 s (WheelModel odometry, closed square path & ArUco fusion) | [pytest.log](week-02/pytest.log) |
+| T1 | Classroom door evaluation (`sentry/perception/entrance.py`, XFeat `auto`) | TPR 1.00 (210/210), FPR 0.00 (0/52) | [entrance_bench_2026-10-12.md](../DoanQuocKien/week-02/d1/entrance_bench_2026-10-12.md) |
 
 ## Acceptance criteria status (Implementation Plan §4.3)
 
-- **ORB entrance logic & bearing:** Functional on synthetic scenes with sub-degree bearing accuracy and clean rejection of negative frames -> **Pass (T0)**. T1 TPR/FPR threshold evaluation pending D1 dataset delivery.
-- **Pose integration (closed square path):** Robot executes a 1 m x 1 m square path in simulation and returns to origin `(0, 0, 0)` -> **Pass (T0)** (< 1 mm residual drift).
-- **ArUco pose estimation on synthetic renders:** Detects `DICT_4X4_50` markers, extracts 3D translation vector and horizontal bearing -> **Pass (T0)**.
+- **Entrance recognition (XFeat + DINOv2, primary demo door = classroom door):** **TPR 1.00 ($\ge 90\%$), FPR 0.00 ($\le 5\%$)** with per-room negative calibration on D1 classroom dataset $\rightarrow$ **Pass (T1)** (secondary cafe glass door reported without threshold: TPR 0.87 / FPR 0.06).
+- **Pose integration (`WheelModel`, closed square path):** Robot executes a $1\text{ m} \times 1\text{ m}$ square path in simulation using `WheelModel` and returns to origin `(0, 0, 0)` $\rightarrow$ **Pass (T0)** ($< 1\text{ mm}$ residual error); speeds and turn rates match 2026-10-15 marker measurements within 6–8%.
+- **ArUco pose estimation on synthetic renders:** Detects `DICT_4X4_50` ($0.15\text{ m}$) markers, extracts 3D translation vector and horizontal bearing, and fuses anchor observations within $1.5\text{ m}$ $\rightarrow$ **Pass (T0)**.
 
 ## Blockers / risks
 
-- **Awaiting D1 Dataset (Classroom & Doorways):** Real-world evaluation (T1 TPR >= 90%, FPR <= 5%) requires DQK's recorded doorway photos and manifests from the D1 classroom session.
-- **Awaiting Sunday HIL Session:** Real-world motion repeatability and ArUco 3 m path accuracy (T2 <= 15 cm with ArUco) will be evaluated on the physical JetBot with DQK.
+- **Open-loop floor heading veer:** As measured on 2026-10-15 (`calib/motion.json`), open-loop drives on the classroom glossy tile show a random per-run spread ($\approx \pm 10^\circ/\text{m}$ with a left bias), so fixed drift compensation is disabled in `WheelModel` and online marker correction is used when anchors are in view.
+- **Sunday T2 Session (2026-10-18):** T2 3 m dead-reckoning path with ArUco correction ($\le 15\text{ cm}$ with correction, $\le 40\text{ cm}$ without) and T2 end-to-end exploration with obstacle repulsion to be run at the Sunday integration session.
 
 ## Next steps (Week 3 prep & integration)
 
-- Evaluate `entrance.py` on D1 doorway dataset once shared; tune `min_inliers` and Lowe ratio thresholds.
-- Implement `sentry/net/mjpeg_rx.py` with auto-reconnect for ESP32 stream.
-- Wire `entrance.py` into the ESP32 placement handshake protocol.
-- Generate offline speech prompts (`assets/audio/`) using TTS.
+- Run the Sunday T2 3 m dead-reckoning + ArUco correction protocol with DQK.
+- Implement `sentry/net/mjpeg_rx.py` with auto-reconnect for the OV2640 ESP32 stream (alongside `sentry.espcam.TileReceiver` for GC2145).
+- Wire `sentry/perception/entrance.py` into the ESP32 placement handshake check (enrolled with an ESP32 reference frame).
+- Generate offline speech prompts (`assets/audio/`) and implement `sentry/app/state_machine.py` skeleton.

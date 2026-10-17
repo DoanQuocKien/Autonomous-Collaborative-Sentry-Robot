@@ -5,12 +5,14 @@ from sentry.nav.localization import (
     MarkerDetection,
     RobotPose,
 )
+from sentry.nav.wheel_model import WheelModel
 
 __all__ = [
     "LocalizationTracker",
     "MarkerAnchor",
     "MarkerDetection",
     "RobotPose",
+    "WheelModel",
 ]
 
 try:
