@@ -1,8 +1,9 @@
 """Robot localization: dead reckoning and ArUco marker pose correction.
 
 Tracks 2D planar robot pose (x, y, theta) by integrating commanded (v, w)
-normalized velocity commands against gains from calib/motion.json, and correcting
-drift when known ArUco fiducial markers (DICT_4X4_50) are detected in camera frames.
+normalized velocity commands via the per-wheel motion model (WheelModel,
+calib/motion.json), and correcting drift when known ArUco fiducial markers
+(DICT_4X4_50) are detected in camera frames.
 """
 from __future__ import annotations
 
@@ -16,7 +17,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import cv2
 import numpy as np
 
-from common.mixing import deadzone, mix
+from sentry.nav.wheel_model import K_WHEEL, M0, TRACK, WheelModel
 
 
 def wrap_angle(rad: float) -> float:
@@ -115,13 +116,13 @@ class MarkerDetection:
 
 
 class LocalizationTracker:
-    """Tracks robot pose using dead reckoning with ArUco marker pose fusion.
+    """Tracks robot pose using dead reckoning on WheelModel with ArUco marker pose fusion.
 
-    Dead-reckoning model from tools/calibrate_motion.py:
-        forward speed [m/s] = v_gain * v
-        turn rate [rad/s] = w_gain * w
-        path curvature drift [rad/m] = drift_rad_per_m
-        heading change delta_theta = w_gain * w * dt + drift_rad_per_m * delta_s
+    Dead-reckoning model from sentry/nav/wheel_model.py (fitted 2026-10-15):
+        wheel speed [m/s] = scale * k * (|motor| - m0)   for |motor| >= min_pwm, else 0
+        motor = (command mixed into left / right) * max_speed after per-wheel dead zone
+        forward speed [m/s] = (vL + vR) / 2
+        turn rate [rad/s] = (vR - vL) / track            (left positive, like w)
     """
 
     def __init__(
@@ -133,16 +134,13 @@ class LocalizationTracker:
         initial_pose: RobotPose | None = None,
         config_path: str | Path | None = "config.toml",
         max_marker_distance_m: float = 1.5,
+        wheel_model: WheelModel | None = None,
     ) -> None:
-        # Motion gains default to baseline values
-        self.v_gain: float = 0.4135188866799205
-        self.w_gain: float = 6.480182866315579
-        self.drift_rad_per_m: float = -0.18594104308390022
-        self.apply_drift_compensation: bool = True
-        self.min_pwm: float = 0.12 if motion_calib is not None else 0.0
-        self.max_speed: float = 0.3 if motion_calib is not None else 1.0
+        self.wheel_model: WheelModel = wheel_model if wheel_model is not None else WheelModel()
+        self.drift_rad_per_m: float = 0.0
+        self.apply_drift_compensation: bool = False
 
-        if motion_calib is not None:
+        if motion_calib is not None and wheel_model is None:
             self._load_motion_calib(motion_calib)
 
         # Camera calibration
@@ -190,6 +188,30 @@ class LocalizationTracker:
         self.anchors: Dict[int, MarkerAnchor] = {}
         self.corrections_count: int = 0
 
+    @property
+    def min_pwm(self) -> float:
+        return self.wheel_model.min_pwm
+
+    @min_pwm.setter
+    def min_pwm(self, value: float) -> None:
+        self.wheel_model.min_pwm = float(value)
+
+    @property
+    def max_speed(self) -> float:
+        return self.wheel_model.max_speed
+
+    @max_speed.setter
+    def max_speed(self, value: float) -> None:
+        self.wheel_model.max_speed = float(value)
+
+    @property
+    def scale(self) -> float:
+        return self.wheel_model.scale
+
+    @scale.setter
+    def scale(self, value: float) -> None:
+        self.wheel_model.scale = float(value)
+
     def _load_motion_calib(self, calib_source: dict[str, Any] | str | Path) -> None:
         data: dict[str, Any] | None = None
         if isinstance(calib_source, (str, Path)):
@@ -200,17 +222,40 @@ class LocalizationTracker:
         elif isinstance(calib_source, dict):
             data = calib_source
 
-        if data:
-            if "v_gain_m_per_s" in data:
-                self.v_gain = float(data["v_gain_m_per_s"])
-            if "w_gain_rad_per_s" in data:
-                self.w_gain = float(data["w_gain_rad_per_s"])
+        if not data:
+            return
+
+        wm = data.get("wheel_model") if isinstance(data.get("wheel_model"), dict) else None
+        if wm is not None:
+            k = float(wm.get("k_m_per_s_per_motor", wm.get("k", self.wheel_model.k)))
+            m0 = float(wm.get("motor_offset", wm.get("m0", self.wheel_model.m0)))
+            track = float(wm.get("track_m", wm.get("track", self.wheel_model.track)))
+            max_speed = float(wm.get("max_speed", data.get("max_speed", self.wheel_model.max_speed)))
+            min_pwm = float(wm.get("min_pwm", data.get("min_pwm", self.wheel_model.min_pwm)))
+            scale = float(wm.get("scale", data.get("scale", self.wheel_model.scale)))
+            k_mix = float(wm.get("k_mix", data.get("k", self.wheel_model.k_mix)))
+            self.wheel_model = WheelModel(
+                k=k, m0=m0, track=track, max_speed=max_speed,
+                min_pwm=min_pwm, scale=scale, k_mix=k_mix,
+            )
+            if "drift_rad_per_m" in wm:
+                self.drift_rad_per_m = float(wm["drift_rad_per_m"])
+                self.apply_drift_compensation = self.drift_rad_per_m != 0.0
+        else:
+            k = float(data.get("k_m_per_s_per_motor", self.wheel_model.k))
+            m0 = float(data.get("motor_offset", data.get("m0", self.wheel_model.m0)))
+            track = float(data.get("track_m", data.get("track", self.wheel_model.track)))
+            max_speed = float(data.get("max_speed", self.wheel_model.max_speed))
+            min_pwm = float(data.get("min_pwm", self.wheel_model.min_pwm))
+            scale = float(data.get("scale", self.wheel_model.scale))
+            k_mix = float(data.get("k_mix", data.get("k", self.wheel_model.k_mix)))
+            self.wheel_model = WheelModel(
+                k=k, m0=m0, track=track, max_speed=max_speed,
+                min_pwm=min_pwm, scale=scale, k_mix=k_mix,
+            )
             if "drift_rad_per_m" in data:
                 self.drift_rad_per_m = float(data["drift_rad_per_m"])
-            if "min_pwm" in data:
-                self.min_pwm = float(data["min_pwm"])
-            if "max_speed" in data:
-                self.max_speed = float(data["max_speed"])
+                self.apply_drift_compensation = self.drift_rad_per_m != 0.0
 
     def _load_camera_calib(self, calib_source: dict[str, Any] | str | Path) -> None:
         data: dict[str, Any] | None = None
@@ -264,18 +309,12 @@ class LocalizationTracker:
         v = float(np.clip(v, -1.0, 1.0))
         w = float(np.clip(w, -1.0, 1.0))
 
-        # Dead zone per WHEEL on the final value, exactly as the robot does (common/mixing.py: mix -> speed cap -> deadzone).
-        # Applying it to v and w separately would drop steering while driving: v 0.6, w 0.065 really turns the robot.
-        if self.min_pwm > 0.0:
-            left, right = (deadzone(x * self.max_speed, self.min_pwm) / self.max_speed for x in mix(v, w))
-            v, w = (left + right) / 2.0, (right - left) / 2.0
-
-        v_mps = self.v_gain * v
-        w_radps = self.w_gain * w
+        # Per-wheel speed and turn rate from WheelModel (mix -> speed cap -> per-wheel deadzone -> wheel law)
+        v_mps, w_radps = self.wheel_model.body_speeds(v, w)
         delta_s = v_mps * dt
 
         delta_theta = w_radps * dt
-        if self.apply_drift_compensation:
+        if self.apply_drift_compensation and self.drift_rad_per_m != 0.0:
             delta_theta += self.drift_rad_per_m * delta_s
 
         theta = self.pose.theta
