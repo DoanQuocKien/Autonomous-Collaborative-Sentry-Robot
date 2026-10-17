@@ -10,7 +10,7 @@ Week 1 starts **Mon 2026-10-05**; the calendar runs 13 weeks, to Sun 2027-01-03 
 
 | Handle | CUDA | Hardware | Primary ownership |
 | :-- | :-: | :-: | :-- |
-| **DoanQuocKien** (DQK) | Yes | Holds the JetBot kit (speaker later) | Jetson side, motor control, calibration, controllers on the robot, hardware-in-the-loop (HIL) testing, integration host |
+| **DoanQuocKien** (DQK) | Yes | Holds the JetBot kit (speaker later) | Jetson side, motor control, calibration, controllers on the robot, hardware-in-the-loop (HIL) testing, integration host; on-robot inference (extra, proposed 2026-10-16) |
 | **HuynhNguyenHoaiLoc** (HNHL) | Yes | – | Laptop perception: YOLOv8, ByteTrack, InsightFace, OSNet, YOLOv8-pose, GPU profiling |
 | **kouun-rokku** (KR) | No | Holds the ESP32-CAM + MB base | CPU-side logic: record/replay tooling, entrance matching (XFeat / DINOv2; ORB baseline), localization (ArUco + dead reckoning), state machine, queue/handoff logic, simulation, audio assets, test infrastructure, report editing |
 
@@ -63,6 +63,7 @@ Freezing these lets the three members work in parallel against the same contract
 | Laptop -> JetBot control | UDP, port 5556, non-blocking | JSON `{"seq": int, "v": float, "w": float}` with v, w normalized to [-1, 1]; or `{"seq": int, "play": "<clip_name>"}` |
 | Clock sync | UDP echo, port 5557 | laptop sends `t0`, Jetson replies `{t0, t_jetson}`; offset by Cristian's algorithm (min-RTT of 20 samples) |
 | ESP32-CAM -> laptop | **UDP tiles, port 5600** (GC2145 module, no hardware JPEG): raw Bayer 640x480, changed 64x32 tiles only, laptop found by `HELO` broadcast; `sentry.espcam.TileReceiver.latest()` gives a BGR frame. **Frozen 2026-10-11 by DQK's decision: the UDP tile stream is the interface.** An OV2640 module was nevertheless ordered the same day (`docs/ESP32-CAM.md`; firmware ready in `esp32/sentry_cam`, not tested on a board); switching the interface to it needs a PR all three approve. HNHL approved PR #2, which carried this row; KR was asked in the comments on PR #2 and #6 and had not answered by 2026-10-11, so KR may still object (a change then needs a PR all three approve). With an OV2640 module the original HTTP MJPEG `http://<esp32-ip>:81/stream` (VGA, 15 FPS) is used instead | 640x480 at 14.4 FPS average (fixed camera); see `docs/ESP32-CAM.md` |
+| Companion app <-> robot (**proposed 2026-10-16, not frozen**; needs a PR all three approve) | robot -> app: ZeroMQ PUB; app -> robot: ZeroMQ REQ/REP | messages `status` (1 Hz: phase, state, battery, e-stop, FPS, GPU ms, temperature, RAM, `where` = laptop or edge), `frame` (<= 5 Hz, boxes + JPEG), `event` (the state-machine events), `intruder_candidate`, `queue`, `map`; app -> robot `start`, `stop`, `confirm`. Field list: `docs/Edge Feasibility.md` section 5. Motion permission stays with the gamepad dead-man: the app can always stop, never override it |
 
 Laptop-internal contract:
 - JetBot video adapters use `read(timeout) -> VideoFrame | None`, single consumer, with `frame_bgr`, original `jpeg`, `seq`, source `t_cap`, laptop `t_rx` and `t_decode` (see `sentry/net/frame.py`). Latest-frame receivers deliberately skip old frames; record/replay preserves source timestamps. `tools.replay.ReplayStream.read()` implements this offline contract; legacy tuple iteration remains supported. The ESP32 tile interface uses `latest()` as documented separately above.
@@ -118,7 +119,7 @@ Privacy: face photos and recordings of volunteers stay in `data/` and the team D
 | Camera tilt self-calibration (extra, DQK) | Live tilt from an ArUco marker (`LiveTilt`): median ground-distance error of the wall base against the marker-pose truth in drive runs from 2 m to 0.5 m (`reports/DoanQuocKien/week-02/live_tilt/`), live vs the fixed strips tilt; marker <= 1.5 m, speed <= 0.3 m/s | live median error <= 10 % and at least 2x lower than the fixed tilt; marker tilt within 0.5 deg of the strips at 1 m (the old "<= 1.5 deg" is 21 % at 1 m). 2026-10-14: fixed tilt 14-39 % off, live 0.5-6 % standing and 3-20 % moving (window 15 lagged; default now 3), 0.08-0.16 deg from the strips at 1 m | T1 |
 | Obstacle distance | Relative error vs tape on D1 | median <= 10 %, p90 <= 20 % over 0.3-2.0 m | T1 |
 | Obstacle repulsion | Collisions in exploration runs | 0 collisions in 5 x 3-min runs | T2 |
-| Entrance recognition (XFeat, DINOv2; ORB baseline; one door per room) | Frame-level TPR / FPR on D1, pooled and **per room**; thresholds calibrated on a sweep of that room's negatives, reference position left out of the evaluation | TPR >= 90 %, FPR <= 5 % pooled; report the worst room (2026-10-12: classroom 1.00 / 0.00, cafe glass 0.87 / 0.06) | T1 |
+| Entrance recognition (XFeat, DINOv2; ORB baseline; one door per room) | Frame-level TPR / FPR on D1 for the **primary demo door (the classroom door)**; thresholds calibrated on a sweep of that room's negatives, reference position left out of the evaluation. Other doors (the cafe glass door) are **secondary and optional**: measured and reported, no pass threshold | Classroom door: TPR >= 90 %, FPR <= 5 % (2026-10-12: 1.00 / 0.00, n = 210 / 52); secondary doors: report only (cafe glass 0.87 / 0.06) | T1 |
 | Motion calibration + dead reckoning | Position error after 3 m path | <= 15 cm with ArUco correction, <= 40 cm without | T2 |
 | Sweet-spot selection | Chosen spot satisfies the 3 spec conditions | 5/5 runs | T2 |
 | ESP32 handshake | I_ref detection when camera faces door / is turned away | 10/10 correct accepts, 10/10 correct rejects | T2 |
@@ -136,6 +137,11 @@ Privacy: face photos and recordings of volunteers stay in `data/` and the team D
 | Search exhausted | T2 absent (removed from the room) | path completes, T2 dropped from the queue, robot reaches the next target or standby; 3/3 trials, 0 collisions | T2 |
 | Full loop | Two consecutive intruders, start to standby | >= 4/5 runs without steering or intervention (the operator may hold R1; risk 15) | T2 |
 | GPU budget | All models running together | peak VRAM <= 5.5 GB; pipeline >= 15 FPS | T1 (gpu) |
+| Edge conversion parity (extra, proposed) | Every TensorRT engine against ONNX Runtime FP32 on the same input: cosine of the raw outputs; decoded boxes of the detectors; our parity set (200 D1 obstacle frames without faces, a public face set) | cosine >= 0.999 on every output; detector boxes matched at IoU >= 0.9 for >= 95 % of detections and the same count; 2026-10-16 on public photos: YOLOv8n, pose, OSNet, XFeat, MobileFaceNet, SCRFD (after the Resize fix) all >= 0.9999 | T1 (robot) |
+| Edge latency and load (extra, proposed) | Stage B mix on live frames with a person in view, door pipeline in its own thread at 5 Hz, on battery, 15 min: capture-to-result, FPS, RAM, temperature | >= 20 FPS, capture-to-result p95 <= 100 ms, RAM < 3.0 GB, GPU temperature < 80 C, battery stays >= 11.1 V (2026-10-16, nobody in view: p95 72 ms, 2.1 GB, 40 C, 12.14 -> 11.93 V in 10 min) | T2 (wheels still) |
+| Edge obstacle layer, Stage A (extra, proposed) | The same exploration protocol as 'Obstacle repulsion', with the obstacle layer on the robot; distance error against the laptop path on D1 | 0 collisions in 5 x 3-min runs; median distance error within 2 percentage points of the laptop's; the laptop fallback takes over within 1 s when the robot layer is switched off | T1 + T2 |
+| Edge pursuit, Stage B (extra, proposed) | The 'Pursuit PD', 'Standoff hold' and 'Strike detection' rows run with the loop on the robot | the same thresholds as those rows; strike latency frame to command <= 150 ms with the link unplugged | T2 |
+| Edge safety (extra, proposed) | Laptop disconnected (Wi-Fi off, app closed) while the robot runs the on-robot layer | motors stop <= 350 ms after the dead-man is released or a packet stream ends; e-stop and speed cap unchanged; companion-app `stop` stops the robot | T2 |
 
 ## 5. Weekly Plan
 
@@ -158,6 +164,18 @@ Each week ends with a **Sunday integration session** hosted by DQK (in person or
 | 11 | Dec 14-20 | Integration Buffer & Stress Tests (contingency) | everything in section 4.3 green or explained |
 | 12 | Dec 21-27 | Validation, Freeze & Rehearsal | code freeze Wed Dec 23, rehearsal Sat Dec 26, tag `final` Sun Dec 27 |
 | 13 | Dec 28-Jan 3 | Final Submission & Defense | **submit Mon Dec 28**; defense by Fri Jan 2 |
+
+**Extra task (proposed 2026-10-16): on-robot inference.** Aim: the Jetson Nano runs the time-critical models itself so the control loop does not depend on the Wi-Fi link, and the laptop becomes a companion app (start/stop, live view, confirm intruders). The laptop pipeline stays the default and the fallback for every deliverable; this is an extra, owned by DQK (Jetson side) with HNHL (parity, model choice) and KR (CPU-side ports). **Nothing in it is due in Week 2: it is agreed or rejected at the Week 2 weekend meet-up (Sun Oct 18), and every work item below starts in Week 3 or later.** Evidence so far, the TensorRT 7.1 limits and how to repeat it: `docs/Edge Deployment.md`; the desk study and its staging: `docs/Edge Feasibility.md`; spec: section 4.7.
+
+| Gate | When | Question | Pass | If it fails |
+| :-- | :-- | :-- | :-- | :-- |
+| G0 | Sun Oct 18 (W2 meet-up) | Do we take the extra task? | all three agree and the owners below are accepted | nothing changes; the evidence is the report's optimisation chapter |
+| G1 | Sun Oct 25 (W3) | Is the bench closed? | the section 4.3 'Edge latency and load' row passes with a person in view and live ESP32 frames, and the parity row passes on the parity set | stop; the report keeps the bench results as they are |
+| G2 | Sun Nov 8 (W5) | Stage A: obstacle layer on the robot | the section 4.3 'Edge obstacle layer' and 'Edge safety' rows pass | stay on the laptop path; no further edge work before the mid-term |
+| G3 | Sun Nov 29 (W8, after the submission) | Stage B: pursuit loop on the robot | pursuit, hold and the laptop-path strike rows already pass (W6, W8); G2 passed | pursuit stays on the laptop |
+| G4 | Sun Dec 6 (W9) | Stage C (stretch): door pipeline, search, network on the robot | Stage B passed its rows and the team has a free week | the door and the search stay on the laptop; **no new edge work after Sun Dec 13**; code freeze Dec 23 applies as for everything |
+
+Effort estimate (desk study, to be re-estimated at G1): Stage A about 4 person-days, Stage B 8-10, Stage C 8-12 (stretch). The bench and the conversion tooling (about 3 person-days) are already done and recorded.
 
 ### Week 1 (Oct 5-11): Networking & Telemetry
 
@@ -194,18 +212,25 @@ Each week ends with a **Sunday integration session** hosted by DQK (in person or
   - `nav/vantage.py`: score candidate stops on the grid for line of sight, 1.5-3.0 m from the door, and nearness to a boundary.
   - Tests: T0 for the distance formula, repulsion sign and grid updates on synthetic data; T1 distance error and map-vs-tape error on D1.
 - **KR**
-  - `sentry/perception/entrance.py` (**first version written 2026-10-12, KR owns it from here: tune, extend, own the tests**) + `tools/enroll_entrance.py` + `third_party/xfeat/` (vendored XFeat, Apache-2.0). `EntranceDetector(camera)(frame_bgr, t) -> EntranceResult(in_view, inliers, similarity, bearing_rad, quad)`; `EntranceFilter` turns the results into `ENTRANCE_FOUND` (with the bearing) / `ENTRANCE_LOST` events for the state machine. **Enrolment per room** (one entrance door per room is assumed): a frame from the robot's own camera with the door in view (2 m, straight on; keep that position out of every evaluation) + the door box (`--roi`), optionally a phone photo, and a sweep of the room without the door to calibrate the thresholds (`EntranceDetector.save/load`). **XFeat** (top_k 2048, mutual nearest neighbours, RANSAC homography, sanity check on the inliers' hull scale) against the robot-eye reference: door in view when the inliers pass the threshold (27, raised by `calibrate()` above the room's negatives); bearing = the door box projected through the homography (positive left, via the fisheye model), the centroid of the inliers without a box. **DINOv2** (cls + GeM of the patch tokens, cosine, `dino_size` b or s) is the phone-photo mode and an optional second opinion (`policy` auto | xfeat | dino | and | or; default `auto` = XFeat with a robot reference). ORB is dropped. Measured through the module on D1 with per-room calibration (`reports/DoanQuocKien/week-02/d1/entrance_bench_2026-10-12.md`, `python -m tools.enroll_entrance`): classroom door TPR 1.00 / FPR 0.00 (n = 210 / 52), bearing within about 6 deg at 1.5-3 m (no ground truth, indicative); cafe glass door TPR 0.87 / FPR 0.06-0.08, below the 0.90 / 0.05 target (a harder door; thresholds from 6 negative positions lower TPR to 0.72 at FPR 0.00): DINOv2 thresholds are brittle per room (cafe TPR 0.37-1.00, FPR 0.00-0.27). Weights: `python -m tools.fetch_models` (`--dino b` for DINOv2, pinned commits). XFeat on a CPU is about 0.5 s per match (not re-measured on an idle machine): call it on demand on KR's laptop. Tests: T0 with injected fakes (`tests/test_entrance.py`), T1 replay on the D1 classroom door, real-XFeat warp test.
+  - `sentry/perception/entrance.py` (**first version written 2026-10-12, KR owns it from here: tune, extend, own the tests**) + `tools/enroll_entrance.py` + `third_party/xfeat/` (vendored XFeat, Apache-2.0). `EntranceDetector(camera)(frame_bgr, t) -> EntranceResult(in_view, inliers, similarity, bearing_rad, quad)`; `EntranceFilter` turns the results into `ENTRANCE_FOUND` (with the bearing) / `ENTRANCE_LOST` events for the state machine. **Enrolment per room** (one entrance door per room is assumed): a frame from the robot's own camera with the door in view (2 m, straight on; keep that position out of every evaluation) + the door box (`--roi`), optionally a phone photo, and a sweep of the room without the door to calibrate the thresholds (`EntranceDetector.save/load`). **XFeat** (top_k 2048, mutual nearest neighbours, RANSAC homography, sanity check on the inliers' hull scale) against the robot-eye reference: door in view when the inliers pass the threshold (27, raised by `calibrate()` above the room's negatives); bearing = the door box projected through the homography (positive left, via the fisheye model), the centroid of the inliers without a box. **DINOv2** (cls + GeM of the patch tokens, cosine, `dino_size` b or s) is the phone-photo mode and an optional second opinion (`policy` auto | xfeat | dino | and | or; default `auto` = XFeat with a robot reference). ORB is dropped. Measured through the module on D1 with per-room calibration (`reports/DoanQuocKien/week-02/d1/entrance_bench_2026-10-12.md`, `python -m tools.enroll_entrance`): classroom door TPR 1.00 / FPR 0.00 (n = 210 / 52), bearing within about 6 deg at 1.5-3 m (no ground truth, indicative); cafe glass door (secondary and optional, no pass threshold: the classroom door is the primary demo door and the one that must pass 0.90 / 0.05) TPR 0.87 / FPR 0.06-0.08 (a harder door; thresholds from 6 negative positions lower TPR to 0.72 at FPR 0.00): DINOv2 thresholds are brittle per room (cafe TPR 0.37-1.00, FPR 0.00-0.27). Weights: `python -m tools.fetch_models` (`--dino b` for DINOv2, pinned commits). XFeat on a CPU is about 0.5 s per match (not re-measured on an idle machine): call it on demand on KR's laptop. Tests: T0 with injected fakes (`tests/test_entrance.py`), T1 replay on the D1 classroom door, real-XFeat warp test.
   - `nav/localization.py`: dead reckoning from `motion.json`, corrected by ArUco pose (`cv2.aruco`, 150 mm markers, `aruco_marker_m` in `config.toml`).
   - Tests: T0 for pose integration (closed square path returns to the origin in sim) and ArUco pose on synthetic renders; T1 entrance TPR/FPR on D1.
-- **Session:** T2 exploration with obstacle repulsion, connected end to end.
+- **Status (Fri 2026-10-16):** merged: fisheye calibration (RMS 0.83 px), the motion calibration tools and the affine speed / turn fits and wheel law (`calib/motion.json`, `docs/Classroom Session 2026-10-15.md`), live camera tilt with roll (`LiveTilt`, PRs #35, #38), the entrance detector (PR #31; the classroom door, the primary demo door, passes at TPR 1.00 / FPR 0.00; the cafe glass door is optional), HNHL's obstacle detector with reflection handling (PR #34), KR's dead reckoning and ArUco correction (PRs #33, #37), the D1 classroom data and the 24-row obstacle pack for HNHL (PR #42). Still open: see the list below (this is Week 2: everything on it is due before the Sunday Oct 18 meet-up).
+- **Still open before the Sunday Oct 18 meet-up (this is Week 2; checked at the session):**
+  - DQK: the PR for the 2026-10-15 evidence log (`DoanQuocKien/w02-log`, not merged; `calib/motion.json` cites it); the Week 2 log with the Fri-Sun hours. Not a Week 2 blocker: the random heading error needs online correction from the marker, which is Week 3 work.
+  - HNHL: issue #43 (chairs on the glossy floor get no distance, small or low objects are not detected); the T1 obstacle-distance result (median <= 10 %, p90 <= 20 %, 0.3-2.0 m) on the 24-row pack of 2026-10-15; the week-02 report is dated 2026-10-12.
+  - KR: issue #41 (switch `localization.py` to the new wheel model); the week-02 report still describes the old ORB `entrance.py` (it is XFeat + DINOv2 now and KR owns it): update it and re-run the T1 entrance check on the classroom door, the primary demo door.
+  - Session (Sunday Oct 18, hosted by DQK, run with HNHL and KR; these are the session's T2 protocols, not personal tasks): T2 exploration with obstacle repulsion, connected end to end (0 collisions in 5 x 3-min runs, section 4.3), which needs HNHL's obstacle layer, KR's pose, a cleared floor, a camera pose measured for that day's mount, and a runner that connects them (none is in the repo yet); T2 dead reckoning over a 3 m path with ArUco correction (DQK with KR), which needs the markers on rigid boards and issue #41 done first.
+  - All: review PR #45 (one reviewer) and decide G0.
+- **Session:** T2 exploration with obstacle repulsion, connected end to end; T2 dead reckoning over a 3 m path with ArUco correction (DQK with KR; position error <= 15 cm with the correction, <= 40 cm without, section 4.3; moved here from Week 4 on 2026-10-16).
 
 ### Week 3 (Oct 19-25): HCI Deployment & Biometrics
 
 - **DQK**
-  - Finish the Week 2 motion calibration first (the deployment needs it): straight runs at v = 0.4 and 0.7, short turns (w = 1.0 for 0.5 s, w = 0.5 for 1.5 s), fit with an intercept, drift term handed to KR's `localization.py`.
+  - Motion calibration is done (2026-10-15: affine speed and turn fits, wheel law, heading statistics; `calib/motion.json`). This week: wire `MotionEstimator` (marker range and bearing) into the drive tools and do the demo-room check from `docs/Classroom Session 2026-10-15.md`.
   - USB speaker playback on the Jetson (`aplay` on `play` packets).
   - Deployment behaviour on the robot: stop at the sweet spot, face the room centre, prompt, wait for validation, reverse to standby.
-  - Tests: T2 motion repeatability (Week 2 protocol, now at three speeds); T2 deployment sequence, 5 runs.
+  - Tests: T2 motion repeatability with the estimator in the loop; T2 deployment sequence, 5 runs.
 - **HNHL**
   - `perception/face.py`: InsightFace detection + 512-d embedding. Check the insightface 2.0 API first; the spec names MobileFaceNet, so prefer the `buffalo_s` pack.
   - `tools/enroll_whitelist.py`: 3-5 photos per person, stored as **all** normalized embeddings (the spec uses max similarity, so no averaging).
@@ -217,6 +242,10 @@ Each week ends with a **Sunday integration session** hosted by DQK (in person or
   - Generate audio prompts offline (Windows SAPI via `pyttsx3`, or another offline TTS) into `assets/audio/`.
   - `app/state_machine.py` skeleton with all phase 1-3 states, transitions and timeouts.
   - Tests: T0 scripted event sequences for every transition, including invalid events, which are ignored and logged.
+- **Extra (proposed 2026-10-16; checked at G1, Sun Oct 25; agreed at G0 first)**
+  - DQK: close the bench (`jetson/edge_bench.py`, `docs/Edge Deployment.md`): Stage B mix with a person in view; Stage C with live ESP32-CAM frames; a 15-minute run on battery with the voltage log; `tools/export_edge_onnx.py` and the evidence under `reports/DoanQuocKien/week-03/edge_deploy/`.
+  - HNHL: the parity set (200 D1 obstacle frames without faces, a public face set) and the pass thresholds of the 'Edge conversion parity' row; review the conversion tooling PR.
+  - KR: a Python 3.6 variant of the ESP32 tile receiver for the robot (`sentry.espcam.TileReceiver` imports `sentry.net.discover`), tested on recorded tile streams (T0, CPU only).
 - **Report (all):** each member adds 3+ papers from their area to the list in `Mid-Term Report Plan.md` section 2.
 - **Session:** record **D2**; T2 ESP32 handshake accept/reject.
 
@@ -224,7 +253,7 @@ Each week ends with a **Sunday integration session** hosted by DQK (in person or
 
 - **DQK**
   - Phase 1 end-to-end HIL: explore -> find entrance -> sweet spot -> prompt -> camera placed -> verified -> standby. Make sure the exploration covers the room (risk 8).
-  - Tests: T2, 5 runs; T2 dead reckoning over a 3 m path (with KR).
+  - Tests: T2, 5 runs.
 - **HNHL**
   - `perception/reid.py`: person crop from YOLO on ESP32 frames -> OSNet via torchreid with **re-ID-trained weights from `python -m tools.fetch_models`** (`osnet_ain_x1_0` domain-generalised, and `osnet_x0_25` Market1501); compare both on D2/D3 and keep the better one. Not `pretrained=True`: that is ImageNet-only.
   - Tests: T1 rank-1 and ROC on D2.
@@ -233,6 +262,9 @@ Each week ends with a **Sunday integration session** hosted by DQK (in person or
   - Sector logging: bounding-box horizontal drift over 2 s -> L/C/R (optional prior for the Week 9 search).
   - Phase 2 replay pipeline on D2, connected end to end.
   - Tests: T0 for the queue and sector classification; T1 sector accuracy on D2.
+- **Extra (proposed; only if G1 passed)**
+  - DQK: Stage A: the obstacle ground-distance and repulsion logic as a Python 3.6 module on the robot (a local safety layer between the laptop's commands and the motors), engines built on the robot, laptop fallback switch.
+  - HNHL: parity table of the robot's distances against the laptop path on D1 (median and p90 error), including the glossy-floor rows.
 - **Report (all):** agree the outline, page budget and owners in `Mid-Term Report Plan.md` by Mon Nov 2 (T-3 weeks).
 - **Milestone:** Phase 1 runs end to end on the robot; Phase 2 runs end to end on replayed D2. Both are the core of the mid-term demo.
 
@@ -251,6 +283,10 @@ Each week ends with a **Sunday integration session** hosted by DQK (in person or
   - HOLD behaviour: zero translation, yaw-only PD that keeps the bbox centered (reuses the PD yaw term from DQK's controller). No orbiting: the target would sit 90 degrees off-axis, outside the camera's field of view.
   - Closed-loop tests of PD and hold against `sim_robot` with a scripted target.
   - Tests: T0 for detector timing, hysteresis, and "robot yawing alone never triggers hold".
+- **Extra (proposed; Stage A gate G2, Sun Nov 8)**
+  - DQK: T2 obstacle layer on the robot, 5 x 3-min runs, and the link-unplugged safety check ('Edge obstacle layer', 'Edge safety' rows).
+  - HNHL: the OSNet x0.25 against AIN Rank-1 comparison (W4) also in TensorRT FP16; the result picks the lock model for the robot.
+  - KR: vendor the original ByteTrack tracker (MIT, numpy + scipy, Python 3.6; Ultralytics needs Python 3.8) into `third_party/bytetrack/`; T0 on synthetic tracks and a D3 replay against the Ultralytics tracker (ID agreement >= 95 %).
 - **Report (all):** chapter drafts from the Week 1-4 evidence; figures F1-F15 (`Mid-Term Report Plan.md` section 3).
 - **Session:** Phase 2 live at the door (ESP32 -> face -> re-ID -> queue); T2 pursuit first trials; first demo video shots (Phase 1, Phase 2).
 
@@ -269,6 +305,7 @@ Each week ends with a **Sunday integration session** hosted by DQK (in person or
   - State machine: PURSUE/HOLD wired to the hold detector and the controller commands; Phase 1-3 transitions replayed from logged events.
   - Report editor: merge the chapter drafts, check the page budget, start the code appendix.
   - Tests: T0 for the Phase 2 -> Phase 3 event chain.
+- **Extra (proposed):** DQK refreshes figures F20 and F21 (`Mid-Term Report Plan.md` section 3) with a person in view, the door thread and a battery run, and writes the 'Optimization and on-device deployment' section of chapter 5 with HNHL's laptop FP32 against FP16 numbers beside the robot's; figures frozen Sun Nov 15. No new edge features.
 - **Session (Sun Nov 15):** T2 pursuit + hold; pick-up shots for the video. **Milestone:** experiments for the mid-term closed and figures frozen (T-8 days). Anything not working by now goes into the report as "in progress" with its plan; it is not rushed.
 
 ### Week 7 (Nov 16-22): Mid-Term Report & Buffer (no new features)
@@ -282,6 +319,7 @@ Each week ends with a **Sunday integration session** hosted by DQK (in person or
 - **KR**
   - Editor: merged document, consistency of numbers against evidence files, code appendix (modules, owners, tests).
   - Clean-checkout test run and the submission package (`Mid-Term Report Plan.md` section 6).
+- **Extra (proposed):** no edge work except the report text and figures; the report states plainly which mode (laptop or on-robot) each result was measured in.
 - **Milestones:** Wed Nov 18 full draft + video cut (internal draft deadline); Thu-Fri Nov 19-20 internal review by all three, PR freeze Fri; Sat Nov 21 tag `midterm` on `main`; Sun Nov 22 PDF and video final.
 
 ### Week 8 (Nov 23-29): Mid-Term Submission & Threat Evasion
@@ -299,6 +337,7 @@ Each week ends with a **Sunday integration session** hosted by DQK (in person or
   - False-trigger harness (false triggers per minute on normal walking).
   - EVADE state + cooldown in the state machine.
   - Tests: T0 for the state machine preempting PURSUE/HOLD with EVADE.
+- **Extra (proposed; Stage B gate G3, Sun Nov 29):** the team decides Stage B once pursuit, hold and the laptop-path strike rows pass. If go, DQK starts it only after the evasion T2 passes (it competes with evasion in W8 and path following in W9); the plan: pursuit loop (pose model, ByteTrack, OSNet lock, PD and hold) in a Python 3.6 process on the robot, control packets to `robot_udp.py` unchanged.
 - **Session:** record **D4**; evasion wheels-off and at low cap.
 
 ### Week 9 (Nov 30-Dec 6): Evasion Validation & Search Building Blocks
@@ -307,7 +346,7 @@ Each week ends with a **Sunday integration session** hosted by DQK (in person or
   - T2 padded-lunge trials (the speed-cap decision of section 3 is recorded first).
   - Follow a planned path on the robot (waypoint following with the obstacle override and ArUco pose corrections) and the slow in-place 360° scan at each viewpoint.
   - Measure the effective detection radius `r_det` (distance at which OSNet still matches reliably; 3 people) and write it to `config.toml`.
-  - Tests: T2 strike evasion (latency part); path-following error over the 3 m protocol.
+  - Tests: T2 strike evasion (latency part); path-following error over the 3 m protocol of the Week 2 dead-reckoning test.
 - **HNHL**
   - Tune the lunge detector on D4.
   - Exit-event detection on the ESP32 (re-ID matches T1 at the door and motion is toward the door).
@@ -316,6 +355,7 @@ Each week ends with a **Sunday integration session** hosted by DQK (in person or
   - Label D4 with `label_events.py`; T1 false-trigger rate.
   - `nav/coverage.py`: viewpoints chosen greedily on the saved map until the coverage target is met within `r_det` and line of sight; tour ordered by nearest neighbour + 2-opt; legs connected by A* on an obstacle-inflated grid; optional departure-sector prior.
   - Tests: T0 for the planner on 3 synthetic rooms (coverage, plan time, tour length vs a lawnmower baseline); T1 false-trigger rate.
+- **Extra (proposed; gate G4, Sun Dec 6):** Stage B continues (T2: pursuit, hold and strike latency <= 150 ms with the link unplugged); G4 decides whether Stage C (door pipeline, search, network on the robot) is attempted at all.
 - **Session:** T2 strike evasion; first path-following run on the saved map.
 
 ### Week 10 (Dec 7-13): Next-Target Integration
@@ -331,6 +371,7 @@ Each week ends with a **Sunday integration session** hosted by DQK (in person or
 - **KR**
   - Handoff orchestration in the state machine: TARGET_EXITED -> PLAN -> FOLLOW/SCAN -> TARGET_FOUND -> PURSUE, or SEARCH_EXHAUSTED -> drop from queue -> next target or STANDBY.
   - Tests: T0 for the two-intruder event script, including the not-found drop.
+- **Extra (proposed):** only Stage C if G4 passed, and only until Sun Dec 13; otherwise the door pipeline and the search run on the laptop as specified.
 - **Session:** two-intruder rehearsal. **Gate (Sun Dec 13):** overhead camera decision (`Hardware.md` section 2).
 
 ### Week 11 (Dec 14-20): Integration Buffer & Stress Tests (contingency week)
@@ -403,7 +444,7 @@ reports/<handle>/week-NN/       # test evidence: pytest logs, metrics JSON/CSV, 
 | 7 | Mid-term due date was assumed to be Nov 1 | **Resolved 2026-10-12 (DQK):** due Mon 2026-11-23 (10-15 pages, with the code), final window 2026-12-28..2027-01-02. Section 5 restructured to 13 weeks; Week 7 is the report week (internal draft Wed Nov 18) |
 | 12 | The ESP32-CAM modules (both the Shopee and the local one) carry a GC2145, which has no hardware JPEG: the plan's HTTP MJPEG VGA 15 FPS is impossible with the stock sketch (1.7-7.7 FPS) | **Worked around in software on 2026-10-09:** raw Bayer + changed-tile UDP stream, 14.4 FPS average, 9-10 FPS worst case; needs a fixed camera. Alternative: buy an OV2640 module (about 25 FPS VGA, stock sketch). **Decision 2026-10-11 (DQK): keep the tile stream as the interface.** An OV2640 was also ordered that day as an option (`docs/ESP32-CAM.md`); using it changes the frozen interface, so it needs a PR all three approve. Details: `docs/ESP32-CAM.md` |
 | 13 | The second ESP32-CAM board loses its Wi-Fi uplink while the camera runs (cause unknown); the first board is fine | Use the first board for the stream; ask KR to test their board; if a board shows send failures only while the camera runs, swap it |
-| 14 | ORB entrance matching is weak from the robot's low 160 deg fisheye view on both a frameless glass door (cafe, 2026-10-11) and a plain white solid door (classroom, 2026-10-12: positives p10 at or below the negatives' p95 in every ORB / SIFT variant; a phone photo as reference gives AUC 0.6-0.7) | **Replaced by XFeat + DINOv2 (2026-10-12, `sentry/perception/entrance.py`).** Through the module with per-room calibration: classroom TPR 1.00 / FPR 0.00, cafe glass door TPR 0.87 / FPR 0.06 (target 0.90 / 0.05, so the glass door is still short). Open: only two rooms, one session each, same-session reference; a third room and a second session decide the threshold rule; DINOv2 thresholds are brittle (use XFeat as the primary); a marker on the door only as a fallback, with the team's approval |
+| 14 | ORB entrance matching is weak from the robot's low 160 deg fisheye view on both a frameless glass door (cafe, 2026-10-11) and a plain white solid door (classroom, 2026-10-12: positives p10 at or below the negatives' p95 in every ORB / SIFT variant; a phone photo as reference gives AUC 0.6-0.7) | **Replaced by XFeat + DINOv2 (2026-10-12, `sentry/perception/entrance.py`).** Through the module with per-room calibration: classroom TPR 1.00 / FPR 0.00, cafe glass door TPR 0.87 / FPR 0.06. **Decision (DQK, 2026-10-12, confirmed 2026-10-16): the classroom door is the primary demo door and the only one that must pass the 0.90 / 0.05 target; other doors (the cafe glass door) are secondary and optional, reported without a threshold.** Open: one session per room with a same-session reference, so a second session on the classroom door decides how robust the primary result is (a third room is optional); DINOv2 thresholds are brittle (use XFeat as the primary); a marker on the door only as a fallback, with the team's approval |
 | 15 | **Decided provisionally 2026-10-12 (DQK), subject to change.** The full-loop criterion says "without manual help" (section 4.3), but the robot moves only while an operator holds R1 (section 3, Safety) | Holding R1 stays allowed during the pursuit and full-loop trials: reword the criterion to "without steering or intervention" (the operator only holds the dead-man) and say so in every report. Do not loosen the dead-man; a supervised mode would need its own safety case |
 | 16 | **Open, needs a team decision (audit 2026-10-11).** The video target p95 < 50 ms is missed on the default 2.4 GHz hotspot (53-62 ms measured, `docs/JetBot Notes.md`), and the spec's simultaneous 2.4 + 5 GHz bands are not what the single-radio Windows hotspot provides | `docs/Hardware.md` section 2 has the router gate (ping p95 > 50 ms): decide whether it has triggered, or record the conditions under which the hotspot meets the target |
 | 17 | The mid-term report competes with integration work in Weeks 5-7 | Week 7 has no new features; figures are made from each week's evidence as it lands (W5-W6), not at the end; anything not working by Sun Nov 15 is reported as "in progress" with its plan. Evasion and search are deliberately after the mid-term |
@@ -414,3 +455,8 @@ reports/<handle>/week-NN/       # test evidence: pytest logs, metrics JSON/CSV, 
 | 22 | The camera tilt changes between sessions (tiltable mount, 3.6° seen on 2026-10-12) and a wrong tilt gives a wrong ground distance (1° is about 15 % at 1 m and 26 % at 2 m with the lens 0.10 m high) | Lock the mount mechanically and put a pencil mark on it; one `camera_pose_<session>.json` per D1 session; re-check with 3 strips at the end of each session; live tilt from an ArUco marker (Week 2 extra, `LiveTilt`, validated on the robot 2026-10-14) with a fallback to the stored value. **Measured: the chassis tilt itself differs by up to 1.7° between floor spots (a 10 cm wheelbase follows tile edges), so the live value is needed, not only the mount lock.** Pitch and camera roll are a coupled pair (`LiveTilt` sets both; a roll mismatch costs 15-70 % above a 20° bearing; measured roll +1.1°, the strip-click value -1.85° was wrong). A 150 mm marker is about 15 px wide at 3 m, so trust the live value only within about 1.5 m (the marker pose is noisiest at 2 m); use the median of 3 frames (15 lagged a moving robot by about 1 s) |
 | 23 | **Glossy floor reflections bias the ground distance (found 2026-10-12, D1 classroom).** The polished tile mirrors low objects, so the box/mask bottom that the detector returns includes the reflection: with the strip-verified camera pose (flat paper at 1.0 m: -5 %), a 3 cm wooden block at 0.70 m read 0.59 m (-16 %) and a chair front rail at 1.40 m read 1.21 m (-14 %); the offset is about `fy * h / d` px for an object of height `h`. The 10 % median-error target (section 4.3) would fail on this floor | HNHL (`obstacle.py`): treat the contact row as the join of the object and its mirror image (symmetry search at the bottom of the box) or use segmentation masks, and report the error on a glossy and a matte floor separately; keep every D1 obstacle row with the floor type; DQK: add a matte-floor setup to the next session |
 | 24 | **Assumption (DQK, 2026-10-12): one entrance door per room.** The entrance detector answers "is THE entrance in view, and where"; telling two similar doors apart, or a door from a second door in the same room, is out of scope | Enrolment is per room (`tools/enroll_entrance.py`); the D1 doorway sets record one door per room (a room with several doors is recorded for its entrance only); say it in the report's assumptions; if a demo room has two doors the entrance reference must be unique-looking (a marker on it, with the team's approval) |
+| 25 | **TensorRT 7.1 can compute an operator wrongly without an error or warning.** Found 2026-10-16: the insightface SCRFD `Resize` nodes (opset-11 `sizes` form) gave a cosine of 0.88 to 0.99 against ONNX Runtime in FP32 and FP16 alike, face scores 0.72 instead of 0.81 and landmarks off by about 10 px | Every engine is checked against ONNX Runtime before use (section 4.3 'Edge conversion parity'); the fix is in `tools/export_edge_onnx.py` (nearest 2x upsampling as a grouped ConvTranspose, with a test); a layer-by-layer comparison locates a bad operator; opset 11 or lower, no `grid_sample`, no bicubic Resize |
+| 26 | The on-robot stack is Python 3.6 with OpenCV 4.1.1: no Ultralytics, `sentry/` code uses 3.7+ features and `cv2.aruco.ArucoDetector`, whether the JetPack OpenCV has the aruco module is unchecked | Edge code stays in 3.6-compatible `jetson/` modules (`yolo_post.py`, `face_post.py`, `trt_runtime.py`, tests included); ByteTrack vendored (W5, KR); check `cv2.aruco` on the robot before any localization port; `pycuda` and TensorRT are already in the JetBot container |
+| 27 | A self-contained robot needs its own network: on 2026-10-16 the robot lost its network when the phone hotspot left and was unreachable for about 20 minutes | Gate G4 (stretch) covers it; a travel router (`Hardware.md` section 2) is the safe option, the robot as an access point on the RTL8822CE is unverified (2.4 GHz only at best); until then keep the laptop hotspot and the phone fallback |
+| 28 | SD card integrity on the only robot: the card was removed twice without `sudo shutdown now` (unreplayed journal), and the laptop-side USB card reader plus `usbipd` path silently dropped writes during a repair, so the same fixes never stuck; a second card from the same image showed far more filesystem errors | Rules in `JetBot Notes.md` (shut down cleanly, never write the card through that reader, check any new card with `e2fsck -n` before use); root grown to 58 GB (34 GB free) and the filesystem repaired on 2026-10-16; back up the card once the setup is final (risk 19) |
+| 29 | Power: on-robot inference adds about 3 W (board 4.6 to 5.8 W against 2.5 W idle) and 10 minutes of compute alone dropped the battery from 12.14 to 11.93 V; motors will add much more | Drain test from full to 11.1 V with a driving profile before any runtime claim (section 4.3 'Edge latency and load'); keep the 10.5 V stop rule; MAXN stays on (the 5 W mode costs about a third of the frame rate, desk study) |
