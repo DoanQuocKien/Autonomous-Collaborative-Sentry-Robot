@@ -1,0 +1,1 @@
+{"mode": "decode", "seconds": 20.0, "frames": 400, "fps": 20.0, "skipped_by_newest_only": 0, "avg_people": 0.0, "avg_obstacle_boxes_on_det_frames": null, "stage_ms": {"decode": {"n": 400, "mean": 4.89, "p50": 4.74, "p95": 5.58}, "compute": {"n": 400, "mean": 4.9, "p50": 4.76, "p95": 5.59}, "e2e": {"n": 400, "mean": 11.89, "p50": 11.96, "p95": 12.91}}}

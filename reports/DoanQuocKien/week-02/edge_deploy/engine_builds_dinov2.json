@@ -1,0 +1,20 @@
+[
+ {
+  "model": "dinov2_vits14_336x448",
+  "upload_s": 37,
+  "build_s": 422,
+  "exit": "exit=0",
+  "passed": true,
+  "gpu_ms": 359.516,
+  "engine_mb": "45.6"
+ },
+ {
+  "model": "dinov2_vitb14_336x448",
+  "upload_s": 97,
+  "build_s": 638,
+  "exit": "exit=0",
+  "passed": true,
+  "gpu_ms": 885.871,
+  "engine_mb": "174.2"
+ }
+]
