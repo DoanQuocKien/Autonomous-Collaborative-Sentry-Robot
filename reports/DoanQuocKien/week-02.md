@@ -43,6 +43,8 @@
 - **Camera pose of Saturday's mount (2026-10-17, about 01:00):** three strips at 0.5 / 1.0 / 2.0 m, lens height by tape 0.100 m: fit H 0.0947 m, pitch 0.68 deg down, rms 1.57 cm, passed (`reports/DoanQuocKien/week-02/camera_pose_classroom_1017.json`). The preflight marker reading (+16.2 deg against 5.0 deg stored) did not agree with the strips: the marker's height setting no longer applied after the board was moved; the strips are the reference.
 - **Exploration runner (preparation for the Sunday session, in no PR):** a policy module, a live runner with a dry-run mode, start checks, R1 wait and stop rules, and 12 tests (closed loop with the measured wheel model: at least 0.37 m clear of every obstacle surface with 60 % of detections missed and 0.3 s latency). Only dry runs on the robot (detector about 55 ms per frame, 105-130 ms with the glossy contact estimator); nothing was driven. It sits on the local branch `DoanQuocKien/w02-explore-driver`.
 
+- **Small objects and wires, first baseline (2026-10-18, rugged matte floor, 1.0 m; `week-02/small_objects_1018/`):** the stock detector and the semantic floor find none of a small low table, a backpack and a box; the open-vocabulary backend (PR #46) finds them when they are in its prompt list (distance 10-14 % short, all on one side) and **never finds a black wire across the floor (0 of 20)**. Pose of the day: height fixed 0.100 m, tilt 1.04 deg from the 1.0 and 2.0 m strips (the 0.5 m strip 3 cm off). Feeds the required row "Small objects and wires" and risk 30. Single session and floor; not the acceptance measurement.
+
 ## Tests run
 | Tier | Command | Result | Evidence |
 | :-- | :-- | :-- | :-- |

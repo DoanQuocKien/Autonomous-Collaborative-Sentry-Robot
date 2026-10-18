@@ -1,0 +1,4 @@
+label,tape_distance_m,frames,frames_with_detection,frames_with_distance,median_distance_m,classes_reasons
+small table,1.0,20,0,0,,{}
+backpack,1.0,20,2,2,0.927,"{""(28, '')"": 2}"
+box,1.0,20,1,0,,"{""(60, 'bottom_truncated')"": 1}"
