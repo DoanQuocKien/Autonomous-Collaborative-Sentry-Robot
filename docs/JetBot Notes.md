@@ -104,6 +104,7 @@ Record the outputs in `reports/DoanQuocKien/week-01/`.
 - Assumes that INA219 measures the 3S Li-ion pack (12.6 V full). Our rule of thumb: **>= 11.1 V OK, 10.5-11.1 V LOW (charge soon), < 10.5 V CRITICAL (stop and charge)**. The percentage in the tool is only a rough linear guess between 9.9 and 12.6 V.
 - Readings so far: 12.0 V on 2026-10-04 (about 80 %), 11.9-11.95 V on 2026-10-06 after about two hours of tests.
 - Never run motor tests below the LOW threshold: under load the voltage sags and the Jetson can brown out and corrupt the SD card.
+- **When the robot is not in use (waiting, being set up, a break, on the charger), put it in power-saver mode:** `sudo nvpmodel -m 1` (5 W mode, 2 CPU cores) on the robot, and `sudo nvpmodel -m 0` (MAXN, the default and what all our measurements use) before a run. `sudo nvpmodel -q` shows the current mode. Reason: a session spent hours powered on between runs and the pack drains while the robot only waits (idle board about 2.5 W; with the on-robot models it was 4.6-5.8 W, `docs/Edge Deployment.md`). The saving of 5 W mode is **not measured on our kit yet** (note it with the voltage next time). Also shut down with `sudo shutdown now` if the break is long, and never pull the SD card without it. Noted 2026-10-18 (DQK); on 2026-10-18 the robot was found in MAXN.
 
 ## Return checklist (the robot is school property; undo what we changed before handing it back)
 
