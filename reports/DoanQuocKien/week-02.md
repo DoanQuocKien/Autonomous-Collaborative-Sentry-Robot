@@ -95,7 +95,7 @@
 - **D1 / classroom:** done: 24 obstacle rows (PR #42). Dropped on purpose (DQK): the matte-floor control, the empty-floor clips and the room sweep. Open: back up `data/D1*` and `data/D1_obstacles_1015` (the plan names `data/` and the team Drive as the places for face data), the return checklist.
 - **HNHL:** issue #43 (chairs on the glossy floor get no distance, small or low objects are not detected); the T1 obstacle-distance result on the 24-row pack; the week-02 report is dated 2026-10-12.
 - **KR:** issue #41 (localization on the new wheel model); the week-02 report still describes the old ORB `entrance.py`; the T1 entrance check on the classroom door.
-- **All:** review PR #45 and decide G0 (the on-robot inference extra task, agreed or rejected on Sunday; nothing in it is due before Week 3).
+- **All:** PR #45 is merged and G0 passed: the team agreed to take the on-robot inference extra task on 2026-10-17 (confirm the owners on Sunday; nothing in it is due before Week 3).
 - **Other:** OV2640 arrival and flashing.
 - **Week 3 (DQK):** USB speaker playback and the deployment behaviour; wiring `MotionEstimator`; the demo-room check from `docs/Classroom Session 2026-10-15.md`; if G0 passes, closing the on-robot bench (gate G1, Sun Oct 25).
 

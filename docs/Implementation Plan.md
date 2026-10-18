@@ -165,11 +165,11 @@ Each week ends with a **Sunday integration session** hosted by DQK (in person or
 | 12 | Dec 21-27 | Validation, Freeze & Rehearsal | code freeze Wed Dec 23, rehearsal Sat Dec 26, tag `final` Sun Dec 27 |
 | 13 | Dec 28-Jan 3 | Final Submission & Defense | **submit Mon Dec 28**; defense by Fri Jan 2 |
 
-**Extra task (proposed 2026-10-16): on-robot inference.** Aim: the Jetson Nano runs the time-critical models itself so the control loop does not depend on the Wi-Fi link, and the laptop becomes a companion app (start/stop, live view, confirm intruders). The laptop pipeline stays the default and the fallback for every deliverable; this is an extra, owned by DQK (Jetson side) with HNHL (parity, model choice) and KR (CPU-side ports). **Nothing in it is due in Week 2: it is agreed or rejected at the Week 2 weekend meet-up (Sun Oct 18), and every work item below starts in Week 3 or later.** Evidence so far, the TensorRT 7.1 limits and how to repeat it: `docs/Edge Deployment.md`; the desk study and its staging: `docs/Edge Feasibility.md`; spec: section 4.7.
+**Extra task (proposed 2026-10-16, agreed by all three 2026-10-17): on-robot inference.** Aim: the Jetson Nano runs the time-critical models itself so the control loop does not depend on the Wi-Fi link, and the laptop becomes a companion app (start/stop, live view, confirm intruders). The laptop pipeline stays the default and the fallback for every deliverable; this is an extra, owned by DQK (Jetson side) with HNHL (parity, model choice) and KR (CPU-side ports). **Nothing in it is due in Week 2: the team agreed to take it before the Week 2 weekend meet-up (G0 passed, 2026-10-17; reported by DQK, confirm the owners at the Sun Oct 18 meet-up), and every work item below starts in Week 3 or later.** Evidence so far, the TensorRT 7.1 limits and how to repeat it: `docs/Edge Deployment.md`; the desk study and its staging: `docs/Edge Feasibility.md`; spec: section 4.7.
 
 | Gate | When | Question | Pass | If it fails |
 | :-- | :-- | :-- | :-- | :-- |
-| G0 | Sun Oct 18 (W2 meet-up) | Do we take the extra task? | all three agree and the owners below are accepted | nothing changes; the evidence is the report's optimisation chapter |
+| G0 | Sun Oct 18 (W2 meet-up); **passed 2026-10-17, all three agreed** | Do we take the extra task? | all three agree and the owners below are accepted | nothing changes; the evidence is the report's optimisation chapter |
 | G1 | Sun Oct 25 (W3) | Is the bench closed? | the section 4.3 'Edge latency and load' row passes with a person in view and live ESP32 frames, and the parity row passes on the parity set | stop; the report keeps the bench results as they are |
 | G2 | Sun Nov 8 (W5) | Stage A: obstacle layer on the robot | the section 4.3 'Edge obstacle layer' and 'Edge safety' rows pass | stay on the laptop path; no further edge work before the mid-term |
 | G3 | Sun Nov 29 (W8, after the submission) | Stage B: pursuit loop on the robot | pursuit, hold and the laptop-path strike rows already pass (W6, W8); G2 passed | pursuit stays on the laptop |
@@ -221,7 +221,7 @@ Effort estimate (desk study, to be re-estimated at G1): Stage A about 4 person-d
   - HNHL: issue #43 (chairs on the glossy floor get no distance, small or low objects are not detected); the T1 obstacle-distance result (median <= 10 %, p90 <= 20 %, 0.3-2.0 m) on the 24-row pack of 2026-10-15; the week-02 report is dated 2026-10-12.
   - KR: issue #41 (switch `localization.py` to the new wheel model); the week-02 report still describes the old ORB `entrance.py` (it is XFeat + DINOv2 now and KR owns it): update it and re-run the T1 entrance check on the classroom door, the primary demo door.
   - Session (Sunday Oct 18, hosted by DQK, run with HNHL and KR; these are the session's T2 protocols, not personal tasks): T2 exploration with obstacle repulsion, connected end to end (0 collisions in 5 x 3-min runs, section 4.3), which needs HNHL's obstacle layer, KR's pose, a cleared floor, a camera pose measured for that day's mount, and a runner that connects them (none is in the repo yet); T2 dead reckoning over a 3 m path with ArUco correction (DQK with KR), which needs the markers on rigid boards and issue #41 done first.
-  - All: review PR #45 (one reviewer) and decide G0.
+  - All: PR #45 is merged and G0 passed (agreed 2026-10-17); confirm the owners at the meet-up.
 - **Session:** T2 exploration with obstacle repulsion, connected end to end; T2 dead reckoning over a 3 m path with ArUco correction (DQK with KR; position error <= 15 cm with the correction, <= 40 cm without, section 4.3; moved here from Week 4 on 2026-10-16).
 
 ### Week 3 (Oct 19-25): HCI Deployment & Biometrics
@@ -242,7 +242,7 @@ Effort estimate (desk study, to be re-estimated at G1): Stage A about 4 person-d
   - Generate audio prompts offline (Windows SAPI via `pyttsx3`, or another offline TTS) into `assets/audio/`.
   - `app/state_machine.py` skeleton with all phase 1-3 states, transitions and timeouts.
   - Tests: T0 scripted event sequences for every transition, including invalid events, which are ignored and logged.
-- **Extra (proposed 2026-10-16; checked at G1, Sun Oct 25; agreed at G0 first)**
+- **Extra (agreed 2026-10-17 at G0; checked at G1, Sun Oct 25)**
   - DQK: close the bench (`jetson/edge_bench.py`, `docs/Edge Deployment.md`): Stage B mix with a person in view; Stage C with live ESP32-CAM frames; a 15-minute run on battery with the voltage log; `tools/export_edge_onnx.py` and the evidence under `reports/DoanQuocKien/week-03/edge_deploy/`.
   - HNHL: the parity set (200 D1 obstacle frames without faces, a public face set) and the pass thresholds of the 'Edge conversion parity' row; review the conversion tooling PR.
   - KR: a Python 3.6 variant of the ESP32 tile receiver for the robot (`sentry.espcam.TileReceiver` imports `sentry.net.discover`), tested on recorded tile streams (T0, CPU only).
