@@ -21,3 +21,24 @@ Types of cameras in machine vision and robotics (fixed · PTZ · fisheye · dept
 ArUco Markers — Detection & Pose Estimation Using Fiducial Markers: https://aiclub.uit.edu.vn/itcourses/#t/Th%E1%BB%8B%20gi%C3%A1c%20m%C3%A1y%20t%C3%ADnh/32
 Guide to writing a script to read battery information on JetBot: https://aiclub.uit.edu.vn/itcourses/#t/Hardware%20&%20IoT/31
 MPU6050 — 6-axis motion sensor (comparison: MPU9250 · ICM-20948 · ICM-20602): https://aiclub.uit.edu.vn/itcourses/#t/Hardware%20&%20IoT/29
+
+Converting PyTorch Models for Edge Devices (Jetson, Raspberry Pi 5)
+https://aiclub.uit.edu.vn/itcourses/#CS532/CS532-13
+
+Visual Tracking & Target Following
+https://aiclub.uit.edu.vn/itcourses/#CS532/CS532-11
+
+Vision-Language-Action (VLA): Models for Perception, Instruction Understanding, and Action
+https://aiclub.uit.edu.vn/itcourses/#CS532/CS532-14
+
+PID Control for Robots: From Theory to Parameter Tuning
+https://aiclub.uit.edu.vn/itcourses/#CS532/CS532-15
+
+Imitation Learning
+https://aiclub.uit.edu.vn/itcourses/#RL/RL-10
+
+World Models
+https://aiclub.uit.edu.vn/itcourses/#RL/RL-11
+
+Map Reconstruction via Camera — Visual Mapping and 3D Reconstruction for Robots
+https://aiclub.uit.edu.vn/itcourses/#t/Hardware%20&%20IoT/55
