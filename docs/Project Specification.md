@@ -73,6 +73,7 @@ JetBot Deploys \-\> Pursue Target (YOLOv8 \+ ByteTrack)
 * Robot pose is tracked by dead reckoning from calibrated $(v, \omega)$ commands, and corrected whenever an ArUco marker is visible.  
 * **Room map:** while exploring, the base station builds a 2D occupancy grid in world coordinates: robot pose comes from dead reckoning, the ground point of each detected obstacle marks occupied cells, floor the robot has driven over or seen is free, and unseen cells stay unknown. YOLO does not detect walls or unclassified objects, so the map only covers known-free floor. It is saved at the end of Phase 1 (with the guarding position) and used by the search in section 4.6.  
 * If any obstacle falls within \$0.6\\text{ m}\$, the base station injects a repulsive angular velocity component to steer the robot into open floor space.
+* **Minimum obstacle set (added 2026-10-18):** the obstacle layer must detect, from the robot's own camera 0.10 m above the floor, at least **human legs and feet, wires (black and white), footwear (shoes, sandals, slippers) and backpacks or bags**, in addition to furniture. The stock COCO detector does not (measured 2026-10-18), so the model is trained on images from the robot's own view (Implementation Plan section 4.2, dataset D5; acceptance in section 4.3). Wires are the hardest case and are reported on their own.
 
 ### **4.2 Entrance Localization & Vantage Selection**
 
