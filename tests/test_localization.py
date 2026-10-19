@@ -256,3 +256,31 @@ def test_marker_distance_gating_and_alpha_decay():
     pose, _ = tracker.update_with_markers(frame, alpha=0.5)
     assert tracker.corrections_count == 0
     assert math.isclose(pose.x, 0.0, abs_tol=1e-6)
+
+
+def _detection_from_pose(anchor, x, y, psi):
+    """The MarkerDetection a perfect camera at world pose (x, y, psi) would report for a marker facing along anchor.yaw_rad."""
+    from sentry.nav.localization import MarkerDetection
+    nx, ny = math.cos(anchor.yaw_rad), math.sin(anchor.yaw_rad)
+    axes_world = np.array([[-ny, nx, 0.0], [0.0, 0.0, 1.0], [nx, ny, 0.0]])             # marker x (right), y (up), z (out toward the viewer)
+    cam = np.array([[math.sin(psi), -math.cos(psi), 0.0], [0.0, 0.0, -1.0], [math.cos(psi), math.sin(psi), 0.0]])  # right, down, forward
+    R_cm = cam @ axes_world.T
+    t = cam @ np.array([anchor.x - x, anchor.y - y, 0.0])
+    return MarkerDetection(anchor.marker_id, np.zeros((4, 2)), t.reshape(3, 1), cv2.Rodrigues(R_cm)[0], float(np.linalg.norm(t)), 0.0)
+
+
+def test_marker_correction_gives_the_true_heading_off_axis():
+    """T2 2026-10-18 (classroom): the robot turned 50 deg left and the correction said 41 deg right. The heading must follow the sign of the real turn, for markers facing any way."""
+    anchors = [MarkerAnchor(0, 3.8, 0.0, yaw_rad=math.pi), MarkerAnchor(1, 1.5, 0.7, yaw_rad=-math.pi / 2), MarkerAnchor(2, 2.5, -0.7, yaw_rad=math.pi / 2)]
+    for anchor in anchors:
+        for x, y, deg in [(0.5, 0.2, 0.0), (0.6, 0.3, 33.0), (0.9, 0.0, -25.0), (1.0, 0.1, 50.0)]:
+            tracker = LocalizationTracker(camera_calib=None, max_marker_distance_m=1e9)
+            tracker.add_anchor(anchor)
+            tracker.set_pose(0.0, 0.0, 0.0)
+            det = _detection_from_pose(anchor, x, y, math.radians(deg))
+            if det.tvec[2][0] <= 0.2:
+                continue                                                                  # behind or beside the camera: not a view
+            tracker.detect_markers = lambda frame, d=det: [d]
+            tracker.update_with_markers(np.zeros((4, 4, 3), np.uint8), alpha=1.0)
+            assert math.isclose(tracker.pose.x, x, abs_tol=1e-6) and math.isclose(tracker.pose.y, y, abs_tol=1e-6), (anchor.marker_id, x, y, deg)
+            assert math.isclose(math.degrees(tracker.pose.theta), deg, abs_tol=1e-4), (anchor.marker_id, x, y, deg, math.degrees(tracker.pose.theta))
