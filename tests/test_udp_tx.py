@@ -86,3 +86,14 @@ def test_numpy_scalars_and_rounding_overshoot_are_sent(sender):
     now[0] = 1
     assert tx.send(1.0000001, -1.0000001)
     assert [p[0] for p in sock.packets] == [{"seq": 0, "v": 0.5, "w": -0.25}, {"seq": 1, "v": 1.0, "w": -1.0}]
+
+
+def test_play_sends_validated_audio_packet_and_shares_seq(sender):
+    tx, sock, _ = sender
+    assert tx.send(0.4, 0.0)
+    assert tx.play("guard_ready")
+    assert [p[0] for p in sock.packets] == [{"seq": 0, "v": 0.4, "w": 0.0}, {"seq": 1, "play": "guard_ready"}]
+    for bad in ("../etc/passwd", "BAD_UPPER", "", 123):
+        with pytest.raises(ValueError):
+            tx.play(bad)
+

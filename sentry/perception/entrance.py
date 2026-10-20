@@ -180,6 +180,15 @@ class EntranceDetector:
             self.robot_refs.append({"image": f, "quad": quad, "feats": self.matcher.features(f), "roi": None if roi is None else list(roi)})
         self._descs = None
 
+    def enroll_esp32(self, frames, rois=None):
+        """Enrol reference frames captured from the ESP32-CAM itself.
+
+        The robot-eye fisheye reference does not transfer to the ESP32 lens, so the
+        ESP32 placement handshake uses a second `EntranceDetector(camera=None)` with
+        its own ESP32 reference frame(s) and calibrated thresholds.
+        """
+        self.enroll_robot(frames, rois=rois)
+
     def enroll_phone(self, images):
         """Photos of the door that are not from the robot (a phone): only the DINOv2 path can use them (XFeat on a phone photo: AUC 0.87-0.98 vs 0.99-1.00 on D1)."""
         self.phone_images += list(images if isinstance(images, (list, tuple)) else [images])
@@ -315,6 +324,79 @@ class EntranceFilter:
                 self.bearings.clear()
                 return "ENTRANCE_LOST", None
         return None
+
+
+class ESP32Handshake:
+    """Placement verification handshake for the stationary ESP32-CAM (Spec §4.3).
+
+    Uses a dedicated `EntranceDetector` enrolled with a reference frame from the ESP32
+    camera itself (`camera=None`, own thresholds calibrated on ESP32 negatives) and
+    debounces frame results into `ESP32_VERIFIED` / `ESP32_LOST` events for the state
+    machine. Works with both `TileReceiver` (`.latest()`) and `MJPEGReceiver` (`.latest()` / `.read()`).
+    """
+
+    def __init__(self, detector, *, enter=None, exit=None, max_frame_age_s=1.0):
+        if max_frame_age_s <= 0 or not math.isfinite(max_frame_age_s):
+            raise ValueError("max_frame_age_s must be positive and finite")
+        self.detector = detector
+        enter = detector.cfg.enter_frames if enter is None else int(enter)
+        exit = detector.cfg.exit_frames if exit is None else int(exit)
+        if enter <= 0 or exit <= 0:
+            raise ValueError("enter and exit frame counts must be positive")
+        self.filter = EntranceFilter(enter=enter, exit=exit)
+        self.max_frame_age_s = float(max_frame_age_s)
+        self.verified = False
+        self.last_result = None
+        self.last_frame_id = -1
+        self.accepted = 0
+        self.rejected = 0
+        self.stale = 0
+
+    @classmethod
+    def from_folder(cls, folder, *, matcher=None, describer=None, **kwargs):
+        det = EntranceDetector.load(folder, camera=None, matcher=matcher, describer=describer)
+        return cls(det, **kwargs)
+
+    def reset(self):
+        self.filter = EntranceFilter(enter=self.filter.enter, exit=self.filter.exit)
+        self.verified = False
+        self.last_result = None
+        self.last_frame_id = -1
+
+    def check_frame(self, frame_bgr, t=None):
+        """Evaluate one ESP32 BGR frame -> (EntranceResult, 'ESP32_VERIFIED' | 'ESP32_LOST' | None)."""
+        result = self.detector(frame_bgr, t)
+        self.last_result = result
+        if result.in_view:
+            self.accepted += 1
+        else:
+            self.rejected += 1
+        ev = self.filter.update(result)
+        if ev is not None:
+            if ev[0] == "ENTRANCE_FOUND":
+                self.verified = True
+                return result, "ESP32_VERIFIED"
+            if ev[0] == "ENTRANCE_LOST":
+                self.verified = False
+                return result, "ESP32_LOST"
+        return result, None
+
+    def poll(self, receiver, timeout=0.0):
+        """Poll `TileReceiver` or `MJPEGReceiver` once; skip missing, duplicate, or stale frames."""
+        if hasattr(receiver, "latest"):
+            frame, fid, age_s = receiver.latest()
+            if frame is None or fid == self.last_frame_id:
+                return None, None
+            if age_s > self.max_frame_age_s:
+                self.stale += 1
+                return None, None
+            self.last_frame_id = fid
+            return self.check_frame(frame)
+        vf = receiver.read(timeout=timeout)
+        if vf is None or vf.seq == self.last_frame_id:
+            return None, None
+        self.last_frame_id = vf.seq
+        return self.check_frame(vf.frame_bgr, vf.t_cap)
 
 
 # Backward compatibility alias

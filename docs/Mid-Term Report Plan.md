@@ -44,18 +44,22 @@ Each member adds 3+ papers from their area in Week 3. Candidates below are the m
 
 | # | Paper (verify) | Used for | Ch. | Added by |
 | :-- | :-- | :-- | :-: | :-- |
-| 1 | Rublee et al., "ORB: an efficient alternative to SIFT or SURF", ICCV 2011 | Entrance matching | 5 | KR |
+| 1 | Rublee, Rabaud, Konolige and Bradski, "ORB: An efficient alternative to SIFT or SURF", *IEEE International Conference on Computer Vision (ICCV)*, pp. 2564–2571, 2011 (reference verified 2026-10-20; oFAST + rBRIEF binary descriptor baseline in the D1 entrance bake-off, AUC 0.91 vs XFeat 0.99–1.00, replaced by XFeat in `sentry/perception/entrance.py`) | Entrance matching (baseline comparison in D1 bake-off) | 5 | KR |
 | 2 | Kannala and Brandt, generic camera model for fish-eye lenses, TPAMI 2006 | `cv2.fisheye` calibration | 4 | DQK |
-| 3 | Garrido-Jurado et al., ArUco fiducial markers, Pattern Recognition 2014 | Localization anchors | 4 | KR |
+| 3 | Garrido-Jurado, Muñoz-Salinas, Madrid-Cuevas and Marín-Jiménez, "Automatic generation and detection of highly reliable fiducial markers under occlusion", *Pattern Recognition*, 47(6):2280–2292, 2014 (reference verified 2026-10-20; `DICT_4X4_50` 150 mm square markers in `sentry/nav/localization.py` and `sentry/perception/camera_pose.py`) | Localization anchors & live camera tilt | 4 | KR |
 | 4 | Cristian, "Probabilistic clock synchronization", Distributed Computing 1989 | Clock sync | 3 | HNHL |
 | 5 | Deng et al., "ArcFace", CVPR 2019; Chen et al., "MobileFaceNets", CCBR 2018; Guo et al., "SCRFD", ICLR 2022 | Face detection and embedding (`buffalo_s`) | 5 | HNHL |
 | 6 | Zhou et al., "Omni-Scale Feature Learning for Person Re-Identification" (OSNet), ICCV 2019, and the OSNet-AIN follow-up | Re-ID | 5 | HNHL |
 | 7 | Zhang et al., "ByteTrack", ECCV 2022 | Tracking | 5 | HNHL |
 | 8 | Ultralytics YOLOv8 (software, cite the repository) | Detection, pose | 5 | HNHL |
-| 9 | Galceran and Carreras, "A survey on coverage path planning for robotics", RAS 2013 | Search (expected) | 8 | KR |
+| 9 | Galceran and Carreras, "A survey on coverage path planning for robotics", *Robotics and Autonomous Systems*, 61(12):1258–1276, 2013 (reference verified 2026-10-20; cellular decomposition and viewpoint tour formulation for the post-exit room search in `sentry/nav/coverage.py`) | Search (expected) | 8 | KR |
 | 10 | Potje, Cadar, Araujo, Martins and Nascimento, "XFeat: Accelerated Features for Lightweight Image Matching", CVPR 2024, arXiv:2404.19174 (reference verified against arXiv on 2026-10-15; **read in full on 2026-10-15**: sparse XFeat 27.1 FPS on an i5-1135G7 CPU at VGA, MegaDepth-1500 AUC@5/10/20 42.6/56.4/67.7 against ORB 17.9/27.6/39.0; the paper does not test in-plane rotation, fisheye images or repeated doors, so our inlier threshold stays empirical; code vendored in `third_party/xfeat/`, Apache-2.0) | Entrance matching (primary method after the bake-off, `sentry/perception/entrance.py`) | 5 | DQK |
 | 11 | Oquab et al., "DINOv2: Learning Robust Visual Features without Supervision", TMLR 2024, arXiv:2304.07193 (reference verified against the paper text on 2026-10-15; torch hub, pinned commit) | Entrance matching with a phone reference (`sentry/perception/entrance.py`); cosine similarity of cls + GeM descriptors is our choice, the paper does not specify pooling for retrieval | 5 | DQK |
-| 12+ | ... | | | |
+| 12 | Fischler and Bolles, "Random Sample Consensus: A Paradigm for Model Fitting with Applications to Image Analysis and Automated Cartography", *Communications of the ACM*, 24(6):381–395, 1981 (reference verified 2026-10-20; planar homography estimation `cv2.findHomography(..., cv2.RANSAC, 5.0)` and inlier-count decision rule for robot-eye and ESP32 handshake entrance verification in `sentry/perception/entrance.py`) | Geometric verification & door ROI projection (`sentry/perception/entrance.py`) | 5 | KR |
+| 13 | Collins and Bartoli, "Infinitesimal Plane-Based Pose Estimation", *International Journal of Computer Vision (IJCV)*, 109(3):252–286, 2014 (reference verified 2026-10-20; analytical 4-corner planar PnP solver `cv2.SOLVEPNP_IPPE_SQUARE` with two-solution normal disambiguation used in `sentry/nav/localization.py`) | ArUco planar marker pose estimation (`sentry/nav/localization.py`) | 4 | KR |
+| 14 | Siegwart, Nourbakhsh and Scaramuzza, *Introduction to Autonomous Mobile Robots*, 2nd ed., MIT Press, 2011, Ch. 3 & Ch. 5 (reference verified 2026-10-20; differential-drive forward kinematics, exact circular-arc vs Euler midpoint unicycle integration, and odometry error growth in `sentry/nav/wheel_model.py`, `sentry/nav/localization.py` and `tools/sim_robot.py`) | Differential-drive dead reckoning & simulation (`sentry/nav/localization.py`, `sentry/nav/wheel_model.py`) | 4, 6 | KR |
+| 15 | Hart, Nilsson and Raphael, "A Formal Basis for the Heuristic Determination of Minimum Cost Paths", *IEEE Transactions on Systems Science and Cybernetics*, 4(2):100–107, 1968 (reference verified 2026-10-20; A* shortest-path search on an obstacle-inflated occupancy grid connecting viewpoints in `sentry/nav/coverage.py`) | Obstacle-avoiding grid path planning for coverage search (expected) | 8 | KR |
+| 16+ | ... | | | |
 
 ## 3. Figures and charts
 
