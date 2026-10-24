@@ -485,7 +485,7 @@ class LocalizationTracker:
 
                 # Camera heading:
                 # Normal of marker seen in camera frame is R_cm[:, 2].
-                yaw_cam = wrap_angle(anchor.yaw_rad + math.pi - math.atan2(R_cm[0, 2], R_cm[2, 2]))
+                yaw_cam = wrap_angle(anchor.yaw_rad + math.atan2(R_cm[0, 2], R_cm[2, 2]))
 
                 # Filter update (alpha blend with range falloff beyond 0.8 m)
                 base_alpha = float(np.clip(alpha, 0.0, 1.0))

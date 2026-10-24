@@ -1,0 +1,90 @@
+{
+  "label": "t2_1024_2_follow",
+  "v": 0.7,
+  "seconds": null,
+  "truncated_to_s": null,
+  "battery_v": null,
+  "frames": 81,
+  "commands": 304,
+  "true_end": {
+    "forward": 2.95,
+    "lateral": 0.05,
+    "heading_deg": 0.0
+  },
+  "anchors": "data/dr_anchors_1024.csv",
+  "results": [
+    {
+      "scale": 1.0,
+      "correction": false,
+      "x": 2.605,
+      "y": -0.87,
+      "heading_deg": -51.7,
+      "corrections": 0,
+      "error_m": 0.983
+    },
+    {
+      "scale": 1.0,
+      "correction": true,
+      "x": 2.81,
+      "y": 0.013,
+      "heading_deg": -2.8,
+      "corrections": 59,
+      "error_m": 0.145
+    },
+    {
+      "scale": 0.9,
+      "correction": false,
+      "x": 2.394,
+      "y": -0.715,
+      "heading_deg": -46.5,
+      "corrections": 0,
+      "error_m": 0.946
+    },
+    {
+      "scale": 0.9,
+      "correction": true,
+      "x": 2.799,
+      "y": 0.015,
+      "heading_deg": -2.5,
+      "corrections": 59,
+      "error_m": 0.155
+    },
+    {
+      "scale": 0.8,
+      "correction": false,
+      "x": 2.168,
+      "y": -0.572,
+      "heading_deg": -41.3,
+      "corrections": 0,
+      "error_m": 0.999
+    },
+    {
+      "scale": 0.8,
+      "correction": true,
+      "x": 2.788,
+      "y": 0.017,
+      "heading_deg": -2.2,
+      "corrections": 59,
+      "error_m": 0.165
+    },
+    {
+      "scale": 0.72,
+      "correction": false,
+      "x": 1.977,
+      "y": -0.467,
+      "heading_deg": -37.2,
+      "corrections": 0,
+      "error_m": 1.102
+    },
+    {
+      "scale": 0.72,
+      "correction": true,
+      "x": 2.78,
+      "y": 0.018,
+      "heading_deg": -2.0,
+      "corrections": 59,
+      "error_m": 0.173
+    }
+  ],
+  "acceptance": "<= 0.15 m with correction, <= 0.40 m without"
+}

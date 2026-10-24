@@ -1,0 +1,17 @@
+{
+  "label": "follow_3",
+  "marker": 0,
+  "v": 0.7,
+  "battery_v": 12.08,
+  "stopped": "arrived (0.90 m)",
+  "seconds": 9.913,
+  "start_dist_m": 3.825,
+  "end_dist_m": 0.919,
+  "trim_w": -0.0107,
+  "veer_deg_per_m": 15.6,
+  "observations": 146,
+  "trim0": -0.025,
+  "mean_abs_bearing_deg": 1.27,
+  "kp": 0.2,
+  "ki": 0.05
+}
