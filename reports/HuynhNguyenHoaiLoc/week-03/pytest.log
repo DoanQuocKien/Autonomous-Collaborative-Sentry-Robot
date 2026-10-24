@@ -1,0 +1,25 @@
+[PASS] Face embedding normalization and 512D shape validation
+[PASS] Whitelist cosine verification logic (max-similarity against all enrolled vectors)
+[PASS] Unknown face rejection under configurable threshold (threshold = 0.45 from config.toml)
+[PASS] InsightFace buffalo_s backend interface & BGR input validation
+[PASS] Whitelist enrollment pipeline (3–5 photos per identity, uncompressed/compressed npz without pickle)
+[PASS] Enrollment to verification round-trip verified
+
+============================= test session starts =============================
+platform win32 -- Python 3.12.15, pytest-9.1.1, pluggy-1.6.0 -- .venv\Scripts\python.exe
+rootdir: C:\Users\Hoai Loc\Desktop\ROBOT\Autonomous-Collaborative-Sentry-Robot
+configfile: pytest.ini
+collected 10 items
+
+tests/test_face.py::test_normalize_embedding PASSED                      [ 10%]
+tests/test_face.py::test_known_face PASSED                               [ 20%]
+tests/test_face.py::test_unknown_face PASSED                             [ 30%]
+tests/test_face.py::test_invalid_embedding PASSED                        [ 40%]
+tests/test_face.py::test_extract_face_with_fake_backend PASSED           [ 50%]
+tests/test_face.py::test_extract_rejects_invalid_image PASSED            [ 60%]
+tests/test_enroll_whitelist.py::test_enroll_keeps_all_embeddings PASSED  [ 70%]
+tests/test_enroll_whitelist.py::test_rejects_insufficient_photos PASSED  [ 80%]
+tests/test_enroll_whitelist.py::test_saved_enrollment_can_be_verified PASSED [ 90%]
+tests/test_enroll_whitelist.py::test_rejects_invalid_whitelist_shape PASSED [100%]
+
+============================= 10 passed in 4.67s ==============================
