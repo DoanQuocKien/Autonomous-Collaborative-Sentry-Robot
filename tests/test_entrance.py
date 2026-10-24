@@ -6,7 +6,16 @@ import cv2
 import numpy as np
 import pytest
 
-from sentry.perception.entrance import DINO_REPO, XFEAT_WEIGHTS, Camera, EntranceConfig, EntranceDetector, EntranceFilter, EntranceResult
+from sentry.perception.entrance import (
+    DINO_REPO,
+    XFEAT_WEIGHTS,
+    Camera,
+    EntranceConfig,
+    EntranceDetector,
+    EntranceFilter,
+    EntranceResult,
+    ESP32Handshake,
+)
 
 K = np.array([[300.0, 0, 320.0], [0, 300.0, 240.0], [0, 0, 1.0]])
 GRID = np.float32([[x, y] for x in range(40, 600, 40) for y in range(40, 440, 40)])      # 14 x 10 = 140 fake keypoints
@@ -205,3 +214,72 @@ def test_replay_on_the_classroom_door_meets_the_plan_thresholds():
 def test_config_toml_section_matches_the_defaults():
     from sentry.config import load
     assert EntranceConfig.from_toml(load()["entrance"]) == EntranceConfig()
+
+
+def test_esp32_handshake_uses_separate_detector_thresholds_and_debounces(tmp_path):
+    # Robot detector vs ESP32 detector (no fisheye camera, higher room noise threshold)
+    esp_det = EntranceDetector(None, EntranceConfig(enter_frames=3, exit_frames=4), FakeMatcher(neg_inliers=40), FakeDescriber())
+    esp_det.enroll_esp32([frame(1)], rois=[(180, 90, 460, 390)])
+    x_thr, _ = esp_det.calibrate([frame(0)] * 6)
+    assert x_thr == 42
+    esp_det.save(tmp_path / "esp32_door")
+
+    hs = ESP32Handshake.from_folder(tmp_path / "esp32_door", matcher=FakeMatcher(neg_inliers=40), describer=FakeDescriber())
+    assert not hs.verified and hs.detector.cam is None and hs.detector.xfeat_thr == 42
+
+    # 10 turned-away frames: 10/10 rejects, never verified
+    for i in range(10):
+        res, ev = hs.check_frame(frame(0, dx=i))
+        assert not res.in_view and ev is None and not hs.verified
+    assert hs.rejected == 10 and hs.accepted == 0
+
+    # 10 door-facing frames: accepts every frame, emits ESP32_VERIFIED on the 3rd consecutive hit
+    events = []
+    for i in range(10):
+        res, ev = hs.check_frame(frame(1, dx=i * 2))
+        assert res.in_view and res.bearing_rad is None and res.quad is not None
+        events.append(ev)
+    assert hs.accepted == 10
+    assert events == [None, None, "ESP32_VERIFIED"] + [None] * 7
+    assert hs.verified
+
+    # Turned away for 4 frames -> emits ESP32_LOST
+    lost_events = [hs.check_frame(frame(0))[1] for _ in range(4)]
+    assert lost_events == [None, None, None, "ESP32_LOST"]
+    assert not hs.verified
+
+
+def test_esp32_handshake_polls_latest_and_skips_duplicate_or_stale_frames():
+    esp_det = EntranceDetector(None, EntranceConfig(enter_frames=2, exit_frames=2), FakeMatcher(), FakeDescriber())
+    esp_det.enroll_esp32([frame(1)])
+    hs = ESP32Handshake(esp_det, max_frame_age_s=0.5)
+
+    class StubRx:
+        def __init__(self):
+            self.state = (None, -1, float("inf"))
+
+        def latest(self):
+            return self.state
+
+    rx = StubRx()
+    assert hs.poll(rx) == (None, None)
+
+    rx.state = (frame(1), 1, 0.05)
+    r1, ev1 = hs.poll(rx)
+    assert r1.in_view and ev1 is None
+    # Same frame_id=1 is not re-evaluated
+    assert hs.poll(rx) == (None, None)
+
+    # Stale frame (age > 0.5 s) is skipped and counted
+    rx.state = (frame(1), 2, 1.2)
+    assert hs.poll(rx) == (None, None)
+    assert hs.stale == 1 and not hs.verified
+
+    # Fresh second frame completes the 2-frame enter debounce
+    rx.state = (frame(1), 3, 0.02)
+    r2, ev2 = hs.poll(rx)
+    assert r2.in_view and ev2 == "ESP32_VERIFIED" and hs.verified
+
+    hs.reset()
+    assert not hs.verified and hs.last_frame_id == -1
+

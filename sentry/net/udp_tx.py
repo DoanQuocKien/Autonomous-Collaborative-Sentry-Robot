@@ -10,7 +10,7 @@ import numbers
 import socket
 import time
 
-from common.protocol import encode_control
+from common.protocol import decode_control, encode_control, encode_play
 from sentry.config import load
 from sentry.net.discover import resolve
 
@@ -70,6 +70,23 @@ class UDPSender:
             raise RuntimeError("sender is closed")
         self._last_attempt = self._clock()
         return self._send(0.0, 0.0)
+
+    def play(self, clip):
+        """Immediate audio clip packet (bypasses motor rate limit, shares seq stream)."""
+        if self._closed:
+            raise RuntimeError("sender is closed")
+        if not isinstance(clip, str):
+            raise ValueError("clip name must be a string, got %r" % (clip,))
+        packet = encode_play(self.seq, clip)
+        decode_control(packet)
+        self.seq += 1
+        try:
+            self._socket.sendto(packet, self.address)
+        except BlockingIOError:
+            self.dropped += 1
+            return False
+        self.sent += 1
+        return True
 
     def close(self, *, stop=True):
         if not self._closed:

@@ -44,7 +44,7 @@ def main():
     ap.add_argument("--manifest")
     ap.add_argument("--step", type=int, default=5, help="use every Nth manifest frame")
     ap.add_argument("--calib-positions", type=int, default=2, help="manifest: how many negative positions calibrate the thresholds (the rest of the negatives test them)")
-    ap.add_argument("--camera", default="calib/camera.json")
+    ap.add_argument("--camera", default="calib/camera.json", help="fisheye camera JSON, or 'none' for ESP32-CAM enrolment")
     ap.add_argument("--out")
     a = ap.parse_args()
     refs = [cv2.imread(p) for p in a.robot_ref]
@@ -53,7 +53,8 @@ def main():
         x, y, w, h = cv2.selectROI("door box (Enter = ok)", refs[0], showCrosshair=False)
         cv2.destroyAllWindows()
         roi = (int(x), int(y), int(x + w), int(y + h))
-    det = EntranceDetector(Camera.from_json(a.camera), EntranceConfig(policy=a.policy, dino_size=a.dino_size))
+    cam = None if not a.camera or a.camera.lower() == "none" else Camera.from_json(a.camera)
+    det = EntranceDetector(cam, EntranceConfig(policy=a.policy, dino_size=a.dino_size))
     det.enroll_robot(refs, [roi] + [None] * (len(refs) - 1) if roi else None)
     if a.phone_ref:
         det.enroll_phone([cv2.imread(p) for p in a.phone_ref])
