@@ -55,6 +55,9 @@ Each member adds 3+ papers from their area in Week 3. Candidates below are the m
 | 9 | Galceran and Carreras, "A survey on coverage path planning for robotics", RAS 2013 | Search (expected) | 8 | KR |
 | 10 | Potje, Cadar, Araujo, Martins and Nascimento, "XFeat: Accelerated Features for Lightweight Image Matching", CVPR 2024, arXiv:2404.19174 (reference verified against arXiv on 2026-10-15; **read in full on 2026-10-15**: sparse XFeat 27.1 FPS on an i5-1135G7 CPU at VGA, MegaDepth-1500 AUC@5/10/20 42.6/56.4/67.7 against ORB 17.9/27.6/39.0; the paper does not test in-plane rotation, fisheye images or repeated doors, so our inlier threshold stays empirical; code vendored in `third_party/xfeat/`, Apache-2.0) | Entrance matching (primary method after the bake-off, `sentry/perception/entrance.py`) | 5 | DQK |
 | 11 | Oquab et al., "DINOv2: Learning Robust Visual Features without Supervision", TMLR 2024, arXiv:2304.07193 (reference verified against the paper text on 2026-10-15; torch hub, pinned commit) | Entrance matching with a phone reference (`sentry/perception/entrance.py`); cosine similarity of cls + GeM descriptors is our choice, the paper does not specify pooling for retrieval | 5 | DQK |
+| 12 | Cheng, Song, Ge et al., "YOLO-World: Real-Time Open-Vocabulary Object Detection", CVPR 2024, arXiv:2401.17270 (existence, authors and title verified against arXiv on 2026-10-24) | Open-vocabulary backend for the small-object baseline (PR #46, `reports/DoanQuocKien/week-02/small_objects_1018/`) | 5 | DQK |
+| 13 | Xie, Wang, Yu et al., "SegFormer: Simple and Efficient Design for Semantic Segmentation with Transformers", NeurIPS 2021, arXiv:2105.15203 (existence, authors and title verified against arXiv on 2026-10-24) | Semantic-floor backend (SegFormer-B0 ADE20K, PR #46), failed from the 10 cm view | 5 | DQK |
+| 14 | Borenstein and Feng, "Measurement and correction of systematic odometry errors in mobile robots", IEEE Trans. Robotics and Automation 12(6), 1996, DOI 10.1109/70.544770 (title, authors, journal verified against Crossref on 2026-10-24) | Why the veer is a systematic error that needs calibration and correction (`tools/follow_marker.py`, `calib/motion.json`) | 4 | DQK |
 | 12+ | ... | | | |
 
 ## 3. Figures and charts
@@ -123,7 +126,7 @@ Who: DQK films the robot (phone on a tripod) and edits; HNHL screen-records the 
 | 3 | Live stream with FPS/latency overlay, raw vs undistorted side by side | 20 | network, calibration |
 | 4 | Exploration with obstacle boxes and distances, map building (split screen) | 30 | obstacle distance, map |
 | 5 | Entrance found -> sweet spot -> audio prompt -> camera placed -> verified -> standby | 40 | Phase 1 end to end |
-| 6 | ESP32 view: team member walks in -> whitelisted; consenting volunteer -> intruder -> queued | 30 | Phase 2 |
+| 6 | ESP32 view: team member walks in -> whitelisted; a team member who is not enrolled in that fold (leave-one-out, Implementation Plan D2) -> intruder -> queued | 30 | Phase 2 |
 | 7 | Pursuit at 1.2 m, then hold and re-centre when the target stops | 30 | Phase 3 (first part) |
 | 8 | All models together: FPS and `nvidia-smi` on the laptop; then the same detector + pose + re-ID mix running on the Jetson itself (`edge_bench.py` overlay: FPS, GPU %, watts) | 15 | GPU budget, optimization, on-device deployment |
 | 9 | Next steps: evasion, search (text over F1) | 10 | expected results |
