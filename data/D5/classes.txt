@@ -1,0 +1,8 @@
+leg
+footwear
+backpack
+bag
+wire
+chair
+table
+plant
