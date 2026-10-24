@@ -9,6 +9,9 @@
 Frame: x forward along the path from the point under the lens at the start, y left, heading 0 = along +x. The anchors CSV is
 marker_id,x_m,y_m,z_m,yaw_deg (z: marker centre above the floor; yaw: the direction the marker FACES in this frame, a board
 facing the robot at the end of the path is 180). Output: data/dr_path/<label>/{commands.csv,frames/,summary.json}.
+Closed loop (--follow ID): instead of driving open loop, steer by the bearing of marker ID with the PI controller of tools.follow_marker (the veer of a real
+floor and real motors is corrected as the robot drives; the commands that were sent, including the steering, are logged and replayed) and stop when that
+marker is --stop-m away (a board 3.8 m ahead and --stop-m 0.8 is a 3.0 m path).
 Acceptance (Implementation Plan 4.3): end error <= 15 cm with correction, <= 40 cm without. Never use --no-estop; R1 held.
 """
 import argparse
@@ -91,6 +94,16 @@ def drive(a, out):
     th = threading.Thread(target=_frame_thread, args=(stop, frames), daemon=True)
     th.start()
     time.sleep(2.0)
+    state = {}
+    if a.follow is not None:
+        from tools.follow_marker import _vision
+        threading.Thread(target=_vision, args=(stop, state, a.follow), daemon=True).start()
+        t_wait = time.perf_counter() + 10
+        while not state and time.perf_counter() < t_wait:
+            time.sleep(0.1)
+        if not state:
+            raise SystemExit("marker %d not in view: aim the robot at the board first" % a.follow)
+        print("marker %d in view: distance %.2f m, bearing %+.1f deg" % (a.follow, state["dist"], math.degrees(state["bearing"])))
     sender = UDPSender(ip, load()["net"]["control_port"], 30)
     try:
         for _ in range(3):
@@ -112,10 +125,31 @@ def drive(a, out):
         print("R1 held: driving", flush=True)
         t0 = time.perf_counter()
         frames.clear()
-        while time.perf_counter() - t0 < seconds:
-            sender.send(a.v, 0.0)
-            cmds.append((time.perf_counter(), a.v, 0.0))
-            time.sleep(sender.period_s)
+        if a.follow is None:
+            while time.perf_counter() - t0 < seconds:
+                sender.send(a.v, 0.0)
+                cmds.append((time.perf_counter(), a.v, 0.0))
+                time.sleep(sender.period_s)
+        else:
+            from tools.follow_marker import PIController
+            ctl, w, prev = PIController(kp=a.kp, ki=a.ki), 0.0, t0
+            seen_t, last_ok, why = state["t"], t0, "max time"
+            while time.perf_counter() - t0 < a.max_s:
+                now = time.perf_counter()
+                s_ = dict(state)
+                if s_["t"] != seen_t:                                  # a new observation of the marker
+                    w = ctl.step(s_["bearing"], now - prev)
+                    seen_t, last_ok, prev = s_["t"], now, now
+                if now - last_ok > a.lost_s:
+                    why = "marker lost"
+                    break
+                if s_["dist"] < a.stop_m:
+                    why = "arrived (%.2f m)" % s_["dist"]
+                    break
+                sender.send(a.v, w)
+                cmds.append((now, a.v, w))
+                time.sleep(sender.period_s)
+            print("stopped: %s, last steering w %.3f, integral %.4f" % (why, w, ctl.i), flush=True)
     finally:
         sender.close()                                     # always sends the stop
         stop.set()
@@ -149,6 +183,12 @@ def main():
     ap.add_argument("--dist", type=float, default=3.0)
     ap.add_argument("--expect-scale", type=float, default=1.0, help="speed scale of this floor against calib/motion.json (rugged floor about 0.72)")
     ap.add_argument("--seconds", type=float, help="override the drive time")
+    ap.add_argument("--follow", type=int, metavar="ID", help="closed loop: steer by the bearing of this marker (PI, tools.follow_marker) and stop at --stop-m")
+    ap.add_argument("--stop-m", type=float, default=0.8, help="--follow: stop when the marker is this far (board distance minus the path length)")
+    ap.add_argument("--lost-s", type=float, default=1.2, help="--follow: stop if the marker is not seen for this long")
+    ap.add_argument("--max-s", type=float, default=25.0, help="--follow: time limit")
+    ap.add_argument("--kp", type=float, default=0.20)
+    ap.add_argument("--ki", type=float, default=0.05)
     ap.add_argument("--scales", type=float, nargs="+", default=[1.0, 0.72], help="wheel-model scales to replay")
     ap.add_argument("--wait", type=float, default=60.0)
     ap.add_argument("--min-battery", type=float, default=MIN_BATTERY_V, help="refuse to drive below this pack voltage (the project rule is 11.1 V; the speed model is calibrated at 12.0-12.2 V)")
