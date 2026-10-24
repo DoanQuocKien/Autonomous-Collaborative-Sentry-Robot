@@ -58,3 +58,14 @@ try:
     ])
 except ImportError:
     pass
+
+try:
+    from sentry.perception.wire_fallback import WireCandidate, WireGeometricFallback
+
+    __all__.extend([
+        "WireCandidate",
+        "WireGeometricFallback",
+    ])
+except ImportError:
+    pass
+

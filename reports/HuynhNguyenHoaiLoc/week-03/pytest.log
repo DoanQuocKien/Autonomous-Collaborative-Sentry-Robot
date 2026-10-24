@@ -4,22 +4,37 @@
 [PASS] InsightFace buffalo_s backend interface & BGR input validation
 [PASS] Whitelist enrollment pipeline (3–5 photos per identity, uncompressed/compressed npz without pickle)
 [PASS] Enrollment to verification round-trip verified
+[PASS] T1 Face verification ROC on D2 leave-one-out dataset: TAR 100.0% @ FAR 0.0% (threshold 0.45)
+[PASS] Geometric wire fallback: thin dark wire detection on light floor & bright wire on dark floor
+[PASS] Geometric wire fallback: sub-threshold rejection & ground-plane range projection
+[PASS] Edge conversion parity: cosine similarity >= 0.999 & detector box IoU >= 0.90 for >= 95% of detections
+[PASS] D5 fine-tuning pipeline & multi-resolution benchmark (320x320, 416x416, 640x640)
 
 ============================= test session starts =============================
 platform win32 -- Python 3.12.15, pytest-9.1.1, pluggy-1.6.0 -- .venv\Scripts\python.exe
 rootdir: C:\Users\Hoai Loc\Desktop\ROBOT\Autonomous-Collaborative-Sentry-Robot
 configfile: pytest.ini
-collected 10 items
+collected 20 items
 
-tests/test_face.py::test_normalize_embedding PASSED                      [ 10%]
-tests/test_face.py::test_known_face PASSED                               [ 20%]
-tests/test_face.py::test_unknown_face PASSED                             [ 30%]
-tests/test_face.py::test_invalid_embedding PASSED                        [ 40%]
-tests/test_face.py::test_extract_face_with_fake_backend PASSED           [ 50%]
-tests/test_face.py::test_extract_rejects_invalid_image PASSED            [ 60%]
-tests/test_enroll_whitelist.py::test_enroll_keeps_all_embeddings PASSED  [ 70%]
-tests/test_enroll_whitelist.py::test_rejects_insufficient_photos PASSED  [ 80%]
-tests/test_enroll_whitelist.py::test_saved_enrollment_can_be_verified PASSED [ 90%]
-tests/test_enroll_whitelist.py::test_rejects_invalid_whitelist_shape PASSED [100%]
+tests/test_face.py::test_normalize_embedding PASSED                      [  5%]
+tests/test_face.py::test_known_face PASSED                               [ 10%]
+tests/test_face.py::test_unknown_face PASSED                             [ 15%]
+tests/test_face.py::test_invalid_embedding PASSED                        [ 20%]
+tests/test_face.py::test_extract_face_with_fake_backend PASSED           [ 25%]
+tests/test_face.py::test_extract_rejects_invalid_image PASSED            [ 30%]
+tests/test_enroll_whitelist.py::test_enroll_keeps_all_embeddings PASSED  [ 35%]
+tests/test_enroll_whitelist.py::test_rejects_insufficient_photos PASSED  [ 40%]
+tests/test_enroll_whitelist.py::test_saved_enrollment_can_be_verified PASSED [ 45%]
+tests/test_enroll_whitelist.py::test_rejects_invalid_whitelist_shape PASSED [ 50%]
+tests/test_face_roc.py::test_d2_roc_evaluation_meets_spec_thresholds PASSED [ 55%]
+tests/test_wire_fallback.py::test_detect_dark_wire_on_light_floor PASSED [ 60%]
+tests/test_wire_fallback.py::test_detect_bright_wire_on_dark_floor PASSED [ 65%]
+tests/test_wire_fallback.py::test_rejects_sub_threshold_contrast PASSED  [ 70%]
+tests/test_wire_fallback.py::test_detect_with_camera_geometry PASSED     [ 75%]
+tests/test_wire_fallback.py::test_rejects_invalid_input_shape PASSED     [ 80%]
+tests/test_edge_parity.py::test_compute_cosine_and_iou PASSED            [ 85%]
+tests/test_edge_parity.py::test_parity_evaluation_meets_thresholds PASSED [ 90%]
+tests/test_d5_training.py::test_d5_yaml_generation PASSED                [ 95%]
+tests/test_d5_training.py::test_benchmark_resolutions_metrics PASSED     [100%]
 
-============================= 10 passed in 4.67s ==============================
+============================= 20 passed in 3.15s ==============================

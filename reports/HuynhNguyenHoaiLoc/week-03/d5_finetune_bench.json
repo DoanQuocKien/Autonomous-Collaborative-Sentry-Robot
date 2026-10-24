@@ -1,0 +1,100 @@
+{
+  "dataset": "D5_first_batch_397_frames",
+  "classes": [
+    "leg",
+    "footwear",
+    "backpack",
+    "bag",
+    "wire",
+    "chair",
+    "table",
+    "plant"
+  ],
+  "models": {
+    "yolov8n_320": {
+      "imgsz": 320,
+      "jetson_nano_latency_ms": 14.8,
+      "laptop_rtx5060_latency_ms": 1.9,
+      "mAP50": 0.792,
+      "mAP50_95": 0.548,
+      "per_class_recall": {
+        "leg": 0.88,
+        "footwear": 0.925,
+        "backpack": 0.864,
+        "bag": 0.842,
+        "wire": 0.745,
+        "chair": 0.94,
+        "table": 0.85,
+        "plant": 0.96
+      },
+      "per_class_precision": {
+        "leg": 0.84,
+        "footwear": 0.89,
+        "backpack": 0.82,
+        "bag": 0.805,
+        "wire": 0.71,
+        "chair": 0.91,
+        "table": 0.81,
+        "plant": 0.94
+      },
+      "recommendation": "Recommended for Jetson Nano on-robot pursuit loop (meets 20 FPS budget)"
+    },
+    "yolov8n_416": {
+      "imgsz": 416,
+      "jetson_nano_latency_ms": 23.4,
+      "laptop_rtx5060_latency_ms": 2.6,
+      "mAP50": 0.835,
+      "mAP50_95": 0.582,
+      "per_class_recall": {
+        "leg": 0.91,
+        "footwear": 0.945,
+        "backpack": 0.892,
+        "bag": 0.87,
+        "wire": 0.79,
+        "chair": 0.955,
+        "table": 0.875,
+        "plant": 0.97
+      },
+      "per_class_precision": {
+        "leg": 0.865,
+        "footwear": 0.915,
+        "backpack": 0.85,
+        "bag": 0.835,
+        "wire": 0.75,
+        "chair": 0.93,
+        "table": 0.845,
+        "plant": 0.955
+      },
+      "recommendation": "Balanced accuracy/latency candidate"
+    },
+    "yolov8n_640": {
+      "imgsz": 640,
+      "jetson_nano_latency_ms": 48.2,
+      "laptop_rtx5060_latency_ms": 4.1,
+      "mAP50": 0.868,
+      "mAP50_95": 0.615,
+      "per_class_recall": {
+        "leg": 0.935,
+        "footwear": 0.96,
+        "backpack": 0.92,
+        "bag": 0.895,
+        "wire": 0.825,
+        "chair": 0.97,
+        "table": 0.9,
+        "plant": 0.985
+      },
+      "per_class_precision": {
+        "leg": 0.89,
+        "footwear": 0.935,
+        "backpack": 0.88,
+        "bag": 0.86,
+        "wire": 0.785,
+        "chair": 0.95,
+        "table": 0.87,
+        "plant": 0.97
+      },
+      "recommendation": "High accuracy laptop perception baseline"
+    }
+  },
+  "wire_mitigation_note": "Thin floor wires at 320/416 achieve 74.5%-79.0% box recall (< 80% threshold). Geometric fallback (WireGeometricFallback) provides guaranteed keep-clear signal as planned."
+}

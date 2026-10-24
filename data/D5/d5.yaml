@@ -1,0 +1,14 @@
+# D5 Floor-Level Obstacle Dataset
+path: C:/Users/Hoai Loc/Desktop/ROBOT/Autonomous-Collaborative-Sentry-Robot/data/D5
+train: .
+val: .
+
+names:
+  0: leg
+  1: footwear
+  2: backpack
+  3: bag
+  4: wire
+  5: chair
+  6: table
+  7: plant
