@@ -101,6 +101,12 @@
 - **Other:** OV2640 arrival and flashing.
 - **Week 3 (DQK):** USB speaker playback and the deployment behaviour; wiring `MotionEstimator`; the demo-room check from `docs/Classroom Session 2026-10-15.md`; if G0 passes, closing the on-robot bench (gate G1, Sun Oct 25).
 
+## Sunday 2026-10-18 session (DQK, rugged cafe floor, then the classroom)
+- **Done:** camera pose on that day's mount (H fixed at 0.100 m, pitch fitted 1.04 deg); the small-object baseline (above and `week-02/small_objects_1018/`).
+- **Found:** `update_with_markers` had the heading with the wrong sign and a pi offset (estimate -41 deg when the true heading was +50 deg); fixed with a regression test (PR #56). The robot veers left, about 13 deg/m, with start-up transients.
+- **Marker following (`tools.follow_marker`, PR #56):** the bearing PI loop reached the board (0.92 m, run 3 of 3) and its integral gives the steering offset: -0.009 w, about 13-15 deg/m. Evidence `week-02/follow_marker/follow_3_*`.
+- **Not done:** T2 dead reckoning over 3 m with ArUco has no valid number (the runs veered into the boards; needs a layout with the boards to the right and a run with the heading fix); T2 exploration with obstacle repulsion (no detector sees objects from 10 cm yet, YOLO-World is not wired into `explore_live.py`); the IMU for heading (not wired). All three carry into Week 3.
+
 ## Hours
 - From the chat timestamps (session transcripts, UTC+7; a gap of up to 30 minutes between messages counts as work, a longer one as a break), counted on Saturday 2026-10-17 at about 01:10:
   | Day | Active chat time |
@@ -111,7 +117,8 @@
   | Wed 2026-10-14 | 4.2 h |
   | Thu 2026-10-15 (classroom 08:00-12:00, the packaging, the evening) | 4.5 h |
   | Fri 2026-10-16 (on-robot inference, the SD card, the plans and PR #45, from 19:40) | 4.3 h |
-  | Sat 2026-10-17 (so far: the camera pose, the exploration runner prep) | 0.6 h |
-  | **Mon-Fri** | **17.2 h** (21.9 h with Sunday evening; 22.4 h with Saturday so far) |
+  | Sat 2026-10-17 (the camera pose, the exploration runner prep) | 1.2 h |
+  | Sun 2026-10-18 (session from 19:47: rugged-floor pose, small objects, 3 m path, marker following; counted to midnight) | 1.5 h |
+  | **Mon-Fri** | **17.2 h** (21.9 h with Sunday evening; **24.6 h for the whole week** with Saturday and Sunday) |
   Caveats: chat time only; it includes the robot runs (the assistant's tool calls and the waiting for R1 count as active) and not offline work that left no messages (printing, moving furniture, reading papers). Update on Sunday with the rest of the week.
-  Saturday after about 01:10 and Sunday are still to add.
+  Counted on Saturday 2026-10-24 with the same rule. The Sunday session ran past midnight: a further 2.2 h on Mon 2026-10-19 (until about 12:50) belongs to Week 3.
