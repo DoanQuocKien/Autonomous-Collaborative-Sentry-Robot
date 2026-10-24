@@ -12,3 +12,8 @@ def test_boxes_that_are_not_a_standing_head_are_skipped():
     assert head_box((100, 2, 160, 180), 640, 480) is None      # cut by the top border
     assert head_box((100, 40, 120, 60), 640, 480) is None      # too small (a shoe)
     assert head_box((100, 300, 300, 400), 640, 480) is None    # wider than tall (lying leg)
+
+
+def test_yolo_label_line_is_normalised():
+    from tools.autolabel_d5 import yolo_line
+    assert yolo_line(3, (100, 60, 300, 260), 640, 480) == "3 0.312500 0.333333 0.312500 0.416667"
