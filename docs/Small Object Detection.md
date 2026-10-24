@@ -23,7 +23,7 @@ The Open Images model was tried because its label set already contains `Human le
 
 ## 3. What we do, in order (Implementation Plan weeks 3 to 5)
 
-1. **D5, our own data (DQK records, all label).** Robot camera, lens 0.10 m, matte and glossy floors, two rooms, three lightings, 0.3-1.5 m; at least 150 images per class (leg and foot, wire black and white straight and curled, footwear, backpack and bag, furniture) and 20 % empty-floor negatives; one whole session held out for the T1. Legs: volunteers with consent, no faces in frame.
+1. **D5, our own data (DQK records, all label).** Robot camera, lens 0.10 m, matte and glossy floors, two rooms, three lightings, 0.3-1.5 m; at least 150 images per class (leg and foot, wire black and white straight and curled, footwear, backpack and bag, furniture) and 20 % empty-floor negatives; one whole session held out for the T1. Legs: team members (or volunteers with consent), no faces in frame.
 2. **Auto-label with YOLO-World** (prompts: leg, shoe, sandal, slipper, backpack, bag, cable, wire), then correct by hand; split the correction work three ways.
 3. **Fine-tune YOLOv8n from COCO weights** on the laptop; compare input sizes 320, 416 and 640 (the Nano runs YOLOv8n at 320 in 14.8 ms, `docs/Edge Deployment.md`).
 4. **Wires:** if box recall stays under 80 %, train a segmentation model (YOLOv8n-seg or a small strip-convolution network) on polygon labels plus pasted synthetic wires; a **geometric fallback** (thin dark or bright line on the floor, ground-plane check across frames while driving) gives the keep-clear rule a signal even if the learned model fails.

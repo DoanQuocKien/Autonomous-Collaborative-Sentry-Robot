@@ -123,7 +123,7 @@ Who: DQK films the robot (phone on a tripod) and edits; HNHL screen-records the 
 | 3 | Live stream with FPS/latency overlay, raw vs undistorted side by side | 20 | network, calibration |
 | 4 | Exploration with obstacle boxes and distances, map building (split screen) | 30 | obstacle distance, map |
 | 5 | Entrance found -> sweet spot -> audio prompt -> camera placed -> verified -> standby | 40 | Phase 1 end to end |
-| 6 | ESP32 view: team member walks in -> whitelisted; consenting volunteer -> intruder -> queued | 30 | Phase 2 |
+| 6 | ESP32 view: team member walks in -> whitelisted; a team member who is not enrolled in that fold (leave-one-out, Implementation Plan D2) -> intruder -> queued | 30 | Phase 2 |
 | 7 | Pursuit at 1.2 m, then hold and re-centre when the target stops | 30 | Phase 3 (first part) |
 | 8 | All models together: FPS and `nvidia-smi` on the laptop; then the same detector + pose + re-ID mix running on the Jetson itself (`edge_bench.py` overlay: FPS, GPU %, watts) | 15 | GPU budget, optimization, on-device deployment |
 | 9 | Next steps: evasion, search (text over F1) | 10 | expected results |
