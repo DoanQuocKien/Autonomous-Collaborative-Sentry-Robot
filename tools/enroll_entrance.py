@@ -31,7 +31,7 @@ def split_manifest(rows, skip_position=2, n_calib_neg=2):
     return [r for r in rows if int(r["position_id"]) in calib], [r for r in rows if int(r["position_id"]) not in calib]
 
 
-def main():
+def build_parser():
     ap = argparse.ArgumentParser()
     ap.add_argument("--room", required=True)
     ap.add_argument("--robot-ref", nargs="+", required=True)
@@ -46,14 +46,23 @@ def main():
     ap.add_argument("--calib-positions", type=int, default=2, help="manifest: how many negative positions calibrate the thresholds (the rest of the negatives test them)")
     ap.add_argument("--camera", default="calib/camera.json", help="fisheye camera JSON, or 'none' for ESP32-CAM enrolment")
     ap.add_argument("--out")
-    a = ap.parse_args()
+    return ap
+
+
+def resolve_camera(camera_path):
+    return None if not camera_path or camera_path.lower() == "none" else Camera.from_json(camera_path)
+
+
+def main(argv=None):
+    ap = build_parser()
+    a = ap.parse_args(argv)
     refs = [cv2.imread(p) for p in a.robot_ref]
     roi = tuple(a.roi) if a.roi else None
     if a.select:
         x, y, w, h = cv2.selectROI("door box (Enter = ok)", refs[0], showCrosshair=False)
         cv2.destroyAllWindows()
         roi = (int(x), int(y), int(x + w), int(y + h))
-    cam = None if not a.camera or a.camera.lower() == "none" else Camera.from_json(a.camera)
+    cam = resolve_camera(a.camera)
     det = EntranceDetector(cam, EntranceConfig(policy=a.policy, dino_size=a.dino_size))
     det.enroll_robot(refs, [roi] + [None] * (len(refs) - 1) if roi else None)
     if a.phone_ref:

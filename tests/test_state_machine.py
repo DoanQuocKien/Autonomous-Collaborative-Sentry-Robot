@@ -228,3 +228,5 @@ def test_backwards_or_nonfinite_timestamps_rejected():
         sm.tick(4.9)
     with pytest.raises(ValueError):
         sm.handle_event(Event("ENTRANCE_FOUND", t=float("nan")))
+    with pytest.raises(ValueError):
+        sm.handle_event(Event("ENTRANCE_FOUND", t=4.9))

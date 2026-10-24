@@ -144,7 +144,7 @@ class StateMachineConfig:
 class Event:
     name: str
     data: object = None
-    t: float = 0.0
+    t: float | None = None
 
 
 @dataclass(frozen=True)
@@ -186,16 +186,18 @@ class TransitionResult:
     search_step: str | None = None
 
 
-def _normalize_event(event, data=None, t=0.0):
+def _normalize_event(event, data=None, t=None, fallback_t=0.0):
     if isinstance(event, Event):
         raw_name = event.name
         ev_data = event.data if data is None else data
-        ev_t = event.t if t == 0.0 else t
+        cand_t = event.t if t is None else t
+        ev_t = fallback_t if cand_t is None else cand_t
     elif isinstance(event, tuple) and len(event) == 2:
         raw_name, ev_data = event
-        ev_t = t
+        ev_t = fallback_t if t is None else t
     elif isinstance(event, str):
-        raw_name, ev_data, ev_t = event, data, t
+        raw_name, ev_data = event, data
+        ev_t = fallback_t if t is None else t
     else:
         raise TypeError("event must be an Event, (name, data) tuple, or str; got %r" % (event,))
     if not isinstance(raw_name, str) or not raw_name:
@@ -359,7 +361,7 @@ class StateMachine:
 
     def handle_event(self, event, data=None, t=None):
         """Process one discrete event at timestamp `t` -> TransitionResult."""
-        name, ev_data, ev_t = _normalize_event(event, data=data, t=self.t if t is None else t)
+        name, ev_data, ev_t = _normalize_event(event, data=data, t=t, fallback_t=self.t)
         now = self._advance_time(ev_t)
         prev = self.state
 
