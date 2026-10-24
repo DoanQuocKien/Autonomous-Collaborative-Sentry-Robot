@@ -1,6 +1,6 @@
 # D5 first batch (DQK, 2026-10-24, glossy floor, one room)
 
-Floor-level objects from the robot's own camera (lens 0.10 m), recorded with `python -m tools.record_d5 <class> --floor glossy --dist <m> --n <N>`. The images stay in `data/D5/` (not in git; people are in some frames), listed in `data/D5/manifest.csv` (class, file, floor, tape distance, session, time).
+Floor-level objects from the robot's own camera (lens 0.10 m), recorded with `python -m tools.record_d5 <class> --floor glossy --dist <m> --n <N>`. The masked images are committed in `data/D5/` (team decision 2026-10-24; `.gitignore` re-includes that folder, the underscore folders stay out), listed in `data/D5/manifest.csv` (class, file, floor, tape distance, session, time).
 
 | Class | Frames | Positions |
 | :-- | :-- | :-- |

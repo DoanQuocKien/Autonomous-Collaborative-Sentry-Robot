@@ -108,7 +108,7 @@ Laptop-internal contract:
 | D4 | End of W8 (**changed** from W6 by the 2026-10-12 restructure) | DQK + KR labels | 20+ padded "lunges" (pillow on a stick, never a real strike) + 10 min of normal walking; onset timestamps labelled with `label_events.py` |
 | D5 | W3 (collection), grows with every session | DQK records, all three label | **Floor-level objects from the robot's own camera (lens 0.10 m): legs and feet, wires (black, white, straight, curled), footwear, backpacks, bags, plus furniture and empty-floor negatives (20 %).** At least 150 labelled images per class, 2+ floors (matte and glossy), 2+ rooms, 3+ lighting conditions, 0.3-1.5 m; one whole session kept out of training for the T1. Stays in `data/`; people's legs only with consent and no faces in frame |
 
-Privacy: face photos and recordings of volunteers stay in `data/` and the team Drive, are used only with consent, and are deleted after grading.
+Privacy: face photos and recordings of volunteers stay in `data/` and the team Drive, are used only with consent, and are deleted after grading. **Exception (team decision 2026-10-24, to avoid passing the folder back and forth): the D5 frames (`data/D5/`, floor-level objects) are committed to this private repository, with every detected head painted over by `tools/mask_faces.py` and the borderline frames dropped; the unmasked originals (`data/D5_unmasked/`) and the excluded frames stay local and are never committed. Git history cannot be erased: after grading, delete or archive the repository rather than only the folder.**
 
 ### 4.3 Acceptance criteria per feature
 
