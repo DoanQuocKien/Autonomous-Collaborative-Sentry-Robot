@@ -60,6 +60,10 @@ Each member adds 3+ papers from their area in Week 3. Candidates below are the m
 | 14 | Siegwart, Nourbakhsh and Scaramuzza, *Introduction to Autonomous Mobile Robots*, 2nd ed., MIT Press, 2011, Ch. 3 & Ch. 5 (reference verified 2026-10-20; differential-drive forward kinematics, exact circular-arc vs Euler midpoint unicycle integration, and odometry error growth in `sentry/nav/wheel_model.py`, `sentry/nav/localization.py` and `tools/sim_robot.py`) | Differential-drive dead reckoning & simulation (`sentry/nav/localization.py`, `sentry/nav/wheel_model.py`) | 4, 6 | KR |
 | 15 | Hart, Nilsson and Raphael, "A Formal Basis for the Heuristic Determination of Minimum Cost Paths", *IEEE Transactions on Systems Science and Cybernetics*, 4(2):100–107, 1968 (reference verified 2026-10-20; A* shortest-path search on an obstacle-inflated occupancy grid connecting viewpoints in `sentry/nav/coverage.py`) | Obstacle-avoiding grid path planning for coverage search (expected) | 8 | KR |
 | 16+ | ... | | | |
+| 12 | Cheng, Song, Ge et al., "YOLO-World: Real-Time Open-Vocabulary Object Detection", CVPR 2024, arXiv:2401.17270 (existence, authors and title verified against arXiv on 2026-10-24) | Open-vocabulary backend for the small-object baseline (PR #46, `reports/DoanQuocKien/week-02/small_objects_1018/`) | 5 | DQK |
+| 13 | Xie, Wang, Yu et al., "SegFormer: Simple and Efficient Design for Semantic Segmentation with Transformers", NeurIPS 2021, arXiv:2105.15203 (existence, authors and title verified against arXiv on 2026-10-24) | Semantic-floor backend (SegFormer-B0 ADE20K, PR #46), failed from the 10 cm view | 5 | DQK |
+| 14 | Borenstein and Feng, "Measurement and correction of systematic odometry errors in mobile robots", IEEE Trans. Robotics and Automation 12(6), 1996, DOI 10.1109/70.544770 (title, authors, journal verified against Crossref on 2026-10-24) | Why the veer is a systematic error that needs calibration and correction (`tools/follow_marker.py`, `calib/motion.json`) | 4 | DQK |
+| 12+ | ... | | | |
 
 ## 3. Figures and charts
 
@@ -127,7 +131,7 @@ Who: DQK films the robot (phone on a tripod) and edits; HNHL screen-records the 
 | 3 | Live stream with FPS/latency overlay, raw vs undistorted side by side | 20 | network, calibration |
 | 4 | Exploration with obstacle boxes and distances, map building (split screen) | 30 | obstacle distance, map |
 | 5 | Entrance found -> sweet spot -> audio prompt -> camera placed -> verified -> standby | 40 | Phase 1 end to end |
-| 6 | ESP32 view: team member walks in -> whitelisted; consenting volunteer -> intruder -> queued | 30 | Phase 2 |
+| 6 | ESP32 view: team member walks in -> whitelisted; a team member who is not enrolled in that fold (leave-one-out, Implementation Plan D2) -> intruder -> queued | 30 | Phase 2 |
 | 7 | Pursuit at 1.2 m, then hold and re-centre when the target stops | 30 | Phase 3 (first part) |
 | 8 | All models together: FPS and `nvidia-smi` on the laptop; then the same detector + pose + re-ID mix running on the Jetson itself (`edge_bench.py` overlay: FPS, GPU %, watts) | 15 | GPU budget, optimization, on-device deployment |
 | 9 | Next steps: evasion, search (text over F1) | 10 | expected results |

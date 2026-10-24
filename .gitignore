@@ -4,7 +4,9 @@ graphify-out/
 .serena/
 *.pt
 *.onnx
-data/
+data/*
+!data/D5/
+data/D5/_*/
 runs/
 pip_install.log
 .venv/
