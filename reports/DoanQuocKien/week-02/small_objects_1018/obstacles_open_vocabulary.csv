@@ -1,0 +1,3 @@
+label,tape_distance_m,frames,frames_with_detection,frames_with_distance,median_distance_m,classes_reasons
+box,1.0,20,20,25,0.861,"{""(-2, 'border_truncated')"": 34, ""(-2, 'no_ground_intersection_or_out_of_range')"": 21, ""(-2, '')"": 25, ""(-2, 'bottom_truncated')"": 5, ""(60, 'border_truncated')"": 1, ""(60, 'bottom_truncated')"": 5}"
+black wire,1.0,20,20,15,0.658,"{""(-2, 'no_ground_intersection_or_out_of_range')"": 19, ""(-2, 'border_truncated')"": 14, ""(-2, '')"": 15}"
