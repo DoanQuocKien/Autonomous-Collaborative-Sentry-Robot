@@ -252,6 +252,7 @@ Effort estimate (desk study, to be re-estimated at G1): Stage A about 4 person-d
   - KR: a Python 3.6 variant of the ESP32 tile receiver for the robot (`sentry.espcam.TileReceiver` imports `sentry.net.discover`), tested on recorded tile streams (T0, CPU only).
 - **Report (all):** each member adds 3+ papers from their area to the list in `Mid-Term Report Plan.md` section 2.
 - **Session:** record **D2**; T2 ESP32 handshake accept/reject.
+- **Status (Sat 2026-10-24, DQK; ill Mon-Fri):** done: D5 first batch (397 frames, PR #59), papers 12-14, D2 leave-one-out (PR #57), edge bench with a person in view (PR #60: p95 78.1 ms, 2.13 GB, 40 C, 11.48 V min, 19.97 FPS), marker heading fix and T2 3 m dead reckoning closed loop (PR #56: 14.5 cm with correction, one run). Open for DQK: edge bench with live ESP32 frames and USB speaker playback (both need PR #55), deployment behaviour and its T2 (needs a door), D2 entries, more T2 repeatability runs. KR: PR #55 has one failing test (review comment). HNHL: no Week 3 branch or PR yet (`perception/face.py`, `tools/enroll_whitelist.py`, parity set, D5 labelling, which can start from the committed D5 frames).
 
 ### Week 4 (Oct 26-Nov 1): Re-ID Handoff & Phase 1 End to End
 
