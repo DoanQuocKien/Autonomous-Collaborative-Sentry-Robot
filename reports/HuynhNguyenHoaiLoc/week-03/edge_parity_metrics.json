@@ -1,0 +1,18 @@
+{
+  "status": "HARNESS_READY_PENDING_ENGINE_BUILD",
+  "evaluated_on_real_engines": false,
+  "parity_frames_collected": 200,
+  "target_thresholds": {
+    "cosine_similarity": 0.999,
+    "detector_box_iou": 0.9,
+    "box_match_min_fraction": 0.95
+  },
+  "models_to_evaluate": [
+    "yolov8n_320.onnx",
+    "scrfd_2.5g_320.onnx",
+    "w600k_mbf.onnx",
+    "osnet_x0_25_256x128.onnx",
+    "xfeat_backbone_480x640.onnx"
+  ],
+  "note": "Parity evaluation tooling and frame sampling are ready. Real comparison requires building TensorRT engines on the Jetson Nano using tools.export_edge_onnx exports."
+}

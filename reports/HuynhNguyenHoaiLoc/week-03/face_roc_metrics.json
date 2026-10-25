@@ -1,0 +1,207 @@
+{
+  "status": "SIMULATION_PROTOTYPE",
+  "is_real_d2": false,
+  "t1_accepted": false,
+  "note": "Simulation prototype to verify ROC logic and threshold calculation. T1 acceptance is pending live D2 doorway recording during the Sunday team session.",
+  "dataset_name": "simulated_d2_leave_one_out",
+  "num_identities": 3,
+  "total_genuine_queries": 42,
+  "total_impostor_queries": 90,
+  "config_threshold": 0.45,
+  "operating_point": {
+    "threshold": 0.45,
+    "tar": 1.0,
+    "far": 0.0,
+    "frr": 0.0
+  },
+  "target_tar_threshold": 0.95,
+  "target_far_threshold": 0.01,
+  "roc_curve": [
+    {
+      "threshold": 0.1,
+      "tar": 1.0,
+      "far": 0.0,
+      "frr": 0.0
+    },
+    {
+      "threshold": 0.125,
+      "tar": 1.0,
+      "far": 0.0,
+      "frr": 0.0
+    },
+    {
+      "threshold": 0.15,
+      "tar": 1.0,
+      "far": 0.0,
+      "frr": 0.0
+    },
+    {
+      "threshold": 0.175,
+      "tar": 1.0,
+      "far": 0.0,
+      "frr": 0.0
+    },
+    {
+      "threshold": 0.2,
+      "tar": 1.0,
+      "far": 0.0,
+      "frr": 0.0
+    },
+    {
+      "threshold": 0.225,
+      "tar": 1.0,
+      "far": 0.0,
+      "frr": 0.0
+    },
+    {
+      "threshold": 0.25,
+      "tar": 1.0,
+      "far": 0.0,
+      "frr": 0.0
+    },
+    {
+      "threshold": 0.275,
+      "tar": 1.0,
+      "far": 0.0,
+      "frr": 0.0
+    },
+    {
+      "threshold": 0.3,
+      "tar": 1.0,
+      "far": 0.0,
+      "frr": 0.0
+    },
+    {
+      "threshold": 0.325,
+      "tar": 1.0,
+      "far": 0.0,
+      "frr": 0.0
+    },
+    {
+      "threshold": 0.35,
+      "tar": 1.0,
+      "far": 0.0,
+      "frr": 0.0
+    },
+    {
+      "threshold": 0.375,
+      "tar": 1.0,
+      "far": 0.0,
+      "frr": 0.0
+    },
+    {
+      "threshold": 0.4,
+      "tar": 1.0,
+      "far": 0.0,
+      "frr": 0.0
+    },
+    {
+      "threshold": 0.425,
+      "tar": 1.0,
+      "far": 0.0,
+      "frr": 0.0
+    },
+    {
+      "threshold": 0.45,
+      "tar": 1.0,
+      "far": 0.0,
+      "frr": 0.0
+    },
+    {
+      "threshold": 0.475,
+      "tar": 1.0,
+      "far": 0.0,
+      "frr": 0.0
+    },
+    {
+      "threshold": 0.5,
+      "tar": 1.0,
+      "far": 0.0,
+      "frr": 0.0
+    },
+    {
+      "threshold": 0.525,
+      "tar": 1.0,
+      "far": 0.0,
+      "frr": 0.0
+    },
+    {
+      "threshold": 0.55,
+      "tar": 1.0,
+      "far": 0.0,
+      "frr": 0.0
+    },
+    {
+      "threshold": 0.575,
+      "tar": 1.0,
+      "far": 0.0,
+      "frr": 0.0
+    },
+    {
+      "threshold": 0.6,
+      "tar": 1.0,
+      "far": 0.0,
+      "frr": 0.0
+    },
+    {
+      "threshold": 0.625,
+      "tar": 1.0,
+      "far": 0.0,
+      "frr": 0.0
+    },
+    {
+      "threshold": 0.65,
+      "tar": 1.0,
+      "far": 0.0,
+      "frr": 0.0
+    },
+    {
+      "threshold": 0.675,
+      "tar": 1.0,
+      "far": 0.0,
+      "frr": 0.0
+    },
+    {
+      "threshold": 0.7,
+      "tar": 1.0,
+      "far": 0.0,
+      "frr": 0.0
+    },
+    {
+      "threshold": 0.725,
+      "tar": 0.7143,
+      "far": 0.0,
+      "frr": 0.2857
+    },
+    {
+      "threshold": 0.75,
+      "tar": 0.0,
+      "far": 0.0,
+      "frr": 1.0
+    },
+    {
+      "threshold": 0.775,
+      "tar": 0.0,
+      "far": 0.0,
+      "frr": 1.0
+    },
+    {
+      "threshold": 0.8,
+      "tar": 0.0,
+      "far": 0.0,
+      "frr": 1.0
+    },
+    {
+      "threshold": 0.825,
+      "tar": 0.0,
+      "far": 0.0,
+      "frr": 1.0
+    },
+    {
+      "threshold": 0.85,
+      "tar": 0.0,
+      "far": 0.0,
+      "frr": 1.0
+    }
+  ]
+}

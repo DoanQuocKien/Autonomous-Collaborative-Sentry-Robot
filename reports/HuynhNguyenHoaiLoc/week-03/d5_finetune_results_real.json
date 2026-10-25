@@ -1,0 +1,139 @@
+{
+  "evidence_type": "transcription_of_actual_ultralytics_validation_logs_from_user",
+  "evaluation_tier": "internal_dev_validation_not_independent_T1",
+  "dataset": {
+    "name": "D5_first_batch",
+    "images_total": 397,
+    "train_images": 307,
+    "val_images": 90,
+    "val_instances_total": 241,
+    "sessions": 1,
+    "room": "single glossy-floor room",
+    "exact_duplicate_images_across_splits": 0,
+    "important_limitations": [
+      "same session and scene across training and validation",
+      "label completeness not exhaustively human audited",
+      "wire validation comprises 20 instances at 1.00m"
+    ]
+  },
+  "training": {
+    "model": "yolov8n.pt",
+    "epochs": 30,
+    "batch": 8,
+    "seed": 42,
+    "workers": 0,
+    "device": "CUDA:0 NVIDIA GeForce RTX 5060 Laptop GPU",
+    "ultralytics_version": "8.4.172",
+    "python_version": "3.12.15",
+    "torch_version": "2.9.1+cu128",
+    "dataset_yaml": "data/D5_yolo_dev/data.yaml",
+    "run_root": "runs/detect/runs/d5_dev",
+    "note": "trained via yolo detect train CLI, not legacy tools/train_d5.py"
+  },
+  "class_names": [
+    "leg",
+    "footwear",
+    "backpack",
+    "bag",
+    "wire",
+    "chair",
+    "table",
+    "plant"
+  ],
+  "models": {
+    "320": {
+      "imgsz": 320,
+      "all": {
+        "precision": 0.73,
+        "recall": 0.693,
+        "map50": 0.739,
+        "map50_95": 0.574
+      },
+      "wire": {
+        "precision": 0.0915,
+        "recall": 0.05,
+        "map50": 0.178,
+        "map50_95": 0.0559
+      },
+      "bag": {
+        "recall": 0.591
+      },
+      "measured_ultralytics_inference_ms_per_image": 0.6,
+      "checkpoint_local": "runs/detect/runs/d5_dev/yolov8n_320/weights/best.pt"
+    },
+    "416": {
+      "imgsz": 416,
+      "all": {
+        "precision": 0.677,
+        "recall": 0.72,
+        "map50": 0.758,
+        "map50_95": 0.608
+      },
+      "wire": {
+        "precision": 0.0996,
+        "recall": 0.1,
+        "map50": 0.0458,
+        "map50_95": 0.00688
+      },
+      "bag": {
+        "recall": 0.318
+      },
+      "measured_ultralytics_inference_ms_per_image": 1.6,
+      "checkpoint_local": "runs/detect/runs/d5_dev/yolov8n_416/weights/best.pt"
+    },
+    "640": {
+      "imgsz": 640,
+      "all": {
+        "precision": 0.588,
+        "recall": 0.803,
+        "map50": 0.75,
+        "map50_95": 0.606
+      },
+      "wire": {
+        "precision": 0.0419,
+        "recall": 0.05,
+        "map50": 0.0419,
+        "map50_95": 0.00631
+      },
+      "bag": {
+        "recall": 0.63
+      },
+      "measured_ultralytics_inference_ms_per_image": 0.9,
+      "checkpoint_local": "runs/detect/runs/d5_dev/yolov8n_640/weights/best.pt"
+    }
+  },
+  "wire_diagnostic_416": {
+    "gt_positive_images": 20,
+    "gt_wire_boxes": 20,
+    "positive_images_with_wire_prediction_conf_ge_005": 20,
+    "wire_predictions_conf_ge_005": 23,
+    "one_to_one_gt_matches_conf_ge_005_iou_ge_025": 20,
+    "one_to_one_gt_matches_conf_ge_005_iou_ge_050": 1,
+    "one_to_one_gt_matches_conf_ge_025_iou_ge_025": 11,
+    "one_to_one_gt_matches_conf_ge_025_iou_ge_050": 1,
+    "median_best_iou_conf_ge_005": 0.351,
+    "negative_gt_images": 70,
+    "negative_gt_images_with_wire_prediction_conf_ge_005": 5,
+    "note": "diagnostic IoU subset; NOT Ultralytics recall or mAP"
+  },
+  "wire_geometric_fallback": {
+    "synthetic_unit_tests_passed": 5,
+    "synthetic_unit_tests_total": 5,
+    "gt_positive_images_with_any_segment_in_wire_gt_region": 20,
+    "gt_positive_images": 20,
+    "no_gt_wire_images_with_any_candidate": 70,
+    "no_gt_wire_images": 70,
+    "decision": "NO-GO as standalone wire alarm; high grout-line candidate contamination",
+    "note": "candidate inside box is not wire detection recall; any candidate on negative is not a final detector false alarm"
+  },
+  "segmentation_pilot": {
+    "annotated_masks": 12,
+    "selected_training_images": 12,
+    "trained_segmentation_model": false,
+    "evaluated_segmentation_model": false,
+    "quality_warning": "0.30m close wire coils/connectors may be overpainted"
+  },
+  "edge_parity_t1": "pending_actual_engine_measurements",
+  "face_d2_roc_t1": "pending_real_recordings",
+  "jetson_nano_runtime_measurements": "not available"
+}

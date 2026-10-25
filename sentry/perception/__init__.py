@@ -42,3 +42,30 @@ try:
 except ImportError:
     pass
 
+try:
+    from sentry.perception.face import (
+        FaceVerifier,
+        InsightFaceEncoder,
+        load_whitelist,
+        normalize_embedding,
+    )
+
+    __all__.extend([
+        "FaceVerifier",
+        "InsightFaceEncoder",
+        "load_whitelist",
+        "normalize_embedding",
+    ])
+except ImportError:
+    pass
+
+try:
+    from sentry.perception.wire_fallback import WireCandidate, WireGeometricFallback
+
+    __all__.extend([
+        "WireCandidate",
+        "WireGeometricFallback",
+    ])
+except ImportError:
+    pass
+
