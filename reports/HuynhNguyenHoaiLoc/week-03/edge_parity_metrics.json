@@ -1,43 +1,18 @@
 {
-  "parity_set_size": 200,
-  "target_cosine_threshold": 0.999,
-  "target_box_iou_threshold": 0.9,
-  "models": {
-    "yolov8n_320": {
-      "type": "detector",
-      "cosine_min": 0.9998,
-      "cosine_mean": 0.99995,
-      "box_iou_ge_90_fraction": 0.985,
-      "status": "PASS"
-    },
-    "scrfd_2.5g_320": {
-      "type": "face_detector",
-      "resize_deconv_fix": true,
-      "cosine_min": 0.9995,
-      "cosine_mean": 0.99991,
-      "box_iou_ge_90_fraction": 0.992,
-      "status": "PASS"
-    },
-    "mobilefacenet_512d": {
-      "type": "face_embedding",
-      "cosine_min": 0.9999,
-      "cosine_mean": 0.99998,
-      "status": "PASS"
-    },
-    "osnet_x0_25": {
-      "type": "reid_embedding",
-      "cosine_min": 0.9996,
-      "cosine_mean": 0.99994,
-      "status": "PASS"
-    },
-    "xfeat_backbone": {
-      "type": "feature_descriptor",
-      "cosine_min": 0.9994,
-      "cosine_mean": 0.99989,
-      "status": "PASS"
-    }
+  "status": "HARNESS_READY_PENDING_ENGINE_BUILD",
+  "evaluated_on_real_engines": false,
+  "parity_frames_collected": 200,
+  "target_thresholds": {
+    "cosine_similarity": 0.999,
+    "detector_box_iou": 0.9,
+    "box_match_min_fraction": 0.95
   },
-  "all_passed": true,
-  "reviewed_by": "HuynhNguyenHoaiLoc",
-  "date": "2026-10-24"
+  "models_to_evaluate": [
+    "yolov8n_320.onnx",
+    "scrfd_2.5g_320.onnx",
+    "w600k_mbf.onnx",
+    "osnet_x0_25_256x128.onnx",
+    "xfeat_backbone_480x640.onnx"
+  ],
+  "note": "Parity evaluation tooling and frame sampling are ready. Real comparison requires building TensorRT engines on the Jetson Nano using tools.export_edge_onnx exports."
 }

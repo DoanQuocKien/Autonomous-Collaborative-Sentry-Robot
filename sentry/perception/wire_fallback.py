@@ -142,5 +142,4 @@ class WireGeometricFallback:
                 bearing_rad=bearing,
                 keep_clear=keep_clear,
             ))
-
         return candidates

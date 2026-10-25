@@ -1,10 +1,14 @@
-"""Unit test for edge conversion parity contracts (Week 3, HNHL)."""
-import json
+"""Unit test for edge conversion parity metrics functions (Week 3, HNHL)."""
 from pathlib import Path
 import numpy as np
 import pytest
 
-from tools.check_edge_parity import compute_cosine, compute_iou, run_parity_evaluation
+from tools.check_edge_parity import (
+    collect_parity_images,
+    compute_cosine,
+    compute_iou,
+    write_parity_harness_spec,
+)
 
 
 def test_compute_cosine_and_iou():
@@ -25,12 +29,8 @@ def test_compute_cosine_and_iou():
     assert 0.4 < compute_iou(box1, box3) < 0.6
 
 
-def test_parity_evaluation_meets_thresholds(tmp_path):
-    out = tmp_path / "parity.json"
-    res = run_parity_evaluation(out)
-
-    assert res["all_passed"] is True
-    for model_name, info in res["models"].items():
-        assert info["cosine_min"] >= res["target_cosine_threshold"]
-        if "box_iou_ge_90_fraction" in info:
-            assert info["box_iou_ge_90_fraction"] >= 0.95
+def test_parity_harness_spec_generation(tmp_path):
+    spec = write_parity_harness_spec(tmp_path / "spec.json")
+    assert spec["status"] == "HARNESS_READY_PENDING_ENGINE_BUILD"
+    assert spec["evaluated_on_real_engines"] is False
+    assert spec["target_thresholds"]["cosine_similarity"] == 0.999

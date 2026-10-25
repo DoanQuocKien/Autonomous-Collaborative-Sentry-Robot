@@ -1,5 +1,9 @@
 {
-  "dataset": "D2_leave_one_out",
+  "status": "SIMULATION_PROTOTYPE",
+  "is_real_d2": false,
+  "t1_accepted": false,
+  "note": "Simulation prototype to verify ROC logic and threshold calculation. T1 acceptance is pending live D2 doorway recording during the Sunday team session.",
+  "dataset_name": "simulated_d2_leave_one_out",
   "num_identities": 3,
   "total_genuine_queries": 42,
   "total_impostor_queries": 90,
@@ -12,7 +16,6 @@
   },
   "target_tar_threshold": 0.95,
   "target_far_threshold": 0.01,
-  "meets_target": true,
   "roc_curve": [
     {
       "threshold": 0.1,
