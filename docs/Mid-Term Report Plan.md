@@ -122,7 +122,7 @@ Each figure is saved as PNG next to its evidence in `reports/<handle>/week-NN/`,
 
 The video is optional: if pursuit slips, cut the W6 robot shots and keep the Phase 1 and calibration shots (or use the replay/`sim_robot` fallback, captioned as such).
 
-Who: DQK films the robot (phone on a tripod) and edits; HNHL screen-records the laptop overlays (OBS); KR films the door and the ESP32 view. When: each shot as soon as its feature works (W5-W6 sessions); pick-up session Sun Nov 15; cut by Wed Nov 18; spare re-shoot Sat Nov 21. Upload to the team Drive; the link goes in the report and appendix, never in git.
+Who: DQK films the robot (phone on a tripod) and edits; HNHL screen-records the laptop overlays (OBS); KR films the door and the ESP32 view. When: each shot as soon as its feature works (W5-W6 sessions); pick-up session Mon Nov 16; cut by Wed Nov 18; spare re-shoot Sat Nov 21. Upload to the team Drive; the link goes in the report and appendix, never in git.
 
 | # | Shot | s | Proves |
 | :-- | :-- | :-: | :-- |
@@ -152,7 +152,7 @@ Rules: check the battery before every take (>= 11.1 V; stop below 10.5 V); the o
 | :-- | :-- |
 | T-3 w, Mon Nov 2 | Outline, page budget and owners agreed (this file); 3+ papers per member; figures assigned; shared document created |
 | T-2 w, Mon Nov 9 | Chapters 1-4 drafted from Week 1-4 evidence; F1-F15 and F20-F21 made; Phase 1 and Phase 2 video shots recorded |
-| T-8 d, Sun Nov 15 | Experiments closed, **figures frozen**, all video shots recorded |
+| T-7 d, Mon Nov 16 | Experiments closed, **figures frozen**, all video shots recorded |
 | T-5 d, Wed Nov 18 | **Internal draft:** full merged report (10-15 pages) and video cut |
 | T-4..3 d, Thu-Fri Nov 19-20 | Internal review: each member reads the whole report and checks every number against its file; PR freeze Fri |
 | T-2 d, Sat Nov 21 | Clean checkout test, tag `midterm`, spare re-shoot slot |
