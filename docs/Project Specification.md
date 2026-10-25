@@ -152,7 +152,7 @@ The calendar was restructured on 2026-10-12 (team lead): 13 weeks from Mon 2026-
 | **3** | Oct 19-25 | HCI Deployment & Biometrics | Audio prompts and ESP32-CAM handshake; InsightFace whitelist and verification thresholds; state machine skeleton; dataset D2. |
 | **4** | Oct 26-Nov 1 | Re-ID Handoff & Phase 1 end to end | OSNet appearance extraction, FIFO queue, sector logging; Phase 1 on the robot, Phase 2 on replayed data; report outline. |
 | **5** | Nov 2-8 | Pursuit & Live Phase 2 | YOLOv8 + ByteTrack pursuit with PD control and obstacle override; hold-and-re-center detector; Phase 2 live at the door; dataset D3. |
-| **6** | Nov 9-15 | Pursuit + Hold on the robot, Model Optimization | Pursuit and hold trials; FP16 / TensorRT optimization; report figures frozen and demo video shot (Sun Nov 15). |
+| **6** | Nov 9-15 | Pursuit + Hold on the robot, Model Optimization | Pursuit and hold trials; FP16 / TensorRT optimization; report figures frozen and demo video shot (Mon Nov 16). |
 | **7** | Nov 16-22 | Mid-Term Report & Buffer | No new features: draft Wed Nov 18, tag `midterm` Sat Nov 21. |
 | **8** | Nov 23-29 | Mid-term submission & Threat Evasion | **Submit the Mid-Term Report Mon Nov 23.** Evasion override, YOLOv8-pose lunge detector; dataset D4. |
 | **9** | Nov 30-Dec 6 | Evasion Validation & Search Building Blocks | Lunge detector tuned; evasion trials; effective detection radius; map-based coverage planner and path following. |
@@ -163,4 +163,4 @@ The calendar was restructured on 2026-10-12 (team lead): 13 weeks from Mon 2026-
 
 **Milestones:** the **Mid-Term Report is due Mon 2026-11-23** (10-15 pages, includes the code, with an optional demo video; internal draft Wed Nov 18; plan in `Mid-Term Report Plan.md`). This replaces the earlier "15-20 page report in Week 4". The **final submission** window is 2026-12-28 to 2027-01-02, target Mon Dec 28.
 
-*Extension schedule (Implementation Plan section 5): agreed by the team on 2026-10-17 (G0); work from Week 3 with gates on the Sundays of Weeks 3, 5, 8 and 9. It does not change the core deliverables above.*
+*Extension schedule (Implementation Plan section 5): agreed by the team on 2026-10-17 (G0); work from Week 3 with gates at the Monday sessions after Weeks 3, 5, 8 and 9. It does not change the core deliverables above.*

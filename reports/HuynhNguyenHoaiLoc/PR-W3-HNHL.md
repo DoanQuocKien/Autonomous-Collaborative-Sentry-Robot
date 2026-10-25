@@ -29,7 +29,7 @@ PR này cập nhật công việc **Tuần 3** của `HuynhNguyenHoaiLoc (HNHL)`
 
 - 416 đạt mAP tổng thể cao nhất trong thử nghiệm phát triển, **không phải cấu hình đã được chứng nhận trên robot**. Wire Recall cao nhất **10%**, chưa đạt mốc **80%** của kế hoạch.
 - Checkpoints/logs lưu cục bộ trong `runs/detect/runs/d5_dev/yolov8n_{320,416,640}/`; không có benchmark latency Jetson Nano được đo trong thí nghiệm này.
-- Dữ liệu số thực tế tóm tắt tại `reports/HuynhNguyenHoaiLoc/week-03/d5_finetune_results_real.json` khi file này được stage. Lưu ý `tools/train_d5.py` và `data/D5/d5.yaml` kế thừa vẫn cần kiểm tra/fix đường dẫn `train`/`val` trước khi dùng như entrypoint chính thức.
+- Dữ liệu số thực tế tóm tắt tại `reports/HuynhNguyenHoaiLoc/week-03/d5_finetune_results_real.json` khi file này được stage. Lưu ý `tools/train_d5.py` kế thừa (`data/D5/d5.yaml` đã bị xóa trong bản sửa sau review) vẫn cần kiểm tra/fix đường dẫn `train`/`val` trước khi dùng như entrypoint chính thức.
 
 ### 4. Chẩn đoán Wire: định vị, báo nhầm và geometric fallback
 

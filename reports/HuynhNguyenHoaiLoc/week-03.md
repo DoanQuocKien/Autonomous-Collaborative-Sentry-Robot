@@ -17,7 +17,7 @@
 - D5 first batch: **397 real images** captured from one glossy-floor room/session. Target-class label presence after manual editing: `leg` **50/50**; `footwear` **49/49**; `backpack` **49/49**; `bag` **50/50**; `table` **15/15**; `wire_black` **50/50**, `wire_white` **49/49**. These are **coverage counts**, not a claim that every bounding box/background label has been exhaustively audited.
 - Visual QA sampled representative frames; checked normalized coordinates and exact duplicate label lines. Background classes and difficult instances may still need review.
 - `tools/prepare_d5_yolo_dev.py` produced Ultralytics dataset `data/D5_yolo_dev/`: **307 train / 90 internal dev-val**, 8 classes, no **exact duplicate image files** between splits. **Both splits are from the same session/room; near-duplicate appearance and optimistic validation remain possible.** The earlier 317/80 split specification is superseded by this actual dataset.
-- `data/D5_yolo_dev/data.yaml` is the **actual training YAML**. `data/D5/d5.yaml` and `tools/train_d5.py` must be checked/fixed for consistency with the exported layout before claiming that legacy harness is independently reproducible.
+- `data/D5_yolo_dev/data.yaml` is the **actual training YAML**. The unusable `data/D5/d5.yaml` (the absolute path of one laptop, `train: .`) was removed in the review fix; `tools/train_d5.py` reads `data/D5_yolo_dev/data.yaml` (made by `tools/prepare_d5_yolo_dev.py`) and must still be checked before claiming that harness is independently reproducible. **Labels:** 138 `leg` boxes for the standing person in the background of 137 frames were added by `tools/label_background_legs.py` (review fix, detector proposals checked on a sample); the splits and the numbers below were made before that and must be re-run.
 
 ### 3. Actual YOLOv8n fine-tuning and validation (RTX 5060, internal dev-val)
 
@@ -53,7 +53,7 @@ Ran Ultralytics 8.4.172, Python 3.12.15, PyTorch 2.9.1+cu128, GPU RTX 5060 Lapto
 
 - Prior Week 3 test suite: **20/20 T0 unit tests passed** (`test_face`, `test_enroll_whitelist`, `test_face_roc`, `test_wire_fallback`, `test_edge_parity`, `test_d5_training`); the wire fallback subset was also rerun: **5/5 passed**. T0 success **does not** establish real D2 ROC, Jetson parity, or D5 T1.
 - Previously reported perception regression suite: 53 tests passed; do not describe this as a fresh test after subsequent modifications without re-running.
-- Actual Ultralytics validation logs and `best.pt` are currently **local**, under `runs/detect/runs/d5_dev/`. Diagnostic evidence is local under `data/D5_wire_val_audit.csv`, `data/D5_fallback_audit/`, `data/D5_wire_seg_masks_v1/`. Compact metric transcription: `reports/HuynhNguyenHoaiLoc/week-03/d5_finetune_results_real.json` (when added).
+- Actual Ultralytics validation logs and `best.pt` are currently **local**, under `runs/detect/runs/d5_dev/`. Diagnostic evidence is local under `data/D5_wire_val_audit.csv`, `data/D5_fallback_audit/`, `data/D5_wire_seg_masks_v1/`. Compact metric transcription: `reports/HuynhNguyenHoaiLoc/week-03/d5_finetune_results_real.json`.
 
 ## Acceptance status and blockers
 
