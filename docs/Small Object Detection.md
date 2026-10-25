@@ -29,7 +29,7 @@ The Open Images model was tried because its label set already contains `Human le
 4. **Wires:** if box recall stays under 80 %, train a segmentation model (YOLOv8n-seg or a small strip-convolution network) on polygon labels plus pasted synthetic wires; a **geometric fallback** (thin dark or bright line on the floor, ground-plane check across frames while driving) gives the keep-clear rule a signal even if the learned model fails.
 5. **Evaluate** per class on the held-out session (recall, precision, distance error) and run the exploration T2 with the whole set in the arena. A class that misses its target is reported as not met, with the speed cap and keep-clear rule as the mitigation.
 
-## 4. Decisions still open for the team (Sun Oct 25)
+## 4. Decisions still open for the team (Mon Oct 26)
 
 - The targets in section 4.3 (legs, footwear, backpacks: recall >= 90 %, precision >= 80 %; wires: recall >= 80 %, <= 1 false alarm per 20 empty-floor frames) are the assistant's proposal.
 - Whether human legs count as obstacles in every phase (proposed: yes, for repulsion in exploration and for the pursuit override; they are never targets by themselves).

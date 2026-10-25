@@ -6,7 +6,7 @@ Question (2026-10-16): can the robot run the sentry nearly self-contained on its
 
 Inputs: the trtexec FP16 measurements and robot facts of 2026-10-16 (network only, batch 1, camera and control services running), `docs/Project Specification.md`, `docs/Implementation Plan.md`, `docs/JetBot Notes.md`, the code in `jetson/` and `sentry/`. Every number marked **est.** is an estimate from this study, not a measurement. Measured numbers come from the inputs table unless a source [n] is given.
 
-**Answer: go, staged.** The models fit on the Nano in GPU time and RAM with a 2x margin if the expensive work is gated. The cost is engineering time (a TensorRT wrapper, a Python 3.6 port of the pursuit code, a vendored ByteTrack), not compute. Stage A (obstacle detector on the robot) fits before the mid-term and gives the report its on-device deployment chapter; Stage B (pursuit loop) after it; Stage C (door pipeline, search, robot as access point) only if B is done by Sun Dec 6.
+**Answer: go, staged.** The models fit on the Nano in GPU time and RAM with a 2x margin if the expensive work is gated. The cost is engineering time (a TensorRT wrapper, a Python 3.6 port of the pursuit code, a vendored ByteTrack), not compute. Stage A (obstacle detector on the robot) fits before the mid-term and gives the report its on-device deployment chapter; Stage B (pursuit loop) after it; Stage C (door pipeline, search, robot as access point) only if B is done by Mon Dec 7.
 
 ## 1. Compute budget per stage
 
@@ -137,9 +137,9 @@ The sources found no contradiction with the measured table. A forum report of YO
 |---|---|---|---|---|
 | E0 bench | **done 2026-10-16** (person in view, ESP32 frames and the battery run remain: W3, gate G1) | TensorRT + pycuda wrapper, YOLOv8 decode, parity on D1, then the Section 7.4 bench | 2-3 (DQK) | Stage B model mix >= 15 FPS on live frames, CPU < 200 %, system RAM < 3.0 GB, no throttling in 10 min |
 | A | W4-W5 | Obstacle detector + repulsion on the robot, camera preview to the laptop; laptop path kept as the fallback | 4 (DQK, HNHL for parity) | 0 collisions in the existing exploration protocol, same distance errors as on the laptop |
-| Mid-term | W6-W7 | FP32 vs FP16 vs laptop latency, RAM, power, parity table: the "model optimisation and on-device deployment" chapter | 1-2 (HNHL), replaces part of the W6 laptop-only optimisation | figures frozen Sun Nov 15 |
+| Mid-term | W6-W7 | FP32 vs FP16 vs laptop latency, RAM, power, parity table: the "model optimisation and on-device deployment" chapter | 1-2 (HNHL), replaces part of the W6 laptop-only optimisation | figures frozen Mon Nov 16 |
 | B | W8-W9 | Pose + strike detector, vendored ByteTrack, OSNet x0.25 lock, PD/hold ported to 3.6, brain -> local UDP | 8-10 (DQK, HNHL; KR ports hold logic) | pursuit and hold rows of section 4.3 pass on the edge path; strike latency <= 150 ms |
-| C (stretch) | W10-W11 | Door pipeline on the robot, queue, pre-planned coverage search, robot or router network, companion app | 8-12 (all) | only if B passed by Sun Dec 6; otherwise the door stays on the laptop |
+| C (stretch) | W10-W11 | Door pipeline on the robot, queue, pre-planned coverage search, robot or router network, companion app | 8-12 (all) | only if B passed by Mon Dec 7; otherwise the door stays on the laptop |
 
 Pursuit and hold stay on the laptop for the mid-term demo (the plan's W5-W6), so the report does not depend on Stage B. Total A + B is about 15 person-days, roughly one fifth of the team's remaining time; C would compete with the W10 full-loop integration and the W11 contingency week, which is why it is a stretch. Staying in the laptop mode for the door costs little: the laptop is present anyway to confirm intruders, and only small events cross the link.
 
