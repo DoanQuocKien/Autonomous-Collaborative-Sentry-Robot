@@ -27,7 +27,7 @@ Floor-level objects from the robot's own camera (lens 0.10 m), recorded with `py
 - `record_d5` numbers files from the highest index + 1; the first version reused numbers after frames were moved and overwrote 3 empty frames (re-recorded).
 
 ## Auto-labels (first pass, to correct by hand)
-`python -m tools.autolabel_d5` (YOLO-World `yolov8s-worldv2`, 8 classes in `data/D5/classes.txt`) wrote YOLO-format proposals to `data/D5/labels/<folder>/<frame>.txt` (boxes with confidence >= 0.2) and every box with its confidence to `data/D5/autolabel.csv` (threshold 0.05). They are proposals, not ground truth.
+`python -m tools.autolabel_d5` (YOLO-World `yolov8s-worldv2`, 8 classes in `data/D5/classes.txt`) wrote YOLO-format proposals to `data/D5/labels/<folder>/<frame>.txt` (boxes with confidence >= 0.2; not committed, HNHL's hand-corrected labels in PR #63 use the same paths, rerun the tool to regenerate) and every box with its confidence to `data/D5/autolabel.csv` (threshold 0.05). They are proposals, not ground truth.
 
 | Folder | Own class found in the frame (conf >= 0.2) | Notes |
 | :-- | :-- | :-- |
