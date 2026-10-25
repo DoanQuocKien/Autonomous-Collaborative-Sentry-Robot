@@ -150,6 +150,12 @@ robot_radius_m = 0.15           # MEASURE footprint + clearance margin before HI
 boundary_weight = 1.0
 distance_weight = 0.2
 
+[sector]                             # perception/sector.py: departure sector classification (Spec §4.6)
+window_s = 2.0                       # Bounding-box horizontal drift window over 2 s -> L/C/R
+drift_threshold = 0.08               # Normalized horizontal shift fraction separating L/R from C
+min_points = 3                       # Minimum detections required to evaluate drift
+
+
 [w2_validation]
 min_obstacles = 20
 min_tape_m = 0.3

@@ -1,0 +1,205 @@
+{
+  "status": "PASS",
+  "total_entries": 30,
+  "authorized_count": 20,
+  "intruder_count": 10,
+  "false_accepts": 0,
+  "false_rejects": 0,
+  "sector_evaluation": {
+    "total_evaluated": 30,
+    "correct": 30,
+    "accuracy": 1.0,
+    "threshold_required": 0.9,
+    "passed": true,
+    "confusion_matrix": {
+      "left": {
+        "left": 12,
+        "center": 0,
+        "right": 0
+      },
+      "center": {
+        "left": 0,
+        "center": 9,
+        "right": 0
+      },
+      "right": {
+        "left": 0,
+        "center": 0,
+        "right": 9
+      }
+    }
+  },
+  "sector_distribution": {
+    "left": 12,
+    "center": 9,
+    "right": 9,
+    "unknown": 0
+  },
+  "queue_metrics": {
+    "final_queued_length": 10,
+    "active_target_id": "D2_member_KR_run01",
+    "history_count": 10
+  },
+  "state_machine_transitions": [
+    {
+      "prev_state": "STANDBY",
+      "state": "PURSUE",
+      "event": "INTRUDER_QUEUED",
+      "t": 310.0,
+      "command": {
+        "v": 0.45,
+        "w": 0.0,
+        "play": "intruder_detected",
+        "actions": [
+          "engage_target",
+          "pursue_target"
+        ],
+        "target_id": "D2_member_KR_run01"
+      }
+    },
+    {
+      "prev_state": "PURSUE",
+      "state": "PURSUE",
+      "event": "INTRUDER_QUEUED",
+      "t": 320.0,
+      "command": {
+        "v": 0.45,
+        "w": 0.0,
+        "play": null,
+        "actions": [
+          "pursue_target",
+          "queue_target"
+        ],
+        "target_id": "D2_member_KR_run01"
+      }
+    },
+    {
+      "prev_state": "PURSUE",
+      "state": "PURSUE",
+      "event": "INTRUDER_QUEUED",
+      "t": 330.0,
+      "command": {
+        "v": 0.45,
+        "w": 0.0,
+        "play": null,
+        "actions": [
+          "pursue_target",
+          "queue_target"
+        ],
+        "target_id": "D2_member_KR_run01"
+      }
+    },
+    {
+      "prev_state": "PURSUE",
+      "state": "PURSUE",
+      "event": "INTRUDER_QUEUED",
+      "t": 340.0,
+      "command": {
+        "v": 0.45,
+        "w": 0.0,
+        "play": null,
+        "actions": [
+          "pursue_target",
+          "queue_target"
+        ],
+        "target_id": "D2_member_KR_run01"
+      }
+    },
+    {
+      "prev_state": "PURSUE",
+      "state": "PURSUE",
+      "event": "INTRUDER_QUEUED",
+      "t": 350.0,
+      "command": {
+        "v": 0.45,
+        "w": 0.0,
+        "play": null,
+        "actions": [
+          "pursue_target",
+          "queue_target"
+        ],
+        "target_id": "D2_member_KR_run01"
+      }
+    },
+    {
+      "prev_state": "PURSUE",
+      "state": "PURSUE",
+      "event": "INTRUDER_QUEUED",
+      "t": 360.0,
+      "command": {
+        "v": 0.45,
+        "w": 0.0,
+        "play": null,
+        "actions": [
+          "pursue_target",
+          "queue_target"
+        ],
+        "target_id": "D2_member_KR_run01"
+      }
+    },
+    {
+      "prev_state": "PURSUE",
+      "state": "PURSUE",
+      "event": "INTRUDER_QUEUED",
+      "t": 370.0,
+      "command": {
+        "v": 0.45,
+        "w": 0.0,
+        "play": null,
+        "actions": [
+          "pursue_target",
+          "queue_target"
+        ],
+        "target_id": "D2_member_KR_run01"
+      }
+    },
+    {
+      "prev_state": "PURSUE",
+      "state": "PURSUE",
+      "event": "INTRUDER_QUEUED",
+      "t": 380.0,
+      "command": {
+        "v": 0.45,
+        "w": 0.0,
+        "play": null,
+        "actions": [
+          "pursue_target",
+          "queue_target"
+        ],
+        "target_id": "D2_member_KR_run01"
+      }
+    },
+    {
+      "prev_state": "PURSUE",
+      "state": "PURSUE",
+      "event": "INTRUDER_QUEUED",
+      "t": 390.0,
+      "command": {
+        "v": 0.45,
+        "w": 0.0,
+        "play": null,
+        "actions": [
+          "pursue_target",
+          "queue_target"
+        ],
+        "target_id": "D2_member_KR_run01"
+      }
+    },
+    {
+      "prev_state": "PURSUE",
+      "state": "PURSUE",
+      "event": "INTRUDER_QUEUED",
+      "t": 400.0,
+      "command": {
+        "v": 0.45,
+        "w": 0.0,
+        "play": null,
+        "actions": [
+          "pursue_target",
+          "queue_target"
+        ],
+        "target_id": "D2_member_KR_run01"
+      }
+    }
+  ]
+}

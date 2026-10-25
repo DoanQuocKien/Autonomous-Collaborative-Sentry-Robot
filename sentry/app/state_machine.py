@@ -211,6 +211,10 @@ def _extract_target_id(data, fallback_seq):
         for k in ("id", "target_id", "intruder_id"):
             if k in data and data[k] is not None:
                 return data[k]
+    elif hasattr(data, "id") and getattr(data, "id") is not None:
+        return getattr(data, "id")
+    elif hasattr(data, "target_id") and getattr(data, "target_id") is not None:
+        return getattr(data, "target_id")
     elif isinstance(data, (str, int)):
         return data
     return "intruder_%d" % fallback_seq
