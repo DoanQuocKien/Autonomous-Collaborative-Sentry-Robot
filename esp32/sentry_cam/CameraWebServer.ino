@@ -62,7 +62,18 @@ void setup() {
 #endif
 
   // camera init
+  // 2026-10-26: on this board init failed with 0x105 (camera not detected) on some boots, mostly the first one after a flash. Power-cycle the sensor
+  // first (PWDN high 200 ms) and retry; with this 13 of 13 boots found it (esp32/experiments/ov2640_rate). Cause not proven.
+#if defined(PWDN_GPIO_NUM) && PWDN_GPIO_NUM >= 0
+  pinMode(PWDN_GPIO_NUM, OUTPUT); digitalWrite(PWDN_GPIO_NUM, HIGH); delay(200); digitalWrite(PWDN_GPIO_NUM, LOW); delay(100);
+#endif
   esp_err_t err = esp_camera_init(&config);
+  for (int k = 0; k < 4 && err != ESP_OK; k++) {
+    Serial.printf("Camera init try %d failed (0x%x), retrying\n", k + 1, err);
+    esp_camera_deinit();
+    delay(500);
+    err = esp_camera_init(&config);
+  }
   if (err != ESP_OK) {
     Serial.printf("Camera init failed with error 0x%x", err);
     return;
