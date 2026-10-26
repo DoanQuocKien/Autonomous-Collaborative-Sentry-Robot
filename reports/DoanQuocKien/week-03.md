@@ -10,9 +10,11 @@
 - **D2 without outside volunteers:** leave-one-out among the three members (PR #57), with the limit stated.
 - Reviewed KR's PR #55: 410 tests pass, 1 fails (event timestamps ignored once the clock is non-zero); KR informed.
 - Week 2 leftovers closed: PR #54 merged, the Week 2 log (PR #58).
+- **HNHL's PR #63** reviewed (442 tests pass, the metrics match their JSON), fixed with PR #66 (the unusable `d5.yaml` removed; **138 background leg boxes in 137 frames** with `tools/label_background_legs.py`) and merged. First-pass YOLO-World labels (`tools/autolabel_d5.py`: chair, plant and shoe found well; legs, wires and tables not found) were replaced by HNHL's hand-corrected ones (PR #65).
+- **Plan:** the weekly session is now the Monday of the following week, in the classroom (PR #64; Week 3's is Mon Oct 26); six PRs merged (#56-#61) and the plan checked after the merge; paper numbering fixed (PR #67).
 
 ## Not done (Week 3, DQK)
-- Edge bench with **live ESP32 frames** (G1, second half): needs KR's robot tile receiver (PR #55) and a small `edge_bench.py` change.
+- Edge bench with **live ESP32 frames** (G1, second half): KR's robot tile receiver (PR #55) is merged (2026-10-25); the bench still needs a small `edge_bench.py` change, the ESP32 and a charged robot (classroom, Mon Oct 26).
 - USB speaker playback on the Jetson (needs #55 and the speaker).
 - Deployment behaviour and the T2 deployment sequence (5 runs): needs a door and the classroom.
 - D2 ESP32 entries (needs a door and the ESP32).
@@ -24,4 +26,4 @@
 - Marker range gate 1.5 m (`max_marker_distance_m`): far boards are rejected; a longer gate made the open-loop estimate worse (heading from oblique, distant markers).
 
 ## Hours
-- From the chat timestamps (same rule as week 2: a gap of up to 30 minutes between messages counts as work), counted on Sat 2026-10-24 at 22:10 (UTC+7): Mon 2026-10-19 2.2 h (the Sunday-session spill-over, until about 12:50), Sat 2026-10-24 **2.5 h**. Chat time only; the 15-minute bench run and the robot waits are inside it; offline work (reading the papers, moving boards and furniture) is not.
+- From the chat timestamps (same rule as week 2: a gap of up to 30 minutes between messages counts as work), counted on Sun 2026-10-25 at 09:16 (UTC+7): Mon 2026-10-19 2.2 h (the Sunday-session spill-over, until about 12:50), Sat 2026-10-24 **2.6 h**, Sun 2026-10-25 **0.4 h** so far; **5.2 h** for the week. Chat time only; the 15-minute bench run and the robot waits are inside it, the long gaps while the PRs were reviewed and merged are not; offline work (reading the papers, moving boards and furniture) is not counted.
