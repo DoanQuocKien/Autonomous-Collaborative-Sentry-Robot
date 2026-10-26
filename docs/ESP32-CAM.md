@@ -78,3 +78,12 @@ It can be fed from `record.py` like any other stream by saving the frames `lates
 - **Colour** is only gray-world white balanced; no colour-correction matrix.
 - **Power:** the camera needs a stable 5 V (a phone charger did not change the results; the laptop USB port is fine).
 - The `GC2145` driver comment says the ESP32 can only take about 15 MHz PCLK: it is also why raw at 1 byte per pixel (half the data of YUV) is what makes 15 fps possible.
+
+## OV2640 board (`esp32/sentry_cam`, HTTP MJPEG): measured 2026-10-26
+- Sensor check first: the boot log line `SENSOR PID=` (0x0026 = OV2640 -> this firmware; 0x2145 = GC2145 -> `esp32/tile_stream`). Running the wrong one gives 1.6 fps and wrong colours.
+- Camera alone (Wi-Fi off, `esp32/experiments/ov2640_rate`): VGA q12 25.2 fps, QVGA 50 fps. Over Wi-Fi with the camera clock at 20 MHz: 1.1 fps; at 10 MHz (now the default, `XCLK_HZ`): about 10-11 fps, about 17 kB per frame. The camera clock interferes with the 2.4 GHz radio (same effect as on 2026-10-09). The door pipeline needs 5 Hz.
+- Found in the code and fixed: `setup()` returned when the camera was not detected (0x105), before Wi-Fi started, so the board looked as if it could not join the hotspot (it now reboots until the camera is found); `loop()` never checked Wi-Fi (it now reboots after 60 s without it); the sensor is power-cycled before init; the stream sent three small chunks per frame (now boundary and header in one, `TCP_NODELAY`); `CORE_DEBUG_LEVEL` 5 logged every frame (now 3). Which of these raised the frame rate was not separated.
+- **One stream client at a time:** the stream runs in the single HTTP task, so a second reader (laptop while the Jetson reads) is blocked until the first disconnects.
+- **Opening the serial port resets the board** (CH340 on the MB base), so a stream client cannot be tested at the same time as a serial read started after it.
+- The first seconds after a boot or a new client can be slower (about 3-4 fps for up to 14 s in some runs, steady in others); cause not found.
+

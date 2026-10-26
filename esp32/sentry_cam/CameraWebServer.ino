@@ -18,12 +18,20 @@ const char *password = WIFI_PASSWORD;
 void startCameraServer();
 void setupLedFlash();
 
+#ifndef JPEG_Q
+#define JPEG_Q 12  // 10-63, lower = better quality and bigger frames
+#endif
+
+#ifndef XCLK_HZ
+#define XCLK_HZ 10000000  // camera clock. 20 MHz gave 1.1 fps over Wi-Fi (ESP32 ping 136 ms avg, 837 max), 10 MHz 9.4 fps (58 ms): the clock interferes with the radio (2026-10-26, one board, one AP, 15 s runs: 16 MHz 5.9, 12 MHz 6.6, 8 MHz 7.0 fps)
+#endif
+
 void setup() {
   Serial.begin(115200);
   Serial.setDebugOutput(true);
   Serial.println();
 
-  camera_config_t config;
+  camera_config_t config = {};  // was uninitialised stack memory
   config.ledc_channel = LEDC_CHANNEL_0;
   config.ledc_timer = LEDC_TIMER_0;
   config.pin_d0 = Y2_GPIO_NUM;
@@ -42,13 +50,13 @@ void setup() {
   config.pin_sccb_scl = SIOC_GPIO_NUM;
   config.pin_pwdn = PWDN_GPIO_NUM;
   config.pin_reset = RESET_GPIO_NUM;
-  config.xclk_freq_hz = 20000000;
+  config.xclk_freq_hz = XCLK_HZ;
   // OV2640 only (hardware JPEG). A GC2145 or OV3660/OV5640 module cannot do this: the init fails with 0x105/0x106 or the sensor check below prints a warning; use esp32/tile_stream for a GC2145.
   config.pixel_format = PIXFORMAT_JPEG;
   config.frame_size = FRAMESIZE_VGA;  // 640x480, the plan's interface
   config.grab_mode = CAMERA_GRAB_LATEST;  // always the newest frame, never a stale queued one
   config.fb_location = CAMERA_FB_IN_PSRAM;
-  config.jpeg_quality = 12;  // 10-12; lower number = better quality but bigger frames
+  config.jpeg_quality = JPEG_Q;  // was 12 (see XCLK_HZ note);  // 10-12; lower number = better quality but bigger frames
   config.fb_count = 2;
   if (!psramFound()) {
     config.frame_size = FRAMESIZE_SVGA;
@@ -75,8 +83,11 @@ void setup() {
     err = esp_camera_init(&config);
   }
   if (err != ESP_OK) {
-    Serial.printf("Camera init failed with error 0x%x", err);
-    return;
+    // Was `return`: setup() ended before Wi-Fi started, so a camera that was not detected on a cold boot left the board silent (no Wi-Fi, no server, nothing to
+    // diagnose from the network). Reboot instead: the detection failure depends on the power-up and a fresh boot found the camera every time we tried.
+    Serial.printf("Camera init failed with error 0x%x, restarting in 2 s\n", err);
+    delay(2000);
+    ESP.restart();
   }
 
   sensor_t *s = esp_camera_sensor_get();
@@ -133,6 +144,12 @@ void setup() {
 }
 
 void loop() {
-  // Do nothing. Everything is done in another task by the web server
+  // Everything is done in another task by the web server. Only supervise Wi-Fi: after the hotspot dropped for good the board used to sit there until power-cycled.
+  static uint8_t down = 0;
   delay(10000);
+  down = (WiFi.status() == WL_CONNECTED) ? 0 : down + 1;
+  if (down >= 6) {
+    Serial.println("WiFi down for 60 s, restarting");
+    ESP.restart();
+  }
 }
