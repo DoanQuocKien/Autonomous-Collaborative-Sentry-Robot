@@ -25,7 +25,7 @@ The system operates across three distinct phases:
   * 5V power source (lithium cell with 5V boost circuit or compact USB power bank).  
   * FTDI USB-to-TTL adapter (for initial firmware flashing via Arduino IDE).  
   * Minimal enclosure or stand to position the module on the floor or a shelf.  
-* **Audio Feedback:** USB mini speaker connected to the Jetson Nano, playing pre-generated WAV prompts (offline TTS, rendered on the laptop) for setup prompts and deterrent alarms.  
+* **Audio Feedback:** no speaker on the robot (dropped 2026-10-26 to cut cost). The laptop plays pre-generated WAV prompts (offline TTS) and the alarm sound through its own speakers for setup prompts and deterrent alarms.  
 * **Localization Markers:** Cardstock ArUco markers (150 mm, `aruco_marker_m` in `config.toml`) as position anchors (the kit has no encoders or IMU), plus a printed checkerboard for one-time fisheye camera calibration.
 
 ### **Optional External Hardware**
@@ -86,10 +86,10 @@ JetBot Deploys \-\> Pursue Target (YOLOv8 \+ ByteTrack)
 
 ### **4.3 HCI Deployment Protocol**
 
-* The JetBot stops at the sweet spot, turns toward the center of the room, and plays a pre-generated audio message through the USB speaker: *"Guarding position reached. Please place the entrance camera."*  
+* The JetBot stops at the sweet spot, turns toward the center of the room, and the laptop plays a pre-generated audio message (alert sound): *"Guarding position reached. Please place the entrance camera."*  
 * The user positions the ESP32-CAM at the designated spot facing the door.  
 * The base station ingests the ESP32-CAM stream and checks that \$I\_{\\text{ref}}\$ is visible.  
-* Upon validation, an audio confirmation plays, and the JetBot reverses into a nearby standby position.
+* Upon validation, an audio confirmation plays on the laptop, and the JetBot reverses into a nearby standby position.
 
 ### **4.4 Entrance Verification & Target Queuing**
 

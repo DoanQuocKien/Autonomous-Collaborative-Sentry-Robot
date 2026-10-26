@@ -12,7 +12,7 @@ Spec: `docs/Project Specification.md` (source of truth). Plan: `docs/Implementat
 - Laptop runs ALL models (YOLOv8, YOLOv8-pose, InsightFace, OSNet, XFeat + DINOv2 for the entrance) and the state machine. Assumption: one entrance door per room (`sentry/perception/entrance.py`, enrolment per room). Jetson only captures frames and drives motors.
 - JetBot -> laptop: ZeroMQ, JPEG q60 (5 GHz). Laptop -> JetBot: non-blocking UDP (v, omega). ESP32-CAM (2.4 GHz): OV2640 -> HTTP MJPEG VGA; our GC2145 boards (no JPEG) -> `esp32/tile_stream` UDP tile stream via `sentry.espcam.TileReceiver`, see `docs/ESP32-CAM.md`.
 - No encoders/IMU: pose = dead reckoning from calibrated (v, omega) + ArUco corrections. Camera is a 160deg fisheye: calibrate and undistort before the ground-distance formula.
-- Audio: USB speaker playing pre-generated WAVs (offline TTS rendered on the laptop).
+- Audio: no speaker on the robot (dropped 2026-10-26 to cut cost). The laptop plays the pre-generated WAV prompts / alarm sound (offline TTS) through its own speakers, triggered by the state machine.
 
 ## Constants (keep in one config, never hardcode; hardware needs tuning)
 - Obstacle repulsion: 0.6 m (exploration), 0.5 m (pursuit override)
