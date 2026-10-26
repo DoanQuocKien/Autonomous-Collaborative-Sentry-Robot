@@ -97,6 +97,7 @@ class TileReceiver:
 
     SOURCE_QUIET_S = 5.0
     MAX_PENDING = 64  # frame ids with tiles but no frame end yet; bounded so stray packets cannot grow memory
+    REFRESH_S = 10  # ask for a complete picture this often (s): at 1-2 fps the firmware's own slow refresh leaves grey holes for minutes
 
     def __init__(self, port=PORT, pattern="BG", wb="gray", gamma=1.0, wb_smooth=0.05):
         self.port, self.wb, self.wb_smooth = port, wb, wb_smooth
@@ -224,7 +225,7 @@ class TileReceiver:
                 for t in targets:
                     try:
                         sock.sendto(b"HELO", (t, self.port + 1))
-                        if now - t_start < 3:  # just started: ask for a complete picture (repeated, UDP can lose it)
+                        if now - t_start < 3 or int(now) % self.REFRESH_S == 0:  # just started: ask for a complete picture (repeated, UDP can lose it)
                             sock.sendto(b"REFR", (t, self.port + 1))
                     except OSError:
                         pass

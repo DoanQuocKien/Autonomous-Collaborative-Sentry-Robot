@@ -116,6 +116,7 @@ class TileReceiver(object):
 
     SOURCE_QUIET_S = 5.0
     MAX_PENDING = 64
+    REFRESH_S = 10  # ask for a complete picture this often (s): at 1-2 fps the firmware's own slow refresh leaves grey holes for minutes
 
     def __init__(self, port=PORT, pattern="BG", wb="gray", gamma=1.0, wb_smooth=0.05, clock=None):
         self.port, self.wb, self.wb_smooth = port, wb, wb_smooth
@@ -238,7 +239,7 @@ class TileReceiver(object):
                 for t in targets:
                     try:
                         sock.sendto(b"HELO", (t, self.port + 1))
-                        if now - t_start < 3:
+                        if now - t_start < 3 or int(now) % self.REFRESH_S == 0:
                             sock.sendto(b"REFR", (t, self.port + 1))
                     except OSError:
                         pass
