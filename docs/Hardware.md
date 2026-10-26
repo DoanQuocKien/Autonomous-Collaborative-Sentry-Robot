@@ -13,7 +13,7 @@ Spec section 2 is the source for the original list; where this file disagrees wi
 | ESP32-CAM + MB base | **Already bought; kouun-rokku holds it** and does the W1 firmware work. Nothing to buy. | $0 | No spare. If it dies, buy another locally ($8-10, 1-2 days); a W1-W2 failure costs little. |
 | ESP32 power | Phone charger (5 V, 1 A or more) + a short, thick cable you own | $0 | Possible reboot loops on a weak charger or thin cable; if so, try another charger before buying anything |
 | Camera stand | Tape it to a shelf, or use a stack of books and double-sided tape | $0 | Less adjustable |
-| Speaker | **A USB sound adapter ($2-3) + any old powered 3.5 mm speaker** (the Nano has no headphone jack). If you own no speaker, the cheapest USB speaker (~$5) | $2-5 | Nothing important; check the volume in the room |
+| Speaker | **None** (dropped 2026-10-26): the laptop plays the audio prompts and alarm through its own speakers | $0 | The sound comes from the laptop, not the robot; keep the laptop volume up and within earshot in the room |
 | Checkerboard backing | Glue the print onto a **flat rigid board you already own** (MDF offcut, cutting board, spare tile). Check flatness with a ruler | $0 | Warped backing ruins the calibration, so reject anything curved. Do not use thin cardboard |
 | Printing | Matte or plain paper at a print shop: the checkerboard + **only the 150 mm ArUco set** (7 pages) | $1-2 | The 10 cm set is skipped. After printing, measure a marker and set `aruco_marker_m = 0.15` in `config.toml` |
 | Tape measure | Borrow one (5 m) or buy | $0-2 | |
@@ -24,7 +24,7 @@ Spec section 2 is the source for the original list; where this file disagrees wi
 | Spare batteries | **Do not buy.** Charge between sessions and plan around the measured runtime | $0 | Shorter test sessions; revisit if runtime is under 60 min |
 | IMU, overhead camera | **Do not buy** | $0 | Same gates as section 2; the IMU costs only $2-3 if the W2 test fails |
 
-**Still worth paying for even on a budget:** the ESP32-CAM + MB base (the project cannot work without it) and the sound adapter or speaker. Everything else has a free substitute that I judge low risk.
+**Still worth paying for even on a budget:** the ESP32-CAM + MB base (the project cannot work without it) . Everything else has a free substitute that I judge low risk.
 
 **Order of upgrades if something fails** (cheapest first): another phone charger or cable, then a second ESP32-CAM ($8-10), then the router ($20-30), then spare batteries ($12-18).
 
@@ -36,7 +36,7 @@ Spec section 2 is the source for the original list; where this file disagrees wi
 | 2 | **ESP32-CAM-MB programmer base (micro-USB, CH340)** | 2 | Oct 5 | **Replaces the spec's FTDI adapter**: plugs onto the board, no jumper wires, no IO0-to-GND juggling. If the shop only sells bare boards, fall back to a 3.3 V FTDI adapter (not 5 V) + 4 female-female jumpers. |
 | 3 | **Power for the ESP32-CAM**: 5 V 2 A USB wall adapter + 2 m micro-USB data cable **or** a power bank | 1 | W3 | It needs a stable 5 V and ~0.5 A peaks; weak supplies cause reboot loops. Prefer a wall adapter if there is an outlet near the door. If a power bank, pick one without auto-off at low current. You probably own one already. |
 | 4 | **Mini tripod or gooseneck phone clamp** | 1 | W3 | The camera must sit about face height (1.4-1.6 m) facing the door. Against a custom enclosure: not worth team time. |
-| 5 | **USB speaker with its own USB audio (plug and play)** | 1 | W3 | For the audio prompts. After plugging in, `aplay -l` on the Jetson must list it. Against the GPIO buzzer: spoken prompts were chosen. |
+| 5 | ~~USB speaker with its own USB audio~~ **Not bought (2026-10-26, cost)** | 0 | - | Audio prompts and alarm play on the laptop instead (no hardware). |
 | 6 | **5 mm foam board (A4 or A3) + spray adhesive or double-sided tape** | 1 | **Oct 9** | The checkerboard must be perfectly flat and rigid or the fisheye calibration is wrong. D1 (end of W1) needs 30+ checkerboard photos. |
 | 7 | **Printing on matte paper**: `assets/print/checkerboard_9x6_25mm.pdf`, `aruco_4x4_50_ids0-5_100mm.pdf`, `aruco_4x4_50_ids0-5_150mm.pdf` | 1 each | Oct 9 | Print at 100 % ("actual size", never "fit to page"), matte (glossy paper reflects). Measure the 100 mm scale bar and the printed square/marker, then update `config.toml`. The 150 mm set is new: see section 4. |
 | 8 | **5 m tape measure + masking tape** | 1 each | Oct 5 | Ground truth for obstacle distances (D1), motion calibration, floor marks. |

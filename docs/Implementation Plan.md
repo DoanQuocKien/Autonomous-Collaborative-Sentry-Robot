@@ -10,7 +10,7 @@ Week 1 starts **Mon 2026-10-05**; the calendar runs 13 weeks, to Sun 2027-01-03 
 
 | Handle | CUDA | Hardware | Primary ownership |
 | :-- | :-: | :-: | :-- |
-| **DoanQuocKien** (DQK) | Yes | Holds the JetBot kit (speaker later) | Jetson side, motor control, calibration, controllers on the robot, hardware-in-the-loop (HIL) testing, integration host; on-robot inference (extra, proposed 2026-10-16) |
+| **DoanQuocKien** (DQK) | Yes | Holds the JetBot kit | Jetson side, motor control, calibration, controllers on the robot, hardware-in-the-loop (HIL) testing, integration host; on-robot inference (extra, proposed 2026-10-16) |
 | **HuynhNguyenHoaiLoc** (HNHL) | Yes | – | Laptop perception: YOLOv8, ByteTrack, InsightFace, OSNet, YOLOv8-pose, GPU profiling |
 | **kouun-rokku** (KR) | No | Holds the ESP32-CAM + MB base | CPU-side logic: record/replay tooling, entrance matching (XFeat / DINOv2; ORB baseline), localization (ArUco + dead reckoning), state machine, queue/handoff logic, simulation, audio assets, test infrastructure, report editing |
 
@@ -26,7 +26,7 @@ sentry/                 # laptop package, Python 3.12 in sentry (see Setup.md)
   net/                  # zmq_rx.py, udp_tx.py, mjpeg_rx.py, clock_sync.py
   perception/           # obstacle.py, entrance.py (XFeat + DINOv2, written 2026-10-12), face.py, reid.py, tracker.py, pose.py, camera_pose.py (live camera tilt)
   nav/                  # localization.py, gridmap.py, vantage.py, coverage.py, controllers.py
-  app/                  # state_machine.py, target_queue.py, audio.py, main.py
+  app/                  # state_machine.py, target_queue.py, audio.py (laptop alert/WAV playback), main.py
 config.toml             # repo-root tunables (thresholds, gains, ports; [entrance] for the entrance detector); stdlib tomllib
 third_party/xfeat/      # vendored XFeat (Apache-2.0, trimmed; LICENSE + NOTICE.md); weights from tools/fetch_models.py
 common/                 # Python 3.6-compatible, stdlib only; used by BOTH laptop and Jetson
@@ -38,7 +38,7 @@ tools/                  # DONE: check_env.py, send_cmd.py, make_markers.py, reco
                         # TODO: enroll_whitelist.py, label_events.py
 jetson/                 # Python 3.6, Ubuntu 18.04; own requirements.txt (see docs/Setup.md)
   camera_pub.py         # CSI -> JPEG q60 -> ZeroMQ PUB; `--source synthetic` works without the robot (tested on the robot 2026-10-06)
-  robot_udp.py          # UDP (v, omega) + audio commands -> motors / speaker, watchdog, e-stop interlock (motors tested; aplay untested)
+  robot_udp.py          # UDP (v, omega) -> motors, watchdog, e-stop interlock (motors tested; the `play`/`aplay` path is unused since the speaker was dropped 2026-10-26)
   estop.py              # gamepad dead-man + e-stop, robot host (tested wheels-off 2026-10-06, first floor drive 2026-10-11)
   systemd/              # boot units for estop / camera / control (written 2026-10-11, not yet tested on the robot)
 assets/print/           # ArUco markers (ids 0-5, 10 cm and 15 cm sets; the 150 mm set is the one in use) and 9x6 checkerboard PDFs, from tools/make_markers.py
@@ -228,7 +228,7 @@ Effort estimate (desk study, to be re-estimated at G1): Stage A about 4 person-d
 
 - **DQK**
   - Motion calibration is done (2026-10-15: affine speed and turn fits, wheel law, heading statistics; `calib/motion.json`). This week: wire `MotionEstimator` (marker range and bearing) into the drive tools and do the demo-room check from `docs/Classroom Session 2026-10-15.md`.
-  - USB speaker playback on the Jetson (`aplay` on `play` packets).
+  - ~~USB speaker playback on the Jetson~~ replaced 2026-10-26 (no speaker, cost): the laptop plays the WAV prompts / alert sound (`sentry/app/audio.py`, `winsound`), triggered by the state machine; the Jetson `play`/`aplay` path stays in the code but is not used.
   - Deployment behaviour on the robot: stop at the sweet spot, face the room centre, prompt, wait for validation, reverse to standby.
   - Tests: T2 motion repeatability with the estimator in the loop; T2 deployment sequence, 5 runs.
 - **HNHL**
@@ -239,7 +239,7 @@ Effort estimate (desk study, to be re-estimated at G1): Stage A about 4 person-d
 - **KR**
   - `sentry/net/mjpeg_rx.py`: ESP32 stream with auto-reconnect (OV2640 path; the GC2145 tile stream already has `sentry.espcam.TileReceiver`).
   - ESP32 handshake check (reuses `sentry/perception/entrance.py` on the ESP32 frames: enrol the door with a reference from the ESP32 camera itself, a second `EntranceDetector` with its own thresholds; the robot-eye reference does not transfer to another lens).
-  - Generate audio prompts offline (Windows SAPI via `pyttsx3`, or another offline TTS) into `assets/audio/`.
+  - Generate audio prompts offline (Windows SAPI via `pyttsx3`, or another offline TTS) into `assets/audio/`; they play on the laptop.
   - `app/state_machine.py` skeleton with all phase 1-3 states, transitions and timeouts.
   - Tests: T0 scripted event sequences for every transition, including invalid events, which are ignored and logged.
 - **Extra (agreed 2026-10-17 at G0; checked at G1, Sun Oct 25)**
