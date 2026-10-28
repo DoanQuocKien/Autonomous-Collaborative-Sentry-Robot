@@ -110,6 +110,7 @@ def main():
     ap.add_argument("--door-thread", action="store_true", help="run the door pipeline in its own thread at 5 Hz instead of inside the frame loop")
     ap.add_argument("--door-image", default="/workspace/trt/demo/zidane.jpg", help="still image with faces standing in for the ESP32-CAM frame")
     ap.add_argument("--door-live", action="store_true", help="door pipeline on the live ESP32-CAM tile stream (jetson/espcam.py) instead of --door-image")
+    ap.add_argument("--door-url", help="door pipeline on an OV2640 ESP32-CAM MJPEG stream, e.g. http://10.195.93.9:81/stream (jetson/mjpeg_latest.py)")
     ap.add_argument("--conf", type=float, default=0.25)
     ap.add_argument("--det-every", type=int, default=3)
     ap.add_argument("--reid-every", type=int, default=15)
@@ -129,10 +130,14 @@ def main():
         eng["scrfd"] = trt_runtime.TrtEngine(sc_path, input_shape=(1, 3, 320, 320))
         eng["mbf"] = trt_runtime.TrtEngine(os.path.join(a.trt_dir, ENGINES["mbf"]), input_shape=(1, 3, 112, 112))
         door_img = cv2.imread(a.door_image)
-        if door_img is None and not a.door_live:
+        if door_img is None and not (a.door_live or a.door_url):
             sys.exit("cannot read %s" % a.door_image)
     rx = None
-    if a.door_live:
+    if a.door_url:
+        from mjpeg_latest import MjpegLatest
+        rx = MjpegLatest(a.door_url).start()
+        get_img = lambda: rx.latest()[0]
+    elif a.door_live:
         from espcam import TileReceiver
         rx = TileReceiver().start()
         get_img = lambda: rx.latest()[0]                                # None until the first complete frame
@@ -226,7 +231,11 @@ def main():
     live = None
     if rx is not None:
         rx.stop()
-        live = {"esp_frames": rx.frames, "esp_fps": round(rx.frames / wall, 2) if wall else 0, "esp_tiles_missing": rx.missing, "esp_foreign_packets": rx.foreign}
+        live = {"esp_frames": rx.frames, "esp_fps": round(rx.frames / wall, 2) if wall else 0}
+        if a.door_url:
+            live["esp_reconnects"] = rx.reconnects
+        else:
+            live.update({"esp_tiles_missing": rx.missing, "esp_foreign_packets": rx.foreign})
     res = {"mode": a.mode, "seconds": round(wall, 1), "frames": frames, "fps": round(frames / wall, 2) if wall else 0,
            "skipped_by_newest_only": skipped, "avg_people": round(n_people / max(frames, 1), 2), "door_thread": bool(a.door_thread), "door_runs": n_door, "avg_faces_per_door_run": round(n_faces / max(n_door, 1), 2), "avg_obstacle_boxes_on_det_frames": None, "door_live": live,
            "stage_ms": {k: stats(v) for k, v in T.items() if v}}
