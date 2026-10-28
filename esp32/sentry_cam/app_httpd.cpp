@@ -236,7 +236,7 @@ static esp_err_t stream_handler(httpd_req_t *req) {
   // 2026-10-26: each frame went out as three small chunks (boundary, part header, JPEG), each split into more small sends by the HTTP server, with
   // Nagle on: bursts and 0.3-0.8 s gaps (about 9 fps of a camera that does 25). Turn Nagle off and send boundary + part header as one chunk.
 #ifndef STREAM_NODELAY
-#define STREAM_NODELAY 0  // measured 2026-10-26 (2 x 20 s each): off 7.5 fps / 176-184 kB/s, on 5.6-7.2 fps / 134-158 kB/s; the HTTP server writes each chunk as several tiny sends, which Nagle coalesces
+#define STREAM_NODELAY 0  // measured 2026-10-28 (2 x 20 s each): off 7.5 fps / 176-184 kB/s, on 5.6-7.2 fps / 134-158 kB/s; the HTTP server writes each chunk as several tiny sends, which Nagle coalesces
 #endif
 #if STREAM_NODELAY
   int nodelay = 1;
