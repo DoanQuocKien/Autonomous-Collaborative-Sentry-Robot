@@ -1,0 +1,78 @@
+from sentry.app.deploy_runner import DeployRunner
+from sentry.app.state_machine import StateMachine, StateMachineConfig
+from sentry.nav.explore import Command, ExploreSettings, legal
+from sentry.nav.wheel_model import WheelModel
+from tools.deploy_live import control_loop, fresh_flag
+
+
+class Speaker:
+    def __init__(self):
+        self.played = []
+
+    def play(self, clip):
+        self.played.append(clip)
+        return True
+
+
+def loop(get_flag=lambda now: False, get_link=lambda now: None, seconds=100.0, key=lambda: None, cfg=None):
+    clock_t = {"t": 0.0}
+    sp = Speaker()
+    runner = DeployRunner(StateMachine(cfg or StateMachineConfig()), sp, vantage_xy=(1.2, 0.6), centre_xy=(3.0, 0.0))
+    cmd, end = {"v": 0.0, "w": 0.0, "t": 0.0}, {"reason": None}
+
+    def sleep(d):
+        clock_t["t"] += d
+    rows, pose, path = control_loop(runner, WheelModel(), cmd, end, lambda now: get_flag(now), get_link, seconds, clock=lambda: clock_t["t"], sleep=sleep, key=key)
+    return rows, end, runner, sp, cmd, path
+
+
+def test_a_run_with_a_handshake_ends_in_standby_with_legal_commands():
+    s = ExploreSettings()
+    rows, end, runner, sp, cmd, path = loop(get_flag=lambda now: now >= 15.0)
+    assert end["reason"] == "STANDBY reached" and sp.played == ["place_camera", "camera_verified"]
+    assert all(legal(Command(r[4], r[5], "", ""), s) for r in rows) and path > 1.0
+    assert (cmd["v"], cmd["w"]) == (0.0, 0.0) or end["reason"] == "STANDBY reached"
+
+
+def test_a_stale_robot_link_stops_the_run():
+    rows, end, runner, sp, cmd, path = loop(get_link=lambda now: {"stale": now > 2.0, "blocked": False})
+    assert end["reason"].startswith("no robot frame") and rows[-1][0] <= 2.1
+
+
+def test_a_blocker_stops_the_robot_while_it_drives_forward_and_never_avoids():
+    rows, end, runner, sp, cmd, path = loop(get_link=lambda now: {"stale": False, "blocked": True})
+    assert end["reason"].startswith("obstacle ahead") and (cmd["v"], cmd["w"]) == (0.0, 0.0)
+
+
+def test_the_time_limit_and_the_q_key_end_the_run():
+    rows, end, *_ = loop(seconds=3.0)
+    assert end["reason"] == "time limit"
+    rows, end, *_ = loop(key=lambda: "q")
+    assert end["reason"] == "operator pressed q" and rows == []
+
+
+def test_the_v_key_verifies_by_hand_and_latches_long_enough_for_three_ticks():
+    fired = {"done": False}
+
+    def key():
+        return None
+    clock_probe = {"n": 0}
+
+    def get_flag(now):
+        return False
+
+    def keyed():
+        clock_probe["n"] += 1
+        if clock_probe["n"] == 600 and not fired["done"]:       # about 20 s in, the robot is waiting for the camera
+            fired["done"] = True
+            return "v"
+        return None
+    rows, end, runner, sp, cmd, path = loop(get_flag=get_flag, key=keyed)
+    assert end["reason"] == "STANDBY reached" and sp.played[-1] == "camera_verified"
+
+
+def test_a_handshake_answer_counts_only_while_it_is_fresh():
+    assert fresh_flag({"in_view": True, "t": 10.0}, 10.5) is True
+    assert fresh_flag({"in_view": True, "t": 10.0}, 12.0) is False            # stale: the ESP32 stream stopped
+    assert fresh_flag({"in_view": False, "t": 10.0}, 10.1) is False
+    assert fresh_flag(None, 1.0) is False and fresh_flag({"in_view": True, "t": None}, 1.0) is False

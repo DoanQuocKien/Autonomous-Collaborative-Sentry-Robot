@@ -4,6 +4,9 @@ The Jetson plays pre-generated WAV files from `assets/audio/<clip>.wav` via `apl
 when it receives a `{"seq": int, "play": "<clip>"}` UDP packet (`jetson/robot_udp.py`).
 Clip names must match `^[a-z0-9_]{1,32}$` (`common/protocol.py`).
 
+Since 2026-10-28 there is NO speaker on the robot (cost): the laptop plays the clips. Use `AudioPromptPlayer(sender=LocalSpeaker())`; the Jetson `play` path above stays
+in the code but is unused.
+
 Run offline generation from the repo root:
     python -m sentry.app.audio
 """
@@ -310,6 +313,47 @@ def generate_all(audio_dir=AUDIO_DIR, *, prompts=None, backend="auto", sample_ra
             render_prompt_wav(text, wav_path, clip_name=clip, backend=backend, sample_rate=sample_rate)
         generated[clip] = verify_wav(wav_path)
     return generated
+
+
+def _default_backend():
+    """winsound on Windows (asynchronous), else the first of aplay / afplay / paplay on PATH; the returned callable raises if nothing can play."""
+    try:
+        import winsound
+        return lambda path: winsound.PlaySound(path, winsound.SND_FILENAME | winsound.SND_ASYNC)
+    except ImportError:
+        pass
+    for exe in ("aplay", "afplay", "paplay"):
+        found = shutil.which(exe)
+        if found:
+            return lambda path, exe=found: subprocess.Popen([exe, path])
+
+    def no_player(path):
+        raise RuntimeError("no audio player found (winsound, aplay, afplay, paplay)")
+    return no_player
+
+
+class LocalSpeaker:
+    """Sender for AudioPromptPlayer that plays the clip on THIS machine. play(clip) -> True when playback started; False (never raises) for a missing clip or a failing player,
+    so an audio problem can never stop the state machine. `backend(path)` is replaceable for tests."""
+
+    def __init__(self, audio_dir=AUDIO_DIR, backend=None):
+        self.audio_dir = Path(audio_dir)
+        self._backend = backend
+        self.played = []
+
+    def play(self, clip):
+        validate_clip_name(clip)
+        path = self.audio_dir / ("%s.wav" % clip)
+        if not path.exists():
+            return False
+        try:
+            if self._backend is None:
+                self._backend = _default_backend()
+            self._backend(str(path))
+        except Exception:
+            return False
+        self.played.append(clip)
+        return True
 
 
 class AudioPromptPlayer:

@@ -63,6 +63,27 @@ except ImportError:
     pass
 
 try:
+    from sentry.perception.sector import (
+        DepartureSector,
+        SectorConfig,
+        SectorTracker,
+        classify_sector,
+        normalize_sector,
+        sector_code,
+    )
+
+    __all__.extend([
+        "DepartureSector",
+        "SectorConfig",
+        "SectorTracker",
+        "classify_sector",
+        "normalize_sector",
+        "sector_code",
+    ])
+except ImportError:
+    pass
+
+try:
     from sentry.perception.wire_fallback import WireCandidate, WireGeometricFallback
 
     __all__.extend([

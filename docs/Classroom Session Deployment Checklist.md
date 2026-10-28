@@ -1,0 +1,41 @@
+# Classroom session: deployment (T2) and handshake, DQK alone (checklist)
+
+What is tested: the spec's section 4.3 HCI deployment protocol on the robot (sweet spot, prompt on the laptop, ESP32 handshake, reverse to standby) and the ESP32 handshake at the real door (plan 4.3: 'Sweet-spot selection' 5 of 5 runs; 'ESP32 handshake' 10 of 10 accepts and 10 of 10 rejects). Tools: `tools/deploy_live.py` (PRs #84, #85), `tools/handshake_test.py` (PR #80). **They are merged only after review: check `git log` for them first.** Run everything from the repo root with the `sentry` interpreter. The matte-floor D5 batch was dropped for this week (no matte floor, decision 2026-10-28).
+
+## Bring
+- Robot charged to about 12.4 V (>= 11.3 V to start, the tool refuses below; < 10.5 V stop), gamepad, tape measure (3 m+), masking tape, laptop + charger.
+- The ESP32 (OV2640, `esp32/sentry_cam`, 10 MHz clock) and a power bank or the laptop USB, plus its cable. Note: opening the board's serial port resets it; the stream serves ONE client at a time (close every other reader).
+- Phone for the hotspot: 2.4 GHz, battery saver off, auto-off for the hotspot disabled (it dropped twice on 2026-10-28). Laptop on that hotspot.
+
+## Set up (15 min)
+1. `python -m tools.find_jetbot` (or the IP), then `python -m tools.jetbot_status <ip>`: battery >= 11.3 V, `jetbot_jupyter` container up.
+2. Robot side running: `estop.py` armed (hold Start 1.5 s), `camera_pub.py`, `robot_udp.py` (the services: see `docs/JetBot Notes.md`, return checklist at the end; by hand as in `docs/D1 Classroom Checklist.md` section Set up).
+3. ESP32 powered: `ping <esp-ip>` (it was 10.195.93.9 on the last hotspot; the IP can change: `python -c "from sentry.net import discover; print(discover.find_esp32())"`).
+4. Pick the door and a **cleared floor** of about 4 x 3 m: no people, bags, cables, wires: people are not obstacles to the detector, and the obstacle stop sees only furniture classes.
+
+## Part A: the handshake at the real door (about 15 min)
+`python -m tools.handshake_test ref --name class_door` (hold the ESP32 still facing the door at about 2 m), then `sweep --name class_door` (25 s around the room, door NOT in view), then `trials --name class_door` (20 segments, long high beep = face the door from 1.5-3 m with the position varied, two low beeps = turn away), then `eval --name class_door`. Read `data/handshake/class_door/results.json`: target 10/10 and 10/10. Report as measured; copy the numbers to `reports/DoanQuocKien/week-04/handshake/` with a README (the cafe rehearsal was 9/10 and 10/10).
+
+## Part B: the deployment (about 45 min)
+Coordinates in the START frame, metres, with the tape: the robot starts at (0, 0) facing +x, y to its left. Choose the sweet spot `--vantage X Y` (clear line of sight to the door, 1.5-3.0 m from it, close to a wall or furniture), and `--centre X Y` (the room centre). Measure the door-to-vantage distance with the tape now and again at the end of each run.
+1. **Rehearsal, laptop only:** `python -m tools.deploy_live --label class --vantage X Y --centre X Y --handshake data/handshake/class_door --no-robot`. When "place the entrance camera" plays, hold the ESP32 toward the door: expect "camera verified" and STANDBY. Add `--no-audio` in a quiet room.
+2. **Dry run, robot connected, no motor commands:** the same with `--dry-run` instead of `--no-robot`: checks the battery, the video frames, the 0.5 s frame watchdog. It must print "start checks passed".
+3. **First supervised run:** drop `--dry-run`, add `--camera-pose calib/<the current mount>.json --floor glossy` (the obstacle stop; a stale pose gives wrong distances: check the mount first). Beeps, then HOLD R1 within 30 s and keep holding; release R1 at any problem. Stand at the edge; do not walk in front of the robot.
+4. **T2, 5 runs:** the same command, `--label t2` (outputs `data/deploy/t2_<n>/`). At the end it asks four questions: tape distance robot-to-door, clear line of sight (y/n), wall or furniture within 1 m (y/n), collisions. A run passes when: the robot stops with the tape distance 1.5-3.0 m, the line of sight is clear, a boundary or furniture is near, the handshake verified, the retract ended in STANDBY, 0 collisions. Count 5 of 5.
+
+## Part C: the Phase 1 chain, if time (about 30 min, only after Part B works; PR #87)
+The tool chooses the sweet spot instead of you typing it. **The room is declared from your tape measurements, not explored** (the map marks floor free only where the robot drove, so an explored map cannot give a sweet spot: say so in the report).
+1. Measure in the START frame (robot at (0, 0) facing +x, y to its left): the cleared floor as a box `X0 Y0 X1 Y1`, every wall as a segment (include the door's wall), the door position `DX DY` on its wall, the room centre `CX CY`. The box must reach the walls.
+2. **The entrance detector for the classroom door** is enrolled from the D1 data (2026-10-29): `python -m tools.enroll_entrance --room class_door --robot-ref data/D1/class_door_iref_robot.jpg --roi 178 0 410 252 --manifest data/D1/manifest_class_door.csv --out data/entrance/class_door` (about 1 minute; the folder is local, git-ignored). On the recorded D1 frames: TPR 1.000 (210 frames), FPR 0.000 (52 frames) at 1.0-3.0 m and +-30 deg, 233 ms per frame (about 4 fps). It is the 2026-10-12 reference: check on the day that the door is "in view" from 2 m with the current mount; if not, take a new robot-eye reference first.
+3. Rehearse, no robot: `python -m tools.deploy_live --label p1 --door DX DY --box X0 Y0 X1 Y1 --wall ... (one --wall per wall) --centre CX CY --entrance sim --handshake manual --no-robot --no-audio` (the key v verifies). Then with the real detector and the robot connected: `--entrance data/entrance/class_door --handshake data/handshake/class_door --dry-run`, then the real run with `--camera-pose calib/<current>.json --floor glossy`, holding R1.
+4. A run passes when: the real detector fires ENTRANCE_FOUND during the scan, a sweet spot is chosen (`chosen_vantage` in summary.json), the robot stops there, the T2 tape conditions of Part B hold, the handshake verifies and the robot ends in STANDBY. The summary also records `door_bearing_error_deg` and `phase1_notes` (the detector's bearing against your declared door: a large value means the declaration or the detector is wrong).
+5. If the scan misses the door, raise `--scan-hold` (default 0.8 s) or check the enrolment; if no sweet spot exists the tool says so and stops (a door in the middle of a wide wall has no spot near a side wall: that is geometry, not a fault).
+
+## Known limits (state them in the report, do not hide them)
+- The pose is dead reckoning (heading error about 10 deg per metre): the robot may stop a few tens of cm from the target `--vantage`; the TAPE distance decides the pass, the tool's `dr_error_at_vantage_m` is only indicative.
+- No obstacle avoidance: a blocker seen with `--camera-pose` stops the run; without it nothing stops it except you (R1).
+- The vantage and centre are typed in, not yet chosen from the explored map (`sentry/nav/vantage.py` exists; wiring it is future work).
+- Spins are about 2 rad/s (the motor dead zone): the robot turns in short quick pulses, not smoothly.
+
+## After
+Copy `data/deploy/t2_*` (log.csv, summary.json) and the handshake results into `reports/DoanQuocKien/week-04/` with a README stating the pass count as measured, the conditions (floor, lighting, battery) and every failure. Then the robot return checklist in `docs/JetBot Notes.md`. Data with faces stays local (the handshake frames and D2): never commit it unzipped.

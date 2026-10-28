@@ -72,3 +72,19 @@ def test_audio_prompt_player_dispatches_to_sender_and_tracks_history(tmp_path):
     assert player.history == ["place_camera"]
     with pytest.raises(FileNotFoundError):
         player.play("missing_clip")
+
+
+def test_local_speaker_plays_on_this_machine_and_never_raises(tmp_path):
+    from sentry.app.audio import AudioPromptPlayer, LocalSpeaker
+    (tmp_path / "place_camera.wav").write_bytes(b"RIFF")
+    played = []
+    sp = LocalSpeaker(tmp_path, backend=played.append)
+    assert sp.play("place_camera") is True and played == [str(tmp_path / "place_camera.wav")] and sp.played == ["place_camera"]
+    assert sp.play("absent") is False                                   # a missing clip is False, not an exception
+
+    def broken(path):
+        raise OSError("no sound card")
+    assert LocalSpeaker(tmp_path, backend=broken).play("place_camera") is False
+    assert AudioPromptPlayer(sender=LocalSpeaker(tmp_path, backend=played.append), audio_dir=tmp_path).play("place_camera") is True
+    with pytest.raises(ValueError):
+        sp.play("../evil")
