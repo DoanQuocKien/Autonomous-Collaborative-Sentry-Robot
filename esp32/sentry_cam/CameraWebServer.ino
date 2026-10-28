@@ -19,7 +19,7 @@ void startCameraServer();
 void setupLedFlash();
 
 #ifndef JPEG_Q
-#define JPEG_Q 12  // 10-63, lower = better quality and bigger frames
+#define JPEG_Q 25  // 10-63, lower = better quality and bigger frames. The stream is capped at about 130-160 kB/s by the TCP window (5760 B) over the round trip, so smaller frames mean more fps: q12 7.1, q20 8.6, q25 8.9, q30 10.0 fps (face found in every tested frame at each, one person at close range; small faces at 2-3 m not checked)
 #endif
 
 #ifndef XCLK_HZ
