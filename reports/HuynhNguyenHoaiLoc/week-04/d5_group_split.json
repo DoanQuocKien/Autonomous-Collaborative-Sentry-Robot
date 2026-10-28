@@ -1,0 +1,67 @@
+{
+  "status": "DEVELOPMENT_ONLY_NOT_T1",
+  "capture_sessions": [
+    "1024"
+  ],
+  "train_frames": 307,
+  "dev_val_frames": 90,
+  "exact_cross_split_duplicate_images": 0,
+  "rule": "Hold out complete distance group per folder; empty folder uses last contiguous ~20%",
+  "warning": "All frames came from one session and room. Validation may be optimistic; hold out a new D5 session for T1.",
+  "per_folder_rule": {
+    "backpack": "hold out entire 1.0m distance block",
+    "bag": "hold out entire 1.0m distance block",
+    "chair": "hold out entire 1.2m distance block",
+    "empty": "hold out final 10 contiguous frames (same-session caveat)",
+    "leg": "hold out entire 1.2m distance block",
+    "plant": "hold out entire 1.2m distance block",
+    "shoe": "hold out entire 1.0m distance block",
+    "table": "hold out entire 1.2m distance block",
+    "wire_black": "hold out entire 1.0m distance block",
+    "wire_white": "hold out entire 1.0m distance block"
+  },
+  "per_folder_frames": {
+    "backpack": {
+      "train": 39,
+      "val": 10
+    },
+    "bag": {
+      "train": 40,
+      "val": 10
+    },
+    "chair": {
+      "train": 10,
+      "val": 10
+    },
+    "leg": {
+      "train": 40,
+      "val": 10
+    },
+    "plant": {
+      "train": 10,
+      "val": 5
+    },
+    "shoe": {
+      "train": 39,
+      "val": 10
+    },
+    "table": {
+      "train": 10,
+      "val": 5
+    },
+    "wire_black": {
+      "train": 40,
+      "val": 10
+    },
+    "wire_white": {
+      "train": 39,
+      "val": 10
+    }
+  },
+  "source": "data/D5",
+  "output": "data/D5_yolo_w04",
+  "review_date": "2026-10-29",
+  "w4_fallback_note": "DQK 2026-10-28 decision permits whole distance/position groups within the one glossy session; this existing split already follows that rule. Dev-val was used for checkpoint/size selection, so it is not an untouched test set.",
+  "split_manifest_sha256": "80a8401ca784b1ee6dd883046f8e73b6bdd4827b948dc3d351bbc0ad17021d80",
+  "independent_session": false
+}

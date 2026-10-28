@@ -181,6 +181,7 @@ person_confidence = 0.25
 person_imgsz = 640
 person_weights = "data/models/yolov8n.pt"
 person_device = "0"
+pilot_face_overlap_min = 0.80    # D2 face/person association; ambiguous proposals abstain
 match_threshold = 0.7             # provisional, not calibrated; ROC tool chooses on calibration split
 rank1_target = 0.85
 min_eval_identities = 5

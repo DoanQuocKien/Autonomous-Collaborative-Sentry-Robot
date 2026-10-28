@@ -16,16 +16,31 @@ def test_real_osnet_weights_offline_cuda(monkeypatch):
     import urllib.request
     import requests
     from sentry.perception.reid import ARCHITECTURES, OSNetEncoder
+    from sentry.app.phase2_pipeline import OSNetAppearanceExtractor, Phase2Pipeline
     def forbidden(*a, **kw):
         raise AssertionError('OSNet inference attempted a download')
     monkeypatch.setattr(urllib.request, 'urlopen', forbidden)
     monkeypatch.setattr(requests.sessions.Session, 'request', forbidden)
     crop = np.random.default_rng(532).integers(0, 256, (256, 128, 3), np.uint8)
     for architecture in ARCHITECTURES:
-        encoder = OSNetEncoder.from_config(architecture)
+        adapter = OSNetAppearanceExtractor(arch=architecture, device='cuda:0')
+        encoder = adapter.encoder
+        assert isinstance(encoder, OSNetEncoder)
         first = encoder.encode([crop, crop])
         assert first.shape == (2, 512)
         assert np.isfinite(first).all()
         assert np.linalg.norm(first, axis=1) == pytest.approx([1, 1], abs=1e-5)
         assert np.allclose(first[0], first[1], atol=1e-5)
         assert str(next(encoder.model.parameters()).device).startswith('cuda')
+        single = encoder.encode([crop])[0]
+        # CUDA may choose a different convolution kernel for batch 1 vs 2.
+        # Compare the adapter to the same batch shape, and check cross-batch
+        # cosine rather than requiring elementwise identity across kernels.
+        assert float(single @ first[0]) >= .999
+        # The merged KR Phase 2 adapter must use exactly the same embedding
+        # space, preprocessing and checkpoint validation as HNHL's encoder.
+        pipeline = Phase2Pipeline(appearance_extractor=adapter)
+        result = pipeline.process_entry('gpu_handoff', [], person_crop_bgr=crop, timestamp=1.)
+        assert np.allclose(result.record.appearance_vector, single, atol=1e-5)
+        assert result.record.metadata['appearance_model_id'] == encoder.model_id
+        assert not result.record.metadata['appearance_simulated']

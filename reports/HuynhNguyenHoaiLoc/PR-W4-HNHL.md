@@ -1,25 +1,26 @@
-# W4: OSNet re-ID pipeline, corrected D5 training and frozen ONNX candidate
+# W4: OSNet re-ID, real D2 pilot and D5 development release
 
-## Behavior
+## Problem and resulting behavior
 
-Add a live/replay `PersonReID(frame_bgr,t) -> ReIDResult` pipeline: local YOLO person detection, bounded/validated crops, local re-ID-trained OSNet-AIN or OSNet x0.25 and normalized 512D vectors. Check backbone completeness, use restricted checkpoint deserialization, preserve model/hash provenance and abstain on invalid crops or tied gallery identities.
+Provide HNHL's Week 4 person re-ID pipeline and integrate it with KR's newly merged Phase 2 queue. Local YOLO person crops feed either re-ID-trained OSNet-AIN x1.0 or OSNet x0.25, using one validated loader/preprocessor and model/hash provenance. Missing real models/crops fail before queue/state mutation; synthetic appearance requires an explicit mock. The simulation CLI now requires `--simulated` and labels its JSON as simulation, with `t1_accepted=false`. Fix the missing `Optional` import in the merged replay tool.
 
-Add a session/entry-aware re-ID rank-1/CMC/ROC evaluator: calibrate threshold/model only on calibration, hold out test sessions, reject duplicate image bytes and entry leakage, report query-level false-match rates. Do not recommend an uncalibrated/reject-all model. No biometric images/vectors in this PR.
+Integrate main **6367935** (PRs #75–#87) into this existing PR. Unpack the newly shared D2 cafe archive locally and add an entry-held-out pilot plus aggregate F13 face ROC. Keep the independent calibration/test evaluator strict: no renamed sessions or frame leakage. No raw biometric data, vectors, weights or engines are added by this PR.
 
-Re-run all three D5 input sizes after DQK's background-leg corrections (#66), freeze the best development checkpoint/class order/provenance, export fixed-shape ONNX opset11 and measure PyTorch/ONNX decoded parity. Add independent-session D5 audit/evaluation tooling. Keep default live obstacle model unchanged and candidate deployment_ready=false.
+Retain corrected-label D5 training at 320/416/640, class/checkpoint freeze, ONNX opset11 export and 90-image conversion parity. DQK's 28 October fallback allows whole distance/position groups within the one glossy session: the existing 307/90 split already holds out complete distance groups (empty controls use the final contiguous block). Publish its rules/hash; do not retrain unchanged data or describe the reused dev-val as an untouched independent test. The live obstacle default remains unchanged; `deployment_ready=false`.
 
-## Validation — 2026-10-28
+## Validation — updated 2026-10-29
 
-- CPU regression: **476 passed**, 2 data skips, 3 GPU deselected; 18.94s, including CMC/reject-all tests.
-- GPU regression: **3 passed**, 9.22s, including both real OSNet weights on CUDA with network requests blocked.
-- D5 corrected-label retraining: 307 train / 90 dev-val, one session, 30 epochs ×320/416/640. Revalidation mAP50 **0.759 / 0.753 / 0.810**. Wire recall **0 at the validation operating point for all sizes**; no independent acceptance claim.
-- ONNX real-image parity: **90/90 same box counts**, 294 reference boxes, every frame matched fraction1.0 at IoU≥0.9, minimum raw cosine0.9999999916. This is PyTorch CUDA FP32 vs ONNX Runtime CPU, **not TensorRT**.
-- OSNet synthetic runtime: 512D, norm1, repeat consistency, CUDA FP32. No real D2/D3 accuracy or model-winner claim.
+- CPU regression: **546 passed**, 2 D1 data skips, 3 GPU tests deselected.
+- GPU regression: **3 passed**, including both real OSNet checkpoints, offline CUDA inference and the Phase 2 adapter/queue handoff. Check same-batch vector agreement and cross-batch cosine ≥0.999.
+- Real D2: **125 walker-face frames, 21 entries, 3 identities**, first entry per member reserved as gallery. YOLO yields **23 unambiguous person crops**; 99 absent and 3 ambiguous. Two gallery entries and nine query entries lack body crops: both OSNet models run but retrieval is **unscorable**, with no model winner or fabricated rank-1.
+- Face pilot on DQK-supplied buffalo_s vectors: leave-one-member-out, first-entry enrollment, 194 genuine / 125 impostor queries. At the unchanged 0.45 threshold: **TAR 82.99%, FAR 46.40%**. Automatic walker/entry labels require review; same-session correlated queries, not T1 acceptance. F13 is explicitly labelled as a pilot.
+- D5 retained evidence (28 October): all-size mAP50 0.759/0.753/0.810; wire recall **0 at the validation operating point**. The 640 development candidate's PyTorch/ONNX parity has equal box counts on **90/90 frames**, 294 boxes, matched fraction 1.0 at IoU≥0.9. This is laptop conversion parity, not TensorRT.
+- Updated CLI help, explicit simulation CLI, Python AST including common/jetson Python 3.6, and whitespace checks pass.
 
-[Report](week-04.md), [reproduction/API](W4-USAGE.md), [evidence](week-04/).
+[Report](https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/blob/HuynhNguyenHoaiLoc/w04-reid-obstacles/reports/HuynhNguyenHoaiLoc/week-04.md), [API/reproduction](https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/blob/HuynhNguyenHoaiLoc/w04-reid-obstacles/reports/HuynhNguyenHoaiLoc/W4-USAGE.md), [evidence](https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/tree/HuynhNguyenHoaiLoc/w04-reid-obstacles/reports/HuynhNguyenHoaiLoc/week-04).
 
-## Pending acceptance
+## Remaining acceptance
 
-HNHL confirmed D2/D3 and an independent D5 session are unavailable. Real re-ID ROC/rank-1, model/threshold selection, glossy/matte held-out D5 metrics and distance acceptance, Nano FP16/engine parity and hardware exploration remain pending. Wire remains below target. Masks from W3 remain an annotation pilot, not a segmentation result. This PR completes the offline implementation/development experiments; it does not mark full W4 T1/T2 acceptance complete.
+D2 is now available and evaluated as a pilot; D3/cross-camera queries, reviewed full-body gallery data and ≥5 re-ID gallery identities are still missing. No calibrated model winner. Wire misses its target; no independent D5 session/matte generalisation, contact-distance acceptance or hardware T2 is claimed. DQK's stock TensorRT parity (#79) is measured, but literal same-count remains **205/208**, with no team exception granted here; it does not certify the custom D5 model, OSNet-AIN or glossy ground-distance parity. Outline/page budget/owners are agreed per #86. No motor commands or hardware run in this update.
 
-Per HNHL's request, DQK PRs #71/#72/#73 were reviewed/merged first (including MJPEG fixes in #73), and this branch starts at **39b4e4c**. Firmware build/flash and hardware measurements were not repeated locally. Reviewer: **DQK**. No merge to main requested for this PR; review first.
+Keep PR #74 open for review (DQK/KR); no merge to main in this task. Earlier approval covered the previous head and should be revisited for the integrated code.

@@ -1,0 +1,35 @@
+{
+  "date": "2026-10-29",
+  "main_sha": "63679358d2e85f7666c18e146d6cb3868746ca62",
+  "integrated_prs": [
+    75,
+    76,
+    77,
+    78,
+    79,
+    80,
+    81,
+    82,
+    83,
+    84,
+    85,
+    86,
+    87
+  ],
+  "integration": "merged origin/main into existing PR 74 feature branch",
+  "new_data": "team_data/D2_1028.zip",
+  "archive_sha256": "7212305a54d448013b17868bdab9bd9fa644f8b1e264cc8aef0229c155efb4d1",
+  "data_unpack_files": 834,
+  "independent_d5_available": false,
+  "d3_available": false,
+  "thresholds_changed": false,
+  "motor_commands_sent": 0,
+  "edge_parity_review": {
+    "source": "reports/DoanQuocKien/week-04/edge_parity/parity_results.json",
+    "same_count_frames": 205,
+    "total_frames": 208,
+    "literal_same_count_passed": false,
+    "scope": "DQK stock edge models; does not certify HNHL custom D5 detector or OSNet-AIN",
+    "team_acceptance_exception_granted": false
+  }
+}

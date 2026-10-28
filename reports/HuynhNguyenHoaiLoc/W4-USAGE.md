@@ -39,6 +39,37 @@ Tool chọn model và threshold trên calibration. Test chỉ đo tại threshol
 
 Crop evaluation chưa đo person-detector recall và chưa chứng minh handoff ESP32→JetBot nếu không có queries cross-camera. Ảnh/crops/embeddings luôn giữ data ngoài Git; report chỉ chứa metrics/counts/hash.
 
+## Tích hợp Phase 2 của KR (main sau PR #76)
+
+```python
+from sentry.app.phase2_pipeline import OSNetAppearanceExtractor, Phase2Pipeline
+
+appearance = OSNetAppearanceExtractor(arch="osnet_ain_x1_0", device="cuda:0")
+phase2 = Phase2Pipeline(face_verifier=verifier, appearance_extractor=appearance)
+event = phase2.process_entry(
+    entry_id="entry_001", observations=timestamped_person_boxes,
+    face_embedding=face_vector, person_crop_bgr=reviewed_person_crop, timestamp=t,
+)
+# Khi là intruder, event.record giữ appearance_vector và
+# metadata["appearance_model_id"], metadata["appearance_simulated"].
+```
+
+Adapter dùng chính `OSNetEncoder` ở trên, không có loader/preprocessing riêng. Explicit weights_path nếu truyền vào phải khớp arch; sai/mất checkpoint báo lỗi, không fallback sang weights model khác. Khi entry chưa được whitelist mà không có extractor hoặc thiếu crop thật, báo lỗi trước enqueue/state transition. Caller có thể giữ entry chờ crop mới. Unit/replay mô phỏng phải truyền `MockAppearanceExtractor()` rõ ràng; dummy crop chỉ tồn tại trong chế độ mock, record được gắn cờ simulated. Không so vector ở queue với model/hash khác.
+
+CLI mô phỏng của KR phải chạy `python -m tools.replay_phase2 --simulated --out data/phase2_simulation.json`; JSON ghi `SIMULATION_PASS/FAIL`, `T0_SIMULATED_APPEARANCE`, `t1_accepted=false`. Không dùng tool này để mô tả replay thật hoặc ghi đè evidence cũ của KR.
+
+## D2 cafe 1028: đánh giá pilot thực tế
+
+```powershell
+.venv/Scripts/python.exe -m tools.team_data unpack team_data/D2_1028.zip data/D2/1028
+.venv/Scripts/python.exe -m tools.evaluate_d2_pilot --root data/D2/1028 --out reports/HuynhNguyenHoaiLoc/week-04/d2_pilot.json
+.venv/Scripts/python.exe -m tools.plot_d2_pilot --metrics reports/HuynhNguyenHoaiLoc/week-04/d2_pilot.json --out reports/HuynhNguyenHoaiLoc/week-04/F13_d2_face_roc_pilot.png
+```
+
+Dependency `pyzipper` đã có trong requirements-base. Dữ liệu giải nén chỉ ở `data/`. Pilot đọc walker rows/face vectors được DQK cung cấp, không tự coi largest-face labels là ground truth đã review. Chọn entry đầu từng người làm gallery trước inference, giữ mọi frame của từng entry cùng role; dùng mọi frame, không lọc motion blur. YOLO person bbox phải phủ đủ face (config `pilot_face_overlap_min`) và chỉ có một proposal phù hợp. Missing/ambiguous abstain; không dùng face crop thay body crop.
+
+Output chỉ là counts/hash/metrics, không chứa ảnh, body boxes, embedding hay tên người. Face ROC: leave-one-member-out, enrollment từ entry đầu; đo tại threshold config cố định và vẽ ROC mô tả, không chọn threshold mới. Re-ID: trung bình normalized vectors theo entry, báo missing gallery/query; nếu thiếu gallery thì `scored=false`, không có rank-1 giả. Nếu chấm được, `rank1_including_missing` vẫn tính missing query là thất bại. Bộ này có ba người, cùng camera/session, nên `t1_passed=false`, `recommended_model=null` bất kể score. Không truyền dữ liệu một session vào `evaluate_reid` bằng cách đổi tên session để vượt guard calibration/test.
+
 ## D5 corrected-label training
 
 Không ghi đè export hoặc checkpoint cũ:
@@ -48,7 +79,7 @@ Không ghi đè export hoặc checkpoint cũ:
 .venv/Scripts/python.exe -m tools.train_d5 --train --data data/D5_yolo_w04_new/data.yaml --weights data/models/yolov8n.pt --imgsz 640 --epochs 30 --batch 8 --workers 0 --seed 42 --device 0 --project runs/d5_w04_new --name yolov8n_640 --out data/w04/train640.json
 ```
 
-Đổi imgsz 320/416 để so sánh; bản đã chạy trong báo cáo ở `data/D5_yolo_w04` và `runs/d5_w04_corrected`. Cùng session 1024 vẫn là internal dev, không phải T1. Muốn đánh giá lại checkpoint hiện có dùng `tools.train_d5 --val ... --data ... --imgsz ...`; tool từ chối overwrite run/spec.
+Đổi imgsz 320/416 để so sánh; bản đã chạy trong báo cáo ở `data/D5_yolo_w04` và `runs/d5_w04_corrected`. Cùng session 1024 vẫn là internal dev, không phải nghiệm thu độc lập. Quyết định DQK 28/10 cho W4 cho phép fallback split theo nhóm khoảng cách/vị trí khi không có session thứ hai: script đã giữ nguyên whole distance block cho từng loại vật, empty là contiguous block cuối. Counts/rules có trong `week-04/d5_group_split.json`. Split cũ đã phù hợp; không retrain chỉ vì cập nhật mô tả. Vì val đã chọn checkpoint/input size, phải báo đây là dev-val đã được dùng, không phải untouched test. Muốn đánh giá lại checkpoint hiện có dùng `tools.train_d5 --val ... --data ... --imgsz ...`; tool từ chối overwrite run/spec.
 
 ```powershell
 .venv/Scripts/python.exe -m tools.freeze_d5 --weights runs/d5_w04_corrected/yolov8n_640/weights/best.pt --data data/D5_yolo_w04/data.yaml --out-dir data/releases/d5_new --imgsz 640
@@ -82,4 +113,4 @@ Tool audit session/image hashes và label layout, báo class metrics riêng glos
 .venv/Scripts/python.exe -m pytest -m gpu --basetemp=data/pytest-w04-gpu-new -p no:cacheprovider -q -rs
 ```
 
-Chưa có D2/D3 và held-out D5: unit/GPU smoke thành công không thay T1. Không có motor/socket control trong các module/tools mới.
+D2 thật đã có và đã chạy pilot; D3, đủ gallery body crops và D5 session độc lập chưa có. Unit/GPU smoke thành công không thay T1. Không có motor/socket control trong các module/tools mới.

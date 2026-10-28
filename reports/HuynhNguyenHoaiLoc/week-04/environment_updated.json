@@ -1,0 +1,24 @@
+{
+  "date": "2026-10-29",
+  "python": "3.12.15",
+  "versions": {
+    "torch": "2.9.1+cu128",
+    "torchreid": "0.2.5",
+    "ultralytics": "8.4.172",
+    "numpy": "2.5.3",
+    "pyzipper": "0.4.0",
+    "pycryptodomex": "3.24.1",
+    "matplotlib": "3.11.2"
+  },
+  "source_sha256": {
+    "config.toml": "a5545075f69953c91d9ba956054a04acb8f20000e77859c6526f04eba56505a6",
+    "sentry/perception/reid.py": "691cf6cb439e769b7bf9687b94f3ba97e1ca2c0bb52e9e78f89dda5ab85b0c0c",
+    "sentry/app/phase2_pipeline.py": "a86ed0cd26b6acf509b78d1c3ae04aca3ec0624a89f8cd1cbc1bbb2732e15356",
+    "tools/evaluate_d2_pilot.py": "b7d4e387868c50f2f80e5d2967fd410f0eb17200b7f12dc0d800d53314aa9cce",
+    "tools/plot_d2_pilot.py": "71eed26179952037bec3451489010afd1587ebb842be2c28ef0639dad3e7d8c7",
+    "tools/replay_phase2.py": "28cca226b224090077b8ebc704e70a527fca3b2139fc11a9cc88391ec2f68abc"
+  },
+  "hardware": "RTX 5060 Laptop; not RTX 4050 target",
+  "raw_data_committed": false,
+  "motor_commands_sent": 0
+}
