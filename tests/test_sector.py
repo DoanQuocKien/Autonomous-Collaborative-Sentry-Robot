@@ -1,6 +1,4 @@
 """Unit tests for sector classification and SectorTracker (Week 4, kouun-rokku)."""
-import pytest
-
 from sentry.perception.sector import (
     DepartureSector,
     SectorConfig,
@@ -114,3 +112,19 @@ def test_sector_tracker_streaming():
     tracker.reset()
     assert tracker.sector == DepartureSector.UNKNOWN.value
     assert not tracker.is_finalized
+
+
+def test_sector_tracker_normalized_coordinates():
+    # Verify that normalized coordinates in [0.0, 1.0] are handled properly by default SectorTracker
+    cfg = SectorConfig(window_s=2.0, drift_threshold=0.08, min_points=3)
+    tracker = SectorTracker(config=cfg, frame_width=640.0)
+
+    # Entrant moving to the right in normalized bbox space: x_center moves 0.2 -> 0.8
+    tracker.update((0.1, 0.2, 0.3, 0.8), t=0.0)
+    tracker.update((0.4, 0.2, 0.6, 0.8), t=1.0)
+    tracker.update((0.7, 0.2, 0.9, 0.8), t=2.0)
+
+    assert tracker.is_finalized
+    assert tracker.sector == DepartureSector.RIGHT.value
+    assert tracker.code == "R"
+    assert tracker.drift > 0.08

@@ -1,5 +1,4 @@
 """Unit tests for TargetQueue and IntruderRecord (Week 4, kouun-rokku)."""
-import json
 import threading
 import numpy as np
 import pytest

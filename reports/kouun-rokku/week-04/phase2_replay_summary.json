@@ -36,7 +36,7 @@
     "unknown": 0
   },
   "queue_metrics": {
-    "final_queued_length": 10,
+    "final_queued_length": 9,
     "active_target_id": "D2_member_KR_run01",
     "history_count": 10
   },

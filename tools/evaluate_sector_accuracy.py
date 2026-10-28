@@ -13,10 +13,10 @@ import argparse
 import json
 import logging
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List
 import numpy as np
 
-from sentry.perception.sector import DepartureSector, SectorConfig, classify_sector
+from sentry.perception.sector import SectorConfig, classify_sector
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 logger = logging.getLogger("evaluate_sector")

@@ -1,8 +1,7 @@
 """End-to-end integration tests for Phase 2 replay on D2 dataset (Week 4, kouun-rokku)."""
 import numpy as np
-import pytest
 
-from sentry.app.phase2_pipeline import MockAppearanceExtractor, Phase2Pipeline
+from sentry.app.phase2_pipeline import Phase2Pipeline
 from sentry.app.state_machine import State, StateMachine
 from sentry.app.target_queue import TargetQueue
 from sentry.perception.face import FaceVerifier, normalize_embedding
@@ -80,8 +79,11 @@ def test_phase2_pipeline_intruder_engages_pursuit_and_queues():
 
     assert res2.is_intruder
     assert res2.sector == DepartureSector.LEFT.value
-    # TargetQueue should now have 2 records in total (1 active, 1 queued)
-    assert len(queue) == 2
+    # TargetQueue should now have 2 records in total: intruder_01 active, intruder_02 queued
+    assert queue.active_target.id == "intruder_01"
+    assert len(queue) == 1
+    assert queue.peek().id == "intruder_02"
+    assert len(queue.all_history()) == 2
     # Robot continues active pursuit of intruder_01, intruder_02 queued
     assert sm.state == State.PURSUE
     assert sm.active_target == "intruder_01"
@@ -104,12 +106,18 @@ def test_phase2_pipeline_target_handoff_and_next_target_acquisition():
 
     assert sm.active_target == "T1"
     assert sm.state == State.PURSUE
+    assert tq.active_target.id == "T1"
+    assert len(tq) == 1
+    assert tq.peek().id == "T2"
 
     # 2. T1 exits through door -> transitions to SEARCH for next queued target T2
+    tq.complete_active(reason="target_exited", t=10.0)
+    tq.pop(t=10.0)  # T2 becomes active target in queue
     sm.handle_event("TARGET_EXITED", t=10.0)
     assert sm.state == State.SEARCH
     assert sm.search_step == "PLAN"
     assert sm.active_target == "T2"
+    assert tq.active_target.id == "T2"
 
     # 3. Follow coverage path & scan -> T2 re-identified (Spec §4.6 step 4)
     sm.handle_event("PLAN_READY", t=11.0)
@@ -121,8 +129,10 @@ def test_phase2_pipeline_target_handoff_and_next_target_acquisition():
     assert sm.active_target == "T2"
 
     # 4. If T2 exits and search exhausts without finding T2 (Spec §4.6 step 5)
+    tq.complete_active(reason="target_exited", t=25.0)
     sm.handle_event("TARGET_EXITED", t=25.0)
     assert sm.state == State.STANDBY  # queue is now empty, returns to standby
+    assert tq.active_target is None
 
 
 def test_phase2_pipeline_search_exhausted_drops_unfound_target():
@@ -134,18 +144,30 @@ def test_phase2_pipeline_search_exhausted_drops_unfound_target():
     pipeline.process_entry("T1", obs, timestamp=1.0)
     pipeline.process_entry("T2", obs, timestamp=5.0)
 
+    assert tq.active_target.id == "T1"
+    assert len(tq) == 1
+    assert tq.peek().id == "T2"
+
     # T1 exits -> SEARCH for T2
+    tq.complete_active(reason="target_exited", t=10.0)
+    tq.pop(t=10.0)  # T2 becomes active target
     sm.handle_event("TARGET_EXITED", t=10.0)
     assert sm.state == State.SEARCH
     assert sm.active_target == "T2"
+    assert tq.active_target.id == "T2"
 
     # Search finishes without match -> SEARCH_EXHAUSTED
+    tq.drop_active(reason="search_exhausted", t=30.0)
     sm.handle_event("SEARCH_EXHAUSTED", t=30.0)
     # T2 dropped, queue empty -> returns to STANDBY
     assert sm.state == State.STANDBY
     assert sm.active_target is None
+    assert tq.active_target is None
+    assert len(tq) == 0
     assert len(sm.dropped_targets) == 1
     assert sm.dropped_targets[0][1] == "T2"
+    assert len(tq.all_dropped()) == 1
+    assert tq.all_dropped()[0].id == "T2"
 
 
 def test_phase2_replay_d2_full_acceptance():

@@ -8,7 +8,7 @@ This provides an optional search prior for the room coverage planner (Week 9).
 from dataclasses import dataclass
 from enum import Enum
 import math
-from typing import Iterable, List, Optional, Sequence, Tuple, Union
+from typing import List, Optional, Sequence, Tuple, Union
 
 from sentry.config import load
 
@@ -219,9 +219,11 @@ class SectorTracker:
         self,
         config: Optional[SectorConfig] = None,
         frame_width: Optional[float] = 640.0,
+        frame_height: Optional[float] = 480.0,
     ):
         self.cfg = SectorConfig.from_toml() if config is None else config
         self.frame_width = frame_width
+        self.frame_height = frame_height
         self.points: List[TrajectoryPoint] = []
         self._finalized: bool = False
         self._cached_sector: str = DepartureSector.UNKNOWN.value
@@ -240,9 +242,13 @@ class SectorTracker:
         if x2 < x1 or y2 < y1:
             raise ValueError(f"Invalid bbox dimensions: {bbox}")
 
+        center_x = (x1 + x2) / 2.0
+        center_y = (y1 + y2) / 2.0
         fw = float(self.frame_width) if self.frame_width else 1.0
-        xc = ((x1 + x2) / 2.0) / fw if fw > 1.0 else (x1 + x2) / 2.0
-        yc = ((y1 + y2) / 2.0) / fw if fw > 1.0 else (y1 + y2) / 2.0
+        fh = float(self.frame_height) if getattr(self, "frame_height", None) else 480.0
+
+        xc = (center_x / fw) if (fw > 1.0 and center_x > 1.0) else center_x
+        yc = (center_y / fh) if (fh > 1.0 and center_y > 1.0) else center_y
 
         pt = TrajectoryPoint(t=float(t), x=float(xc), y=float(yc), bbox=tuple(bbox))
         self.points.append(pt)

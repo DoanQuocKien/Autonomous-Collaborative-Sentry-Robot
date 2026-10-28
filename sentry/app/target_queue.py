@@ -12,13 +12,13 @@ Implementation Plan §4.3 & §5 (Week 4):
 sector, snapshot path, timestamps)."
 """
 from collections import deque
-from dataclasses import asdict, dataclass, field
+from dataclasses import dataclass, field
 import json
 import math
 from pathlib import Path
 import threading
 import time
-from typing import Any, Deque, Dict, Iterator, List, Optional, Sequence, Union
+from typing import Any, Deque, Dict, List, Optional, Sequence, Union
 
 import numpy as np
 

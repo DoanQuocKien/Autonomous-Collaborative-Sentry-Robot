@@ -15,24 +15,16 @@ Connects the Phase 2 monitoring pipeline end to end on replayed ESP32-CAM doorwa
 """
 from dataclasses import dataclass, field
 import logging
-import math
 from pathlib import Path
 import time
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 
-from sentry.app.state_machine import Command, Event, State, StateMachine, TransitionResult
+from sentry.app.state_machine import Command, State, StateMachine, TransitionResult
 from sentry.app.target_queue import IntruderRecord, TargetQueue
-from sentry.config import load
-from sentry.perception.face import FaceVerifier, normalize_embedding
-from sentry.perception.sector import (
-    DepartureSector,
-    SectorConfig,
-    SectorTracker,
-    classify_sector,
-    normalize_sector,
-)
+from sentry.perception.face import FaceVerifier
+from sentry.perception.sector import DepartureSector, SectorConfig, classify_sector
 
 logger = logging.getLogger("sentry.phase2")
 
@@ -66,12 +58,17 @@ class OSNetAppearanceExtractor(BaseAppearanceExtractor):
             logger.warning("torch or torchreid not installed; OSNetAppearanceExtractor unavailable")
             return
 
-        p = Path(weights_path) if weights_path else Path("weights") / f"{self.arch}_dg.pth"
-        if not p.exists():
-            # Check alternative default
-            p_alt = Path("weights") / "osnet_ain_x1_0_dg.pth"
-            if p_alt.exists():
-                p = p_alt
+        if weights_path:
+            p = Path(weights_path)
+            if not p.exists():
+                logger.warning("Specified weights_path %s does not exist", weights_path)
+        else:
+            p = Path("weights") / f"{self.arch}_dg.pth"
+            if not p.exists():
+                # Check alternative default
+                p_alt = Path("weights") / "osnet_ain_x1_0_dg.pth"
+                if p_alt.exists():
+                    p = p_alt
 
         if p.exists():
             try:
@@ -87,6 +84,9 @@ class OSNetAppearanceExtractor(BaseAppearanceExtractor):
     def extract(self, person_crop_bgr: np.ndarray) -> np.ndarray:
         if self.net is None:
             raise RuntimeError("OSNet model is not initialized or weights missing")
+
+        if person_crop_bgr is None or not isinstance(person_crop_bgr, np.ndarray) or person_crop_bgr.size == 0:
+            raise ValueError("person_crop_bgr must be a non-empty BGR numpy array")
 
         import cv2
         import torch
@@ -117,6 +117,9 @@ class MockAppearanceExtractor(BaseAppearanceExtractor):
         self.rng = np.random.RandomState(seed)
 
     def extract(self, person_crop_bgr: np.ndarray) -> np.ndarray:
+        if person_crop_bgr is None or not isinstance(person_crop_bgr, np.ndarray) or person_crop_bgr.size == 0:
+            raise ValueError("person_crop_bgr must be a non-empty BGR numpy array")
+
         # Generate a deterministic 512D unit vector based on image hash/statistics
         h, w = person_crop_bgr.shape[:2]
         mean_colors = person_crop_bgr.mean(axis=(0, 1)) if person_crop_bgr.size > 0 else np.array([128, 128, 128])
@@ -279,6 +282,10 @@ class Phase2Pipeline:
             data=record.to_dict(),
             t=t0,
         )
+
+        # If StateMachine transitioned from STANDBY to PURSUE, promote intruder to active in TargetQueue
+        if sm_transition.prev_state == State.STANDBY and sm_transition.state == State.PURSUE:
+            self.target_queue.pop(t=t0)
 
         return Phase2EventResult(
             entry_id=entry_id,
