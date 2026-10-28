@@ -1,0 +1,130 @@
+{
+ "cosine": {
+  "det_0": {
+   "n": 208,
+   "min": 0.999996,
+   "p5": 0.999997,
+   "mean": 0.999998,
+   "pass": true
+  },
+  "mbf_0": {
+   "n": 66,
+   "min": 0.999972,
+   "p5": 0.999975,
+   "mean": 0.999982,
+   "pass": true
+  },
+  "osnet_0": {
+   "n": 200,
+   "min": 0.999982,
+   "p5": 0.999986,
+   "mean": 0.99999,
+   "pass": true
+  },
+  "pose_0": {
+   "n": 208,
+   "min": 0.999999,
+   "p5": 0.999999,
+   "mean": 1.0,
+   "pass": true
+  },
+  "scrfd_200_1": {
+   "n": 208,
+   "min": 0.999989,
+   "p5": 0.999992,
+   "mean": 0.999994,
+   "pass": true
+  },
+  "scrfd_200_10": {
+   "n": 208,
+   "min": 0.999996,
+   "p5": 0.999997,
+   "mean": 0.999998,
+   "pass": true
+  },
+  "scrfd_200_4": {
+   "n": 208,
+   "min": 0.999999,
+   "p5": 1.0,
+   "mean": 1.0,
+   "pass": true
+  },
+  "scrfd_3200_1": {
+   "n": 208,
+   "min": 0.999989,
+   "p5": 0.999991,
+   "mean": 0.999992,
+   "pass": true
+  },
+  "scrfd_3200_10": {
+   "n": 208,
+   "min": 0.999997,
+   "p5": 0.999997,
+   "mean": 0.999998,
+   "pass": true
+  },
+  "scrfd_3200_4": {
+   "n": 208,
+   "min": 0.999999,
+   "p5": 0.999999,
+   "mean": 1.0,
+   "pass": true
+  },
+  "scrfd_800_1": {
+   "n": 208,
+   "min": 0.999991,
+   "p5": 0.999992,
+   "mean": 0.999993,
+   "pass": true
+  },
+  "scrfd_800_10": {
+   "n": 208,
+   "min": 0.999998,
+   "p5": 0.999998,
+   "mean": 0.999999,
+   "pass": true
+  },
+  "scrfd_800_4": {
+   "n": 208,
+   "min": 1.0,
+   "p5": 1.0,
+   "mean": 1.0,
+   "pass": true
+  }
+ },
+ "detectors": {
+  "det_conf0.25": {
+   "onnx_detections": 562,
+   "trt_detections": 559,
+   "matched_iou_ge_0.9": 557,
+   "matched_fraction": 0.9911,
+   "frames_with_same_count": 205,
+   "frames": 208
+  },
+  "pose_conf0.25": {
+   "onnx_detections": 81,
+   "trt_detections": 81,
+   "matched_iou_ge_0.9": 81,
+   "matched_fraction": 1.0,
+   "frames_with_same_count": 208,
+   "frames": 208
+  },
+  "scrfd_thr0.5": {
+   "onnx_faces": 22,
+   "trt_faces": 22,
+   "matched_iou_ge_0.9": 22,
+   "matched_fraction": 1.0,
+   "frames_with_same_count": 208,
+   "frames": 208,
+   "landmark_error_px_mean": 0.028
+  }
+ },
+ "pass_cosine_all_outputs": true,
+ "pass_detectors": false,
+ "inputs": {
+  "d1_frames": 200,
+  "yolo_scrfd_images": 208,
+  "osnet_crops": 200,
+  "mbf_faces": 66
+ }
+}
