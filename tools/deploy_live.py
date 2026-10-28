@@ -145,6 +145,7 @@ def main():
     ap.add_argument("--box", type=float, nargs=4, default=None, metavar=("X0", "Y0", "X1", "Y1"), help="the cleared floor of the declared room (with --door)")
     ap.add_argument("--wall", type=float, nargs=4, action="append", default=[], metavar=("X0", "Y0", "X1", "Y1"), help="a wall segment of the declared room (repeat); the door must lie on one")
     ap.add_argument("--entrance", default="manual", help="with --door: a folder from tools.enroll_entrance (the robot's own camera), 'sim' (simulated from the pose) or 'manual' (key e)")
+    ap.add_argument("--scan-hold", type=float, default=0.8, help="with --door: seconds to hold still between scan pulses; the robot-eye entrance detector runs at about 4 fps (233 ms per frame), and the filter needs 3 in-view results in a row")
     ap.add_argument("--distance-margin", type=float, default=0.3, help="with --door: shrink the 1.5-3.0 m window by this on each side (dead reckoning error)")
     ap.add_argument("--centre", type=float, nargs=2, required=True, metavar=("X", "Y"))
     ap.add_argument("--handshake", default="manual", help="folder with ref/ and sweep/ from tools.handshake_test, or 'manual' (press v)")
@@ -187,12 +188,12 @@ def main():
         from sentry.config import load as load_config
         from sentry.nav.declared_room import declared_grid
         from sentry.nav.vantage import VantageSelector
-        from sentry.app.phase1_runner import Phase1Runner
+        from sentry.app.phase1_runner import Phase1Runner, Phase1Settings
         cfg = load_config()
         selector = VantageSelector(cfg["thresholds"]["entrance_min_m"] + a.distance_margin, cfg["thresholds"]["entrance_max_m"] - a.distance_margin,
                                    cfg["vantage"]["robot_radius_m"], cfg["vantage"]["boundary_weight"], cfg["vantage"]["distance_weight"])
         grid = declared_grid(a.box, a.wall, a.door)
-        runner = Phase1Runner(sm, speaker, grid, selector, a.door, a.centre)
+        runner = Phase1Runner(sm, speaker, grid, selector, a.door, a.centre, settings=Phase1Settings(hold_s=a.scan_hold))
         if a.entrance not in ("sim", "manual"):
             from sentry.perception.entrance import Camera, EntranceDetector
             entrance_det = EntranceDetector.load(a.entrance, camera=Camera.from_json("calib/camera.json"))
