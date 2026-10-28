@@ -20,3 +20,10 @@
 - Two-person session this week: T2 deployment sequence (5 runs), KR's live handshake test, the teammates' D2 entries. My own 10 D2 entries can be recorded alone.
 - Decide the ESP32 interface (tile stream vs OV2640 MJPEG, one client at a time): needs all three to approve.
 - `sentry/app/audio.py`, deployment behaviour against the simulator, small-object targets and the IMU decision (solo).
+
+## Session 2026-10-28 (cafe, all three present)
+- **Decisions (reported by DQK as agreed by all three; recorded in the plan and `docs/Hardware.md`):** the ESP32 interface is the OV2640 HTTP MJPEG stream (the tile stream stays as the GC2145 fallback); buy the MPU6050; the small-object targets stay as proposed; the D2 cafe recordings keep every frame including incidental bystanders (local only, never committed, masked before any figure, deleted after grading). Reviews by HNHL and KR on the PRs are still needed.
+- **D2 recorded** (`tools/record_d2.py --continuous`, PR #78): one 60 s clip per member in a cafe with the ESP32 raised to face height. `tools/d2_segment.py` (GPU face detection) found DQK 11 entries / 56 walker-face frames, HNHL 5 / 41, KR 5 / 28 (125 in total; faces 45-86 px wide; HNHL's crops are sharp, DQK's mixed, KR's mostly smeared by motion in the dim light). The plan's 10 entries per member is not met for HNHL and KR; every frame is used as it is. A first DQK clip with the camera too low (legs only) and three accidental runs (23 entries) are in `data/D2/1028` and are not usable. All local, git-ignored.
+- **Link study** (PR #77) and **G1 live-ESP32** (above): done.
+- **Still open from the session:** the G1 parity row, KR's handshake accept/reject test, the T2 deployment sequence (needs a door and a clear floor).
+
