@@ -149,7 +149,7 @@ Rules: check the battery before every take (>= 11.1 V; stop below 10.5 V); the o
 
 | When | Milestone |
 | :-- | :-- |
-| T-3 w, Mon Nov 2 | Outline, page budget and owners agreed (this file); 3+ papers per member; figures assigned; shared document created |
+| T-3 w, Mon Nov 2 | Outline, page budget and owners agreed (this file); 3+ papers per member; figures assigned; shared document created. **Outline, page budget and chapter owners agreed by all three at the 2026-10-28 session (reported by DQK; no change to this file).** Still open from this row: figures assigned and the shared document created |
 | T-2 w, Mon Nov 9 | Chapters 1-4 drafted from Week 1-4 evidence; F1-F15 and F20-F21 made; Phase 1 and Phase 2 video shots recorded |
 | T-7 d, Mon Nov 16 | Experiments closed, **figures frozen**, all video shots recorded |
 | T-5 d, Wed Nov 18 | **Internal draft:** full merged report (10-15 pages) and video cut |
