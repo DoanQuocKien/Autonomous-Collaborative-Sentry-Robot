@@ -20,6 +20,7 @@
 #include "fb_gfx.h"
 #include "esp32-hal-ledc.h"
 #include "sdkconfig.h"
+#include "lwip/sockets.h"  // TCP_NODELAY for the stream socket
 #include "camera_index.h"
 #include "board_config.h"
 
@@ -232,6 +233,12 @@ static esp_err_t stream_handler(httpd_req_t *req) {
 
   httpd_resp_set_hdr(req, "X-Framerate", "60");
 
+  // 2026-10-26: each frame went out as three small chunks (boundary, part header, JPEG), each split into more small sends by the HTTP server, with
+  // Nagle on: bursts and 0.3-0.8 s gaps (about 9 fps of a camera that does 25). Turn Nagle off and send boundary + part header as one chunk.
+  int nodelay = 1;
+  setsockopt(httpd_req_to_sockfd(req), IPPROTO_TCP, TCP_NODELAY, &nodelay, sizeof(nodelay));
+  char hdr_buf[192];
+
 #if defined(LED_GPIO_NUM)
   isStreaming = true;
   enable_led(true);
@@ -259,11 +266,9 @@ static esp_err_t stream_handler(httpd_req_t *req) {
       }
     }
     if (res == ESP_OK) {
-      res = httpd_resp_send_chunk(req, _STREAM_BOUNDARY, strlen(_STREAM_BOUNDARY));
-    }
-    if (res == ESP_OK) {
-      size_t hlen = snprintf((char *)part_buf, 128, _STREAM_PART, _jpg_buf_len, _timestamp.tv_sec, _timestamp.tv_usec);
-      res = httpd_resp_send_chunk(req, (const char *)part_buf, hlen);
+      size_t hlen = snprintf(hdr_buf, sizeof(hdr_buf), "%s", _STREAM_BOUNDARY);
+      hlen += snprintf(hdr_buf + hlen, sizeof(hdr_buf) - hlen, _STREAM_PART, _jpg_buf_len, _timestamp.tv_sec, _timestamp.tv_usec);
+      res = httpd_resp_send_chunk(req, hdr_buf, hlen);
     }
     if (res == ESP_OK) {
       res = httpd_resp_send_chunk(req, (const char *)_jpg_buf, _jpg_buf_len);
