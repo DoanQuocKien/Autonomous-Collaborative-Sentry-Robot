@@ -1,0 +1,47 @@
+============================= test session starts ==============================
+platform linux -- Python 3.14.4, pytest-9.1.1, pluggy-1.7.0 -- /home/hl/Documents/+Project-hoc-ky/Autonomous-Collaborative-Sentry-Robot/.venv/bin/python3
+cachedir: .pytest_cache
+rootdir: /home/hl/Documents/+Project-hoc-ky/Autonomous-Collaborative-Sentry-Robot
+configfile: pytest.ini
+collecting ... collected 38 items
+
+tests/test_target_queue.py::test_intruder_record_valid PASSED            [  2%]
+tests/test_target_queue.py::test_intruder_record_validation_errors PASSED [  5%]
+tests/test_target_queue.py::test_intruder_record_dict_roundtrip PASSED   [  7%]
+tests/test_target_queue.py::test_target_queue_fifo_push_pop PASSED       [ 10%]
+tests/test_target_queue.py::test_target_queue_active_completion_and_drop PASSED [ 13%]
+tests/test_target_queue.py::test_target_queue_get_by_id PASSED           [ 15%]
+tests/test_target_queue.py::test_target_queue_to_state_machine_event PASSED [ 18%]
+tests/test_target_queue.py::test_target_queue_save_load PASSED           [ 21%]
+tests/test_target_queue.py::test_target_queue_thread_safety PASSED       [ 23%]
+tests/test_sector.py::test_normalize_sector_and_codes PASSED             [ 26%]
+tests/test_sector.py::test_classify_sector_left_drift PASSED             [ 28%]
+tests/test_sector.py::test_classify_sector_right_drift PASSED            [ 31%]
+tests/test_sector.py::test_classify_sector_center_straight PASSED        [ 34%]
+tests/test_sector.py::test_classify_sector_normalized_coordinates PASSED [ 36%]
+tests/test_sector.py::test_classify_sector_insufficient_points PASSED    [ 39%]
+tests/test_sector.py::test_sector_tracker_streaming PASSED               [ 42%]
+tests/test_sector.py::test_sector_tracker_normalized_coordinates PASSED  [ 44%]
+tests/test_phase2_replay.py::test_phase2_pipeline_authorized_entrant_stays_in_standby PASSED [ 47%]
+tests/test_phase2_replay.py::test_phase2_pipeline_intruder_engages_pursuit_and_queues PASSED [ 50%]
+tests/test_phase2_replay.py::test_phase2_pipeline_target_handoff_and_next_target_acquisition PASSED [ 52%]
+tests/test_phase2_replay.py::test_phase2_pipeline_search_exhausted_drops_unfound_target PASSED [ 55%]
+tests/test_phase2_replay.py::test_phase2_replay_d2_full_acceptance PASSED [ 57%]
+tests/test_state_machine.py::test_config_from_toml_reads_spec_thresholds PASSED [ 60%]
+tests/test_state_machine.py::test_phase1_scripted_setup_including_entrance_lost_and_handshake PASSED [ 63%]
+tests/test_state_machine.py::test_full_three_phase_two_intruder_script_with_hold_evade_and_search PASSED [ 65%]
+tests/test_state_machine.py::test_evade_preempts_hold_and_enforces_cooldown PASSED [ 68%]
+tests/test_state_machine.py::test_edge_cases_empty_queue_exit_and_intruder_leaving_during_evade_and_esp32_lost PASSED [ 71%]
+tests/test_state_machine.py::test_all_state_timeouts PASSED              [ 73%]
+tests/test_state_machine.py::test_invalid_events_are_ignored_and_logged_in_every_state[EXPLORE-invalid_events0] PASSED [ 76%]
+tests/test_state_machine.py::test_invalid_events_are_ignored_and_logged_in_every_state[APPROACH_VANTAGE-invalid_events1] PASSED [ 78%]
+tests/test_state_machine.py::test_invalid_events_are_ignored_and_logged_in_every_state[WAIT_CAMERA-invalid_events2] PASSED [ 81%]
+tests/test_state_machine.py::test_invalid_events_are_ignored_and_logged_in_every_state[RETRACT-invalid_events3] PASSED [ 84%]
+tests/test_state_machine.py::test_invalid_events_are_ignored_and_logged_in_every_state[STANDBY-invalid_events4] PASSED [ 86%]
+tests/test_state_machine.py::test_invalid_events_are_ignored_and_logged_in_every_state[PURSUE-invalid_events5] PASSED [ 89%]
+tests/test_state_machine.py::test_invalid_events_are_ignored_and_logged_in_every_state[HOLD-invalid_events6] PASSED [ 92%]
+tests/test_state_machine.py::test_invalid_events_are_ignored_and_logged_in_every_state[EVADE-invalid_events7] PASSED [ 94%]
+tests/test_state_machine.py::test_invalid_events_are_ignored_and_logged_in_every_state[SEARCH-invalid_events8] PASSED [ 97%]
+tests/test_state_machine.py::test_backwards_or_nonfinite_timestamps_rejected PASSED [100%]
+
+============================== 38 passed in 0.27s ==============================
