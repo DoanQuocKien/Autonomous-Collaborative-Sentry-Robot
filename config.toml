@@ -166,6 +166,28 @@ map_error_limit_m = 0.20
 map_fraction_min = 0.80
 required_floor_types = ["glossy", "matte"]
 
+[reid]
+model = "osnet_ain_x1_0"          # provisional; select only after a real D2/D3 comparison
+device = "cuda:0"
+ain_weights = "weights/osnet_ain_x1_0_dg.pth"
+small_weights = "weights/osnet_x0_25_market1501.pth"
+input_height = 256
+input_width = 128
+mean = [0.485, 0.456, 0.406]
+std = [0.229, 0.224, 0.225]
+min_crop_height = 32
+min_crop_width = 12
+person_confidence = 0.25
+person_imgsz = 640
+person_weights = "data/models/yolov8n.pt"
+person_device = "0"
+pilot_face_overlap_min = 0.80    # D2 face/person association; ambiguous proposals abstain
+match_threshold = 0.7             # provisional, not calibrated; ROC tool chooses on calibration split
+rank1_target = 0.85
+min_eval_identities = 5
+far_target = 0.01
+verification_tar_target = 0.85   # avoid selecting a reject-all lock threshold
+
 [sim]
 v_max_mps = 0.5                  # Simulated max linear velocity in m/s
 w_max_radps = 2.0                # Simulated max angular velocity in rad/s

@@ -1,0 +1,27 @@
+{
+  "reviewed_prs": [
+    {
+      "number": 71,
+      "sha": "f81af81a1abb727c4825f171f9cd1f2681042b2f",
+      "merged": true,
+      "message": "Pull Request successfully merged"
+    },
+    {
+      "number": 72,
+      "sha": "b570e042e762811a61e6424c99e58ac6f5e4c785",
+      "merged": true,
+      "message": "Pull Request successfully merged"
+    },
+    {
+      "number": 73,
+      "sha": "39b4e4c201ee9b91ff3b7256159608a64f47192c",
+      "merged": true,
+      "message": "Pull Request successfully merged"
+    }
+  ],
+  "cpu_review_suite": "450 passed, 3 skipped, 2 GPU deselected; isolated checkout",
+  "python36_ast_passed": true,
+  "firmware_built_locally": false,
+  "hardware_retested": false,
+  "motor_commands_sent": 0
+}

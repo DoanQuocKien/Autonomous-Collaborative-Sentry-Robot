@@ -1,7 +1,7 @@
 """End-to-end integration tests for Phase 2 replay on D2 dataset (Week 4, kouun-rokku)."""
 import numpy as np
 
-from sentry.app.phase2_pipeline import Phase2Pipeline
+from sentry.app.phase2_pipeline import MockAppearanceExtractor, Phase2Pipeline
 from sentry.app.state_machine import State, StateMachine
 from sentry.app.target_queue import TargetQueue
 from sentry.perception.face import FaceVerifier, normalize_embedding
@@ -17,7 +17,8 @@ def test_phase2_pipeline_authorized_entrant_stays_in_standby():
 
     queue = TargetQueue()
     sm = StateMachine(initial_state=State.STANDBY, t0=0.0)
-    pipeline = Phase2Pipeline(face_verifier=verifier, target_queue=queue, state_machine=sm)
+    pipeline = Phase2Pipeline(face_verifier=verifier, target_queue=queue, state_machine=sm,
+                              appearance_extractor=MockAppearanceExtractor())
 
     # Alice walks in
     query_emb = normalize_embedding(ref_emb + np.random.randn(512) * 0.01)
@@ -43,7 +44,8 @@ def test_phase2_pipeline_intruder_engages_pursuit_and_queues():
 
     queue = TargetQueue()
     sm = StateMachine(initial_state=State.STANDBY, t0=0.0)
-    pipeline = Phase2Pipeline(face_verifier=verifier, target_queue=queue, state_machine=sm)
+    pipeline = Phase2Pipeline(face_verifier=verifier, target_queue=queue, state_machine=sm,
+                              appearance_extractor=MockAppearanceExtractor())
 
     # Stranger walks in drifting to the right
     stranger_emb = normalize_embedding(np.random.randn(512))
@@ -95,7 +97,7 @@ def test_phase2_pipeline_target_handoff_and_next_target_acquisition():
     # T1 exits -> SEARCH -> search completes or exhausted -> Q pops T2 -> engage T2
     tq = TargetQueue()
     sm = StateMachine(initial_state=State.STANDBY, t0=0.0)
-    pipeline = Phase2Pipeline(target_queue=tq, state_machine=sm)
+    pipeline = Phase2Pipeline(target_queue=tq, state_machine=sm, appearance_extractor=MockAppearanceExtractor())
 
     # 1. Enqueue two intruders
     obs_t1 = [(1.0, (300, 100, 400, 300)), (2.0, (300, 150, 400, 350)), (3.0, (300, 200, 400, 400))]
@@ -138,7 +140,7 @@ def test_phase2_pipeline_target_handoff_and_next_target_acquisition():
 def test_phase2_pipeline_search_exhausted_drops_unfound_target():
     tq = TargetQueue()
     sm = StateMachine(initial_state=State.STANDBY, t0=0.0)
-    pipeline = Phase2Pipeline(target_queue=tq, state_machine=sm)
+    pipeline = Phase2Pipeline(target_queue=tq, state_machine=sm, appearance_extractor=MockAppearanceExtractor())
 
     obs = [(1.0, (300, 100, 400, 300)), (2.0, (300, 150, 400, 350))]
     pipeline.process_entry("T1", obs, timestamp=1.0)
@@ -170,11 +172,13 @@ def test_phase2_pipeline_search_exhausted_drops_unfound_target():
     assert tq.all_dropped()[0].id == "T2"
 
 
-def test_phase2_replay_d2_full_acceptance():
+def test_phase2_replay_d2_simulation_is_not_real_acceptance():
     whitelist, entries = generate_d2_replay_entries()
     results = run_phase2_replay(entries, whitelist, cosine_threshold=0.45)
 
-    assert results["status"] == "PASS"
+    assert results["status"] == "SIMULATION_PASS"
+    assert results["appearance_simulated"] is True
+    assert results["t1_accepted"] is False
     assert results["total_entries"] == 30
     assert results["authorized_count"] == 20
     assert results["intruder_count"] == 10

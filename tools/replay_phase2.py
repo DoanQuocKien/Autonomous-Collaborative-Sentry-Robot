@@ -4,14 +4,16 @@ Replays recorded ESP32-CAM doorway entries through the end-to-end Phase 2 monito
   ESP32 stream -> Face Verification -> OSNet re-ID Appearance -> Sector Logging -> TargetQueue -> StateMachine
 
 Usage:
-    python -m tools.replay_phase2
     python -m tools.replay_phase2 --simulated --out reports/kouun-rokku/week-04/phase2_replay_summary.json
+
+This tool uses synthetic entries and mock appearance vectors. For the actual
+shared D2 cafe pilot, use tools.evaluate_d2_pilot; neither tool approves T1.
 """
 import argparse
 import json
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 import numpy as np
 
 from sentry.app.phase2_pipeline import MockAppearanceExtractor, Phase2Pipeline
@@ -148,8 +150,12 @@ def run_phase2_replay(
     false_accepts = sum(1 for e, r in zip(entries, summary.event_results) if e["is_stranger"] and not r.is_intruder)
     false_rejects = sum(1 for e, r in zip(entries, summary.event_results) if not e["is_stranger"] and r.is_intruder)
 
+    simulation_pass = false_accepts == 0 and false_rejects == 0 and sector_accuracy >= 0.90
     results = {
-        "status": "PASS",
+        "status": "SIMULATION_PASS" if simulation_pass else "SIMULATION_FAIL",
+        "evaluation_tier": "T0_SIMULATED_APPEARANCE",
+        "appearance_simulated": True,
+        "t1_accepted": False,
         "total_entries": summary.total_entries,
         "authorized_count": summary.authorized_count,
         "intruder_count": summary.intruder_count,
@@ -191,7 +197,7 @@ def run_phase2_replay(
 
 def main():
     parser = argparse.ArgumentParser(description="Replay Phase 2 pipeline on D2 dataset.")
-    parser.add_argument("--simulated", action="store_true", default=True, help="Use simulated D2 leave-one-out entries")
+    parser.add_argument("--simulated", action="store_true", required=True, help="Explicitly use synthetic entries and mock appearance (not T1)")
     parser.add_argument("--threshold", type=float, default=0.45, help="Whitelist cosine threshold")
     parser.add_argument("--out", type=str, default="reports/kouun-rokku/week-04/phase2_replay_summary.json", help="Output JSON path")
     args = parser.parse_args()

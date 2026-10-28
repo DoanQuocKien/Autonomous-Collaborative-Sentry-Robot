@@ -37,77 +37,25 @@ class BaseAppearanceExtractor:
 
 
 class OSNetAppearanceExtractor(BaseAppearanceExtractor):
-    """OSNet re-ID feature extractor using torchreid weights (Spec §4.4)."""
+    """Phase 2 adapter to HNHL's validated, local-only OSNet encoder."""
 
     def __init__(
         self,
         weights_path: Optional[Union[str, Path]] = None,
         arch: str = "osnet_ain_x1_0",
         device: str = "cpu",
+        config_path=None,
     ):
-        self.device = device
-        self.arch = arch
-        self.net = None
-        self._init_model(weights_path)
-
-    def _init_model(self, weights_path):
-        try:
-            import torch
-            import torchreid
-        except ImportError:
-            logger.warning("torch or torchreid not installed; OSNetAppearanceExtractor unavailable")
-            return
-
-        if weights_path:
-            p = Path(weights_path)
-            if not p.exists():
-                logger.warning("Specified weights_path %s does not exist", weights_path)
-        else:
-            p = Path("weights") / f"{self.arch}_dg.pth"
-            if not p.exists():
-                # Check alternative default
-                p_alt = Path("weights") / "osnet_ain_x1_0_dg.pth"
-                if p_alt.exists():
-                    p = p_alt
-
-        if p.exists():
-            try:
-                self.net = torchreid.models.build_model(name=self.arch, num_classes=1000, pretrained=False)
-                torchreid.utils.load_pretrained_weights(self.net, str(p))
-                self.net.to(self.device)
-                self.net.eval()
-                logger.info("Loaded OSNet re-ID weights from %s on %s", p, self.device)
-            except Exception as e:
-                logger.warning("Failed loading OSNet weights from %s: %s", p, e)
-                self.net = None
+        from sentry.config import DEFAULT_PATH, load
+        from sentry.perception.reid import OSNetEncoder
+        config_path = DEFAULT_PATH if config_path is None else config_path
+        self.encoder = (OSNetEncoder(arch, weights_path, load(config_path)['reid'], device)
+                        if weights_path is not None else
+                        OSNetEncoder.from_config(arch, config_path, device))
+        self.model_id = self.encoder.model_id
 
     def extract(self, person_crop_bgr: np.ndarray) -> np.ndarray:
-        if self.net is None:
-            raise RuntimeError("OSNet model is not initialized or weights missing")
-
-        if person_crop_bgr is None or not isinstance(person_crop_bgr, np.ndarray) or person_crop_bgr.size == 0:
-            raise ValueError("person_crop_bgr must be a non-empty BGR numpy array")
-
-        import cv2
-        import torch
-
-        # Preprocess to 256x128 as standard for OSNet Market1501
-        resized = cv2.resize(person_crop_bgr, (128, 256))
-        rgb = cv2.cvtColor(resized, cv2.COLOR_BGR2RGB).astype(np.float32) / 255.0
-        # Normalize with ImageNet mean and std
-        mean = np.array([0.485, 0.456, 0.406], dtype=np.float32)
-        std = np.array([0.229, 0.224, 0.225], dtype=np.float32)
-        rgb = (rgb - mean) / std
-        tensor = torch.from_numpy(rgb.transpose(2, 0, 1)).unsqueeze(0).to(self.device)
-
-        with torch.no_grad():
-            feat = self.net(tensor)
-            feat = feat.squeeze().cpu().numpy()
-
-        norm = float(np.linalg.norm(feat))
-        if norm < 1e-12:
-            raise ValueError("Zero appearance vector from OSNet")
-        return (feat / norm).astype(np.float32)
+        return self.encoder.encode([person_crop_bgr])[0]
 
 
 class MockAppearanceExtractor(BaseAppearanceExtractor):
@@ -115,6 +63,7 @@ class MockAppearanceExtractor(BaseAppearanceExtractor):
 
     def __init__(self, seed: int = 532):
         self.rng = np.random.RandomState(seed)
+        self.model_id = "simulation:mock-appearance-v1"
 
     def extract(self, person_crop_bgr: np.ndarray) -> np.ndarray:
         if person_crop_bgr is None or not isinstance(person_crop_bgr, np.ndarray) or person_crop_bgr.size == 0:
@@ -171,7 +120,9 @@ class Phase2Pipeline:
         frame_width: float = 640.0,
     ):
         self.face_verifier = FaceVerifier() if face_verifier is None else face_verifier
-        self.appearance_extractor = MockAppearanceExtractor() if appearance_extractor is None else appearance_extractor
+        # Simulations must opt into MockAppearanceExtractor explicitly. A missing
+        # real model/crop must never silently create a synthetic pursuit target.
+        self.appearance_extractor = appearance_extractor
         self.target_queue = TargetQueue() if target_queue is None else target_queue
         self.state_machine = StateMachine(initial_state=State.STANDBY) if state_machine is None else state_machine
         self.sector_config = SectorConfig.from_toml() if sector_config is None else sector_config
@@ -242,12 +193,17 @@ class Phase2Pipeline:
         )
 
         # 4. Appearance feature extraction (OSNet re-ID vector)
-        if person_crop_bgr is not None and person_crop_bgr.size > 0:
-            app_vector = self.appearance_extractor.extract(person_crop_bgr)
-        else:
-            # Fallback mock/synthetic crop
+        if self.appearance_extractor is None:
+            raise RuntimeError("provide OSNetAppearanceExtractor, or an explicit mock for simulation")
+        if person_crop_bgr is None and isinstance(self.appearance_extractor, MockAppearanceExtractor):
             dummy_crop = np.zeros((256, 128, 3), dtype=np.uint8)
             app_vector = self.appearance_extractor.extract(dummy_crop)
+        else:
+            from sentry.perception.reid import validate_image
+            validate_image(person_crop_bgr)
+            app_vector = self.appearance_extractor.extract(person_crop_bgr)
+        from sentry.perception.reid import normalize
+        app_vector = normalize(app_vector)
 
         # 5. Save snapshot if requested
         snapshot_path = None
@@ -272,6 +228,8 @@ class Phase2Pipeline:
             metadata={
                 "similarity_score": best_score,
                 "sector_drift": drift,
+                "appearance_model_id": getattr(self.appearance_extractor, "model_id", "unidentified-extractor"),
+                "appearance_simulated": isinstance(self.appearance_extractor, MockAppearanceExtractor),
             },
         )
         self.target_queue.push(record, t=t0)
