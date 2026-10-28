@@ -4,6 +4,13 @@
   python -m tools.deploy_live --label class --vantage 1.8 0.5 --centre 4.0 0.0 --handshake data/handshake/class_door --dry-run    # robot connected, NO motor commands
   python -m tools.deploy_live --label class --vantage 1.8 0.5 --centre 4.0 0.0 --handshake data/handshake/class_door --camera-pose calib/camera_pose_x.json   # the real run
 
+SECOND MODE (Phase 1 chain, `--door`): instead of typing the sweet spot, declare the room and let the tool choose it:
+  python -m tools.deploy_live --label p1 --door 5.1 0.0 --box -1 -2 5 2 --wall 5.1 -2.1 5.1 2.1 --wall -1.1 -2.1 -1.1 2.1 --wall -1.1 2.1 5.1 2.1 --wall -1.1 -2.1 5.1 -2.1 \
+        --centre 2 0 --entrance sim --handshake manual --no-robot --no-audio          # laptop rehearsal: a simulated entrance detector, the key v verifies
+The robot scans in short pulses until the entrance detector (--entrance <folder from tools.enroll_entrance>, `sim`, or `manual` = the key e) sees the door, picks the best sweet spot
+inside the declared room (sentry/nav/declared_room.py: line of sight, 1.5-3.0 m from the door with --distance-margin on each side, close to a wall, reachable in a straight line) and deploys.
+The map is DECLARED from your tape measurements (box = cleared floor, walls and door occupied), not explored: say so in the report. No sweet spot or no entrance: the run stops with the reason.
+
 Coordinates are in the START frame, metres, measured with a tape: the robot starts at (0, 0) facing +x, y is to its left. --vantage is where it must stop (the sweet spot: line of
 sight to the door, 1.5-3.0 m from it, near a wall or furniture), --centre the room centre it turns to face. --handshake is a folder with ref/ and sweep/ made by tools.handshake_test
 (the ESP32's own reference frames of the door and a sweep of the room without it); `manual` replaces the detector by the key v (verify). Close every other reader of the ESP32 stream.
@@ -60,7 +67,7 @@ def fresh_flag(feed, now, max_age=ESP_FRESH_S):
     return bool(feed and feed.get("t") is not None and now - feed["t"] <= max_age and feed.get("in_view"))
 
 
-def control_loop(runner, model, cmd, end, get_flag, get_link, seconds, clock=time.time, sleep=time.sleep, rate_hz=30.0, key=lambda: None):
+def control_loop(runner, model, cmd, end, get_flag, get_link, seconds, clock=time.time, sleep=time.sleep, rate_hz=30.0, key=lambda: None, pose_cb=None):
     """The 30 Hz loop: dead-reckon the pose from the command the robot was given, step the runner, publish the command, check the safety conditions.
     get_link(now) -> None (no robot) or dict(stale=bool, blocked=bool). Returns (rows, final pose, dead-reckoned path length). Ends by setting end['reason']."""
     x = y = yaw = 0.0
@@ -81,6 +88,8 @@ def control_loop(runner, model, cmd, end, get_flag, get_link, seconds, clock=tim
         y += v_m * math.sin(yaw) * dt
         yaw = math.atan2(math.sin(yaw + w_r * dt), math.cos(yaw + w_r * dt))
         path += abs(v_m) * dt
+        if pose_cb is not None:
+            pose_cb((x, y, yaw))
         link = get_link(now)
         if link is not None and link["stale"]:
             end["reason"] = "no robot frame for %.1f s" % LINK_STALE_S
@@ -89,6 +98,11 @@ def control_loop(runner, model, cmd, end, get_flag, get_link, seconds, clock=tim
             manual_until = now + 0.5                          # the key latches for 0.5 s: the runner needs 3 consecutive in-view ticks
         flag = get_flag(now) or now < manual_until
         v, w = runner.step(t, (x, y, yaw), flag)
+        failed = getattr(runner, "failed", None)                 # a chain runner (Phase1Runner) says why it cannot go on
+        if failed:
+            end["reason"] = failed
+            cmd.update(v=0.0, w=0.0, t=now)
+            break
         if link is not None and link["blocked"] and v > 0.0:
             end["reason"] = "obstacle ahead while driving (stopped; this tool does not avoid)"
             v = w = 0.0
@@ -126,7 +140,12 @@ def make_handshake(folder):
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--label", default="run")
-    ap.add_argument("--vantage", type=float, nargs=2, required=True, metavar=("X", "Y"))
+    ap.add_argument("--vantage", type=float, nargs=2, default=None, metavar=("X", "Y"), help="the sweet spot typed in (manual mode); not needed with --door")
+    ap.add_argument("--door", type=float, nargs=2, default=None, metavar=("X", "Y"), help="Phase 1 chain: the door position (tape, start frame); the sweet spot is chosen from the declared room")
+    ap.add_argument("--box", type=float, nargs=4, default=None, metavar=("X0", "Y0", "X1", "Y1"), help="the cleared floor of the declared room (with --door)")
+    ap.add_argument("--wall", type=float, nargs=4, action="append", default=[], metavar=("X0", "Y0", "X1", "Y1"), help="a wall segment of the declared room (repeat); the door must lie on one")
+    ap.add_argument("--entrance", default="manual", help="with --door: a folder from tools.enroll_entrance (the robot's own camera), 'sim' (simulated from the pose) or 'manual' (key e)")
+    ap.add_argument("--distance-margin", type=float, default=0.3, help="with --door: shrink the 1.5-3.0 m window by this on each side (dead reckoning error)")
     ap.add_argument("--centre", type=float, nargs=2, required=True, metavar=("X", "Y"))
     ap.add_argument("--handshake", default="manual", help="folder with ref/ and sweep/ from tools.handshake_test, or 'manual' (press v)")
     ap.add_argument("--esp-ip", default="10.195.93.9")
@@ -145,6 +164,10 @@ def main():
     a.dry_run = a.dry_run or a.no_robot
     if not 10 <= a.seconds <= 300:
         ap.error("seconds in [10, 300]")
+    if (a.vantage is None) == (a.door is None):
+        ap.error("give exactly one of --vantage (manual sweet spot) and --door (Phase 1 chain)")
+    if a.door is not None and (a.box is None or not a.wall):
+        ap.error("--door needs --box and at least one --wall (the declared room)")
 
     model, done = WheelModel(), threading.Event()
     cmd = {"v": 0.0, "w": 0.0, "t": time.time()}
@@ -156,6 +179,37 @@ def main():
     speaker = AudioPromptPlayer(sender=LocalSpeaker(backend=(lambda path: None) if a.no_audio else None))
 
     detector = None if a.handshake == "manual" else make_handshake(a.handshake)
+    sm = StateMachine(StateMachineConfig())
+    pose_now = {"p": (0.0, 0.0, 0.0)}
+    manual = {"until": 0.0}
+    grid = entrance_det = None
+    if a.door is not None:
+        from sentry.config import load as load_config
+        from sentry.nav.declared_room import declared_grid
+        from sentry.nav.vantage import VantageSelector
+        from sentry.app.phase1_runner import Phase1Runner
+        cfg = load_config()
+        selector = VantageSelector(cfg["thresholds"]["entrance_min_m"] + a.distance_margin, cfg["thresholds"]["entrance_max_m"] - a.distance_margin,
+                                   cfg["vantage"]["robot_radius_m"], cfg["vantage"]["boundary_weight"], cfg["vantage"]["distance_weight"])
+        grid = declared_grid(a.box, a.wall, a.door)
+        runner = Phase1Runner(sm, speaker, grid, selector, a.door, a.centre)
+        if a.entrance not in ("sim", "manual"):
+            from sentry.perception.entrance import Camera, EntranceDetector
+            entrance_det = EntranceDetector.load(a.entrance, camera=Camera.from_json("calib/camera.json"))
+            print("entrance detector loaded from %s" % a.entrance, flush=True)
+    else:
+        runner = DeployRunner(sm, speaker, vantage_xy=a.vantage, centre_xy=a.centre, settings=DeploySettings())
+
+    def entrance_feeder():
+        """sim: the door counts as in view when the robot faces it (within 0.5 rad); manual: for 0.5 s after the key e. 20 Hz, like the robot's frames."""
+        from sentry.perception.entrance import EntranceResult
+        while not done.is_set():
+            x, y, yaw = pose_now["p"]
+            to_door = math.atan2(a.door[1] - y, a.door[0] - x)
+            rel = math.atan2(math.sin(to_door - yaw), math.cos(to_door - yaw))
+            seen = abs(rel) < 0.5 if a.entrance == "sim" else time.time() < manual["until"]
+            runner.observe_entrance(EntranceResult(seen, 30, None, rel if seen else None, None), time.time())
+            time.sleep(0.05)
 
     def esp_reader():
         import cv2
@@ -232,10 +286,18 @@ def main():
                 if f is None:
                     continue
                 link["t"] = time.time()
+                if entrance_det is not None:
+                    try:
+                        runner.observe_entrance(entrance_det.detect(f.frame_bgr), time.time())
+                    except Exception as exc:
+                        end["reason"] = end["reason"] or "entrance detector error: %r" % exc
                 if obs_det is not None:
                     try:
                         obs = obs_det(f.frame_bgr, time.time(), mode="explore", floor_type=a.floor)
                         link["blocked"] = explorer.blocking(obs)[0]
+                        if grid is not None:                       # furniture the detector sees joins the declared map
+                            from sentry.nav.gridmap import Pose2D
+                            grid.update(Pose2D(*pose_now["p"]), obs.ground_points)
                     except Exception as exc:
                         end["reason"] = end["reason"] or "obstacle detector error: %r" % exc
 
@@ -265,16 +327,22 @@ def main():
         threads.extend([threading.Thread(target=sender), threading.Thread(target=watcher), threading.Thread(target=frames)])
     if detector is not None:
         threads.append(threading.Thread(target=esp_reader))
+    if a.door is not None and a.entrance in ("sim", "manual"):
+        threads.append(threading.Thread(target=entrance_feeder))
     for th in threads:
         th.daemon = True
         th.start()
 
-    sm = StateMachine(StateMachineConfig())
-    runner = DeployRunner(sm, speaker, vantage_xy=a.vantage, centre_xy=a.centre, settings=DeploySettings())
     get_link = (lambda now: None) if a.no_robot else (lambda now: {"stale": now - link["t"] > LINK_STALE_S, "blocked": link["blocked"]})
     t_wall = time.time()
     try:
-        rows, final, path = control_loop(runner, model, cmd, end, lambda now: fresh_flag(esp, now), get_link, a.seconds, key=key_pressed)
+        def key():
+            k = key_pressed()
+            if k == "e":                                          # manual entrance: in view for 0.5 s
+                manual["until"] = time.time() + 0.5
+            return k
+        rows, final, path = control_loop(runner, model, cmd, end, lambda now: fresh_flag(esp, now), get_link, a.seconds, key=key,
+                                         pose_cb=lambda p: pose_now.__setitem__("p", p))
     finally:
         cmd.update(v=0.0, w=0.0, t=time.time())            # the sender then repeats zero; its close() sends a final stop
         time.sleep(0.4)
@@ -307,9 +375,17 @@ def main():
         wr.writerow(("t", "x_m", "y_m", "yaw_rad", "cmd_v", "cmd_w", "state", "handshake_in_view"))
         wr.writerows(rows)
     vp = [p for _, name, p in runner.events if name == "VANTAGE_REACHED"]
-    summary = {"label": a.label, "dry_run": a.dry_run, "no_robot": a.no_robot, "end_reason": end["reason"], "success": end["reason"] == "STANDBY reached",
-               "vantage_target": a.vantage, "room_centre": a.centre, "dr_pose_at_vantage_reached": vp[0] if vp else None,
-               "dr_error_at_vantage_m": round(math.hypot(vp[0][0] - a.vantage[0], vp[0][1] - a.vantage[1]), 3) if vp else None,
+    chosen = getattr(runner, "vantage", None)
+    target = (chosen.x_m, chosen.y_m) if chosen is not None else a.vantage
+    if grid is not None:
+        grid.save(run_dir / "grid.npz")
+    summary = {"mode": "declared_room" if a.door is not None else "manual_vantage", "door": a.door, "box": a.box, "walls": a.wall, "entrance_mode": a.entrance if a.door is not None else None,
+               "chosen_vantage": None if chosen is None else {"x": round(float(chosen.x_m), 3), "y": round(float(chosen.y_m), 3), "door_distance_m": round(float(chosen.door_distance_m), 3),
+                                                              "boundary_distance_m": round(float(chosen.boundary_distance_m), 3)},
+               "phase1_notes": getattr(runner, "notes", []), "door_bearing_error_deg": getattr(runner, "door_bearing_error_deg", None),
+               "label": a.label, "dry_run": a.dry_run, "no_robot": a.no_robot, "end_reason": end["reason"], "success": end["reason"] == "STANDBY reached",
+               "vantage_target": target, "room_centre": a.centre, "dr_pose_at_vantage_reached": vp[0] if vp else None,
+               "dr_error_at_vantage_m": round(math.hypot(vp[0][0] - target[0], vp[0][1] - target[1]), 3) if vp and target else None,
                "state_changes": runner.log, "events": [(round(t, 2), name) for t, name, _ in runner.events], "prompts": runner.prompts,
                "handshake": {"mode": a.handshake, "frames": esp["frames"], "in_view_frames": esp["in_view_frames"], "last_inliers": esp["inliers"], "error": esp.get("error")},
                "dr_path_m": round(path, 2), "dr_final_pose": [round(v, 3) for v in final], "battery_v_start": volts0, "battery_v_end": volts1,
