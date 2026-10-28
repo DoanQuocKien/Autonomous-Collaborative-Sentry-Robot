@@ -7,7 +7,11 @@ Reads the OV2640 MJPEG stream (`esp32/sentry_cam`, one client at a time: close e
 a short window to data/D2/<session>/<member>/e<NN>_<dir>/f<NNN>.jpg (the JPEG bytes of the ESP32, untouched) and a row to data/D2/<session>/manifest.csv:
 member, entry, direction, dist_m, light, n_frames, seconds, time. data/ is git-ignored: these are face images, keep them local (privacy rule, plan 4.2).
 
-Beep protocol (the person walking cannot read the screen): 1 beep = enter from the LEFT of the camera image, 2 = CENTRE, 3 = RIGHT; a pause; one long high
+Simplest mode, `--continuous`: ONE clip per person (default 120 s), one beep at the start, three at the end. The person walks up to the camera, turns, walks
+back, repeats about 10 times, coming from the left, centre and right in any order. Entries and directions are labelled afterwards from the faces in the frames
+(closest, largest face = the walker); frames go to data/D2/<session>/<member>/c<NN>/f<NNNNN>.jpg and one manifest row (direction "-").
+
+Beep protocol of the per-entry mode (the person walking cannot read the screen): 1 beep = enter from the LEFT of the camera image, 2 = CENTRE, 3 = RIGHT; a pause; one long high
 beep = start walking in and look at the door/camera; one low beep = stop; then `--gap` seconds to walk back. Entry directions cycle L C R L C R L C R C (balanced for 10).
 Keep strangers out of the ESP32 view; an entry with a stranger in it must be deleted (folder and manifest row) and re-recorded.
 """
@@ -60,7 +64,44 @@ def jpegs(url, timeout=10):
                 buf = buf[b + 2:]
 
 
+def run_continuous(a):
+    """One continuous clip of `a.seconds` for a.member: every frame saved, no per-entry timing. Returns the number of frames."""
+    url = "http://%s:81/stream" % a.ip
+    root = Path(a.out) / a.session
+    mdir = root / a.member
+    mdir.mkdir(parents=True, exist_ok=True)
+    manifest = root / "manifest.csv"
+    new = not manifest.exists()
+    k = 1 + len([p for p in mdir.glob("c*") if p.is_dir()])            # never reuse a number
+    cdir = mdir / ("c%02d" % k)
+    cdir.mkdir()
+    stream = jpegs(url)
+    next(stream)                                                      # connected and streaming
+    t_wait = time.time() + a.start_delay
+    while time.time() < t_wait:                                       # keep reading, save nothing
+        next(stream)
+    print("recording %s for %.0f s from %s" % (a.member, a.seconds, url), flush=True)
+    beep(1400, 450, not a.no_beep)
+    t0 = time.time()
+    n = 0
+    while time.time() - t0 < a.seconds:
+        (cdir / ("f%05d.jpg" % n)).write_bytes(next(stream))
+        n += 1
+    secs = time.time() - t0
+    for _ in range(3):
+        beep(500, 250, not a.no_beep)
+    with manifest.open("a", newline="") as fh:
+        w = csv.writer(fh)
+        if new:
+            w.writerow(["member", "entry", "direction", "dist_m", "light", "n_frames", "seconds", "time"])
+        w.writerow([a.member, "c%02d" % k, "-", a.dist, a.light, n, "%.1f" % secs, time.strftime("%Y-%m-%d %H:%M:%S")])
+    print("done: %d frames (%.1f fps) in %s" % (n, n / secs, cdir))
+    return n
+
+
 def run(a):
+    if getattr(a, "continuous", False):
+        return [] if run_continuous(a) >= MIN_FRAMES * 3 else [0]
     url = "http://%s:81/stream" % a.ip
     root = Path(a.out) / a.session
     mdir = root / a.member
@@ -114,8 +155,9 @@ def run(a):
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("member", help="who is walking in (e.g. DQK, HNHL, KR)")
+    ap.add_argument("--continuous", action="store_true", help="one continuous clip per person (simplest): the walker repeats walk-ins; entries are labelled afterwards")
     ap.add_argument("--entries", type=int, default=10)
-    ap.add_argument("--seconds", type=float, default=3.0, help="length of the saved window per entry")
+    ap.add_argument("--seconds", type=float, default=None, help="length of the saved window per entry (3 s), or of the clip with --continuous (120 s)")
     ap.add_argument("--ready", type=float, default=1.5, help="pause between the direction beeps and the start beep")
     ap.add_argument("--gap", type=float, default=6.0, help="time to walk back between entries")
     ap.add_argument("--start-delay", type=float, default=5.0, help="seconds before the first entry")
@@ -126,6 +168,8 @@ def main():
     ap.add_argument("--out", default="data/D2")
     ap.add_argument("--no-beep", action="store_true", help="no sound (tests, or a quiet room)")
     a = ap.parse_args()
+    if a.seconds is None:
+        a.seconds = 120.0 if a.continuous else 3.0
     if a.ip is None:
         from sentry.net.discover import find_esp32
         a.ip = find_esp32()
