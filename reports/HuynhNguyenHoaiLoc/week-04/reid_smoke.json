@@ -1,0 +1,38 @@
+{
+  "kind": "synthetic runtime smoke; not D2/D3 accuracy or model selection",
+  "models": {
+    "osnet_ain_x1_0": {
+      "model_id": "osnet_ain_x1_0:2f38acc25e28cb29407635db2be315edc08d5457a904b72a9a11e427f41f3242",
+      "device": "cuda:0",
+      "dtype": "torch.float32",
+      "dimensions": 512,
+      "norm": 1.0,
+      "repeat_max_abs": 0.0,
+      "latency_p50_ms": 11.292500072158873,
+      "latency_p95_ms": 11.575300002004951
+    },
+    "osnet_x0_25": {
+      "model_id": "osnet_x0_25:c0ff09177a21417a19bc73bbf5af4eb5d2b097c2074ed35e67819ee6cd93612c",
+      "device": "cuda:0",
+      "dtype": "torch.float32",
+      "dimensions": 512,
+      "norm": 1.0,
+      "repeat_max_abs": 0.0,
+      "latency_p50_ms": 10.444599960464984,
+      "latency_p95_ms": 14.08189499634318
+    }
+  },
+  "person_pipeline_candidates": 0,
+  "warmup": 3,
+  "iterations": 20,
+  "gpu": "NVIDIA GeForce RTX 5060 Laptop GPU",
+  "versions": {
+    "torch": "2.9.1+cu128",
+    "torchreid": "0.2.5",
+    "torchvision": "0.24.1+cu128"
+  },
+  "config_sha256": "b73bf19dd0a3d1536a0d30a6b24ac5bd8e821491dbdcc70599a903f241ec86ef",
+  "t1_passed": false,
+  "recommended_model": null,
+  "motor_commands_sent": 0
+}

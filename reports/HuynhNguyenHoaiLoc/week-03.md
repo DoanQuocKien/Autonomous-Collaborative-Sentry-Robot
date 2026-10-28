@@ -1,5 +1,7 @@
 # Week 03 – HuynhNguyenHoaiLoc (2026-10-19 to 2026-10-25)
 
+**Follow-up 2026-10-28:** training at 320/416/640 has now been repeated after DQK's background-leg corrections. New checkpoint/class-wise metrics and ONNX parity are recorded in [week-04.md](week-04.md); the original Week 3 numbers below remain historical same-session results.
+
 **Phạm vi:** InsightFace whitelist enrollment/verification; D2 ROC evaluation harness; D5 floor-obstacle labels and real YOLOv8n fine-tuning at 320/416/640; wire geometric fallback diagnosis and segmentation-label pilot; edge conversion parity harness; literature notes. **All D5 metrics below are internal development results, not independent T1 acceptance results.**
 
 ## Done

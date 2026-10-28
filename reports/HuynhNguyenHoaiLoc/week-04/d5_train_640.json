@@ -1,0 +1,17 @@
+{
+  "status": "TRAINING_COMPLETED_INTERNAL_DEV_NOT_T1",
+  "dataset_yaml": "data/D5_yolo_w04/data.yaml",
+  "weights_init": "data/models/yolov8n.pt",
+  "imgsz": 640,
+  "epochs": 30,
+  "batch": 8,
+  "device": "0",
+  "workers": 0,
+  "seed": 42,
+  "save_dir": "runs/d5_w04_corrected/yolov8n_640",
+  "best_checkpoint": "runs/d5_w04_corrected/yolov8n_640/weights/best.pt",
+  "precision_all": 0.7146177848538373,
+  "recall_all": 0.7783852639296187,
+  "mAP50_all": 0.8100871706360574,
+  "mAP50_95_all": 0.6550219404866269
+}

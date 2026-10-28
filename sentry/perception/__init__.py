@@ -2,6 +2,9 @@
 
 __all__ = []
 
+from sentry.perception.reid import OSNetEncoder, PersonAppearance, PersonReID, ReIDResult, match_gallery
+__all__.extend(['OSNetEncoder', 'PersonAppearance', 'PersonReID', 'ReIDResult', 'match_gallery'])
+
 try:
     from sentry.perception.entrance import (
         EntranceConfig,
