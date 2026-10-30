@@ -269,6 +269,7 @@ def main():
     ap.add_argument("--servo-marker", type=int, default=None, help="approach by following this board (id) in the robot's video: spin in pulses until it is seen, drive at it steering by its bearing, stop at --servo-stop (dead reckoning only until it is first seen)")
     ap.add_argument("--servo-board", type=float, nargs=2, default=None, metavar=("X", "Y"), help="--servo-marker: the board's position in the start frame; on arrival the pose is set to the vantage with the heading toward it (so the turn to face the centre starts from the truth)")
     ap.add_argument("--servo-stop", type=float, default=0.87, help="--servo-marker: stop at this camera-to-board range (m) = the sweet spot's distance to the board")
+    ap.add_argument("--min-battery", type=float, default=MIN_BATTERY_V, help="refuse to start below this pack voltage (project rule: 11.1 V is OK, 10.5 V stop; the speed model is calibrated at 11.8-12.2 V)")
     ap.add_argument("--no-save-frames", action="store_true", help="by default every robot video frame of the run is saved (JPEG q80, with its time) in <run>/frames for later analysis; faces may be in them: data/ stays local")
     ap.add_argument("--hs-span", type=float, default=5.0, help="handshake rule: window in seconds (the detector answers at about 1.5-2.2 fps in a live run: 5 s holds 7-11 answers)")
     ap.add_argument("--hs-frames", type=int, default=6, help="handshake rule: at least this many detector answers in the window")
@@ -379,8 +380,8 @@ def main():
         ssh = jetbot_ssh.connect(a.ip, a.user, password)
         volts0 = ina219_bus_volts(jetbot_ssh.sudo(ssh, "i2cget -y 1 0x41 0x02 w", password))
         print("battery %.2f V" % volts0)
-        if volts0 < MIN_BATTERY_V:
-            raise SystemExit("ABORT: battery %.2f V < %.1f V: charge first" % (volts0, MIN_BATTERY_V))
+        if volts0 < a.min_battery:
+            raise SystemExit("ABORT: battery %.2f V < %.1f V: charge first" % (volts0, a.min_battery))
         control_port = load()["net"]["control_port"]
         rx = ZMQReceiver(ip=a.ip)
         rx.start()

@@ -28,7 +28,7 @@ T2 (5 runs, pass: tape distance to the door 1.5-3.0 m, clear line of sight, wall
 Turn-rate calibration (left and right), a valid fit from `tools.motion_check`, T2 runs 2-5 and the tape answers, the Part C Phase 1 chain, the obstacle-detector blindness on this glossy floor (1 of about 5 chairs found; `deploy_live` does not avoid, DQK held R1 and the path was cleared by hand).
 
 ## t2_1 (2026-10-30, after the table above was written)
-Same method as sup6 (follow board 2). STANDBY at 17.8 s, handshake verified 2.1 s after the prompt (62 of 62 frames in view, camera pre-aimed), vantage at 13.6 s (slower than sup6: 10.8 s). **Battery 11.44 V at the start, 11.43 V at the end; the speed ratio from board 2 was 0.75** (earlier runs 0.94-1.03), consistent with the wheel offset growing at low battery (Week 2 note: the offset is larger at 11 V), not proven. Door, from the sweet spot (tape, DQK): (1.94, -0.30) m = 1.96 m, clear line of sight, tables and chairs within 1.5 m of the path (the pass rule says within 1 m: not confirmed). Collisions and the offset from the mark: not yet given. Frames (349) local in `data/deploy/t2_1/frames`.
+Same method as sup6 (follow board 2). STANDBY at 17.8 s, handshake verified 2.1 s after the prompt (62 of 62 frames in view, camera pre-aimed), vantage at 13.6 s (slower than sup6: 10.8 s). **Battery 11.44 V at the start, 11.43 V at the end; the speed ratio from board 2 was 0.75** (earlier runs 0.94-1.03), cause unknown: **t2_2 at a lower voltage (11.40 V) gave 0.93**, so the battery alone does not explain 0.75 (the Week 2 note says the wheel offset grows at low voltage, which may add to it). Door, from the sweet spot (tape, DQK): (1.94, -0.30) m = 1.96 m, clear line of sight, tables and chairs within 1.5 m of the path (the pass rule says within 1 m: not confirmed). Collisions and the offset from the mark: not yet given. Frames (349) local in `data/deploy/t2_1/frames`.
 
 ## What went wrong today and the rules (DQK: "today's work is VERY inefficient")
 1. A DR pose was reported as the result of sup1; the robot had veered. A logged pose is not ground truth: ask what happened physically.
@@ -38,4 +38,7 @@ Same method as sup6 (follow board 2). STANDBY at 17.8 s, handshake verified 2.1 
 5. Four runs were started before the operator was ready (R1 not armed in 60 s). Announce what the run needs and wait for "go".
 6. The tape answers were never saved (stdin was /dev/null). Capture grading inputs at run time.
 7. sup3 and a dry run applied 0 marker fixes, an instrumented run 72: cause not found. A feature that silently does nothing must be reported or removed.
-8. The battery fell to 11.44 V before t2_1; its speed ratio (0.75) is probably the battery. Charge under about 11.6 V and read speed with the voltage.
+8. The battery fell to 11.44 V before t2_1 and no charge was possible: runs 2+ were taken at 11.40 V with the guard lowered to the project rule (11.1 V). Read a speed ratio together with the voltage; do not claim a cause for one odd value (t2_1 0.75 vs t2_2 0.93 at a lower voltage).
+
+## t2_2 (11.40 V, guard 11.1 V)
+Vantage at 11.7 s, then **R1 released at 17.9 s with the handshake at 0 of 57 detector frames in view** (the ESP32 was not aimed at the door); not a pass, not graded. Speed ratio from board 2: 0.93. Battery 11.396 -> 11.384 V. Frames (320) local.
