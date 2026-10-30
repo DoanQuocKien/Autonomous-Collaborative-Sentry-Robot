@@ -26,3 +26,16 @@ T2 (5 runs, pass: tape distance to the door 1.5-3.0 m, clear line of sight, wall
 
 ## Not done / open
 Turn-rate calibration (left and right), a valid fit from `tools.motion_check`, T2 runs 2-5 and the tape answers, the Part C Phase 1 chain, the obstacle-detector blindness on this glossy floor (1 of about 5 chairs found; `deploy_live` does not avoid, DQK held R1 and the path was cleared by hand).
+
+## t2_1 (2026-10-30, after the table above was written)
+Same method as sup6 (follow board 2). STANDBY at 17.8 s, handshake verified 2.1 s after the prompt (62 of 62 frames in view, camera pre-aimed), vantage at 13.6 s (slower than sup6: 10.8 s). **Battery 11.44 V at the start, 11.43 V at the end; the speed ratio from board 2 was 0.75** (earlier runs 0.94-1.03), consistent with the wheel offset growing at low battery (Week 2 note: the offset is larger at 11 V), not proven. Door, from the sweet spot (tape, DQK): (1.94, -0.30) m = 1.96 m, clear line of sight, tables and chairs within 1.5 m of the path (the pass rule says within 1 m: not confirmed). Collisions and the offset from the mark: not yet given. Frames (349) local in `data/deploy/t2_1/frames`.
+
+## What went wrong today and the rules (DQK: "today's work is VERY inefficient")
+1. A DR pose was reported as the result of sup1; the robot had veered. A logged pose is not ground truth: ask what happened physically.
+2. Two hours of dead-reckoning corrections and motion fits before the simple closed loop (follow board 2 by its bearing), which worked at once. Use a visible landmark as feedback first; calibrate later.
+3. Optional calibration tooling displaced the required T2 runs. In a room slot, do the required graded runs first; record data for optional maths and do the maths at home.
+4. The motion check was built without looking at the live measurement: spins of 200 deg, a blending bug beyond 0.8 m, a 2 m board too noisy. Look at the measurement live, robot still, before building on it.
+5. Four runs were started before the operator was ready (R1 not armed in 60 s). Announce what the run needs and wait for "go".
+6. The tape answers were never saved (stdin was /dev/null). Capture grading inputs at run time.
+7. sup3 and a dry run applied 0 marker fixes, an instrumented run 72: cause not found. A feature that silently does nothing must be reported or removed.
+8. The battery fell to 11.44 V before t2_1; its speed ratio (0.75) is probably the battery. Charge under about 11.6 V and read speed with the voltage.
