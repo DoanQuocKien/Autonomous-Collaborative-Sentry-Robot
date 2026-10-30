@@ -42,3 +42,13 @@ Same method as sup6 (follow board 2). STANDBY at 17.8 s, handshake verified 2.1 
 
 ## t2_2 (11.40 V, guard 11.1 V)
 Vantage at 11.7 s, then **R1 released at 17.9 s with the handshake at 0 of 57 detector frames in view** (the ESP32 was not aimed at the door); not a pass, not graded. Speed ratio from board 2: 0.93. Battery 11.396 -> 11.384 V. Frames (320) local.
+
+## T2 grading, tape answers as given by DQK (2026-10-30)
+Door from the sweet spot: (1.94, -0.30) m = 1.96 m (the tape distance for every run, corrected by each run's offset below, stays inside 1.5-3.0 m); clear line of sight. **Collisions: none in any run, "there are no collision or any obstacle"** (DQK; applies to sup6, t2_1, t2_3). Furniture: tables and chairs within 1.5 m of the path; DQK also said there is no obstacle on the path, so whether something stands within 1 m of the sweet spot (the pass rule) is NOT settled; the table is very large and cannot be moved.
+| run | STANDBY | handshake | offset from the sweet spot (tape) | counted |
+|---|---|---|---|---|
+| sup6 | yes, 16.0 s | verified (42/42) | (-0.18, +0.19) m = 0.26 m | candidate |
+| t2_1 | yes, 17.8 s | verified (62/62) | (+0.25, -0.10) m = 0.27 m | candidate |
+| t2_2 | no (R1 released 17.9 s) | 0 of 57 in view (ESP32 not aimed) | < 0.04 m | no |
+| t2_3 | yes, 16.5 s (battery 11.36 V) | verified (52/52) | (-0.31, +0.23) m = 0.39 m | candidate |
+"Candidate" = meets STANDBY, verified, 0 collisions, door distance and line of sight; the 1 m clearance condition is the open one. No run is counted as a pass in this file: the count is DQK's call. Speed ratio from board 2 over these runs: 0.75, 0.93, 0.80 (and 1.03 for sup6): unexplained scatter.
