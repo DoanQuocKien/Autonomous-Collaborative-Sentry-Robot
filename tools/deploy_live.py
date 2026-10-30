@@ -149,7 +149,7 @@ def main():
     ap.add_argument("--distance-margin", type=float, default=0.3, help="with --door: shrink the 1.5-3.0 m window by this on each side (dead reckoning error)")
     ap.add_argument("--centre", type=float, nargs=2, required=True, metavar=("X", "Y"))
     ap.add_argument("--handshake", default="manual", help="folder with ref/ and sweep/ from tools.handshake_test, or 'manual' (press v)")
-    ap.add_argument("--esp-ip", default="10.195.93.9")
+    ap.add_argument("--esp-ip", default="auto", help="the ESP32-CAM address, or auto (found on the network: the hotspot hands out a new subnet on some days)")
     ap.add_argument("--camera-pose", default=None, help="camera pose JSON of the CURRENT mount: enables the obstacle stop (and the start check)")
     ap.add_argument("--floor", choices=("glossy", "matte", "unknown"), default="unknown")
     ap.add_argument("--seconds", type=float, default=120.0)
@@ -179,6 +179,12 @@ def main():
     threads, ssh, rx, volts0, volts1, password = [], None, None, None, None, None
     speaker = AudioPromptPlayer(sender=LocalSpeaker(backend=(lambda path: None) if a.no_audio else None))
 
+    if a.handshake != "manual" and a.esp_ip == "auto":
+        from sentry.net.discover import find_esp32
+        a.esp_ip = find_esp32()
+        if a.esp_ip is None:
+            raise SystemExit("no ESP32 found on this network (is it powered and on the hotspot? give --esp-ip)")
+        print("ESP32 found at %s" % a.esp_ip, flush=True)
     detector = None if a.handshake == "manual" else make_handshake(a.handshake)
     sm = StateMachine(StateMachineConfig())
     pose_now = {"p": (0.0, 0.0, 0.0)}
