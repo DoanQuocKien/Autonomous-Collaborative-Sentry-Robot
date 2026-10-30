@@ -41,6 +41,7 @@ ESTOP_LATCH = "/home/jetbot/sentry/ESTOP"
 MIN_BATTERY_V = 11.3
 ESP_FRESH_S = 1.0           # a handshake result older than this counts as "not in view"
 LINK_STALE_S = 0.5          # no robot frame for this long: stop
+LINK_GRACE_S = 1.0          # extra time for the first frame after the threads start
 
 
 def beep(freq, ms):
@@ -336,6 +337,7 @@ def main():
         threads.append(threading.Thread(target=esp_reader))
     if a.door is not None and a.entrance in ("sim", "manual"):
         threads.append(threading.Thread(target=entrance_feeder))
+    link["t"] = time.time() + LINK_GRACE_S      # the watchdog counts from now: link["t"] was set at start-up, before the models and the SSH link, so the first tick looked stale (found by the dry run on 2026-10-30)
     for th in threads:
         th.daemon = True
         th.start()
