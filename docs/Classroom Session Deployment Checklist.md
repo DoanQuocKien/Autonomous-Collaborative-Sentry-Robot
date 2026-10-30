@@ -13,6 +13,10 @@ What is tested: the spec's section 4.3 HCI deployment protocol on the robot (swe
 3. ESP32 powered: `ping <esp-ip>` (it was 10.195.93.9 on the last hotspot; the IP can change: `python -c "from sentry.net import discover; print(discover.find_esp32())"`).
 4. Pick the door and a **cleared floor** of about 4 x 3 m: no people, bags, cables, wires: people are not obstacles to the detector, and the obstacle stop sees only furniture classes.
 
+## Step zero for any run with the obstacle detector: self-calibrate the camera angle (2026-10-30)
+The mount is tiltable and moves whenever the robot is handled, so NEVER use a pose file from another day (1 degree is about 15 % of the ground distance at 1 m). With the robot on its start spot, stand ONE ArUco marker upright (a T2 board on a chair; the 150 mm print) 1-2 m in front of it, in view, and run
+`python -m tools.self_pose --marker-m 0.15 --bottom-h 0.132` (0.132 m = the lower edge of a 0.150 m marker whose centre is at 0.207 m; measure yours). It reads about 45 frames, refuses to write a file unless 15+ markers were accepted with a pitch spread under 0.4 degrees, and writes `calib/camera_pose_self_<date>_<n>.json`: pass that to `--camera-pose`. Without a marker, run without `--camera-pose` and do not rely on any distance or obstacle stop.
+
 ## Part A: the handshake at the real door (about 15 min)
 `python -m tools.handshake_test ref --name class_door` (hold the ESP32 still facing the door at about 2 m), then `sweep --name class_door` (25 s around the room, door NOT in view), then `trials --name class_door` (20 segments, long high beep = face the door from 1.5-3 m with the position varied, two low beeps = turn away), then `eval --name class_door`. Read `data/handshake/class_door/results.json`: target 10/10 and 10/10. Report as measured; copy the numbers to `reports/DoanQuocKien/week-04/handshake/` with a README (the cafe rehearsal was 9/10 and 10/10).
 
