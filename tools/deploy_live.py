@@ -240,6 +240,7 @@ def make_handshake(folder):
 
 
 def main():
+    import cv2
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--label", default="run")
     ap.add_argument("--vantage", type=float, nargs=2, default=None, metavar=("X", "Y"), help="the sweet spot typed in (manual mode); not needed with --door")
@@ -268,6 +269,7 @@ def main():
     ap.add_argument("--servo-marker", type=int, default=None, help="approach by following this board (id) in the robot's video: spin in pulses until it is seen, drive at it steering by its bearing, stop at --servo-stop (dead reckoning only until it is first seen)")
     ap.add_argument("--servo-board", type=float, nargs=2, default=None, metavar=("X", "Y"), help="--servo-marker: the board's position in the start frame; on arrival the pose is set to the vantage with the heading toward it (so the turn to face the centre starts from the truth)")
     ap.add_argument("--servo-stop", type=float, default=0.87, help="--servo-marker: stop at this camera-to-board range (m) = the sweet spot's distance to the board")
+    ap.add_argument("--no-save-frames", action="store_true", help="by default every robot video frame of the run is saved (JPEG q80, with its time) in <run>/frames for later analysis; faces may be in them: data/ stays local")
     ap.add_argument("--hs-span", type=float, default=5.0, help="handshake rule: window in seconds (the detector answers at about 1.5-2.2 fps in a live run: 5 s holds 7-11 answers)")
     ap.add_argument("--hs-frames", type=int, default=6, help="handshake rule: at least this many detector answers in the window")
     ap.add_argument("--hs-frac", type=float, default=0.7, help="handshake rule: at least this fraction of them in view (the camera is placed still: a real placement gives a steady majority)")
@@ -305,7 +307,7 @@ def main():
     def servo_obs():
         s = fixed["servo"]
         return (s[1], s[2]) if s is not None and time.time() - s[0] < 0.6 else None
-    servo_tr, servo_log = None, []
+    servo_tr, servo_log, frames_buf = None, [], []
     if a.servo_marker is not None:
         from sentry.nav.localization import LocalizationTracker
         servo_tr = LocalizationTracker(motion_calib=None, camera_calib="calib/camera.json", max_marker_distance_m=1e6)
@@ -421,6 +423,10 @@ def main():
                 if f is None:
                     continue
                 link["t"] = time.time()
+                if not a.no_save_frames:
+                    ok_, jpg = cv2.imencode(".jpg", f.frame_bgr, [cv2.IMWRITE_JPEG_QUALITY, 80])
+                    if ok_:
+                        frames_buf.append((time.time(), jpg.tobytes()))
                 if servo_tr is not None:
                     for d in servo_tr.detect_markers(f.frame_bgr):
                         if d.marker_id == a.servo_marker:
@@ -540,6 +546,11 @@ def main():
                "marker_fixes": end.get("fixes"), "servo_motion": servo_motion(servo_log, model) if servo_log else None, "servo_sightings": len(servo_log), "anchors": a.anchors, "dr_path_m": round(path, 2), "dr_final_pose": [round(v, 3) for v in final], "battery_v_start": volts0, "battery_v_end": volts1,
                "camera_pose_file": a.camera_pose, "obstacle_check": bool(a.camera_pose), "tape_answers": answers, "date": time.strftime("%Y-%m-%d %H:%M")}
     (run_dir / "summary.json").write_text(json.dumps(summary, indent=1))
+    if frames_buf:
+        (run_dir / "frames").mkdir(exist_ok=True)
+        for t_, jpg in frames_buf:
+            (run_dir / "frames" / ("%.3f.jpg" % t_)).write_bytes(jpg)
+        print("saved %d video frames" % len(frames_buf), flush=True)
     if servo_log:
         with open(run_dir / "servo.csv", "w", newline="") as fh:
             w_ = csv.writer(fh)
