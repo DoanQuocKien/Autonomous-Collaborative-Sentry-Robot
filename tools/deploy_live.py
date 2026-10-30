@@ -266,6 +266,7 @@ def main():
         except Exception as exc:
             esp["error"] = repr(exc)
 
+    obs_det = explorer = None
     if not a.no_robot:
         from sentry.config import load
         from sentry.net.discover import resolve
@@ -371,7 +372,9 @@ def main():
         th.daemon = True
         th.start()
 
-    get_link = (lambda now: None) if a.no_robot else (lambda now: {"stale": now - link["t"] > LINK_STALE_S, "blocked": link["blocked"]})
+    # the 0.5 s video watchdog guards the OBSTACLE detector; without --camera-pose the robot's video steers nothing, and a weak Wi-Fi link (2.5-5 fps measured in the classroom on 2026-10-30)
+    # would abort every run for nothing. The robot's own 0.3 s command watchdog, R1 and the e-stop poll still stop it.
+    get_link = (lambda now: None) if a.no_robot else (lambda now: {"stale": obs_det is not None and now - link["t"] > LINK_STALE_S, "blocked": link["blocked"]})
     t_wall = time.time()
     try:
         def key():
