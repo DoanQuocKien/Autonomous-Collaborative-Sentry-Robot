@@ -238,6 +238,8 @@ def main():
     ap.add_argument("--motion-session", default=None, help="calib/motion_session_*.json from tools.motion_check: this floor's speed scale, left/right turn scales and drift for the dead reckoning (without it the robot veered off the line on 2026-10-30)")
     ap.add_argument("--anchors", default=None, help="ArUco board anchors CSV (marker_id,x_m,y_m,z_m,yaw_deg) in the frame of the start pose: the pose is corrected from the boards in the robot's video (spins go in pulses)")
     ap.add_argument("--fix-range", type=float, default=1.5, help="boards farther than this give no pose fix (their orientation is too noisy)")
+    ap.add_argument("--servo-marker", type=int, default=None, help="approach by following this board (id) in the robot's video: spin in pulses until it is seen, drive at it steering by its bearing, stop at --servo-stop (dead reckoning only until it is first seen)")
+    ap.add_argument("--servo-stop", type=float, default=0.87, help="--servo-marker: stop at this camera-to-board range (m) = the sweet spot's distance to the board")
     ap.add_argument("--hs-span", type=float, default=5.0, help="handshake rule: window in seconds (the detector answers at about 1.5-2.2 fps in a live run: 5 s holds 7-11 answers)")
     ap.add_argument("--hs-frames", type=int, default=6, help="handshake rule: at least this many detector answers in the window")
     ap.add_argument("--hs-frac", type=float, default=0.7, help="handshake rule: at least this fraction of them in view (the camera is placed still: a real placement gives a steady majority)")
@@ -270,7 +272,15 @@ def main():
     detector = None if a.handshake == "manual" else make_handshake(a.handshake)
     sm = StateMachine(StateMachineConfig())
     pose_now = {"p": (0.0, 0.0, 0.0)}
-    fixer, fixed = None, {"m": None}
+    fixer, fixed = None, {"m": None, "servo": None}
+
+    def servo_obs():
+        s = fixed["servo"]
+        return (s[1], s[2]) if s is not None and time.time() - s[0] < 0.6 else None
+    servo_tr = None
+    if a.servo_marker is not None:
+        from sentry.nav.localization import LocalizationTracker
+        servo_tr = LocalizationTracker(motion_calib=None, camera_calib="calib/camera.json", max_marker_distance_m=1e6)
     if a.anchors:
         from sentry.nav.marker_fix import MarkerFix
         fixer = MarkerFix(a.anchors, max_range_m=a.fix_range)
@@ -291,7 +301,8 @@ def main():
             entrance_det = EntranceDetector.load(a.entrance, camera=Camera.from_json("calib/camera.json"))
             print("entrance detector loaded from %s" % a.entrance, flush=True)
     else:
-        runner = DeployRunner(sm, speaker, vantage_xy=a.vantage, centre_xy=a.centre, settings=DeploySettings())
+        runner = DeployRunner(sm, speaker, vantage_xy=a.vantage, centre_xy=a.centre, settings=DeploySettings(),
+                              servo=(lambda t: servo_obs()) if a.servo_marker is not None else None, servo_stop_m=a.servo_stop)
 
     def entrance_feeder():
         """sim: the door counts as in view when the robot faces it (within 0.5 rad); manual: for 0.5 s after the key e. 20 Hz, like the robot's frames."""
@@ -382,6 +393,11 @@ def main():
                 if f is None:
                     continue
                 link["t"] = time.time()
+                if servo_tr is not None:
+                    for d in servo_tr.detect_markers(f.frame_bgr):
+                        if d.marker_id == a.servo_marker:
+                            fixed["servo"] = (time.time(), d.distance_m, d.bearing_rad)
+                            break
                 if fixer is not None:
                     try:
                         fixed["m"] = fixer.measure(f.frame_bgr) or fixed["m"]
@@ -446,7 +462,7 @@ def main():
                 manual["until"] = time.time() + 0.5
             return k
         rows, final, path = control_loop(runner, model, cmd, end, make_flag(esp, window, sm), get_link, a.seconds, key=key,
-                                         pose_cb=lambda p: pose_now.__setitem__("p", p), get_fix=(lambda: fixed["m"]) if fixer is not None else None)
+                                         pose_cb=lambda p: pose_now.__setitem__("p", p), get_fix=(lambda: fixed["m"]) if fixer is not None else ((lambda: None) if servo_tr is not None else None))
     finally:
         cmd.update(v=0.0, w=0.0, t=time.time())            # the sender then repeats zero; its close() sends a final stop
         time.sleep(0.4)

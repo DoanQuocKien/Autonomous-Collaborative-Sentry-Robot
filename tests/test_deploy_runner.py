@@ -105,3 +105,12 @@ def test_a_failing_speaker_cannot_stop_the_deployment():
     r.start(0.0)
     r.step(0.1, (0.0, 0.0, 0.0), False)
     assert sm.state == State.WAIT_CAMERA and r.prompts == ["place_camera"]
+
+
+def test_servo_command_turns_toward_a_board_then_drives_and_stops_at_the_range():
+    from sentry.app.deploy_runner import servo_command
+    assert servo_command(2.0, 0.8, 0.87) == (0.0, 0.45, False)            # board far to the left: spin left
+    assert servo_command(2.0, -0.8, 0.87) == (0.0, -0.45, False)
+    v, w, done = servo_command(2.0, 0.1, 0.87)
+    assert v > 0 and 0 < w < 0.2 and not done                           # roughly ahead: drive and steer left
+    assert servo_command(0.85, 0.0, 0.87) == (0.0, 0.0, True)
