@@ -1,0 +1,119 @@
+{
+ "label": "PROVISIONAL floor model, measured on the classroom glossy tile floor on 2026-10-30 (one robot, one pack, 11.2-11.7 V). Not valid on other floors or below 11.2 V.",
+ "generated_by": "python -m tools.analyse_classroom_1030",
+ "loader": "tools/floor_model.py",
+ "wheel": {
+  "k": 1.64,
+  "m0_at_11_5": 0.0314,
+  "m0_per_volt": -0.0203,
+  "track": 0.137,
+  "max_speed": 0.3,
+  "min_pwm": 0.12,
+  "valid_battery_v": [
+   11.28,
+   11.7
+  ],
+  "source": "speed_vs_battery.json option a (k fixed at the Week 2 slope)"
+ },
+ "turn": {
+  "rate_rad_per_s_at_w_0_45": 2.395,
+  "lag_s": 0.017,
+  "n": 20,
+  "spin_durations_s": [
+   0.2,
+   0.41,
+   0.81,
+   0.82
+  ],
+  "pulse_0_2s_right": {
+   "n": 12,
+   "mean": 0.438,
+   "std": 0.03,
+   "min": 0.394,
+   "max": 0.487,
+   "ci95_halfwidth": 0.017
+  },
+  "pulse_0_2s_left": {
+   "n": 2,
+   "mean": 0.494,
+   "std": 0.079,
+   "min": 0.438,
+   "max": 0.55,
+   "ci95_halfwidth": 0.11
+  },
+  "left_right_note": "not distinguishable: 12 right and 2 left pulses (0.2 s), 1 left + 1 right 0.4 s spin, 2 + 2 cross-board 0.8 s spins",
+  "battery_correlation": -0.096
+ },
+ "startup": {
+  "drive_onset_s": {
+   "n": 7,
+   "mean": 0.137,
+   "std": 0.105,
+   "min": 0.015,
+   "max": 0.287,
+   "ci95_halfwidth": 0.078
+  },
+  "note": "time from the drive command to the first range change in the received video = motor start + video latency (not separable)"
+ },
+ "video": {
+  "latency_upper_bound_s": 0.153,
+  "still_after_pulse_start_s": {
+   "n": 13,
+   "mean": 0.124,
+   "std": 0.023,
+   "min": 0.064,
+   "max": 0.165,
+   "ci95_halfwidth": 0.013
+  },
+  "sim_latency_s": 0.12,
+  "note": "the sim value 0.12 s is a choice inside the measured bounds (<= 0.153 s on the best pulse; frames still unchanged 0.06-0.17 s after a pulse start). One pulse (sup5 1.4 s) looks like frames 0.5-0.7 s stale at a run start: probable, not proven"
+ },
+ "drift": {
+  "closed_loop_steady_rad_per_m": {
+   "n": 5,
+   "mean": 0.384,
+   "std": 0.119,
+   "min": 0.311,
+   "max": 0.593,
+   "ci95_halfwidth": 0.105
+  },
+  "open_loop_from_rest_rad_per_m": {
+   "n": 4,
+   "mean": 0.568,
+   "std": 0.097,
+   "min": 0.456,
+   "max": 0.686,
+   "ci95_halfwidth": 0.095
+  },
+  "sign": "left +",
+  "sim_rad_per_m": 0.45,
+  "note": "0.45 = between the steady closed-loop mean 0.38 and the open-loop-from-rest mean; per-run spread is real, simulate it (e.g. normal, sd 0.12)"
+ },
+ "stop": {
+  "overshoot_m": {
+   "n": 5,
+   "mean": 0.043,
+   "std": 0.014,
+   "min": 0.02,
+   "max": 0.056,
+   "ci95_halfwidth": 0.012
+  },
+  "speed_m_s": 0.22,
+  "equivalent_delay_s": 0.195,
+  "rule": "stop when range <= target + speed * 0.2 s (0.044 m at 0.22 m/s)"
+ },
+ "camera": {
+  "pitch_down_deg_marker": {
+   "furniture_1_2m": 6.21,
+   "deploy_runs": {
+    "sup5_1": 6.0,
+    "sup6_1": 6.04,
+    "t2_1": 6.03,
+    "t2_3": 6.09,
+    "t2_5": 6.14
+   }
+  },
+  "pose_file_pitch_deg": 2.15,
+  "height_m": 0.1
+ }
+}

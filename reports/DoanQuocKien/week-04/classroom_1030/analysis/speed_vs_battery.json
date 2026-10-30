@@ -1,0 +1,187 @@
+{
+ "label": "PROVISIONAL: classroom glossy tile, 2026-10-30, one JetBot, one pack; fitted on 5 runs at ONE command (v = 0.55, motor 0.165) between 11.28 and 11.70 V",
+ "law": "wheel speed = k * (|motor| - m0), motor = mix(v, w) * 0.3 after the dead zone 0.12 (sentry/nav/wheel_model.py)",
+ "data": {
+  "sup4_1": {
+   "battery_mean": 11.696,
+   "speed": 0.2239,
+   "speed_se": 0.0012,
+   "segments": 1,
+   "tool_ratio": 0.936
+  },
+  "sup5_1": {
+   "battery_mean": 11.644,
+   "speed": 0.2244,
+   "speed_se": 0.001,
+   "segments": 1,
+   "tool_ratio": 1.027
+  },
+  "sup6_1": {
+   "battery_mean": 11.592,
+   "speed": 0.2245,
+   "speed_se": 0.0012,
+   "segments": 1,
+   "tool_ratio": 1.028
+  },
+  "t2_1": {
+   "battery_mean": 11.438,
+   "speed": 0.2159,
+   "speed_se": 0.0015,
+   "segments": 1,
+   "tool_ratio": 0.748
+  },
+  "t2_2": {
+   "battery_mean": 11.39,
+   "speed": 0.2156,
+   "speed_se": 0.0012,
+   "segments": 1,
+   "tool_ratio": 0.931
+  }
+ },
+ "week2_published_steady_12V": [
+  {
+   "v": 0.5,
+   "motor": 0.15,
+   "speed": 0.185,
+   "battery_v": "12.02-12.18"
+  },
+  {
+   "v": 0.6,
+   "motor": 0.18,
+   "speed": 0.238,
+   "battery_v": "12.02-12.18"
+  },
+  {
+   "v": 0.7,
+   "motor": 0.21,
+   "speed": 0.276,
+   "battery_v": "12.02-12.18"
+  },
+  {
+   "v": 0.85,
+   "motor": 0.255,
+   "speed": 0.357,
+   "battery_v": "12.02-12.18"
+  },
+  {
+   "v": 1.0,
+   "motor": 0.3,
+   "speed": 0.435,
+   "battery_v": "12.02-12.18"
+  }
+ ],
+ "option_a_m0_of_v": {
+  "k": 1.64,
+  "m0_at_11_5": 0.0314,
+  "m0_per_volt": -0.0203,
+  "bootstrap": {
+   "m0_at_11_5_ci95": [
+    0.0278,
+    0.032
+   ],
+   "m0_per_volt_ci95": [
+    -0.0289,
+    0.0035
+   ],
+   "resamples": 1818
+  }
+ },
+ "option_b_k_of_v": {
+  "m0": 0.038,
+  "k_at_11_5": 1.725,
+  "k_per_volt": 0.262
+ },
+ "table": [
+  {
+   "battery_v": 11.2,
+   "m0": 0.0375,
+   "speed_v055_option_a": 0.2092,
+   "k_option_b": 1.647,
+   "speed_v055_option_b": 0.2092,
+   "spin_rad_s_w045_option_a": 2.335,
+   "spin_rad_s_w045_option_b": 2.332
+  },
+  {
+   "battery_v": 11.3,
+   "m0": 0.0354,
+   "speed_v055_option_a": 0.2125,
+   "k_option_b": 1.673,
+   "speed_v055_option_b": 0.2125,
+   "spin_rad_s_w045_option_a": 2.384,
+   "spin_rad_s_w045_option_b": 2.369
+  },
+  {
+   "battery_v": 11.4,
+   "m0": 0.0334,
+   "speed_v055_option_a": 0.2158,
+   "k_option_b": 1.699,
+   "speed_v055_option_b": 0.2158,
+   "spin_rad_s_w045_option_a": 2.432,
+   "spin_rad_s_w045_option_b": 2.406
+  },
+  {
+   "battery_v": 11.5,
+   "m0": 0.0314,
+   "speed_v055_option_a": 0.2191,
+   "k_option_b": 1.725,
+   "speed_v055_option_b": 0.2191,
+   "spin_rad_s_w045_option_a": 2.481,
+   "spin_rad_s_w045_option_b": 2.443
+  },
+  {
+   "battery_v": 11.6,
+   "m0": 0.0294,
+   "speed_v055_option_a": 0.2225,
+   "k_option_b": 1.752,
+   "speed_v055_option_b": 0.2225,
+   "spin_rad_s_w045_option_a": 2.529,
+   "spin_rad_s_w045_option_b": 2.48
+  },
+  {
+   "battery_v": 11.7,
+   "m0": 0.0273,
+   "speed_v055_option_a": 0.2258,
+   "k_option_b": 1.778,
+   "speed_v055_option_b": 0.2258,
+   "spin_rad_s_w045_option_a": 2.578,
+   "spin_rad_s_w045_option_b": 2.517
+  },
+  {
+   "battery_v": 11.8,
+   "m0": 0.0253,
+   "speed_v055_option_a": 0.2291,
+   "k_option_b": 1.804,
+   "speed_v055_option_b": 0.2291,
+   "spin_rad_s_w045_option_a": 2.626,
+   "spin_rad_s_w045_option_b": 2.554
+  }
+ ],
+ "pearson_r_speed_vs_battery": 0.941,
+ "combined_with_week2": {
+  "fit": {
+   "m0_at_11_5": 0.030680660775242313,
+   "m0_per_volt": 0.006292699259699483,
+   "m0_resid_std": 0.003767540605421271,
+   "k_at_11_5": 1.7346393775839533,
+   "k_per_volt": -0.08587183872660978,
+   "n": 10
+  },
+  "bootstrap": {
+   "m0_at_11_5_ci95": [
+    0.0252,
+    0.033
+   ],
+   "m0_per_volt_ci95": [
+    -0.0031,
+    0.021
+   ],
+   "resamples": 1967
+  },
+  "note": "Week 2 (12.0-12.2 V, 2026-10-15) gives m0 = 0.038, HIGHER than today's 0.031 at 11.5 V: across sessions the offset did not grow as the battery fell; another day, possibly tyres/floor/robot state, cannot be separated"
+ },
+ "cannot_separate": [
+  "k(V) and m0(V): every run today used the same command (0.165 motor units), so options a and b predict the same 0.55 speed; they differ at other commands (see the spin columns: option a predicts a faster spin than b at low voltage)",
+  "battery from time/order: the voltage fell monotonically during the session, so any drift over the morning (warm motors, floor dust) is confounded with the voltage",
+  "the measured spin rate (no battery trend, r = -0.096 over 14 pulses) is closer to option a's flat dependence than to b, but 14 short pulses cannot decide it"
+ ]
+}
