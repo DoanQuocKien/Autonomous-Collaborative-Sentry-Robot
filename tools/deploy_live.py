@@ -207,6 +207,7 @@ def main():
     ap.add_argument("--user", default="jetbot")
     ap.add_argument("--password", default=os.environ.get("JETBOT_PASSWORD"))
     ap.add_argument("--out", default="data/deploy")
+    ap.add_argument("--motion-session", default=None, help="calib/motion_session_*.json from tools.motion_check: this floor's speed scale, left/right turn scales and drift for the dead reckoning (without it the robot veered off the line on 2026-10-30)")
     ap.add_argument("--hs-span", type=float, default=5.0, help="handshake rule: window in seconds (the detector answers at about 1.5-2.2 fps in a live run: 5 s holds 7-11 answers)")
     ap.add_argument("--hs-frames", type=int, default=6, help="handshake rule: at least this many detector answers in the window")
     ap.add_argument("--hs-frac", type=float, default=0.7, help="handshake rule: at least this fraction of them in view (the camera is placed still: a real placement gives a steady majority)")
@@ -220,7 +221,7 @@ def main():
     if a.door is not None and (a.box is None or not a.wall):
         ap.error("--door needs --box and at least one --wall (the declared room)")
 
-    model, done = WheelModel(), threading.Event()
+    model, done = (WheelModel.from_session(a.motion_session) if a.motion_session else WheelModel()), threading.Event()
     cmd = {"v": 0.0, "w": 0.0, "t": time.time()}
     end = {"reason": None}
     r1 = {"held": True, "fail": 0}
