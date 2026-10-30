@@ -122,8 +122,8 @@ def test_a_reset_ignores_late_answers_that_are_older_than_the_prompt():
     w = WindowedHandshake(3.0, 10, 0.7)
     w.reset(5.0)
     for k in range(20):
-        w.add(4.0 + k * 0.04, True)                                  # the reader thread delivers answers stamped before and after the reset
-    assert w.stats(5.0)[0] == 5 and w.in_view(5.0) is False         # only the answers stamped at 5.0 or later count: 5 of them, fewer than 10
+        w.add(4.0 + k * 0.04, True)                                  # the reader thread delivers 20 answers stamped before the reset (4.00 .. 4.76)
+    assert w.stats(5.0)[0] == 0 and w.in_view(5.0) is False         # none counts, although they are inside the 3 s span
     for k in range(10):
         w.add(5.0 + k * 0.1, True)
-    assert w.in_view(5.9) is True
+    assert w.stats(5.9)[0] == 10 and w.in_view(5.9) is True         # only the ten stamped at 5.0 or later
