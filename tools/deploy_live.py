@@ -63,6 +63,29 @@ def key_pressed():
     return None
 
 
+class WindowedHandshake(object):
+    """Live handshake rule over the detector's per-frame answers: "in view" only when, in the last `span_s` seconds, there are at least `min_frames` answers and at least `frac` of them
+    are in view. WHY: on 2026-10-30 at the classroom door, a single-frame detector answered "in view" for isolated frames and short runs of 4-8 frames even when the ESP32 pointed
+    away (21 in a row at the glazed partition): the state machine's rule of 3 consecutive frames would have verified in 7 of 10 reject trials, and a latched single answer (what this
+    tool did before) would verify on ONE frame. The placed camera is still, so a real placement gives a steady majority for seconds."""
+
+    def __init__(self, span_s=3.0, min_frames=10, frac=0.7):
+        self.span_s, self.min_frames, self.frac = span_s, min_frames, frac
+        self.results = []                                    # (t, in_view)
+
+    def add(self, t, in_view):
+        self.results.append((t, bool(in_view)))
+        self.results = [(tt, v) for tt, v in self.results if t - tt <= self.span_s]
+
+    def in_view(self, now):
+        w = [v for tt, v in self.results if now - tt <= self.span_s]
+        return len(w) >= self.min_frames and sum(w) / float(len(w)) >= self.frac
+
+    def stats(self, now):
+        w = [v for tt, v in self.results if now - tt <= self.span_s]
+        return len(w), (sum(w) / float(len(w)) if w else 0.0)
+
+
 def fresh_flag(feed, now, max_age=ESP_FRESH_S):
     """feed: dict with in_view and t (when the detector last answered), or None -> True only for a fresh in-view answer."""
     return bool(feed and feed.get("t") is not None and now - feed["t"] <= max_age and feed.get("in_view"))
@@ -161,6 +184,9 @@ def main():
     ap.add_argument("--user", default="jetbot")
     ap.add_argument("--password", default=os.environ.get("JETBOT_PASSWORD"))
     ap.add_argument("--out", default="data/deploy")
+    ap.add_argument("--hs-span", type=float, default=3.0, help="handshake rule: window in seconds")
+    ap.add_argument("--hs-frames", type=int, default=10, help="handshake rule: at least this many detector answers in the window")
+    ap.add_argument("--hs-frac", type=float, default=0.7, help="handshake rule: at least this fraction of them in view (the camera is placed still: a real placement gives a steady majority)")
     ap.add_argument("--no-audio", action="store_true", help="do not speak (rehearsal in a quiet room); the prompts are still logged")
     a = ap.parse_args()
     a.dry_run = a.dry_run or a.no_robot
@@ -177,6 +203,7 @@ def main():
     r1 = {"held": True, "fail": 0}
     link = {"t": time.time(), "blocked": False}
     esp = {"in_view": False, "t": None, "frames": 0, "in_view_frames": 0, "inliers": 0}
+    window = WindowedHandshake(a.hs_span, a.hs_frames, a.hs_frac)
     threads, ssh, rx, volts0, volts1, password = [], None, None, None, None, None
     speaker = AudioPromptPlayer(sender=LocalSpeaker(backend=(lambda path: None) if a.no_audio else None))
 
@@ -231,7 +258,9 @@ def main():
                 if frame is None:
                     continue
                 res = detector.detect(frame)
-                esp.update(in_view=bool(res.in_view), t=time.time(), inliers=int(res.inliers))
+                now = time.time()
+                window.add(now, res.in_view)
+                esp.update(in_view=window.in_view(now), t=now, inliers=int(res.inliers), single_frame=bool(res.in_view))
                 esp["frames"] += 1
                 esp["in_view_frames"] += int(res.in_view)
         except Exception as exc:
@@ -396,7 +425,7 @@ def main():
                "vantage_target": target, "room_centre": a.centre, "dr_pose_at_vantage_reached": vp[0] if vp else None,
                "dr_error_at_vantage_m": round(math.hypot(vp[0][0] - target[0], vp[0][1] - target[1]), 3) if vp and target else None,
                "state_changes": runner.log, "events": [(round(t, 2), name) for t, name, _ in runner.events], "prompts": runner.prompts,
-               "handshake": {"mode": a.handshake, "frames": esp["frames"], "in_view_frames": esp["in_view_frames"], "last_inliers": esp["inliers"], "error": esp.get("error")},
+               "handshake": {"mode": a.handshake, "rule": {"span_s": a.hs_span, "min_frames": a.hs_frames, "fraction": a.hs_frac}, "frames": esp["frames"], "in_view_frames": esp["in_view_frames"], "last_inliers": esp["inliers"], "error": esp.get("error")},
                "dr_path_m": round(path, 2), "dr_final_pose": [round(v, 3) for v in final], "battery_v_start": volts0, "battery_v_end": volts1,
                "camera_pose_file": a.camera_pose, "obstacle_check": bool(a.camera_pose), "tape_answers": answers, "date": time.strftime("%Y-%m-%d %H:%M")}
     (run_dir / "summary.json").write_text(json.dumps(summary, indent=1))

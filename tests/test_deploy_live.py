@@ -76,3 +76,22 @@ def test_a_handshake_answer_counts_only_while_it_is_fresh():
     assert fresh_flag({"in_view": True, "t": 10.0}, 12.0) is False            # stale: the ESP32 stream stopped
     assert fresh_flag({"in_view": False, "t": 10.0}, 10.1) is False
     assert fresh_flag(None, 1.0) is False and fresh_flag({"in_view": True, "t": None}, 1.0) is False
+
+
+def test_windowed_handshake_needs_a_steady_majority_not_a_single_frame():
+    from tools.deploy_live import WindowedHandshake
+    w = WindowedHandshake(span_s=3.0, min_frames=10, frac=0.7)
+    for k in range(10):                                           # 10 answers in a second, only one in view: not verified
+        w.add(k * 0.1, k == 5)
+    assert w.in_view(1.0) is False
+    w2 = WindowedHandshake(3.0, 10, 0.7)
+    for k in range(9):
+        w2.add(k * 0.1, True)
+    assert w2.in_view(0.9) is False                                # too few answers yet (9 < 10)
+    w2.add(0.9, True)
+    assert w2.in_view(0.9) is True                                 # 10 of 10
+    assert w2.in_view(5.0) is False                                # the answers are older than the window
+    w3 = WindowedHandshake(3.0, 10, 0.7)
+    for k in range(20):
+        w3.add(k * 0.1, k % 3 != 0)                                # 13 of 20 in view = 65 %: below 70 %
+    assert w3.in_view(1.9) is False and abs(w3.stats(1.9)[1] - 0.65) < 0.06
