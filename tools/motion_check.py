@@ -190,12 +190,15 @@ def drive(a, out):
         if not started:
             raise SystemExit("ABORT: R1 not held (and the e-stop armed) within %.0f s" % a.wait)
         threading.Thread(target=watch, daemon=True).start()
+        t_seq = time.perf_counter()
         print("R1 held: sequence starts (hold it until the two beeps)", flush=True)
+        beep(1200, 150)                                    # one short beep: the robot moves in 2.5 s, keep R1 held about 25 s until the two long beeps
 
         def hold(v, w, seconds):
             t_end = time.perf_counter() + seconds
             while time.perf_counter() < t_end:
                 if not latch["armed"]:
+                    print("  e-stop latch present %.1f s into the sequence (R1 released?)" % (time.perf_counter() - t_seq), flush=True)
                     return False
                 sender.send(v, w)
                 cmds.append((time.perf_counter(), v, w))
