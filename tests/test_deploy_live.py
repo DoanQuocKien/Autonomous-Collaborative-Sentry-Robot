@@ -95,3 +95,23 @@ def test_windowed_handshake_needs_a_steady_majority_not_a_single_frame():
     for k in range(20):
         w3.add(k * 0.1, k % 3 != 0)                                # 13 of 20 in view = 65 %: below 70 %
     assert w3.in_view(1.9) is False and abs(w3.stats(1.9)[1] - 0.65) < 0.06
+
+
+def test_evidence_from_before_the_prompt_does_not_verify_the_camera():
+    from tools.deploy_live import WindowedHandshake, make_flag
+    from sentry.app.state_machine import State
+
+    class SM:
+        state = State.APPROACH_VANTAGE
+    sm, window, esp = SM(), WindowedHandshake(3.0, 10, 0.7), {"in_view": False, "t": None}
+    flag = make_flag(esp, window, sm)
+    for k in range(12):                                            # the camera already faces the door while the robot drives
+        window.add(k * 0.1, True)
+        esp.update(in_view=window.in_view(k * 0.1), t=k * 0.1)
+    assert flag(1.2) is True                                       # still the driving phase: the flag follows the window
+    sm.state = State.WAIT_CAMERA                                   # the prompt plays: the old evidence is dropped
+    assert flag(1.3) is False and window.results == []
+    for k in range(13, 25):                                        # new answers after the prompt
+        window.add(k * 0.1, True)
+        esp.update(in_view=window.in_view(k * 0.1), t=k * 0.1)
+    assert flag(2.5) is True                                       # verified only on the evidence gathered after the prompt

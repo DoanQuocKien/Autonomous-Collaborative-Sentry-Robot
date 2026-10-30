@@ -86,6 +86,21 @@ class WindowedHandshake(object):
         return len(w), (sum(w) / float(len(w)) if w else 0.0)
 
 
+def make_flag(esp, window, sm, waiting_state=State.WAIT_CAMERA):
+    """The handshake flag for the control loop. The window is CLEARED each time the machine enters the waiting state (the prompt "place the entrance camera"): evidence gathered
+    BEFORE the request must not verify the camera (the first classroom rehearsal on 2026-10-30 verified 0.1 s after the prompt because the ESP32 already faced the door)."""
+    seen = {"state": None}
+
+    def flag(now):
+        if sm.state != seen["state"]:
+            if sm.state == waiting_state:
+                window.results = []
+                esp["in_view"], esp["t"] = False, None
+            seen["state"] = sm.state
+        return fresh_flag(esp, now)
+    return flag
+
+
 def fresh_flag(feed, now, max_age=ESP_FRESH_S):
     """feed: dict with in_view and t (when the detector last answered), or None -> True only for a fresh in-view answer."""
     return bool(feed and feed.get("t") is not None and now - feed["t"] <= max_age and feed.get("in_view"))
@@ -382,7 +397,7 @@ def main():
             if k == "e":                                          # manual entrance: in view for 0.5 s
                 manual["until"] = time.time() + 0.5
             return k
-        rows, final, path = control_loop(runner, model, cmd, end, lambda now: fresh_flag(esp, now), get_link, a.seconds, key=key,
+        rows, final, path = control_loop(runner, model, cmd, end, make_flag(esp, window, sm), get_link, a.seconds, key=key,
                                          pose_cb=lambda p: pose_now.__setitem__("p", p))
     finally:
         cmd.update(v=0.0, w=0.0, t=time.time())            # the sender then repeats zero; its close() sends a final stop
