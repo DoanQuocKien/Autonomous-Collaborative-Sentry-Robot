@@ -114,11 +114,21 @@ def fresh_flag(feed, now, max_age=ESP_FRESH_S):
     return bool(feed and feed.get("t") is not None and now - feed["t"] <= max_age and feed.get("in_view"))
 
 
-def control_loop(runner, model, cmd, end, get_flag, get_link, seconds, clock=time.time, sleep=time.sleep, rate_hz=30.0, key=lambda: None, pose_cb=None):
+SPIN_PULSE_S, SPIN_PAUSE_S, FIX_STILL_S, FIX_MAX_W = 0.2, 0.5, 0.4, 0.15
+
+
+def blend_fix(pose, fix, gain):
+    """Move the dead-reckoned pose toward a marker pose by `gain` (yaw along the short way)."""
+    x, y, yaw = pose
+    return (x + gain * (fix[0] - x), y + gain * (fix[1] - y), math.atan2(math.sin(yaw + gain * math.atan2(math.sin(fix[2] - yaw), math.cos(fix[2] - yaw))), math.cos(yaw + gain * math.atan2(math.sin(fix[2] - yaw), math.cos(fix[2] - yaw)))))
+
+
+def control_loop(runner, model, cmd, end, get_flag, get_link, seconds, clock=time.time, sleep=time.sleep, rate_hz=30.0, key=lambda: None, pose_cb=None, get_fix=None):
     """The 30 Hz loop: dead-reckon the pose from the command the robot was given, step the runner, publish the command, check the safety conditions.
     get_link(now) -> None (no robot) or dict(stale=bool, blocked=bool). Returns (rows, final pose, dead-reckoned path length). Ends by setting end['reason']."""
     x = y = yaw = 0.0
     path, prev, rows, manual_until = 0.0, (0.0, 0.0), [], 0.0
+    fix_seen, last_moving, spin_start, pause_until, end["fixes"] = 0, clock(), None, 0.0, 0     # get_fix(): (n, x, y, yaw, distance) of the newest marker pose or None
     t0 = last = clock()
     runner.start(0.0, 0.0)
     while end["reason"] is None:
@@ -135,6 +145,15 @@ def control_loop(runner, model, cmd, end, get_flag, get_link, seconds, clock=tim
         y += v_m * math.sin(yaw) * dt
         yaw = math.atan2(math.sin(yaw + w_r * dt), math.cos(yaw + w_r * dt))
         path += abs(v_m) * dt
+        if get_fix is not None:
+            if abs(prev[1]) >= FIX_MAX_W or prev[0] < 0:
+                last_moving = now                             # turning (or reversing): the frame is older than the pose, so no fix until the robot has been still for FIX_STILL_S
+            fx = get_fix()
+            if fx is not None and fx[0] != fix_seen:
+                fix_seen = fx[0]
+                if now - last_moving >= FIX_STILL_S:
+                    x, y, yaw = blend_fix((x, y, yaw), fx[1:4], 0.3 if fx[4] <= 1.5 else 0.2)
+                    end["fixes"] += 1
         if pose_cb is not None:
             pose_cb((x, y, yaw))
         link = get_link(now)
@@ -155,6 +174,15 @@ def control_loop(runner, model, cmd, end, get_flag, get_link, seconds, clock=tim
             v = w = 0.0
             cmd.update(v=0.0, w=0.0, t=now)
             break
+        if get_fix is not None and v == 0.0 and w != 0.0:        # a spin goes in pulses so that the marker fix can look at a still robot between them
+            if now < pause_until:
+                w = 0.0
+            elif spin_start is None:
+                spin_start = now
+            elif now - spin_start >= SPIN_PULSE_S:
+                spin_start, pause_until, w = None, now + SPIN_PAUSE_S, 0.0
+        else:
+            spin_start = None
         prev = (v, w)
         cmd.update(v=v, w=w, t=now)
         rows.append((round(t, 3), round(x, 3), round(y, 3), round(yaw, 3), v, round(w, 3), runner.sm.state.value, int(flag)))
@@ -208,6 +236,8 @@ def main():
     ap.add_argument("--password", default=os.environ.get("JETBOT_PASSWORD"))
     ap.add_argument("--out", default="data/deploy")
     ap.add_argument("--motion-session", default=None, help="calib/motion_session_*.json from tools.motion_check: this floor's speed scale, left/right turn scales and drift for the dead reckoning (without it the robot veered off the line on 2026-10-30)")
+    ap.add_argument("--anchors", default=None, help="ArUco board anchors CSV (marker_id,x_m,y_m,z_m,yaw_deg) in the frame of the start pose: the pose is corrected from the boards in the robot's video (spins go in pulses)")
+    ap.add_argument("--fix-range", type=float, default=1.5, help="boards farther than this give no pose fix (their orientation is too noisy)")
     ap.add_argument("--hs-span", type=float, default=5.0, help="handshake rule: window in seconds (the detector answers at about 1.5-2.2 fps in a live run: 5 s holds 7-11 answers)")
     ap.add_argument("--hs-frames", type=int, default=6, help="handshake rule: at least this many detector answers in the window")
     ap.add_argument("--hs-frac", type=float, default=0.7, help="handshake rule: at least this fraction of them in view (the camera is placed still: a real placement gives a steady majority)")
@@ -240,6 +270,10 @@ def main():
     detector = None if a.handshake == "manual" else make_handshake(a.handshake)
     sm = StateMachine(StateMachineConfig())
     pose_now = {"p": (0.0, 0.0, 0.0)}
+    fixer, fixed = None, {"m": None}
+    if a.anchors:
+        from sentry.nav.marker_fix import MarkerFix
+        fixer = MarkerFix(a.anchors, max_range_m=a.fix_range)
     manual = {"until": 0.0}
     grid = entrance_det = None
     if a.door is not None:
@@ -348,6 +382,11 @@ def main():
                 if f is None:
                     continue
                 link["t"] = time.time()
+                if fixer is not None:
+                    try:
+                        fixed["m"] = fixer.measure(f.frame_bgr) or fixed["m"]
+                    except Exception as exc:
+                        end["reason"] = end["reason"] or "marker fix error: %r" % exc
                 if entrance_det is not None:
                     try:
                         runner.observe_entrance(entrance_det.detect(f.frame_bgr), time.time())
@@ -407,7 +446,7 @@ def main():
                 manual["until"] = time.time() + 0.5
             return k
         rows, final, path = control_loop(runner, model, cmd, end, make_flag(esp, window, sm), get_link, a.seconds, key=key,
-                                         pose_cb=lambda p: pose_now.__setitem__("p", p))
+                                         pose_cb=lambda p: pose_now.__setitem__("p", p), get_fix=(lambda: fixed["m"]) if fixer is not None else None)
     finally:
         cmd.update(v=0.0, w=0.0, t=time.time())            # the sender then repeats zero; its close() sends a final stop
         time.sleep(0.4)
@@ -453,7 +492,7 @@ def main():
                "dr_error_at_vantage_m": round(math.hypot(vp[0][0] - target[0], vp[0][1] - target[1]), 3) if vp and target else None,
                "state_changes": runner.log, "events": [(round(t, 2), name) for t, name, _ in runner.events], "prompts": runner.prompts,
                "handshake": {"mode": a.handshake, "rule": {"span_s": a.hs_span, "min_frames": a.hs_frames, "fraction": a.hs_frac}, "frames": esp["frames"], "in_view_frames": esp["in_view_frames"], "last_inliers": esp["inliers"], "error": esp.get("error")},
-               "dr_path_m": round(path, 2), "dr_final_pose": [round(v, 3) for v in final], "battery_v_start": volts0, "battery_v_end": volts1,
+               "marker_fixes": end.get("fixes"), "anchors": a.anchors, "dr_path_m": round(path, 2), "dr_final_pose": [round(v, 3) for v in final], "battery_v_start": volts0, "battery_v_end": volts1,
                "camera_pose_file": a.camera_pose, "obstacle_check": bool(a.camera_pose), "tape_answers": answers, "date": time.strftime("%Y-%m-%d %H:%M")}
     (run_dir / "summary.json").write_text(json.dumps(summary, indent=1))
     print("saved", run_dir)

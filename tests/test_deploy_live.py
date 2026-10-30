@@ -127,3 +127,10 @@ def test_a_reset_ignores_late_answers_that_are_older_than_the_prompt():
     for k in range(10):
         w.add(5.0 + k * 0.1, True)
     assert w.stats(5.9)[0] == 10 and w.in_view(5.9) is True         # only the ten stamped at 5.0 or later
+
+
+def test_marker_fixes_pull_the_pose_and_spins_go_in_pulses():
+    import math
+    from tools.deploy_live import blend_fix
+    x, y, yaw = blend_fix((0.0, 0.0, math.radians(170)), (1.0, 0.0, math.radians(-170)), 0.5)
+    assert abs(x - 0.5) < 1e-9 and abs(math.degrees(yaw) - 180.0) < 1e-6                  # the short way round the circle, not through 0

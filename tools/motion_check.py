@@ -137,11 +137,15 @@ def verdict(rows):
     return not bad, bad
 
 
-def plan(repeats, spin_w, spin_s, v, drive_s):
+def plan(repeats, spin_w, spin_s, v, drive_s, quad=False):
+    """Per repeat: spin left, spin right, [quad: spin right, spin left (boards ahead, left, ahead, right, ahead)], drive forward."""
     seq = []
     for k in range(repeats):
-        seq += [("spin_left_%d" % (k + 1), "spin_left", 0.0, spin_w, spin_s), ("spin_right_%d" % (k + 1), "spin_right", 0.0, -spin_w, spin_s),
-                ("forward_%d" % (k + 1), "forward", v, 0.0, drive_s)]
+        n = k + 1
+        seq += [("spin_left_%d" % n, "spin_left", 0.0, spin_w, spin_s), ("spin_right_%d" % n, "spin_right", 0.0, -spin_w, spin_s)]
+        if quad:
+            seq += [("spin_right_%db" % n, "spin_right", 0.0, -spin_w, spin_s), ("spin_left_%db" % n, "spin_left", 0.0, spin_w, spin_s)]
+        seq.append(("forward_%d" % n, "forward", v, 0.0, drive_s))
     return seq
 
 
@@ -205,7 +209,7 @@ def drive(a, out):
                 time.sleep(sender.period_s)
             return True
         ok = hold(0.0, 0.0, a.rest)
-        for name, kind, v, w, seconds in plan(a.repeats, a.spin_w, a.spin_s, a.v, a.drive_s):
+        for name, kind, v, w, seconds in plan(a.repeats, a.spin_w, a.spin_s, a.v, a.drive_s, a.quad):
             if not ok:
                 break
             t0 = time.perf_counter()
@@ -257,6 +261,7 @@ def main():
     ap.add_argument("--anchors", required=True, help="marker anchors CSV (marker_id,x_m,y_m,z_m,yaw_deg)")
     ap.add_argument("--motion-session", help="a calib/motion_session_*.json: predict with its correction (the CHECK run)")
     ap.add_argument("--repeats", type=int, default=2)
+    ap.add_argument("--quad", action="store_true", help="four quarter turns per repeat (left, right, right, left) for boards ahead, 90 deg left and 90 deg right: use --spin-s 0.8")
     ap.add_argument("--spin-w", type=float, default=0.45, help="turn command (0.45 is above the motor dead zone, as deploy_runner)")
     ap.add_argument("--spin-s", type=float, default=0.4, help="a spin of 1.5 s is about 200 deg and turns the boards out of view; 0.4 s is about 50 deg (the start-up lag makes it vary: that is what is measured)")
     ap.add_argument("--v", type=float, default=0.55)
