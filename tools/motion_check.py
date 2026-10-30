@@ -10,7 +10,7 @@ tracker's own marker pose, as tools.dr_path), the model integrated over the comm
 heading the model did not predict per metre driven. Fit: speed `scale`, `w_scale_left`, `w_scale_right`, `drift_rad_per_m` (sentry/nav/wheel_model.py), applied by `deploy_live --motion-session`.
 
 SETUP: robot where the run starts, e-stop armed, you hold R1 for the whole sequence (it stops by itself if R1 is released), floor CLEAR for 1.5 m around it. Boards (150 mm, upright, ids from the anchors CSV marker_id,x_m,y_m,z_m,yaw_deg
-as tools.dr_path) must be within --max-marker-m (1.5) of the robot at every rest: otherwise that segment is reported as "no marker pose" and does not count. Several boards all around make every rest measurable.
+as tools.dr_path) must be within --max-marker-m (2.2) of the robot at every rest: otherwise that segment is reported as "no marker pose" and does not count. Several boards all around make every rest measurable.
 Sequence (--repeats times): spin left, spin right, drive forward, each followed by --rest s of stillness; the pose is the median of the marker poses of the last 1.2 s of the rest.
 PASS (check run, proposed limits): every measurable segment within 10 % of its prediction (turn angle, forward distance) and drift under 0.05 rad/m. The fit is refused when the repeats of one kind scatter by more than 0.15 in
 ratio, or a kind has no measurable segment. Never use --no-estop; R1 held.
@@ -40,21 +40,28 @@ def wrap(a):
     return math.atan2(math.sin(a), math.cos(a))
 
 
-def rest_pose(frames, t0, t1, tracker_factory, min_frames=5, max_yaw_std_deg=1.5, max_pos_std_m=0.05):
-    """Marker pose (x, y, yaw) in the frames stamped in [t0, t1]: median position, circular mean yaw; None when too few frames saw a board or they scatter."""
+def rest_pose(frames, t0, t1, tracker_factory, max_range_m=2.2, min_frames=5, max_yaw_spread_deg=10.0, max_pos_spread_m=0.35):
+    """Marker pose (x, y, yaw) in the frames stamped in [t0, t1]: the MEDIAN of each (a 2 m board's orientation is noisy: on 2026-10-30 one still robot read yaws from -17 to +8 deg and y from -0.32 to +0.54 m
+    frame by frame, the median was within about 1.5 deg / 3 cm of the truth); None when too few frames saw a board within max_range_m or the middle half of them spreads over the limits.
+    The tracker blends toward its start pose beyond 0.8 m unless its own range limit is huge, so the factory's limit is huge and the range limit is applied here by dropping the farther anchors."""
     poses = []
     for t, img in frames:
         if t0 <= t <= t1:
             tr = tracker_factory()
+            for d in tr.detect_markers(img):
+                if d.distance_m > max_range_m:
+                    tr.anchors.pop(d.marker_id, None)
             tr.update_with_markers(img, alpha=1.0)
             if tr.corrections_count:
                 poses.append((tr.pose.x, tr.pose.y, tr.pose.theta))
     if len(poses) < min_frames:
         return None
     p = np.array(poses)
-    yaw = math.atan2(np.mean(np.sin(p[:, 2])), np.mean(np.cos(p[:, 2])))
-    yaw_std = math.degrees(math.sqrt(np.mean([wrap(a - yaw) ** 2 for a in p[:, 2]])))
-    if yaw_std > max_yaw_std_deg or max(p[:, 0].std(), p[:, 1].std()) > max_pos_std_m:
+    ref = p[0, 2]
+    dyaw = np.array([wrap(a - ref) for a in p[:, 2]])
+    yaw = wrap(ref + float(np.median(dyaw)))
+    iqr = lambda v: float(np.percentile(v, 75) - np.percentile(v, 25))
+    if math.degrees(iqr(dyaw)) > max_yaw_spread_deg or max(iqr(p[:, 0]), iqr(p[:, 1])) > max_pos_spread_m:
         return None
     return float(np.median(p[:, 0])), float(np.median(p[:, 1])), yaw
 
@@ -106,7 +113,7 @@ def fit(rows, model):
     for kind in KINDS:
         rs = [r["ratio"] for r in rows if r["kind"] == kind and r.get("ratio") is not None]
         if not rs:
-            problems.append("no measurable %s segment (a board within %.1f m at both rests?)" % (kind, 1.5))
+            problems.append("no measurable %s segment (a board in range at both rests?)" % kind)
             continue
         if max(rs) - min(rs) > SCATTER_LIMIT:
             problems.append("%s ratios scatter: %s (limit %.2f)" % (kind, rs, SCATTER_LIMIT))
@@ -232,12 +239,12 @@ def load_run(out):
     return cmds, frames, info["segments"], info["rest_s"]
 
 
-def rest_poses(segments, frames, rest_s, factory):
+def rest_poses(segments, frames, rest_s, factory, max_range_m=2.2):
     """Rest pose before the first segment (the rest ending where it starts) and after every segment (the rest that follows it)."""
     t_first = segments[0]["t0"]
-    out = [rest_pose(frames, t_first - 1.2, t_first, factory)]
+    out = [rest_pose(frames, t_first - 1.2, t_first, factory, max_range_m)]
     for sg in segments:
-        out.append(rest_pose(frames, sg["t1"] + rest_s - 1.2, sg["t1"] + rest_s, factory))
+        out.append(rest_pose(frames, sg["t1"] + rest_s - 1.2, sg["t1"] + rest_s, factory, max_range_m))
     return out
 
 
@@ -248,11 +255,11 @@ def main():
     ap.add_argument("--motion-session", help="a calib/motion_session_*.json: predict with its correction (the CHECK run)")
     ap.add_argument("--repeats", type=int, default=2)
     ap.add_argument("--spin-w", type=float, default=0.45, help="turn command (0.45 is above the motor dead zone, as deploy_runner)")
-    ap.add_argument("--spin-s", type=float, default=1.5)
+    ap.add_argument("--spin-s", type=float, default=0.4, help="a spin of 1.5 s is about 200 deg and turns the boards out of view; 0.4 s is about 50 deg (the start-up lag makes it vary: that is what is measured)")
     ap.add_argument("--v", type=float, default=0.55)
-    ap.add_argument("--drive-s", type=float, default=3.0)
+    ap.add_argument("--drive-s", type=float, default=2.0)
     ap.add_argument("--rest", type=float, default=2.5, help="seconds of stillness after each segment")
-    ap.add_argument("--max-marker-m", type=float, default=1.5)
+    ap.add_argument("--max-marker-m", type=float, default=2.2, help="boards farther than this are ignored (the marker pose is noisier beyond 1.5 m: a 2 m board makes a coarser angle)")
     ap.add_argument("--wait", type=float, default=60.0)
     ap.add_argument("--min-battery", type=float, default=MIN_BATTERY_V)
     ap.add_argument("--ip")
@@ -275,11 +282,11 @@ def main():
     from sentry.nav.localization import LocalizationTracker
 
     def factory():
-        tr = LocalizationTracker(motion_calib=None, camera_calib="calib/camera.json", max_marker_distance_m=a.max_marker_m)
+        tr = LocalizationTracker(motion_calib=None, camera_calib="calib/camera.json", max_marker_distance_m=1e6)
         tr.load_anchors_csv(a.anchors)
         tr.set_pose(0.0, 0.0, 0.0)
         return tr
-    poses = rest_poses(segments, frames, rest_s, factory)
+    poses = rest_poses(segments, frames, rest_s, factory, a.max_marker_m)
     rows = analyse(segments, poses, cmds, model)
     for r in rows:
         if not r["measurable"]:
