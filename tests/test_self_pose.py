@@ -58,3 +58,11 @@ def test_collect_counts_only_estimates_the_filter_accepted(monkeypatch):
     monkeypatch.setattr(self_pose.TiltFilter, "update_frame", fake)
     pitches, rolls, tilt = self_pose.collect([None] * len(ests), None, lambda im: im, 0.15, 0.132, 0.1)
     assert len(pitches) == 10 + 20 and all(abs(p - 1.0) < 1e-9 for p in pitches) and tilt.rejected == 3
+
+
+def test_the_marker_heights_come_from_the_config_wherever_their_section_is():
+    from sentry.config import load
+    cfg = load()
+    assert self_pose._cfg_value(cfg, "aruco_square_above_page_m", -1) == 0.132
+    assert self_pose._cfg_value(cfg, "aruco_page_bottom_h_m", -1) == 0.0
+    assert self_pose._cfg_value({"a": {"x": 1}}, "missing", 7.5) == 7.5

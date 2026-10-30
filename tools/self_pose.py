@@ -1,13 +1,14 @@
 """Camera angle SELF-calibration at the start of a session: measure today's pitch (and roll) from ONE ArUco marker on a vertical surface and write a fresh pose file.
 
-  python -m tools.self_pose --marker-m 0.15 --bottom-h 0.132                  # live robot stream: about 40 frames, writes calib/camera_pose_self_<date>_<n>.json
-  python -m tools.self_pose --marker-m 0.15 --bottom-h 0.132 --image a.jpg b.jpg
+  python -m tools.self_pose --page-bottom-h 0.0                # live robot stream: about 45 frames, writes calib/camera_pose_self_<date>_<n>.json
+  python -m tools.self_pose --page-bottom-h 0.05 --image a.jpg b.jpg
   python -m tools.explore_live --camera-pose calib/camera_pose_self_<...>.json ...      # then use it, like any pose file
 
 The mount is tiltable and is moved whenever the robot is handled (plan risk 22: 1 degree is about 15 % of the ground distance at 1 m with the lens 0.100 m high), so a pose file from another
 day must not be trusted: do this at the start of every session, with the robot where it will start. The marker (the black square: --marker-m, default the 150 mm prints) must stand UPRIGHT
-(a board on a chair, a wall), about 1-2 m in front of the robot, with its LOWER edge --bottom-h above the floor (the T2 boards have the marker centre at 0.207 m, so the lower edge of a 0.150 m
-square is at 0.132 m). The lens height is the mechanical 0.100 m (memory: it is never fitted). The file is refused unless at least --min-frames markers were accepted and their pitch spread
+(a board on a chair, a wall), about 1-2 m in front of the robot. HEIGHT: the black square's lower edge is 0.132 m above the BOTTOM EDGE OF THE A4 PAGE it is printed on (config.toml
+aruco_square_above_page_m, fixed by tools/make_markers.py); --page-bottom-h is the height of that page bottom edge above the floor (config aruco_page_bottom_h_m = 0.0: pages stand on the floor).
+Measure it with the tape on the day: a page taped 5 cm up a board is 0.05 here, not 0. --bottom-h overrides the sum if you measured the square's lower edge directly. The lens height is the mechanical 0.100 m (memory: it is never fitted). The file is refused unless at least --min-frames markers were accepted and their pitch spread
 (standard deviation) is under --max-spread-deg: a marker that moves, is not vertical or is mismeasured fails loudly instead of giving a wrong angle that looks plausible.
 Everything not measured here (strip marks, rms) stays absent from the file: `method` says it is a marker self-calibration.
 """
@@ -21,6 +22,14 @@ import numpy as np
 
 from sentry.perception.camera_pose import TiltFilter
 from tools.estimate_camera_tilt import undistorter
+
+
+def _cfg_value(cfg, key, default):
+    """A scalar from the loaded config.toml, wherever its section is (the marker settings live in the [w2_validation]-style sections); the default when absent."""
+    for section in cfg.values():
+        if isinstance(section, dict) and key in section:
+            return float(section[key])
+    return float(cfg[key]) if key in cfg else default
 
 
 def collect(frames, K, undistort, marker_m, bottom_h, camera_h, marker_id=None):
@@ -53,7 +62,8 @@ def make_pose(pitches, rolls, camera_h, tag, min_frames=15, max_spread_deg=0.4, 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--marker-m", type=float, default=0.15, help="side of the printed black square (m)")
-    ap.add_argument("--bottom-h", type=float, required=True, help="height of the marker's LOWER edge above the floor (m)")
+    ap.add_argument("--page-bottom-h", type=float, default=None, help="height of the A4 page's bottom edge above the floor (m); default config aruco_page_bottom_h_m (0.0: the page stands on the floor)")
+    ap.add_argument("--bottom-h", type=float, default=None, help="height of the black square's LOWER edge above the floor (m); default = page bottom + 0.132 (config aruco_square_above_page_m)")
     ap.add_argument("--camera-h", type=float, default=0.100)
     ap.add_argument("--id", type=int, default=None)
     ap.add_argument("--frames", type=int, default=45, help="frames to read from the robot")
@@ -64,6 +74,13 @@ def main():
     ap.add_argument("--ip", default="auto")
     ap.add_argument("--out", default="calib")
     a = ap.parse_args()
+    from sentry.config import load
+    cfg = load()
+    square_above = _cfg_value(cfg, "aruco_square_above_page_m", 0.132)
+    page_bottom = a.page_bottom_h if a.page_bottom_h is not None else _cfg_value(cfg, "aruco_page_bottom_h_m", 0.0)
+    if a.bottom_h is None:
+        a.bottom_h = page_bottom + square_above
+    print("marker lower edge %.3f m above the floor (page bottom %.3f + square %.3f), marker %.3f m" % (a.bottom_h, page_bottom, square_above, a.marker_m), flush=True)
     K, und = undistorter(json.load(open(a.camera)))
 
     def stream():
