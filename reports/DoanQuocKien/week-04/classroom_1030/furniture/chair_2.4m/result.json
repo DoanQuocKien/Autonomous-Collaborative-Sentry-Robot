@@ -1,0 +1,25 @@
+{
+ "label": "chair_2.4m",
+ "tape_m": 2.4,
+ "camera_pose": "calib/camera_pose_self_1030_2.json",
+ "floor": "glossy",
+ "frames": 12,
+ "frames_with_detection": 0,
+ "frames_with_distance": 0,
+ "median_distance_m": null,
+ "error_m": null,
+ "rows": [
+  [],
+  [],
+  [],
+  [],
+  [],
+  [],
+  [],
+  [],
+  [],
+  [],
+  [],
+  []
+ ]
+}
