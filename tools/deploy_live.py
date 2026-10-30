@@ -69,7 +69,7 @@ class WindowedHandshake(object):
     away (21 in a row at the glazed partition): the state machine's rule of 3 consecutive frames would have verified in 7 of 10 reject trials, and a latched single answer (what this
     tool did before) would verify on ONE frame. The placed camera is still, so a real placement gives a steady majority for seconds."""
 
-    def __init__(self, span_s=3.0, min_frames=10, frac=0.7):
+    def __init__(self, span_s=5.0, min_frames=6, frac=0.7):
         self.span_s, self.min_frames, self.frac = span_s, min_frames, frac
         self.results = []                                    # (t, in_view)
         self.since = float("-inf")                           # answers older than this do not count (reset): a timestamp, not a clear, so the reader thread cannot put old answers back
@@ -207,8 +207,8 @@ def main():
     ap.add_argument("--user", default="jetbot")
     ap.add_argument("--password", default=os.environ.get("JETBOT_PASSWORD"))
     ap.add_argument("--out", default="data/deploy")
-    ap.add_argument("--hs-span", type=float, default=3.0, help="handshake rule: window in seconds")
-    ap.add_argument("--hs-frames", type=int, default=10, help="handshake rule: at least this many detector answers in the window")
+    ap.add_argument("--hs-span", type=float, default=5.0, help="handshake rule: window in seconds (the detector answers at about 1.5-2.2 fps in a live run: 5 s holds 7-11 answers)")
+    ap.add_argument("--hs-frames", type=int, default=6, help="handshake rule: at least this many detector answers in the window")
     ap.add_argument("--hs-frac", type=float, default=0.7, help="handshake rule: at least this fraction of them in view (the camera is placed still: a real placement gives a steady majority)")
     ap.add_argument("--no-audio", action="store_true", help="do not speak (rehearsal in a quiet room); the prompts are still logged")
     a = ap.parse_args()
@@ -226,7 +226,7 @@ def main():
     r1 = {"held": True, "fail": 0}
     link = {"t": time.time(), "blocked": False}
     esp = {"in_view": False, "t": None, "frames": 0, "in_view_frames": 0, "inliers": 0}
-    window = WindowedHandshake(a.hs_span, a.hs_frames, a.hs_frac)
+    window = WindowedHandshake(a.hs_span, a.hs_frames, a.hs_frac)       # defaults 5 s / 6 answers / 70 %: measured live on 2026-10-30 (negative 3 % in view, 0 of 1337 ticks; positive verified 8.4 s after the prompt)
     threads, ssh, rx, volts0, volts1, password = [], None, None, None, None, None
     speaker = AudioPromptPlayer(sender=LocalSpeaker(backend=(lambda path: None) if a.no_audio else None))
 
