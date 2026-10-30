@@ -134,3 +134,15 @@ def test_marker_fixes_pull_the_pose_and_spins_go_in_pulses():
     from tools.deploy_live import blend_fix
     x, y, yaw = blend_fix((0.0, 0.0, math.radians(170)), (1.0, 0.0, math.radians(-170)), 0.5)
     assert abs(x - 0.5) < 1e-9 and abs(math.degrees(yaw) - 180.0) < 1e-6                  # the short way round the circle, not through 0
+
+
+def test_servo_motion_recovers_a_slow_drive_and_an_uneven_turn_from_the_board_sightings():
+    from sentry.nav.wheel_model import WheelModel
+    from tools.deploy_live import servo_motion
+    m = WheelModel()
+    v_m = m.body_speeds(0.55, 0.0)[0]
+    log = [(0.05 * i, 3.0 - 0.8 * v_m * 0.05 * i, 0.0, 0.55, 0.0) for i in range(60)]                  # the robot closes at 0.8 of the model's speed
+    w_r = m.body_speeds(0.0, 0.45)[1]
+    log += [(10 + 0.05 * i, 1.0, 0.0 - 1.2 * w_r * 0.05 * i, 0.0, 0.45) for i in range(10)]            # a left spin at 1.2 of the model: the board's bearing goes negative
+    out = servo_motion(log, m)
+    assert abs(out["speed_ratio"] - 0.8) < 0.02 and abs(out["turn_ratio_left"] - 1.2) < 0.02 and out["turn_ratio_right"] is None

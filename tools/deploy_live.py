@@ -114,6 +114,29 @@ def fresh_flag(feed, now, max_age=ESP_FRESH_S):
     return bool(feed and feed.get("t") is not None and now - feed["t"] <= max_age and feed.get("in_view"))
 
 
+def servo_motion(log, model):
+    """Measured motion from the followed board: log = [(t, range_m, bearing_rad, cmd_v, cmd_w)] (one row per sighting, the command in force then).
+    -> dict(speed_ratio, turn_ratio_left, turn_ratio_right) = measured / the model's prediction (None when there was no such motion in view); drives: range change over time while v > 0 and the steering is small;
+    spins: bearing change over time while the command is a spin (the board's bearing moves opposite to the robot's turn)."""
+    import numpy as np
+    out = dict(speed_ratio=None, turn_ratio_left=None, turn_ratio_right=None)
+    drive = [r for r in log if r[3] > 0 and abs(r[4]) < FIX_MAX_W]
+    if len(drive) >= 5 and drive[-1][0] - drive[0][0] >= 1.0:
+        slope = np.polyfit([r[0] for r in drive], [r[1] for r in drive], 1)[0]        # m/s, negative when closing in
+        pred = np.mean([model.body_speeds(r[3], r[4])[0] for r in drive])
+        out["speed_ratio"] = round(float(-slope / pred), 3) if pred > 0 else None
+    for name, sign in (("turn_ratio_left", 1), ("turn_ratio_right", -1)):
+        num = den = pred = 0.0
+        for r0, r1 in zip(log, log[1:]):
+            if r0[3] == 0 and r1[3] == 0 and r0[4] * sign > 0.3 and r1[4] * sign > 0.3 and 0 < r1[0] - r0[0] < 0.3:
+                num += -(r1[2] - r0[2])
+                den += r1[0] - r0[0]
+                pred += model.body_speeds(0.0, r0[4])[1] * (r1[0] - r0[0])
+        if den >= 0.15 and pred:
+            out[name] = round(num / pred, 3)
+    return out
+
+
 SPIN_PULSE_S, SPIN_PAUSE_S, FIX_STILL_S, FIX_MAX_W = 0.2, 0.5, 0.4, 0.15
 
 
@@ -277,7 +300,7 @@ def main():
     def servo_obs():
         s = fixed["servo"]
         return (s[1], s[2]) if s is not None and time.time() - s[0] < 0.6 else None
-    servo_tr = None
+    servo_tr, servo_log = None, []
     if a.servo_marker is not None:
         from sentry.nav.localization import LocalizationTracker
         servo_tr = LocalizationTracker(motion_calib=None, camera_calib="calib/camera.json", max_marker_distance_m=1e6)
@@ -397,6 +420,7 @@ def main():
                     for d in servo_tr.detect_markers(f.frame_bgr):
                         if d.marker_id == a.servo_marker:
                             fixed["servo"] = (time.time(), d.distance_m, d.bearing_rad)
+                            servo_log.append((time.time(), d.distance_m, d.bearing_rad, cmd["v"], cmd["w"]))
                             break
                 if fixer is not None:
                     try:
@@ -508,9 +532,15 @@ def main():
                "dr_error_at_vantage_m": round(math.hypot(vp[0][0] - target[0], vp[0][1] - target[1]), 3) if vp and target else None,
                "state_changes": runner.log, "events": [(round(t, 2), name) for t, name, _ in runner.events], "prompts": runner.prompts,
                "handshake": {"mode": a.handshake, "rule": {"span_s": a.hs_span, "min_frames": a.hs_frames, "fraction": a.hs_frac}, "frames": esp["frames"], "in_view_frames": esp["in_view_frames"], "last_inliers": esp["inliers"], "error": esp.get("error")},
-               "marker_fixes": end.get("fixes"), "anchors": a.anchors, "dr_path_m": round(path, 2), "dr_final_pose": [round(v, 3) for v in final], "battery_v_start": volts0, "battery_v_end": volts1,
+               "marker_fixes": end.get("fixes"), "servo_motion": servo_motion(servo_log, model) if servo_log else None, "servo_sightings": len(servo_log), "anchors": a.anchors, "dr_path_m": round(path, 2), "dr_final_pose": [round(v, 3) for v in final], "battery_v_start": volts0, "battery_v_end": volts1,
                "camera_pose_file": a.camera_pose, "obstacle_check": bool(a.camera_pose), "tape_answers": answers, "date": time.strftime("%Y-%m-%d %H:%M")}
     (run_dir / "summary.json").write_text(json.dumps(summary, indent=1))
+    if servo_log:
+        with open(run_dir / "servo.csv", "w", newline="") as fh:
+            w_ = csv.writer(fh)
+            w_.writerow(["t", "range_m", "bearing_rad", "cmd_v", "cmd_w"])
+            w_.writerows([tuple(round(v, 4) for v in r) for r in servo_log])
+        print("measured from the board (%d sightings; ratio = measured / model): %s" % (len(servo_log), summary["servo_motion"]), flush=True)
     print("saved", run_dir)
 
 
