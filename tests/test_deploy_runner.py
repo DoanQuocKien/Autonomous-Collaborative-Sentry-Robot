@@ -114,3 +114,14 @@ def test_servo_command_turns_toward_a_board_then_drives_and_stops_at_the_range()
     v, w, done = servo_command(2.0, 0.1, 0.87)
     assert v > 0 and 0 < w < 0.2 and not done                           # roughly ahead: drive and steer left
     assert servo_command(0.85, 0.0, 0.87) == (0.0, 0.0, True)
+
+
+def test_board_following_arrival_resets_the_pose_to_the_vantage_facing_the_board():
+    import math
+    from sentry.app.deploy_runner import DeployRunner
+    sm = StateMachine(StateMachineConfig())
+    r = DeployRunner(sm, None, vantage_xy=(0.0, -1.8), centre_xy=(-2.0, -1.8), servo=lambda t: (0.85, 0.1), servo_stop_m=0.87, servo_board_xy=(0.0, -2.67))
+    r.start(0.0, 0.0)
+    r.step(0.1, (5.0, 5.0, 0.0))                                           # dead reckoning is wrong, the board says arrived
+    x, y, yaw = r.pose_reset
+    assert (x, y) == (0.0, -1.8) and abs(yaw - (-math.pi / 2 - 0.1)) < 1e-9

@@ -187,6 +187,10 @@ def control_loop(runner, model, cmd, end, get_flag, get_link, seconds, clock=tim
             manual_until = now + 0.5                          # the key latches for 0.5 s: the runner needs 3 consecutive in-view ticks
         flag = get_flag(now) or now < manual_until
         v, w = runner.step(t, (x, y, yaw), flag)
+        reset = getattr(runner, "pose_reset", None)
+        if reset is not None:
+            x, y, yaw = reset
+            runner.pose_reset = None
         failed = getattr(runner, "failed", None)                 # a chain runner (Phase1Runner) says why it cannot go on
         if failed:
             end["reason"] = failed
@@ -262,6 +266,7 @@ def main():
     ap.add_argument("--anchors", default=None, help="ArUco board anchors CSV (marker_id,x_m,y_m,z_m,yaw_deg) in the frame of the start pose: the pose is corrected from the boards in the robot's video (spins go in pulses)")
     ap.add_argument("--fix-range", type=float, default=1.5, help="boards farther than this give no pose fix (their orientation is too noisy)")
     ap.add_argument("--servo-marker", type=int, default=None, help="approach by following this board (id) in the robot's video: spin in pulses until it is seen, drive at it steering by its bearing, stop at --servo-stop (dead reckoning only until it is first seen)")
+    ap.add_argument("--servo-board", type=float, nargs=2, default=None, metavar=("X", "Y"), help="--servo-marker: the board's position in the start frame; on arrival the pose is set to the vantage with the heading toward it (so the turn to face the centre starts from the truth)")
     ap.add_argument("--servo-stop", type=float, default=0.87, help="--servo-marker: stop at this camera-to-board range (m) = the sweet spot's distance to the board")
     ap.add_argument("--hs-span", type=float, default=5.0, help="handshake rule: window in seconds (the detector answers at about 1.5-2.2 fps in a live run: 5 s holds 7-11 answers)")
     ap.add_argument("--hs-frames", type=int, default=6, help="handshake rule: at least this many detector answers in the window")
@@ -325,7 +330,7 @@ def main():
             print("entrance detector loaded from %s" % a.entrance, flush=True)
     else:
         runner = DeployRunner(sm, speaker, vantage_xy=a.vantage, centre_xy=a.centre, settings=DeploySettings(),
-                              servo=(lambda t: servo_obs()) if a.servo_marker is not None else None, servo_stop_m=a.servo_stop)
+                              servo=(lambda t: servo_obs()) if a.servo_marker is not None else None, servo_stop_m=a.servo_stop, servo_board_xy=a.servo_board)
 
     def entrance_feeder():
         """sim: the door counts as in view when the robot faces it (within 0.5 rad); manual: for 0.5 s after the key e. 20 Hz, like the robot's frames."""

@@ -77,10 +77,11 @@ def face_command(pose, target_xy, s=None):
 
 
 class DeployRunner(object):
-    def __init__(self, sm, speaker, vantage_xy, centre_xy, settings=None, servo=None, servo_stop_m=None):
+    def __init__(self, sm, speaker, vantage_xy, centre_xy, settings=None, servo=None, servo_stop_m=None, servo_board_xy=None):
         """servo: optional callable t -> (range_m, bearing_rad) of the target board when it is in view (fresh), else None: the approach then follows the board (stops at servo_stop_m) instead of dead reckoning."""
         self.sm, self.speaker = sm, speaker
-        self.servo, self.servo_stop_m = servo, servo_stop_m
+        self.servo, self.servo_stop_m, self.servo_board_xy = servo, servo_stop_m, servo_board_xy
+        self.pose_reset = None                # (x, y, yaw) the control loop must adopt: set when the board-following approach arrives (dead reckoning did not drive it)
         self.vantage_xy, self.centre_xy = tuple(vantage_xy), tuple(centre_xy)
         self.s = settings or DeploySettings()
         self._ok = 0                          # consecutive in-view frames of the handshake detector
@@ -122,6 +123,9 @@ class DeployRunner(object):
             obs = self.servo(t) if self.servo is not None else None
             if obs is not None:
                 v, w, arrived = servo_command(obs[0], obs[1], self.servo_stop_m, self.s)
+                if arrived and self.servo_board_xy is not None:
+                    bx, by = self.servo_board_xy
+                    self.pose_reset = (self.vantage_xy[0], self.vantage_xy[1], wrap(math.atan2(by - self.vantage_xy[1], bx - self.vantage_xy[0]) - obs[1]))   # at the sweet spot, heading = direction of the board minus its bearing
             else:
                 v, w, arrived = goto_command(pose, self.vantage_xy, self.s)
             if arrived:
