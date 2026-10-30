@@ -72,17 +72,24 @@ class WindowedHandshake(object):
     def __init__(self, span_s=3.0, min_frames=10, frac=0.7):
         self.span_s, self.min_frames, self.frac = span_s, min_frames, frac
         self.results = []                                    # (t, in_view)
+        self.since = float("-inf")                           # answers older than this do not count (reset): a timestamp, not a clear, so the reader thread cannot put old answers back
 
     def add(self, t, in_view):
         self.results.append((t, bool(in_view)))
-        self.results = [(tt, v) for tt, v in self.results if t - tt <= self.span_s]
+        self.results = [(tt, v) for tt, v in list(self.results) if t - tt <= self.span_s]
+
+    def reset(self, t):
+        self.since = t
+
+    def _window(self, now):
+        return [v for tt, v in list(self.results) if now - tt <= self.span_s and tt >= self.since]
 
     def in_view(self, now):
-        w = [v for tt, v in self.results if now - tt <= self.span_s]
+        w = self._window(now)
         return len(w) >= self.min_frames and sum(w) / float(len(w)) >= self.frac
 
     def stats(self, now):
-        w = [v for tt, v in self.results if now - tt <= self.span_s]
+        w = self._window(now)
         return len(w), (sum(w) / float(len(w)) if w else 0.0)
 
 
@@ -92,9 +99,10 @@ def make_flag(esp, window, sm, waiting_state=State.WAIT_CAMERA):
     seen = {"state": None}
 
     def flag(now):
+        esp["in_view"] = window.in_view(now) if esp.get("t") is not None else esp["in_view"]
         if sm.state != seen["state"]:
             if sm.state == waiting_state:
-                window.results = []
+                window.reset(now)
                 esp["in_view"], esp["t"] = False, None
             seen["state"] = sm.state
         return fresh_flag(esp, now)

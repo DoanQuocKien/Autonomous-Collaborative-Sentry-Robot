@@ -110,8 +110,20 @@ def test_evidence_from_before_the_prompt_does_not_verify_the_camera():
         esp.update(in_view=window.in_view(k * 0.1), t=k * 0.1)
     assert flag(1.2) is True                                       # still the driving phase: the flag follows the window
     sm.state = State.WAIT_CAMERA                                   # the prompt plays: the old evidence is dropped
-    assert flag(1.3) is False and window.results == []
+    assert flag(1.3) is False and window.in_view(1.3) is False
     for k in range(13, 25):                                        # new answers after the prompt
         window.add(k * 0.1, True)
         esp.update(in_view=window.in_view(k * 0.1), t=k * 0.1)
     assert flag(2.5) is True                                       # verified only on the evidence gathered after the prompt
+
+
+def test_a_reset_ignores_late_answers_that_are_older_than_the_prompt():
+    from tools.deploy_live import WindowedHandshake
+    w = WindowedHandshake(3.0, 10, 0.7)
+    w.reset(5.0)
+    for k in range(20):
+        w.add(4.0 + k * 0.04, True)                                  # the reader thread delivers answers stamped before and after the reset
+    assert w.stats(5.0)[0] == 5 and w.in_view(5.0) is False         # only the answers stamped at 5.0 or later count: 5 of them, fewer than 10
+    for k in range(10):
+        w.add(5.0 + k * 0.1, True)
+    assert w.in_view(5.9) is True
