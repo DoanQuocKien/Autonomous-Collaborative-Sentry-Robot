@@ -18,8 +18,17 @@ TRACK = 0.137           # m between the wheels (fitted from the turn / speed slo
 
 
 class WheelModel:
-    def __init__(self, k=K_WHEEL, m0=M0, track=TRACK, max_speed=0.3, min_pwm=0.12, scale=1.0, k_mix=1.0):
+    def __init__(self, k=K_WHEEL, m0=M0, track=TRACK, max_speed=0.3, min_pwm=0.12, scale=1.0, k_mix=1.0, w_scale_left=1.0, w_scale_right=1.0, drift_rad_per_m=0.0):
         self.k, self.m0, self.track, self.max_speed, self.min_pwm, self.scale, self.k_mix = k, m0, track, max_speed, min_pwm, scale, k_mix
+        # Per-session floor corrections measured with the ArUco boards (tools/motion_check.py): an unlevel floor turns left and right at different rates and bends straight paths.
+        self.w_scale_left, self.w_scale_right, self.drift_rad_per_m = w_scale_left, w_scale_right, drift_rad_per_m
+
+    @classmethod
+    def from_session(cls, path):
+        """The model with the speed scale, the two turn scales and the drift of a calib/motion_session_*.json written by tools.motion_check."""
+        import json
+        d = json.load(open(path))
+        return cls(scale=d["scale"], w_scale_left=d["w_scale_left"], w_scale_right=d["w_scale_right"], drift_rad_per_m=d["drift_rad_per_m"])
 
     def wheel_speed(self, motor):
         """Signed wheel speed (m/s) for a motor value in [-max_speed, max_speed] (after the dead zone)."""
@@ -33,4 +42,6 @@ class WheelModel:
         """(forward speed m/s, turn rate rad/s left +) the robot makes for a normalised command (v, w)."""
         left, right = (deadzone(x * self.max_speed, self.min_pwm) for x in mix(v, w, self.k_mix))
         vl, vr = self.wheel_speed(left), self.wheel_speed(right)
-        return (vl + vr) / 2.0, (vr - vl) / self.track
+        v_m, w_r = (vl + vr) / 2.0, (vr - vl) / self.track
+        w_r *= self.w_scale_left if w_r > 0 else self.w_scale_right
+        return v_m, w_r + self.drift_rad_per_m * v_m           # the heading changes by drift_rad_per_m per metre driven (left +)

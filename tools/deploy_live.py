@@ -41,6 +41,7 @@ ESTOP_LATCH = "/home/jetbot/sentry/ESTOP"
 MIN_BATTERY_V = 11.3
 ESP_FRESH_S = 1.0           # a handshake result older than this counts as "not in view"
 LINK_STALE_S = 0.5          # no robot frame for this long: stop
+LINK_GRACE_S = 1.0          # extra time for the first frame after the threads start
 
 
 def beep(freq, ms):
@@ -62,16 +63,95 @@ def key_pressed():
     return None
 
 
+class WindowedHandshake(object):
+    """Live handshake rule over the detector's per-frame answers: "in view" only when, in the last `span_s` seconds, there are at least `min_frames` answers and at least `frac` of them
+    are in view. WHY: on 2026-10-30 at the classroom door, a single-frame detector answered "in view" for isolated frames and short runs of 4-8 frames even when the ESP32 pointed
+    away (21 in a row at the glazed partition): the state machine's rule of 3 consecutive frames would have verified in 7 of 10 reject trials, and a latched single answer (what this
+    tool did before) would verify on ONE frame. The placed camera is still, so a real placement gives a steady majority for seconds."""
+
+    def __init__(self, span_s=5.0, min_frames=6, frac=0.7):
+        self.span_s, self.min_frames, self.frac = span_s, min_frames, frac
+        self.results = []                                    # (t, in_view)
+        self.since = float("-inf")                           # answers older than this do not count (reset): a timestamp, not a clear, so the reader thread cannot put old answers back
+
+    def add(self, t, in_view):
+        self.results.append((t, bool(in_view)))
+        self.results = [(tt, v) for tt, v in list(self.results) if t - tt <= self.span_s]
+
+    def reset(self, t):
+        self.since = t
+
+    def _window(self, now):
+        return [v for tt, v in list(self.results) if now - tt <= self.span_s and tt >= self.since]
+
+    def in_view(self, now):
+        w = self._window(now)
+        return len(w) >= self.min_frames and sum(w) / float(len(w)) >= self.frac
+
+    def stats(self, now):
+        w = self._window(now)
+        return len(w), (sum(w) / float(len(w)) if w else 0.0)
+
+
+def make_flag(esp, window, sm, waiting_state=State.WAIT_CAMERA):
+    """The handshake flag for the control loop. The window is CLEARED each time the machine enters the waiting state (the prompt "place the entrance camera"): evidence gathered
+    BEFORE the request must not verify the camera (the first classroom rehearsal on 2026-10-30 verified 0.1 s after the prompt because the ESP32 already faced the door)."""
+    seen = {"state": None}
+
+    def flag(now):
+        esp["in_view"] = window.in_view(now) if esp.get("t") is not None else esp["in_view"]
+        if sm.state != seen["state"]:
+            if sm.state == waiting_state:
+                window.reset(now)
+                esp["in_view"], esp["t"] = False, None
+            seen["state"] = sm.state
+        return fresh_flag(esp, now)
+    return flag
+
+
 def fresh_flag(feed, now, max_age=ESP_FRESH_S):
     """feed: dict with in_view and t (when the detector last answered), or None -> True only for a fresh in-view answer."""
     return bool(feed and feed.get("t") is not None and now - feed["t"] <= max_age and feed.get("in_view"))
 
 
-def control_loop(runner, model, cmd, end, get_flag, get_link, seconds, clock=time.time, sleep=time.sleep, rate_hz=30.0, key=lambda: None, pose_cb=None):
+def servo_motion(log, model):
+    """Measured motion from the followed board: log = [(t, range_m, bearing_rad, cmd_v, cmd_w)] (one row per sighting, the command in force then).
+    -> dict(speed_ratio, turn_ratio_left, turn_ratio_right) = measured / the model's prediction (None when there was no such motion in view); drives: range change over time while v > 0 and the steering is small;
+    spins: bearing change over time while the command is a spin (the board's bearing moves opposite to the robot's turn)."""
+    import numpy as np
+    out = dict(speed_ratio=None, turn_ratio_left=None, turn_ratio_right=None)
+    drive = [r for r in log if r[3] > 0 and abs(r[4]) < FIX_MAX_W]
+    if len(drive) >= 5 and drive[-1][0] - drive[0][0] >= 1.0:
+        slope = np.polyfit([r[0] for r in drive], [r[1] for r in drive], 1)[0]        # m/s, negative when closing in
+        pred = np.mean([model.body_speeds(r[3], r[4])[0] for r in drive])
+        out["speed_ratio"] = round(float(-slope / pred), 3) if pred > 0 else None
+    for name, sign in (("turn_ratio_left", 1), ("turn_ratio_right", -1)):
+        num = den = pred = 0.0
+        for r0, r1 in zip(log, log[1:]):
+            if r0[3] == 0 and r1[3] == 0 and r0[4] * sign > 0.3 and r1[4] * sign > 0.3 and 0 < r1[0] - r0[0] < 0.3:
+                num += -(r1[2] - r0[2])
+                den += r1[0] - r0[0]
+                pred += model.body_speeds(0.0, r0[4])[1] * (r1[0] - r0[0])
+        if den >= 0.15 and pred:
+            out[name] = round(num / pred, 3)
+    return out
+
+
+SPIN_PULSE_S, SPIN_PAUSE_S, FIX_STILL_S, FIX_MAX_W = 0.2, 0.5, 0.4, 0.15
+
+
+def blend_fix(pose, fix, gain):
+    """Move the dead-reckoned pose toward a marker pose by `gain` (yaw along the short way)."""
+    x, y, yaw = pose
+    return (x + gain * (fix[0] - x), y + gain * (fix[1] - y), math.atan2(math.sin(yaw + gain * math.atan2(math.sin(fix[2] - yaw), math.cos(fix[2] - yaw))), math.cos(yaw + gain * math.atan2(math.sin(fix[2] - yaw), math.cos(fix[2] - yaw)))))
+
+
+def control_loop(runner, model, cmd, end, get_flag, get_link, seconds, clock=time.time, sleep=time.sleep, rate_hz=30.0, key=lambda: None, pose_cb=None, get_fix=None):
     """The 30 Hz loop: dead-reckon the pose from the command the robot was given, step the runner, publish the command, check the safety conditions.
     get_link(now) -> None (no robot) or dict(stale=bool, blocked=bool). Returns (rows, final pose, dead-reckoned path length). Ends by setting end['reason']."""
     x = y = yaw = 0.0
     path, prev, rows, manual_until = 0.0, (0.0, 0.0), [], 0.0
+    fix_seen, last_moving, spin_start, pause_until, end["fixes"] = 0, clock(), None, 0.0, 0     # get_fix(): (n, x, y, yaw, distance) of the newest marker pose or None
     t0 = last = clock()
     runner.start(0.0, 0.0)
     while end["reason"] is None:
@@ -88,6 +168,15 @@ def control_loop(runner, model, cmd, end, get_flag, get_link, seconds, clock=tim
         y += v_m * math.sin(yaw) * dt
         yaw = math.atan2(math.sin(yaw + w_r * dt), math.cos(yaw + w_r * dt))
         path += abs(v_m) * dt
+        if get_fix is not None:
+            if abs(prev[1]) >= FIX_MAX_W or prev[0] < 0:
+                last_moving = now                             # turning (or reversing): the frame is older than the pose, so no fix until the robot has been still for FIX_STILL_S
+            fx = get_fix()
+            if fx is not None and fx[0] != fix_seen:
+                fix_seen = fx[0]
+                if now - last_moving >= FIX_STILL_S:
+                    x, y, yaw = blend_fix((x, y, yaw), fx[1:4], 0.3 if fx[4] <= 1.5 else 0.2)
+                    end["fixes"] += 1
         if pose_cb is not None:
             pose_cb((x, y, yaw))
         link = get_link(now)
@@ -98,6 +187,10 @@ def control_loop(runner, model, cmd, end, get_flag, get_link, seconds, clock=tim
             manual_until = now + 0.5                          # the key latches for 0.5 s: the runner needs 3 consecutive in-view ticks
         flag = get_flag(now) or now < manual_until
         v, w = runner.step(t, (x, y, yaw), flag)
+        reset = getattr(runner, "pose_reset", None)
+        if reset is not None:
+            x, y, yaw = reset
+            runner.pose_reset = None
         failed = getattr(runner, "failed", None)                 # a chain runner (Phase1Runner) says why it cannot go on
         if failed:
             end["reason"] = failed
@@ -108,6 +201,15 @@ def control_loop(runner, model, cmd, end, get_flag, get_link, seconds, clock=tim
             v = w = 0.0
             cmd.update(v=0.0, w=0.0, t=now)
             break
+        if get_fix is not None and v == 0.0 and w != 0.0:        # a spin goes in pulses so that the marker fix can look at a still robot between them
+            if now < pause_until:
+                w = 0.0
+            elif spin_start is None:
+                spin_start = now
+            elif now - spin_start >= SPIN_PULSE_S:
+                spin_start, pause_until, w = None, now + SPIN_PAUSE_S, 0.0
+        else:
+            spin_start = None
         prev = (v, w)
         cmd.update(v=v, w=w, t=now)
         rows.append((round(t, 3), round(x, 3), round(y, 3), round(yaw, 3), v, round(w, 3), runner.sm.state.value, int(flag)))
@@ -138,6 +240,7 @@ def make_handshake(folder):
 
 
 def main():
+    import cv2
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--label", default="run")
     ap.add_argument("--vantage", type=float, nargs=2, default=None, metavar=("X", "Y"), help="the sweet spot typed in (manual mode); not needed with --door")
@@ -149,7 +252,7 @@ def main():
     ap.add_argument("--distance-margin", type=float, default=0.3, help="with --door: shrink the 1.5-3.0 m window by this on each side (dead reckoning error)")
     ap.add_argument("--centre", type=float, nargs=2, required=True, metavar=("X", "Y"))
     ap.add_argument("--handshake", default="manual", help="folder with ref/ and sweep/ from tools.handshake_test, or 'manual' (press v)")
-    ap.add_argument("--esp-ip", default="10.195.93.9")
+    ap.add_argument("--esp-ip", default="auto", help="the ESP32-CAM address, or auto (found on the network: the hotspot hands out a new subnet on some days)")
     ap.add_argument("--camera-pose", default=None, help="camera pose JSON of the CURRENT mount: enables the obstacle stop (and the start check)")
     ap.add_argument("--floor", choices=("glossy", "matte", "unknown"), default="unknown")
     ap.add_argument("--seconds", type=float, default=120.0)
@@ -160,6 +263,17 @@ def main():
     ap.add_argument("--user", default="jetbot")
     ap.add_argument("--password", default=os.environ.get("JETBOT_PASSWORD"))
     ap.add_argument("--out", default="data/deploy")
+    ap.add_argument("--motion-session", default=None, help="calib/motion_session_*.json from tools.motion_check: this floor's speed scale, left/right turn scales and drift for the dead reckoning (without it the robot veered off the line on 2026-10-30)")
+    ap.add_argument("--anchors", default=None, help="ArUco board anchors CSV (marker_id,x_m,y_m,z_m,yaw_deg) in the frame of the start pose: the pose is corrected from the boards in the robot's video (spins go in pulses)")
+    ap.add_argument("--fix-range", type=float, default=1.5, help="boards farther than this give no pose fix (their orientation is too noisy)")
+    ap.add_argument("--servo-marker", type=int, default=None, help="approach by following this board (id) in the robot's video: spin in pulses until it is seen, drive at it steering by its bearing, stop at --servo-stop (dead reckoning only until it is first seen)")
+    ap.add_argument("--servo-board", type=float, nargs=2, default=None, metavar=("X", "Y"), help="--servo-marker: the board's position in the start frame; on arrival the pose is set to the vantage with the heading toward it (so the turn to face the centre starts from the truth)")
+    ap.add_argument("--servo-stop", type=float, default=0.87, help="--servo-marker: stop at this camera-to-board range (m) = the sweet spot's distance to the board")
+    ap.add_argument("--min-battery", type=float, default=MIN_BATTERY_V, help="refuse to start below this pack voltage (project rule: 11.1 V is OK, 10.5 V stop; the speed model is calibrated at 11.8-12.2 V)")
+    ap.add_argument("--no-save-frames", action="store_true", help="by default every robot video frame of the run is saved (JPEG q80, with its time) in <run>/frames for later analysis; faces may be in them: data/ stays local")
+    ap.add_argument("--hs-span", type=float, default=5.0, help="handshake rule: window in seconds (the detector answers at about 1.5-2.2 fps in a live run: 5 s holds 7-11 answers)")
+    ap.add_argument("--hs-frames", type=int, default=6, help="handshake rule: at least this many detector answers in the window")
+    ap.add_argument("--hs-frac", type=float, default=0.7, help="handshake rule: at least this fraction of them in view (the camera is placed still: a real placement gives a steady majority)")
     ap.add_argument("--no-audio", action="store_true", help="do not speak (rehearsal in a quiet room); the prompts are still logged")
     a = ap.parse_args()
     a.dry_run = a.dry_run or a.no_robot
@@ -170,18 +284,37 @@ def main():
     if a.door is not None and (a.box is None or not a.wall):
         ap.error("--door needs --box and at least one --wall (the declared room)")
 
-    model, done = WheelModel(), threading.Event()
+    model, done = (WheelModel.from_session(a.motion_session) if a.motion_session else WheelModel()), threading.Event()
     cmd = {"v": 0.0, "w": 0.0, "t": time.time()}
     end = {"reason": None}
     r1 = {"held": True, "fail": 0}
     link = {"t": time.time(), "blocked": False}
     esp = {"in_view": False, "t": None, "frames": 0, "in_view_frames": 0, "inliers": 0}
+    window = WindowedHandshake(a.hs_span, a.hs_frames, a.hs_frac)       # defaults 5 s / 6 answers / 70 %: measured live on 2026-10-30 (negative 3 % in view, 0 of 1337 ticks; positive verified 8.4 s after the prompt)
     threads, ssh, rx, volts0, volts1, password = [], None, None, None, None, None
     speaker = AudioPromptPlayer(sender=LocalSpeaker(backend=(lambda path: None) if a.no_audio else None))
 
+    if a.handshake != "manual" and a.esp_ip == "auto":
+        from sentry.net.discover import find_esp32
+        a.esp_ip = find_esp32()
+        if a.esp_ip is None:
+            raise SystemExit("no ESP32 found on this network (is it powered and on the hotspot? give --esp-ip)")
+        print("ESP32 found at %s" % a.esp_ip, flush=True)
     detector = None if a.handshake == "manual" else make_handshake(a.handshake)
     sm = StateMachine(StateMachineConfig())
     pose_now = {"p": (0.0, 0.0, 0.0)}
+    fixer, fixed = None, {"m": None, "servo": None}
+
+    def servo_obs():
+        s = fixed["servo"]
+        return (s[1], s[2]) if s is not None and time.time() - s[0] < 0.6 else None
+    servo_tr, servo_log, frames_buf = None, [], []
+    if a.servo_marker is not None:
+        from sentry.nav.localization import LocalizationTracker
+        servo_tr = LocalizationTracker(motion_calib=None, camera_calib="calib/camera.json", max_marker_distance_m=1e6)
+    if a.anchors:
+        from sentry.nav.marker_fix import MarkerFix
+        fixer = MarkerFix(a.anchors, max_range_m=a.fix_range)
     manual = {"until": 0.0}
     grid = entrance_det = None
     if a.door is not None:
@@ -199,7 +332,8 @@ def main():
             entrance_det = EntranceDetector.load(a.entrance, camera=Camera.from_json("calib/camera.json"))
             print("entrance detector loaded from %s" % a.entrance, flush=True)
     else:
-        runner = DeployRunner(sm, speaker, vantage_xy=a.vantage, centre_xy=a.centre, settings=DeploySettings())
+        runner = DeployRunner(sm, speaker, vantage_xy=a.vantage, centre_xy=a.centre, settings=DeploySettings(),
+                              servo=(lambda t: servo_obs()) if a.servo_marker is not None else None, servo_stop_m=a.servo_stop, servo_board_xy=a.servo_board)
 
     def entrance_feeder():
         """sim: the door counts as in view when the robot faces it (within 0.5 rad); manual: for 0.5 s after the key e. 20 Hz, like the robot's frames."""
@@ -224,12 +358,15 @@ def main():
                 if frame is None:
                     continue
                 res = detector.detect(frame)
-                esp.update(in_view=bool(res.in_view), t=time.time(), inliers=int(res.inliers))
+                now = time.time()
+                window.add(now, res.in_view)
+                esp.update(in_view=window.in_view(now), t=now, inliers=int(res.inliers), single_frame=bool(res.in_view))
                 esp["frames"] += 1
                 esp["in_view_frames"] += int(res.in_view)
         except Exception as exc:
             esp["error"] = repr(exc)
 
+    obs_det = explorer = None
     if not a.no_robot:
         from sentry.config import load
         from sentry.net.discover import resolve
@@ -243,8 +380,8 @@ def main():
         ssh = jetbot_ssh.connect(a.ip, a.user, password)
         volts0 = ina219_bus_volts(jetbot_ssh.sudo(ssh, "i2cget -y 1 0x41 0x02 w", password))
         print("battery %.2f V" % volts0)
-        if volts0 < MIN_BATTERY_V:
-            raise SystemExit("ABORT: battery %.2f V < %.1f V: charge first" % (volts0, MIN_BATTERY_V))
+        if volts0 < a.min_battery:
+            raise SystemExit("ABORT: battery %.2f V < %.1f V: charge first" % (volts0, a.min_battery))
         control_port = load()["net"]["control_port"]
         rx = ZMQReceiver(ip=a.ip)
         rx.start()
@@ -287,6 +424,21 @@ def main():
                 if f is None:
                     continue
                 link["t"] = time.time()
+                if not a.no_save_frames:
+                    ok_, jpg = cv2.imencode(".jpg", f.frame_bgr, [cv2.IMWRITE_JPEG_QUALITY, 80])
+                    if ok_:
+                        frames_buf.append((time.time(), jpg.tobytes()))
+                if servo_tr is not None:
+                    for d in servo_tr.detect_markers(f.frame_bgr):
+                        if d.marker_id == a.servo_marker:
+                            fixed["servo"] = (time.time(), d.distance_m, d.bearing_rad)
+                            servo_log.append((time.time(), d.distance_m, d.bearing_rad, cmd["v"], cmd["w"]))
+                            break
+                if fixer is not None:
+                    try:
+                        fixed["m"] = fixer.measure(f.frame_bgr) or fixed["m"]
+                    except Exception as exc:
+                        end["reason"] = end["reason"] or "marker fix error: %r" % exc
                 if entrance_det is not None:
                     try:
                         runner.observe_entrance(entrance_det.detect(f.frame_bgr), time.time())
@@ -330,11 +482,14 @@ def main():
         threads.append(threading.Thread(target=esp_reader))
     if a.door is not None and a.entrance in ("sim", "manual"):
         threads.append(threading.Thread(target=entrance_feeder))
+    link["t"] = time.time() + LINK_GRACE_S      # the watchdog counts from now: link["t"] was set at start-up, before the models and the SSH link, so the first tick looked stale (found by the dry run on 2026-10-30)
     for th in threads:
         th.daemon = True
         th.start()
 
-    get_link = (lambda now: None) if a.no_robot else (lambda now: {"stale": now - link["t"] > LINK_STALE_S, "blocked": link["blocked"]})
+    # the 0.5 s video watchdog guards the OBSTACLE detector; without --camera-pose the robot's video steers nothing, and a weak Wi-Fi link (2.5-5 fps measured in the classroom on 2026-10-30)
+    # would abort every run for nothing. The robot's own 0.3 s command watchdog, R1 and the e-stop poll still stop it.
+    get_link = (lambda now: None) if a.no_robot else (lambda now: {"stale": obs_det is not None and now - link["t"] > LINK_STALE_S, "blocked": link["blocked"]})
     t_wall = time.time()
     try:
         def key():
@@ -342,8 +497,8 @@ def main():
             if k == "e":                                          # manual entrance: in view for 0.5 s
                 manual["until"] = time.time() + 0.5
             return k
-        rows, final, path = control_loop(runner, model, cmd, end, lambda now: fresh_flag(esp, now), get_link, a.seconds, key=key,
-                                         pose_cb=lambda p: pose_now.__setitem__("p", p))
+        rows, final, path = control_loop(runner, model, cmd, end, make_flag(esp, window, sm), get_link, a.seconds, key=key,
+                                         pose_cb=lambda p: pose_now.__setitem__("p", p), get_fix=(lambda: fixed["m"]) if fixer is not None else ((lambda: None) if servo_tr is not None else None))
     finally:
         cmd.update(v=0.0, w=0.0, t=time.time())            # the sender then repeats zero; its close() sends a final stop
         time.sleep(0.4)
@@ -388,10 +543,21 @@ def main():
                "vantage_target": target, "room_centre": a.centre, "dr_pose_at_vantage_reached": vp[0] if vp else None,
                "dr_error_at_vantage_m": round(math.hypot(vp[0][0] - target[0], vp[0][1] - target[1]), 3) if vp and target else None,
                "state_changes": runner.log, "events": [(round(t, 2), name) for t, name, _ in runner.events], "prompts": runner.prompts,
-               "handshake": {"mode": a.handshake, "frames": esp["frames"], "in_view_frames": esp["in_view_frames"], "last_inliers": esp["inliers"], "error": esp.get("error")},
-               "dr_path_m": round(path, 2), "dr_final_pose": [round(v, 3) for v in final], "battery_v_start": volts0, "battery_v_end": volts1,
+               "handshake": {"mode": a.handshake, "rule": {"span_s": a.hs_span, "min_frames": a.hs_frames, "fraction": a.hs_frac}, "frames": esp["frames"], "in_view_frames": esp["in_view_frames"], "last_inliers": esp["inliers"], "error": esp.get("error")},
+               "marker_fixes": end.get("fixes"), "servo_motion": servo_motion(servo_log, model) if servo_log else None, "servo_sightings": len(servo_log), "anchors": a.anchors, "dr_path_m": round(path, 2), "dr_final_pose": [round(v, 3) for v in final], "battery_v_start": volts0, "battery_v_end": volts1,
                "camera_pose_file": a.camera_pose, "obstacle_check": bool(a.camera_pose), "tape_answers": answers, "date": time.strftime("%Y-%m-%d %H:%M")}
     (run_dir / "summary.json").write_text(json.dumps(summary, indent=1))
+    if frames_buf:
+        (run_dir / "frames").mkdir(exist_ok=True)
+        for t_, jpg in frames_buf:
+            (run_dir / "frames" / ("%.3f.jpg" % t_)).write_bytes(jpg)
+        print("saved %d video frames" % len(frames_buf), flush=True)
+    if servo_log:
+        with open(run_dir / "servo.csv", "w", newline="") as fh:
+            w_ = csv.writer(fh)
+            w_.writerow(["t", "range_m", "bearing_rad", "cmd_v", "cmd_w"])
+            w_.writerows([tuple(round(v, 4) for v in r) for r in servo_log])
+        print("measured from the board (%d sightings; ratio = measured / model): %s" % (len(servo_log), summary["servo_motion"]), flush=True)
     print("saved", run_dir)
 
 

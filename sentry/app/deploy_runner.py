@@ -57,6 +57,16 @@ def goto_command(pose, goal_xy, s=None):
     return s.v_forward, max(-s.w_forward_max, min(s.w_forward_max, err)), False
 
 
+def servo_command(rng_m, bearing_rad, stop_m, s=None, kp=1.0):
+    """Drive at a board that is in view: (v, w, arrived) from its range and bearing (left +). Spins while it is more than turn_only_rad off the heading, otherwise drives and steers by the bearing."""
+    s = s or DeploySettings()
+    if rng_m <= stop_m:
+        return 0.0, 0.0, True
+    if abs(bearing_rad) > 0.35:
+        return 0.0, (s.w_spin if bearing_rad > 0 else -s.w_spin), False
+    return s.v_forward, max(-s.w_forward_max, min(s.w_forward_max, kp * bearing_rad)), False
+
+
 def face_command(pose, target_xy, s=None):
     """Spin in place toward target_xy. -> (w, done)."""
     s = s or DeploySettings()
@@ -67,8 +77,12 @@ def face_command(pose, target_xy, s=None):
 
 
 class DeployRunner(object):
-    def __init__(self, sm, speaker, vantage_xy, centre_xy, settings=None):
+    def __init__(self, sm, speaker, vantage_xy, centre_xy, settings=None, servo=None, servo_stop_m=None, servo_board_xy=None):
+        """servo: optional callable t -> (range_m, bearing_rad) of the target board when it is in view (fresh), else None: the approach then follows the board (stops at servo_stop_m) instead of dead reckoning."""
         self.sm, self.speaker = sm, speaker
+        self.servo, self.servo_stop_m, self.servo_board_xy = servo, servo_stop_m, servo_board_xy
+        self.last_bearing = None              # bearing of the board when it was last in view: once it was seen, losing it must not send the approach back to dead reckoning
+        self.pose_reset = None                # (x, y, yaw) the control loop must adopt: set when the board-following approach arrives (dead reckoning did not drive it)
         self.vantage_xy, self.centre_xy = tuple(vantage_xy), tuple(centre_xy)
         self.s = settings or DeploySettings()
         self._ok = 0                          # consecutive in-view frames of the handshake detector
@@ -107,7 +121,17 @@ class DeployRunner(object):
         st = self.sm.state
         v = w = 0.0
         if st == State.APPROACH_VANTAGE:
-            v, w, arrived = goto_command(pose, self.vantage_xy, self.s)
+            obs = self.servo(t) if self.servo is not None else None
+            if obs is not None:
+                self.last_bearing = obs[1]
+                v, w, arrived = servo_command(obs[0], obs[1], self.servo_stop_m, self.s)
+                if arrived and self.servo_board_xy is not None:
+                    bx, by = self.servo_board_xy
+                    self.pose_reset = (self.vantage_xy[0], self.vantage_xy[1], wrap(math.atan2(by - self.vantage_xy[1], bx - self.vantage_xy[0]) - obs[1]))   # at the sweet spot, heading = direction of the board minus its bearing
+            elif self.last_bearing is not None:         # board seen, now lost (t2_3/4/5 of 2026-10-30 ran 0.8-1.0 m blind on dead reckoning): never drive; look for it on the side it left
+                v, w, arrived = 0.0, (self.s.w_spin if self.last_bearing > 0 else -self.s.w_spin), False
+            else:
+                v, w, arrived = goto_command(pose, self.vantage_xy, self.s)
             if arrived:
                 self._event("VANTAGE_REACHED", t, pose=pose)
                 v = w = 0.0

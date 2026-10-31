@@ -118,6 +118,7 @@ Record the outputs in `reports/DoanQuocKien/week-01/`.
 | Antenna 0 missing (not caused by us as far as we know) | Tell the professor; replacement is cheap |
 | On the laptop: usbipd-win installed and the card reader shared (busid 1-3) | Optional: `usbipd unbind --busid 1-3`, uninstall usbipd-win |
 | SD card filesystem had minor inconsistencies from power-offs by the switch | Prefer a clean shutdown (`sudo shutdown -h now` over SSH) before cutting power |
+| 2026-10-30 classroom session (checked at the end): nothing new was installed on the robot's SD card; the robot only wrote run logs under `/home/jetbot/sentry/` (removed by the `rm -rf` row above). The hotspot subnet was 192.168.221.x (robot .160, ESP32 .9): the `DoanQuocKien` profile above is the one in use. Battery ended near 11.2 V (partly charged, no charger in the room): charge it before handing it back | Charge to full; clean shutdown with `sudo shutdown -h now` over SSH. Laptop-side files of this session (provisional `calib/motion_session_1030_provisional.json`, run data, backups in `D:\CS532\classroom_1030_backup`) are not on the robot |
 
 ## Low-speed motor behaviour (measured 2026-10-11, cafe floor, level, battery about 12.1 V)
 

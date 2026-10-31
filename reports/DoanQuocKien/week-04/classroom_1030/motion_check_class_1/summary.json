@@ -1,0 +1,72 @@
+{
+ "label": "class_1",
+ "battery_v": 11.6,
+ "model": "calib defaults",
+ "rows": [
+  {
+   "name": "spin_left_1",
+   "kind": "spin_left",
+   "measurable": false
+  },
+  {
+   "name": "spin_right_1",
+   "kind": "spin_right",
+   "measurable": true,
+   "measured_forward_m": -0.286,
+   "measured_left_m": -0.282,
+   "measured_turn_deg": -41.4,
+   "predicted_forward_m": 0.0,
+   "predicted_turn_deg": -49.8,
+   "ratio": 0.832
+  },
+  {
+   "name": "forward_1",
+   "kind": "forward",
+   "measurable": true,
+   "measured_forward_m": 0.442,
+   "measured_left_m": -0.031,
+   "measured_turn_deg": 12.6,
+   "predicted_forward_m": 0.412,
+   "predicted_turn_deg": 0.0,
+   "ratio": 1.071,
+   "drift_rad_per_m": 0.4992
+  },
+  {
+   "name": "spin_left_2",
+   "kind": "spin_left",
+   "measurable": false
+  },
+  {
+   "name": "spin_right_2",
+   "kind": "spin_right",
+   "measurable": false
+  },
+  {
+   "name": "forward_2",
+   "kind": "forward",
+   "measurable": true,
+   "measured_forward_m": 0.426,
+   "measured_left_m": 0.084,
+   "measured_turn_deg": 10.1,
+   "predicted_forward_m": 0.412,
+   "predicted_turn_deg": 0.0,
+   "ratio": 1.035,
+   "drift_rad_per_m": 0.4118
+  }
+ ],
+ "check_passed": false,
+ "check_failures": [
+  "spin_right_1 ratio 0.83",
+  "forward_1 drift +0.499 rad/m",
+  "forward_2 drift +0.412 rad/m"
+ ],
+ "fit": null,
+ "fit_problems": [
+  "no measurable spin_left segment (a board in range at both rests?)"
+ ],
+ "limits": {
+  "ratio": 0.1,
+  "drift_rad_per_m": 0.05,
+  "scatter": 0.15
+ }
+}
