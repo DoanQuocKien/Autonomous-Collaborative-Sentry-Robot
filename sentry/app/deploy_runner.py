@@ -81,6 +81,7 @@ class DeployRunner(object):
         """servo: optional callable t -> (range_m, bearing_rad) of the target board when it is in view (fresh), else None: the approach then follows the board (stops at servo_stop_m) instead of dead reckoning."""
         self.sm, self.speaker = sm, speaker
         self.servo, self.servo_stop_m, self.servo_board_xy = servo, servo_stop_m, servo_board_xy
+        self.last_bearing = None              # bearing of the board when it was last in view: once it was seen, losing it must not send the approach back to dead reckoning
         self.pose_reset = None                # (x, y, yaw) the control loop must adopt: set when the board-following approach arrives (dead reckoning did not drive it)
         self.vantage_xy, self.centre_xy = tuple(vantage_xy), tuple(centre_xy)
         self.s = settings or DeploySettings()
@@ -122,10 +123,13 @@ class DeployRunner(object):
         if st == State.APPROACH_VANTAGE:
             obs = self.servo(t) if self.servo is not None else None
             if obs is not None:
+                self.last_bearing = obs[1]
                 v, w, arrived = servo_command(obs[0], obs[1], self.servo_stop_m, self.s)
                 if arrived and self.servo_board_xy is not None:
                     bx, by = self.servo_board_xy
                     self.pose_reset = (self.vantage_xy[0], self.vantage_xy[1], wrap(math.atan2(by - self.vantage_xy[1], bx - self.vantage_xy[0]) - obs[1]))   # at the sweet spot, heading = direction of the board minus its bearing
+            elif self.last_bearing is not None:         # board seen, now lost (t2_3/4/5 of 2026-10-30 ran 0.8-1.0 m blind on dead reckoning): never drive; look for it on the side it left
+                v, w, arrived = 0.0, (self.s.w_spin if self.last_bearing > 0 else -self.s.w_spin), False
             else:
                 v, w, arrived = goto_command(pose, self.vantage_xy, self.s)
             if arrived:

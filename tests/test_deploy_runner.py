@@ -125,3 +125,18 @@ def test_board_following_arrival_resets_the_pose_to_the_vantage_facing_the_board
     r.step(0.1, (5.0, 5.0, 0.0))                                           # dead reckoning is wrong, the board says arrived
     x, y, yaw = r.pose_reset
     assert (x, y) == (0.0, -1.8) and abs(yaw - (-math.pi / 2 - 0.1)) < 1e-9
+
+
+def test_a_board_lost_after_it_was_seen_never_drives_on_dead_reckoning_and_searches_its_side():
+    from sentry.app.deploy_runner import DeployRunner
+    seen = {"obs": (2.0, -0.1)}
+    r = DeployRunner(StateMachine(StateMachineConfig()), None, vantage_xy=(0.0, -1.8), centre_xy=(-2.0, -1.8), servo=lambda t: seen["obs"], servo_stop_m=0.87, servo_board_xy=(0.0, -2.67))
+    r.start(0.0, 0.0)
+    v, w = r.step(0.1, (0.0, 0.0, 0.0))
+    assert v > 0                                                           # in view: drives at it
+    seen["obs"] = None                                                     # lost; dead reckoning says the vantage is straight ahead
+    v, w = r.step(0.2, (0.0, -1.0, -math.pi / 2))
+    assert v == 0.0 and w < 0                                              # stops, spins to the right (the side the board was on)
+    r2 = DeployRunner(StateMachine(StateMachineConfig()), None, vantage_xy=(5.0, 0.0), centre_xy=(0.0, 0.0), servo=lambda t: None, servo_stop_m=0.87)
+    r2.start(0.0, 0.0)
+    assert r2.step(0.1, (0.0, 0.0, 0.0))[0] > 0                            # never seen yet: dead reckoning gets it started
