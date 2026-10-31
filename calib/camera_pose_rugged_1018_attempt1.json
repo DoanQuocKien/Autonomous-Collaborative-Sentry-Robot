@@ -1,0 +1,44 @@
+{
+  "tag": "rugged_1018",
+  "H_cam_m": 0.0899,
+  "H_tape_m": 0.1,
+  "pitch_down_deg": 0.35,
+  "rms_m": 0.0084,
+  "marks_m": [
+    0.5,
+    1.0,
+    2.0
+  ],
+  "clicks_px": [
+    [
+      238,
+      291
+    ],
+    [
+      253,
+      265
+    ],
+    [
+      260,
+      251
+    ]
+  ],
+  "rows_px": [
+    291.0,
+    265.0,
+    251.0
+  ],
+  "camera_roll_deg": 0.0,
+  "strip_slopes_deg": [
+    0.0,
+    0.0,
+    0.0
+  ],
+  "residuals_m": [
+    0.0115,
+    -0.0087,
+    0.0014
+  ],
+  "passed": true,
+  "problems": []
+}
