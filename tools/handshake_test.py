@@ -32,6 +32,25 @@ def decide(flags, min_frac=0.5):
     return f >= min_frac, f
 
 
+def longest_run(flags):
+    """Longest run of consecutive True values."""
+    best = cur = 0
+    for f in flags:
+        cur = cur + 1 if f else 0
+        best = max(best, cur)
+    return best
+
+
+def tally_consecutive(trials, n=3):
+    """SECONDARY rule (the state machine's EntranceFilter: n consecutive in-view frames fire the event): a trial is "verified" when its scored frames contain a run of n in-view results.
+    Chosen after the primary (majority) result was known: report it as secondary. trials need 'kind' and 'frame_flags' (a string of 0 and 1)."""
+    acc = [t for t in trials if t["kind"] == "accept"]
+    rej = [t for t in trials if t["kind"] == "reject"]
+    ok = lambda t: longest_run([c == "1" for c in t["frame_flags"]]) >= n
+    return {"rule": "%d consecutive in-view frames" % n, "accepts": len(acc), "correct_accepts": sum(1 for t in acc if ok(t)),
+            "rejects": len(rej), "correct_rejects": sum(1 for t in rej if not ok(t))}
+
+
 def tally(trials):
     """trials: dicts with kind ('accept' | 'reject') and in_view -> dict with the correct counts."""
     acc = [t for t in trials if t["kind"] == "accept"]
@@ -121,12 +140,16 @@ def cmd_eval(a, root, detector=None):
             inl.append(r.inliers)
         inv, frac = decide(flags)
         trials.append({"trial": folder.name, "kind": kind, "frames_scored": len(scored), "fraction_in_view": round(frac, 3), "in_view": inv,
-                       "correct": inv == (kind == "accept"), "median_inliers": int(np.median(inl)) if inl else 0})
+                       "correct": inv == (kind == "accept"), "median_inliers": int(np.median(inl)) if inl else 0,
+                       "frame_flags": "".join("1" if f else "0" for f in flags), "longest_run_in_view": longest_run(flags), "frame_inliers": inl})
         print("%-12s %2d frames, in view %3.0f %%, inliers median %3d -> %s %s" % (folder.name, len(scored), 100 * frac, trials[-1]["median_inliers"], "IN VIEW" if inv else "not in view",
                                                                               "ok" if trials[-1]["correct"] else "WRONG"), flush=True)
-    res = {"xfeat_threshold": thr[0], "dino_threshold": thr[1], "refs": len(refs), "sweep_frames": len(sweep), "trials": trials, **tally(trials)}
+    res = {"xfeat_threshold": thr[0], "dino_threshold": thr[1], "refs": len(refs), "sweep_frames": len(sweep), "trials": trials, **tally(trials),
+           "secondary_3_consecutive": tally_consecutive(trials)}
     (root / "results.json").write_text(json.dumps(res, indent=1))
-    print("correct accepts %d/%d, correct rejects %d/%d" % (res["correct_accepts"], res["accepts"], res["correct_rejects"], res["rejects"]))
+    print("PRIMARY (at least half of the scored frames in view): correct accepts %d/%d, correct rejects %d/%d" % (res["correct_accepts"], res["accepts"], res["correct_rejects"], res["rejects"]))
+    sec = res["secondary_3_consecutive"]
+    print("SECONDARY (%s; chosen after the primary result): correct accepts %d/%d, correct rejects %d/%d" % (sec["rule"], sec["correct_accepts"], sec["accepts"], sec["correct_rejects"], sec["rejects"]))
     return res
 
 
