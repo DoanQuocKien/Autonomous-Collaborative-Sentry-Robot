@@ -22,7 +22,7 @@ How the JetBot platform works, read from NVIDIA's source (`github.com/NVIDIA-AI-
 - Per-motor calibration traits: `alpha` (gain, default 1.0) and `beta` (offset, default 0.0). Mapped speed = `int(255 * (alpha*value + beta))`, clipped to 0-255.
 - **No watchdog**: if the program dies the motors keep their last value. `atexit` releases them only on a clean exit.
 - The upstream `Heartbeat` class is a Jupyter-widget (browser) heartbeat, so it is **not** usable for our safety stop.
-- **No encoders or IMU**: speed is open-loop PWM, so it varies with battery voltage, and low values fall in a dead zone where the wheels do not turn.
+- **No encoders** (an MPU6050 was added by us on 2026-11-01, see the return checklist): speed is open-loop PWM, so it varies with battery voltage, and low values fall in a dead zone where the wheels do not turn.
 
 ## Camera (`jetbot/camera/`)
 
@@ -111,6 +111,7 @@ Record the outputs in `reports/DoanQuocKien/week-01/`.
 | Change we made | How to undo |
 | :-- | :-- |
 | Wi-Fi profile `DoanQuocKien` added on the SD card (`/etc/NetworkManager/system-connections/DoanQuocKien`, contains the hotspot password) | `sudo rm` that file. The original `Deco_One` profiles were left untouched. A backup of the original folder is in `C:\Users\admin\jetbot_card_backup` on the laptop |
+| **MPU6050 IMU** attached to the robot by DQK on 2026-11-01 (I2C address 0x68; record here how it is wired and mounted: Jetson header pins, where it is fixed) | Unwire and remove it, and remove its mounting (tape, screws, standoffs) so the robot is as received. Fill in the wiring/mounting line when it is checked out. |
 | Our code in `/home/jetbot/sentry/` (some `__pycache__` folders are owned by root) | `sudo rm -rf /home/jetbot/sentry` |
 | `/home/jetbot/sentry/` also holds `ESTOP`, `ESTOP_ALIVE`, `estop.log` while the e-stop runs. **systemd units** (`jetson/systemd/`, installed 2026-10-11 or later): `/etc/systemd/system/sentry-estop.service`, `sentry-camera.service`, optionally `sentry-control.service` and `/etc/default/sentry-control` | **Return checklist:** `sudo systemctl disable --now sentry-estop sentry-camera sentry-control; sudo rm -f /etc/systemd/system/sentry-*.service /etc/default/sentry-control; sudo systemctl daemon-reload`, then `sudo rm -rf /home/jetbot/sentry` (removes everything) |
 | Wi-Fi power save: permanent fix file `/etc/modprobe.d/8822ce-sentry.conf` (2026-10-06) | `sudo rm /etc/modprobe.d/8822ce-sentry.conf` and reboot restores the driver default |
