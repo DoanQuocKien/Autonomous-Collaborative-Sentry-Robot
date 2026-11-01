@@ -51,3 +51,11 @@ def test_eval_scores_trials_with_a_fake_detector(tmp_path):
     res = ht.cmd_eval(SimpleNamespace(), root, detector=FakeDetector())
     assert (res["correct_accepts"], res["accepts"], res["correct_rejects"], res["rejects"]) == (2, 2, 2, 2)
     assert all(t["frames_scored"] == 3 for t in res["trials"]) and json.loads((root / "results.json").read_text())["accepts"] == 2
+
+
+def test_longest_run_and_the_secondary_three_consecutive_rule():
+    assert ht.longest_run([True, True, False, True, True, True, False]) == 3 and ht.longest_run([]) == 0 and ht.longest_run([False, False]) == 0
+    trials = [{"kind": "accept", "frame_flags": "0110111"}, {"kind": "accept", "frame_flags": "1101101"},
+              {"kind": "reject", "frame_flags": "1010101"}, {"kind": "reject", "frame_flags": "0111000"}]
+    t = ht.tally_consecutive(trials)
+    assert (t["correct_accepts"], t["accepts"], t["correct_rejects"], t["rejects"]) == (1, 2, 1, 2)   # accept 1 has a run of 3; reject 2 has a run of 3 (a false accept)
