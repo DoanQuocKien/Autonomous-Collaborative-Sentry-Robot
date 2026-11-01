@@ -7,3 +7,4 @@
 # Pinned: 1.30+ needs CUDA 13 and silently falls back to CPU next to torch cu128.
 # Never keep plain `onnxruntime` installed beside it. Import torch BEFORE onnxruntime so torch's CUDA DLLs are used.
 onnxruntime-gpu==1.23.2
+nvidia-ml-py        # full-device VRAM sampling includes torch, ORT, driver and other processes

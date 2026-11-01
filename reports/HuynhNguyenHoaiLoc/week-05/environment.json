@@ -1,0 +1,29 @@
+{
+  "date": "2026-11-01",
+  "base": "36cb70142710fd0465afc1c3f397d84b677f6f2b",
+  "versions": {
+    "torch": "2.9.1+cu128",
+    "torchvision": "0.24.1+cu128",
+    "ultralytics": "8.4.172",
+    "numpy": "2.5.3",
+    "opencv-python": "5.0.0.93",
+    "onnxruntime-gpu": "1.23.2",
+    "insightface": "2.1",
+    "torchreid": "0.2.5",
+    "lap": "0.5.13",
+    "nvidia-ml-py": "13.615.71"
+  },
+  "source_sha256": {
+    "config.toml": "1dfd44bbfcda15211e6c4182e3058a3f4e67ed636e1a729a7c74f10fd9d5f637",
+    "sentry/perception/tracker.py": "35ecf0bc23cab41d77521cfc426f2f8c23c02e00aad240337d1638f5386f692f",
+    "tools/evaluate_tracking.py": "aba2e1b47be5f9e9fdfbe143f1220c17ae62eff72ba7a6d6693b287eebf1a08e",
+    "tools/profile_pipeline.py": "dba1df1f488e146c168a0921c28551f1eafe6f96d7f9628349c2632f2e75ba24",
+    "tools/track_replay.py": "b7162fa03537ac8840268dd105735b591439d44c3f7c70b8103f4baabdcdfc75",
+    "tools/track_live.py": "9ec04b447b60763fb7d7703d902161e63554db15a13c74f236fc31a756559491",
+    "tools/plot_w5_profile.py": "f2621b74ecb71fdee659e42d17b57c6e10a133b910eee1bacb8fae2ba7b0f15a"
+  },
+  "motor_commands_sent": 0,
+  "d3_available": false,
+  "target_rtx4050_available": false,
+  "profiling_note": "Inference parameters unchanged after measurements; run config hashes/settings preserved. budget_recheck applies plan 5.5 decimal GB, not 5.5 GiB, to saved peak samples; conclusions unchanged."
+}

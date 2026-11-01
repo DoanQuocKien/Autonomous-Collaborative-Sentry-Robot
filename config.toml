@@ -192,3 +192,33 @@ verification_tar_target = 0.85   # avoid selecting a reject-all lock threshold
 v_max_mps = 0.5                  # Simulated max linear velocity in m/s
 w_max_radps = 2.0                # Simulated max angular velocity in rad/s
 loop_hz = 50                     # Simulation loop rate
+
+[tracking]
+track_high_thresh = 0.25
+track_low_thresh = 0.10
+new_track_thresh = 0.25
+track_buffer = 30
+match_thresh = 0.80
+fuse_score = true
+max_frame_gap_s = 1.0
+lock_similarity = 0.70          # provisional: calibrate on D2/D3 before deployment
+lock_margin = 0.05
+confirm_frames = 2
+lost_timeout_s = 2.0
+
+[pipeline_profile]
+warmup = 5
+iterations = 100
+imgsz = 640
+pose_weights = "data/models/yolov8n-pose.pt"
+face_root = "data/insightface"
+torch_home = "data/torch_w5"
+min_fps = 15.0
+max_vram_bytes = 5500000000     # plan says 5.5 GB (decimal); do not silently loosen it to GiB
+profile_people = 2              # pad absent body/face work with labelled synthetic crops
+nvml_sample_s = 0.02
+
+[tracking_validation]
+iou_min = 0.50
+max_id_switches_per_minute = 1.0
+min_duration_s = 60.0           # evaluation protocol: at least one minute, not a new accuracy target

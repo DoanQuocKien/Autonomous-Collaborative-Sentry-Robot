@@ -1,0 +1,34 @@
+[
+  {
+    "number": 88,
+    "head": "c8d0847628c23910316abb89a8019d6d9c933488",
+    "review_id": 5728305476,
+    "merged": true,
+    "merge_sha": "832f382d77f27ab9ed541b86870fb2acf4edcca4",
+    "review": "Reviewed discovery, startup watchdog grace, windowed handshake and tests. Handshake parameters remain experimental; this approval does not grant a threshold exception. Validation on the combined checkout: 569 CPU passed, 3 missing-asset skips, 3 GPU deselected; targeted review tests 36 passed; common/jetson Python 3.6 AST passed. No robot commands were run. AI-assisted review by Codex for HNHL."
+  },
+  {
+    "number": 89,
+    "head": "e05a98e447a8ecc6b5a4b968a46f2bc44328f1b2",
+    "review_id": 5728305720,
+    "merged": true,
+    "merge_sha": "cb652de50314f64224f32282db33bae4c4043aa0",
+    "review": "Reviewed self_pose, accepted-frame counting, config geometry and synthetic projection tests. A stable marker is not a proof of physical verticality; current-session pose is still required. Validation on the combined checkout: 569 CPU passed, 3 missing-asset skips, 3 GPU deselected; targeted review tests 36 passed; common/jetson Python 3.6 AST passed. No robot commands were run. AI-assisted review by Codex for HNHL."
+  },
+  {
+    "number": 91,
+    "head": "4277bd7a05ae57017773067dbfa62084be40de81",
+    "review_id": 5728305972,
+    "merged": true,
+    "merge_sha": "7d93f2ebb061cc27487e96e45d90473cd81e63e9",
+    "review": "Reviewed evaluation code, synthetic rule tests and committed primary trial counts. The measured 7/10 accepts and 9/10 rejects do not meet the written 10/10 targets. The secondary rule is explicitly post hoc. Approval is for truthful evidence and tooling, not T2 acceptance. Validation on the combined checkout: 569 CPU passed, 3 missing-asset skips, 3 GPU deselected; targeted review tests 36 passed; common/jetson Python 3.6 AST passed. No robot commands were run. AI-assisted review by Codex for HNHL."
+  },
+  {
+    "number": 90,
+    "head": "0e9f42ffabf5106b8f17723d36919907a8b4eecd",
+    "review_id": 5728306220,
+    "merged": true,
+    "merge_sha": "36cb70142710fd0465afc1c3f397d84b677f6f2b",
+    "review": "Reviewed motion tools, floor model, deployment changes, calibration and session analysis. Fixed missing/nonfinite measurements producing CHECK PASS, rejected withdrawn/nonphysical session calibration, bounded marker history by age and preserved raw summaries during replay. Latest board-loss code reacquires without forward DR after sightings. Motion/servo fit limitations and unvalidated hardware remain documented. Validation on the combined checkout: 569 CPU passed, 3 missing-asset skips, 3 GPU deselected; targeted review tests 36 passed; common/jetson Python 3.6 AST passed. No robot commands were run. AI-assisted review by Codex for HNHL."
+  }
+]
