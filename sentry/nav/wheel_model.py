@@ -27,7 +27,16 @@ class WheelModel:
     def from_session(cls, path):
         """The model with the speed scale, the two turn scales and the drift of a calib/motion_session_*.json written by tools.motion_check."""
         import json
+        import math
         d = json.load(open(path))
+        if d.get("usable") is False:
+            raise ValueError("withdrawn motion calibration: " + str(path))
+        for key in ("scale", "w_scale_left", "w_scale_right", "drift_rad_per_m"):
+            value = d[key]
+            if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+                raise ValueError("finite numeric motion calibration required: " + key)
+            if key != "drift_rad_per_m" and value <= 0:
+                raise ValueError("positive motion scale required: " + key)
         return cls(scale=d["scale"], w_scale_left=d["w_scale_left"], w_scale_right=d["w_scale_right"], drift_rad_per_m=d["drift_rad_per_m"])
 
     def wheel_speed(self, motor):

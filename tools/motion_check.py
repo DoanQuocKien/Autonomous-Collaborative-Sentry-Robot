@@ -111,7 +111,8 @@ def fit(rows, model):
     """-> (session dict, problems). The ratios are against `model`, so the new gains are model gains times the mean ratio; the drift adds to the model's drift. `scale` multiplies the wheel speeds and so the turn rate too: the turn scales are the turn ratio divided by the speed ratio."""
     problems, mean = [], {}
     for kind in KINDS:
-        rs = [r["ratio"] for r in rows if r["kind"] == kind and r.get("ratio") is not None]
+        rs = [r["ratio"] for r in rows if r["kind"] == kind and r.get("ratio") is not None
+              and math.isfinite(r["ratio"]) and r["ratio"] > 0]
         if not rs:
             problems.append("no measurable %s segment (a board in range at both rests?)" % kind)
             continue
@@ -119,6 +120,8 @@ def fit(rows, model):
             problems.append("%s ratios scatter: %s (limit %.2f)" % (kind, rs, SCATTER_LIMIT))
         mean[kind] = float(np.mean(rs))
     drifts = [r["drift_rad_per_m"] for r in rows if r["kind"] == "forward" and r.get("drift_rad_per_m") is not None]
+    if not drifts or not all(math.isfinite(d) for d in drifts):
+        problems.append("missing or nonfinite forward drift")
     if problems:
         return None, problems
     return dict(scale=round(model.scale * mean["forward"], 4), w_scale_left=round(model.w_scale_left * mean["spin_left"] / mean["forward"], 4),
@@ -129,7 +132,16 @@ def fit(rows, model):
 def verdict(rows):
     """Check rule: every measurable segment's ratio within RATIO_LIMIT of 1 and every drift under DRIFT_LIMIT. -> (passed, list of failures)."""
     bad = []
+    for kind in KINDS:
+        if not any(r.get("kind") == kind and r.get("measurable") and r.get("ratio") is not None
+                   and math.isfinite(r["ratio"]) for r in rows):
+            bad.append("no measurable %s segment" % kind)
     for r in rows:
+        if not r.get("measurable") or r.get("ratio") is None or not math.isfinite(r["ratio"]):
+            bad.append("%s has no finite measurement" % r["name"])
+            continue
+        if r.get("kind") == "forward" and (r.get("drift_rad_per_m") is None or not math.isfinite(r["drift_rad_per_m"])):
+            bad.append("%s has no finite drift measurement" % r["name"])
         if r.get("ratio") is not None and abs(r["ratio"] - 1.0) > RATIO_LIMIT:
             bad.append("%s ratio %.2f" % (r["name"], r["ratio"]))
         if r.get("drift_rad_per_m") is not None and abs(r["drift_rad_per_m"]) > DRIFT_LIMIT:
@@ -307,7 +319,8 @@ def main():
     session, problems = fit(rows, model)
     result = dict(label=a.label, battery_v=volts, model="session " + a.motion_session if a.motion_session else "calib defaults", rows=rows, check_passed=passed, check_failures=bad,
                   fit=session, fit_problems=problems, limits=dict(ratio=RATIO_LIMIT, drift_rad_per_m=DRIFT_LIMIT, scatter=SCATTER_LIMIT))
-    (run / "summary.json").write_text(json.dumps(result, indent=1))
+    # Replay analyses must preserve the original run evidence.
+    (run / ("analysis_summary.json" if a.replay_only else "summary.json")).write_text(json.dumps(result, indent=1))
     print("CHECK against the model (%s): %s%s" % (result["model"], "PASS" if passed else "FAIL", "" if passed else " - " + "; ".join(bad)))
     if session is None:
         raise SystemExit("NOT WRITTEN: " + "; ".join(problems))

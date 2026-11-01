@@ -7,6 +7,7 @@ measurements and boards beyond `max_range_m` (1.5) are ignored.
 """
 import collections
 import math
+import time
 
 import numpy as np
 
@@ -16,7 +17,7 @@ def _wrap(a):
 
 
 class MarkerFix(object):
-    def __init__(self, anchors_csv, camera_calib="calib/camera.json", max_range_m=1.5, median_n=5):
+    def __init__(self, anchors_csv, camera_calib="calib/camera.json", max_range_m=1.5, median_n=5, max_age_s=1.0):
         from sentry.nav.localization import LocalizationTracker, RobotPose
         self._pose0 = RobotPose
         # the tracker blends toward its current pose beyond 0.8 m unless its own range limit is huge: the limit is applied here instead
@@ -25,10 +26,16 @@ class MarkerFix(object):
         self.anchors = dict(self.tr.anchors)
         self.max_range_m = max_range_m
         self.recent = collections.deque(maxlen=median_n)
+        if not math.isfinite(max_age_s) or max_age_s <= 0:
+            raise ValueError("positive finite marker median age required")
+        self.max_age_s = max_age_s
         self.n = 0                                      # counts published fixes
 
     def measure(self, frame_bgr):
         """-> (n, x, y, yaw, distance_m) of the median over the last measurements, or None when no known board is in range in this frame."""
+        now = time.monotonic()
+        while self.recent and now - self.recent[0][0] > self.max_age_s:
+            self.recent.popleft()
         near = {d.marker_id: d.distance_m for d in self.tr.detect_markers(frame_bgr) if d.marker_id in self.anchors and d.distance_m <= self.max_range_m}
         if not near:
             return None
@@ -41,8 +48,8 @@ class MarkerFix(object):
         if not self.tr.corrections_count:
             return None
         p = self.tr.pose
-        self.recent.append((p.x, p.y, p.theta, min(near.values())))
-        a = np.array(self.recent)
+        self.recent.append((now, p.x, p.y, p.theta, min(near.values())))
+        a = np.array(self.recent)[:, 1:]
         ref = a[0, 2]
         yaw = _wrap(ref + float(np.median([_wrap(t - ref) for t in a[:, 2]])))
         self.n += 1
