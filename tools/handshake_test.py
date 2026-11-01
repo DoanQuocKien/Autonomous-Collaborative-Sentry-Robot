@@ -134,7 +134,7 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("phase", choices=["ref", "sweep", "trials", "eval"])
     ap.add_argument("--name", required=True, help="the door / session, e.g. cafe_arch or class_door")
-    ap.add_argument("--ip", default="10.195.93.9")
+    ap.add_argument("--ip", default="auto", help="the ESP32-CAM address, or auto (found on the network)")
     ap.add_argument("--out", default="data/handshake")
     ap.add_argument("--seconds", type=float, default=25.0, help="sweep length")
     ap.add_argument("--trials", type=int, default=20)
@@ -142,6 +142,12 @@ def main():
     ap.add_argument("--no-beep", action="store_true")
     a = ap.parse_args()
     root = Path(a.out) / a.name
+    if a.ip == "auto" and a.phase != "eval":
+        from sentry.net.discover import find_esp32
+        a.ip = find_esp32()
+        if a.ip is None:
+            raise SystemExit("no ESP32 found on this network (is it powered and on the hotspot? give --ip)")
+        print("ESP32 found at %s" % a.ip, flush=True)
     url = "http://%s:81/stream" % a.ip
     if a.phase == "eval":
         cmd_eval(a, root)
