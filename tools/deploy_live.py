@@ -69,21 +69,44 @@ class WindowedHandshake(object):
     away (21 in a row at the glazed partition): the state machine's rule of 3 consecutive frames would have verified in 7 of 10 reject trials, and a latched single answer (what this
     tool did before) would verify on ONE frame. The placed camera is still, so a real placement gives a steady majority for seconds."""
 
-    def __init__(self, span_s=3.0, min_frames=10, frac=0.7):
+    def __init__(self, span_s=5.0, min_frames=6, frac=0.7):
         self.span_s, self.min_frames, self.frac = span_s, min_frames, frac
         self.results = []                                    # (t, in_view)
+        self.since = float("-inf")                           # answers older than this do not count (reset): a timestamp, not a clear, so the reader thread cannot put old answers back
 
     def add(self, t, in_view):
         self.results.append((t, bool(in_view)))
-        self.results = [(tt, v) for tt, v in self.results if t - tt <= self.span_s]
+        self.results = [(tt, v) for tt, v in list(self.results) if t - tt <= self.span_s]
+
+    def reset(self, t):
+        self.since = t
+
+    def _window(self, now):
+        return [v for tt, v in list(self.results) if now - tt <= self.span_s and tt >= self.since]
 
     def in_view(self, now):
-        w = [v for tt, v in self.results if now - tt <= self.span_s]
+        w = self._window(now)
         return len(w) >= self.min_frames and sum(w) / float(len(w)) >= self.frac
 
     def stats(self, now):
-        w = [v for tt, v in self.results if now - tt <= self.span_s]
+        w = self._window(now)
         return len(w), (sum(w) / float(len(w)) if w else 0.0)
+
+
+def make_flag(esp, window, sm, waiting_state=State.WAIT_CAMERA):
+    """The handshake flag for the control loop. The window is CLEARED each time the machine enters the waiting state (the prompt "place the entrance camera"): evidence gathered
+    BEFORE the request must not verify the camera (the first classroom rehearsal on 2026-10-30 verified 0.1 s after the prompt because the ESP32 already faced the door)."""
+    seen = {"state": None}
+
+    def flag(now):
+        esp["in_view"] = window.in_view(now) if esp.get("t") is not None else esp["in_view"]
+        if sm.state != seen["state"]:
+            if sm.state == waiting_state:
+                window.reset(now)
+                esp["in_view"], esp["t"] = False, None
+            seen["state"] = sm.state
+        return fresh_flag(esp, now)
+    return flag
 
 
 def fresh_flag(feed, now, max_age=ESP_FRESH_S):
@@ -184,8 +207,8 @@ def main():
     ap.add_argument("--user", default="jetbot")
     ap.add_argument("--password", default=os.environ.get("JETBOT_PASSWORD"))
     ap.add_argument("--out", default="data/deploy")
-    ap.add_argument("--hs-span", type=float, default=3.0, help="handshake rule: window in seconds")
-    ap.add_argument("--hs-frames", type=int, default=10, help="handshake rule: at least this many detector answers in the window")
+    ap.add_argument("--hs-span", type=float, default=5.0, help="handshake rule: window in seconds (the detector answers at about 1.5-2.2 fps in a live run: 5 s holds 7-11 answers)")
+    ap.add_argument("--hs-frames", type=int, default=6, help="handshake rule: at least this many detector answers in the window")
     ap.add_argument("--hs-frac", type=float, default=0.7, help="handshake rule: at least this fraction of them in view (the camera is placed still: a real placement gives a steady majority)")
     ap.add_argument("--no-audio", action="store_true", help="do not speak (rehearsal in a quiet room); the prompts are still logged")
     a = ap.parse_args()
@@ -203,7 +226,7 @@ def main():
     r1 = {"held": True, "fail": 0}
     link = {"t": time.time(), "blocked": False}
     esp = {"in_view": False, "t": None, "frames": 0, "in_view_frames": 0, "inliers": 0}
-    window = WindowedHandshake(a.hs_span, a.hs_frames, a.hs_frac)
+    window = WindowedHandshake(a.hs_span, a.hs_frames, a.hs_frac)       # defaults 5 s / 6 answers / 70 %: measured live on 2026-10-30 (negative 3 % in view, 0 of 1337 ticks; positive verified 8.4 s after the prompt)
     threads, ssh, rx, volts0, volts1, password = [], None, None, None, None, None
     speaker = AudioPromptPlayer(sender=LocalSpeaker(backend=(lambda path: None) if a.no_audio else None))
 
@@ -266,6 +289,7 @@ def main():
         except Exception as exc:
             esp["error"] = repr(exc)
 
+    obs_det = explorer = None
     if not a.no_robot:
         from sentry.config import load
         from sentry.net.discover import resolve
@@ -371,7 +395,9 @@ def main():
         th.daemon = True
         th.start()
 
-    get_link = (lambda now: None) if a.no_robot else (lambda now: {"stale": now - link["t"] > LINK_STALE_S, "blocked": link["blocked"]})
+    # the 0.5 s video watchdog guards the OBSTACLE detector; without --camera-pose the robot's video steers nothing, and a weak Wi-Fi link (2.5-5 fps measured in the classroom on 2026-10-30)
+    # would abort every run for nothing. The robot's own 0.3 s command watchdog, R1 and the e-stop poll still stop it.
+    get_link = (lambda now: None) if a.no_robot else (lambda now: {"stale": obs_det is not None and now - link["t"] > LINK_STALE_S, "blocked": link["blocked"]})
     t_wall = time.time()
     try:
         def key():
@@ -379,7 +405,7 @@ def main():
             if k == "e":                                          # manual entrance: in view for 0.5 s
                 manual["until"] = time.time() + 0.5
             return k
-        rows, final, path = control_loop(runner, model, cmd, end, lambda now: fresh_flag(esp, now), get_link, a.seconds, key=key,
+        rows, final, path = control_loop(runner, model, cmd, end, make_flag(esp, window, sm), get_link, a.seconds, key=key,
                                          pose_cb=lambda p: pose_now.__setitem__("p", p))
     finally:
         cmd.update(v=0.0, w=0.0, t=time.time())            # the sender then repeats zero; its close() sends a final stop
