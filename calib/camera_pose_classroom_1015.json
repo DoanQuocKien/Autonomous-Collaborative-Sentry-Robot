@@ -1,0 +1,44 @@
+{
+  "tag": "classroom_1015",
+  "H_cam_m": 0.1089,
+  "H_tape_m": 0.1,
+  "pitch_down_deg": -12.2,
+  "rms_m": 0.0021,
+  "marks_m": [
+    0.5,
+    1.0,
+    1.5
+  ],
+  "clicks_px": [
+    [
+      242,
+      379
+    ],
+    [
+      260,
+      341
+    ],
+    [
+      286,
+      329
+    ]
+  ],
+  "rows_px": [
+    379.0,
+    341.0,
+    329.0
+  ],
+  "camera_roll_deg": 0.0,
+  "strip_slopes_deg": [
+    0.0,
+    0.0,
+    0.0
+  ],
+  "residuals_m": [
+    -0.0025,
+    0.0025,
+    -0.0008
+  ],
+  "passed": true,
+  "problems": []
+}

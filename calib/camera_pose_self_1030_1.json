@@ -1,0 +1,11 @@
+{
+ "tag": "self_1030",
+ "H_cam_m": 0.1,
+ "H_tape_m": 0.1,
+ "pitch_down_deg": 2.15,
+ "camera_roll_deg": 2.37,
+ "passed": true,
+ "pitch_spread_deg": 0.032,
+ "marker_frames": 45,
+ "method": "self-calibration from one ArUco marker on a vertical surface (tools/self_pose.py): H fixed at the mechanical 0.100 m, pitch = median of the marker position estimates"
+}

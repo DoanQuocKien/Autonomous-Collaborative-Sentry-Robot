@@ -1,0 +1,138 @@
+{
+ "label": "class_2",
+ "battery_v": 11.2,
+ "model": "calib defaults",
+ "rows": [
+  {
+   "name": "spin_left_1",
+   "kind": "spin_left",
+   "measurable": true,
+   "measured_forward_m": -0.309,
+   "measured_left_m": 0.461,
+   "measured_turn_deg": 93.0,
+   "predicted_forward_m": 0.0,
+   "predicted_turn_deg": 104.4,
+   "ratio": 0.891
+  },
+  {
+   "name": "spin_right_1",
+   "kind": "spin_right",
+   "measurable": false
+  },
+  {
+   "name": "spin_right_1b",
+   "kind": "spin_right",
+   "measurable": false
+  },
+  {
+   "name": "spin_left_1b",
+   "kind": "spin_left",
+   "measurable": false
+  },
+  {
+   "name": "forward_1",
+   "kind": "forward",
+   "measurable": false
+  },
+  {
+   "name": "spin_left_2",
+   "kind": "spin_left",
+   "measurable": false
+  },
+  {
+   "name": "spin_right_2",
+   "kind": "spin_right",
+   "measurable": false
+  },
+  {
+   "name": "spin_right_2b",
+   "kind": "spin_right",
+   "measurable": true,
+   "measured_forward_m": 0.519,
+   "measured_left_m": -0.068,
+   "measured_turn_deg": -123.4,
+   "predicted_forward_m": 0.0,
+   "predicted_turn_deg": -104.3,
+   "ratio": 1.184
+  },
+  {
+   "name": "spin_left_2b",
+   "kind": "spin_left",
+   "measurable": true,
+   "measured_forward_m": 0.071,
+   "measured_left_m": -0.559,
+   "measured_turn_deg": 124.4,
+   "predicted_forward_m": 0.0,
+   "predicted_turn_deg": 104.1,
+   "ratio": 1.196
+  },
+  {
+   "name": "forward_2",
+   "kind": "forward",
+   "measurable": true,
+   "measured_forward_m": 0.486,
+   "measured_left_m": 0.255,
+   "measured_turn_deg": -1.0,
+   "predicted_forward_m": 0.306,
+   "predicted_turn_deg": 0.0,
+   "ratio": 1.587,
+   "drift_rad_per_m": -0.0365
+  },
+  {
+   "name": "spin_left_3",
+   "kind": "spin_left",
+   "measurable": true,
+   "measured_forward_m": -0.108,
+   "measured_left_m": -0.133,
+   "measured_turn_deg": 118.1,
+   "predicted_forward_m": 0.0,
+   "predicted_turn_deg": 104.2,
+   "ratio": 1.132
+  },
+  {
+   "name": "spin_right_3",
+   "kind": "spin_right",
+   "measurable": true,
+   "measured_forward_m": -0.356,
+   "measured_left_m": 0.567,
+   "measured_turn_deg": -83.9,
+   "predicted_forward_m": 0.0,
+   "predicted_turn_deg": -104.8,
+   "ratio": 0.8
+  },
+  {
+   "name": "spin_right_3b",
+   "kind": "spin_right",
+   "measurable": false
+  },
+  {
+   "name": "spin_left_3b",
+   "kind": "spin_left",
+   "measurable": false
+  },
+  {
+   "name": "forward_3",
+   "kind": "forward",
+   "measurable": false
+  }
+ ],
+ "check_passed": false,
+ "check_failures": [
+  "spin_left_1 ratio 0.89",
+  "spin_right_2b ratio 1.18",
+  "spin_left_2b ratio 1.20",
+  "forward_2 ratio 1.59",
+  "spin_left_3 ratio 1.13",
+  "spin_right_3 ratio 0.80"
+ ],
+ "fit": null,
+ "fit_problems": [
+  "spin_left ratios scatter: [0.891, 1.196, 1.132] (limit 0.15)",
+  "spin_right ratios scatter: [1.184, 0.8] (limit 0.15)"
+ ],
+ "limits": {
+  "ratio": 0.1,
+  "drift_rad_per_m": 0.05,
+  "scatter": 0.15
+ }
+}

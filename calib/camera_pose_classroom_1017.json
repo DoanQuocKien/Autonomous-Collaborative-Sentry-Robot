@@ -1,0 +1,44 @@
+{
+  "tag": "classroom_1017",
+  "H_cam_m": 0.0947,
+  "H_tape_m": 0.1,
+  "pitch_down_deg": 0.68,
+  "rms_m": 0.0157,
+  "marks_m": [
+    0.5,
+    1.0,
+    2.0
+  ],
+  "clicks_px": [
+    [
+      367,
+      296
+    ],
+    [
+      327,
+      264
+    ],
+    [
+      305,
+      250
+    ]
+  ],
+  "rows_px": [
+    296.0,
+    264.0,
+    250.0
+  ],
+  "camera_roll_deg": 0.0,
+  "strip_slopes_deg": [
+    0.0,
+    0.0,
+    0.0
+  ],
+  "residuals_m": [
+    -0.0219,
+    0.0159,
+    -0.0028
+  ],
+  "passed": true,
+  "problems": []
+}

@@ -1,0 +1,50 @@
+{
+  "tag": "rugged_1018",
+  "H_cam_m": 0.1,
+  "H_tape_m": 0.1,
+  "pitch_down_deg": 1.04,
+  "rms_m": 0.0209,
+  "marks_m": [
+    0.5,
+    1.0,
+    2.0
+  ],
+  "clicks_px": [
+    [
+      229,
+      291
+    ],
+    [
+      250,
+      264
+    ],
+    [
+      261,
+      249
+    ]
+  ],
+  "rows_px": [
+    291.0,
+    264.0,
+    249.0
+  ],
+  "camera_roll_deg": 0.0,
+  "strip_slopes_deg": [
+    0.0,
+    0.0,
+    0.0
+  ],
+  "residuals_m": [
+    0.0314,
+    0.0045,
+    -0.0176
+  ],
+  "passed": true,
+  "problems": [],
+  "free_fit": {
+    "H_cam_m": 0.0957,
+    "pitch_down_deg": 0.89,
+    "rms_m": 0.0117
+  },
+  "method": "H fixed at 0.100 m (mechanical); pitch = mean of the pitch implied by the 1.0 and 2.0 m strips (agree within 0.05 deg); the 0.5 m strip lands 3 cm off (about 3 px) and is kept in the residuals, not in the fit. Free fit kept under free_fit."
+}
