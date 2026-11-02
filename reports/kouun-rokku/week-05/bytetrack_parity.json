@@ -1,0 +1,10 @@
+{
+  "status": "PASS",
+  "num_frames": 100,
+  "total_matched_detections": 294,
+  "identical_id_assignments": 294,
+  "id_agreement_rate": 1.0,
+  "pass_threshold": 0.95,
+  "python36_ast_compatible": true,
+  "lap_dependency_free": true
+}

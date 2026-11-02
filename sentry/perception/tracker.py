@@ -107,6 +107,22 @@ class ByteTrackBackend:
         return self.tracker.update(Boxes(data, orig_shape=shape))
 
 
+class VendoredByteTrackBackend:
+    """Python 3.6-compatible vendored ByteTrack backend (no lap/ultralytics dependency)."""
+    def __init__(self, settings):
+        from third_party.bytetrack import BYTETracker
+        self.s = {k: settings[k] for k in ('track_high_thresh', 'track_low_thresh', 'new_track_thresh',
+                                         'track_buffer', 'match_thresh', 'fuse_score')}
+        self.tracker = BYTETracker(self.s)
+
+    def reset(self):
+        self.tracker.reset()
+
+    def update(self, rows, shape):
+        data = np.asarray(rows, np.float32).reshape(-1, 6) if len(rows) > 0 else np.empty((0, 6), np.float32)
+        return self.tracker.update(data)
+
+
 class PersonTracker:
     def __init__(self, detector, encoder, settings, reid_settings, backend=None):
         self.detector, self.encoder = detector, encoder

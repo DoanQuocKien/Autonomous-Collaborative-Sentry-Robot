@@ -1,0 +1,10 @@
+{
+  "dwell_time_trigger_s": 2.05,
+  "dwell_time_pass": true,
+  "hysteresis_band_maintained": true,
+  "hysteresis_exit_verified": true,
+  "robot_yawing_alone_false_hold_count": 0,
+  "robot_yawing_alone_invariant_met": true,
+  "stationary_target_detected_while_robot_spins": true,
+  "status": "PASS"
+}
