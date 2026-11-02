@@ -1,0 +1,9 @@
+{"source": "reports/DoanQuocKien/week-04/classroom_1030/README.md (tape offsets given by DQK, section 'T2 grading' and the run table); metres from the sweet spot (forward, left) in the start frame",
+ "runs": [
+  {"run": "sup2", "dx": -0.80, "dy": -0.17, "how": "dead reckoning only (provisional correction)"},
+  {"run": "sup6", "dx": -0.18, "dy": 0.19, "how": "followed board 2 to the end"},
+  {"run": "t2_1", "dx": 0.25, "dy": -0.10, "how": "followed board 2 to the end"},
+  {"run": "t2_3", "dx": -0.31, "dy": 0.23, "how": "lost board 2, then dead reckoning"},
+  {"run": "t2_4", "dx": -0.60, "dy": 0.53, "how": "lost board 2, then dead reckoning"},
+  {"run": "t2_5", "dx": -0.60, "dy": 0.97, "how": "lost board 2, then dead reckoning"}
+ ]}
