@@ -166,9 +166,10 @@ class BYTETracker(object):
     def __init__(self, args, frame_rate=30):
         # Supports args as dict or SimpleNamespace
         cfg = args if isinstance(args, dict) else vars(args)
-        self.track_high_thresh = float(cfg.get("track_high_thresh", cfg.get("track_thresh", 0.25)))
+        # Standard ifzhang/ByteTrack parameter names
+        self.track_thresh = float(cfg.get("track_thresh", cfg.get("track_high_thresh", 0.25)))
         self.track_low_thresh = float(cfg.get("track_low_thresh", 0.1))
-        self.new_track_thresh = float(cfg.get("new_track_thresh", self.track_high_thresh))
+        self.new_track_thresh = float(cfg.get("new_track_thresh", self.track_thresh))
         self.match_thresh = float(cfg.get("match_thresh", 0.8))
         self.track_buffer = int(cfg.get("track_buffer", 30))
         self.fuse_score = bool(cfg.get("fuse_score", False))
@@ -191,9 +192,7 @@ class BYTETracker(object):
     def update(self, output_results, img_info=None, img_size=None):
         """Update tracker with detections and advance frame.
 
-        `output_results` can be:
-        - ndarray or list of rows: [x1, y1, x2, y2, score, (optional class), ...]
-        - Ultralytics Boxes object with .data attribute
+        `output_results`: ndarray or list of rows: [x1, y1, x2, y2, score, (optional class), ...]
         """
         self.frame_id += 1
         activated_stracks = []
@@ -201,12 +200,7 @@ class BYTETracker(object):
         lost_stracks = []
         removed_stracks = []
 
-        if hasattr(output_results, "data"):
-            data = output_results.data
-            if hasattr(data, "cpu"):
-                data = data.cpu().numpy()
-            output_results = np.asarray(data, dtype=np.float32)
-        elif not isinstance(output_results, np.ndarray):
+        if not isinstance(output_results, np.ndarray):
             output_results = np.asarray(output_results, dtype=np.float32)
 
         if output_results.size == 0 or len(output_results.shape) != 2:
@@ -220,9 +214,9 @@ class BYTETracker(object):
             classes = output_results[:, 5].astype(int) if output_results.shape[1] > 5 else np.zeros(len(scores), dtype=int)
             indices = np.arange(len(scores), dtype=int)
 
-        remain_inds = scores >= self.track_high_thresh
+        remain_inds = scores >= self.track_thresh
         inds_low = scores >= self.track_low_thresh
-        inds_high = scores < self.track_high_thresh
+        inds_high = scores < self.track_thresh
         inds_second = np.logical_and(inds_low, inds_high)
 
         dets_second = bboxes[inds_second]

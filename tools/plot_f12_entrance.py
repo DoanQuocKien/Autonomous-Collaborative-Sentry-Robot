@@ -19,7 +19,7 @@ def main():
 
     # Filter methods for both doors
     methods = ["orb", "xfeat", "dino_s", "dino_b"]
-    labels = ["ORB (Baseline)", "XFeat (Lightweight)", "DINOv2-S (ViT-S)", "DINOv2-B (ViT-B)"]
+    labels = ["ORB (Baseline, dropped)", "XFeat (Lightweight)", "DINOv2-S (ViT-S)", "DINOv2-B (ViT-B)"]
 
     class_results = {r["method"]: r for r in data["results"] if r.get("door") == "class_door"}
     cafe_results = {r["method"]: r for r in data["results"] if r.get("door") == "cafe_glass"}
@@ -33,7 +33,7 @@ def main():
     x = np.arange(len(methods))
     width = 0.35
 
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4.5), dpi=200)
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11.5, 4.6), dpi=200)
 
     # Subplot 1: AUC
     ax1.bar(x - width / 2, class_auc, width, label="Classroom Door (Primary)", color="#1f77b4", alpha=0.9)
@@ -42,15 +42,15 @@ def main():
     ax1.set_title("Entrance Recognition AUC (Robot Reference)", fontsize=11, fontweight="bold")
     ax1.set_xticks(x)
     ax1.set_xticklabels(labels, rotation=15, ha="right", fontsize=9)
-    ax1.set_ylim(0.5, 1.05)
+    ax1.set_ylim(0.5, 1.08)
     ax1.axhline(1.0, color="gray", linestyle="--", alpha=0.5)
-    ax1.legend(loc="lower right", fontsize=9)
+    ax1.legend(loc="lower right", fontsize=8.5)
     ax1.grid(axis="y", linestyle=":", alpha=0.6)
 
     # Add data labels
     for i in range(len(methods)):
-        ax1.text(x[i] - width / 2, class_auc[i] + 0.01, f"{class_auc[i]:.3f}", ha="center", fontsize=8)
-        ax1.text(x[i] + width / 2, cafe_auc[i] + 0.01, f"{cafe_auc[i]:.3f}", ha="center", fontsize=8)
+        ax1.text(x[i] - width / 2, class_auc[i] + 0.012, f"{class_auc[i]:.3f}", ha="center", fontsize=8)
+        ax1.text(x[i] + width / 2, cafe_auc[i] + 0.012, f"{cafe_auc[i]:.3f}", ha="center", fontsize=8)
 
     # Subplot 2: TPR @ 5% FPR
     ax2.bar(x - width / 2, class_tpr, width, label="Classroom Door", color="#2ca02c", alpha=0.9)
@@ -59,9 +59,9 @@ def main():
     ax2.set_title("TPR at 5% FPR Operating Point", fontsize=11, fontweight="bold")
     ax2.set_xticks(x)
     ax2.set_xticklabels(labels, rotation=15, ha="right", fontsize=9)
-    ax2.set_ylim(0.0, 1.15)
+    ax2.set_ylim(0.0, 1.25)
     ax2.axhline(0.90, color="red", linestyle="--", label="T1 Pass Threshold (90%)", alpha=0.8)
-    ax2.legend(loc="upper left", fontsize=9)
+    ax2.legend(loc="upper right", fontsize=8.5)
     ax2.grid(axis="y", linestyle=":", alpha=0.6)
 
     for i in range(len(methods)):

@@ -22,6 +22,7 @@ from sentry.nav.controllers import (
     InterceptionController,
     PursuitConfig,
 )
+from sentry.nav.explore import Command, ExploreSettings, legal
 from sentry.nav.hold_detector import HoldConfig
 from tools.sim_robot import SimRobot
 
@@ -32,10 +33,11 @@ def run_simulation(
 ) -> Dict:
     """Execute closed-loop pursuit and hold simulation against SimRobot."""
     sim = SimRobot(v_max=0.5, w_max=2.0, watchdog_s=0.3)
+    explore_settings = ExploreSettings()
     ctrl = InterceptionController(
         pursuit_cfg=PursuitConfig(target_distance_m=1.2, kp_distance=1.0, kp_yaw=2.0),
-        hold_behavior_cfg=HoldBehaviorConfig(kp_yaw=2.0, w_max=1.0),
-        hold_detector_cfg=HoldConfig(speed_threshold_mps=0.1, dwell_time_s=2.0, exit_speed_mps=0.2),
+        hold_behavior_cfg=HoldBehaviorConfig(kp_yaw=2.0, w_max=1.0, max_recenter_time_s=1.5),
+        hold_detector_cfg=HoldConfig(speed_threshold_mps=0.1, dwell_time_s=2.0, exit_speed_mps=0.2, min_samples=5, min_window_span_s=0.2),
     )
 
     t = 0.0
@@ -102,10 +104,14 @@ def run_simulation(
         if out.event:
             events_logged.append({"t": round(t, 3), "event": out.event, "mode": out.mode})
 
-        # Apply motor commands directly to SimRobot
-        # Convert controller output (v, w in [-1, 1]) to sim command
-        sim.v = out.v
-        sim.w = out.w
+        # Apply motor dead-zone enforcement through legal()
+        # On physical JetBot, commands inside dead zone stall (effective motion 0, 0)
+        is_cmd_legal = legal(Command(out.v, out.w, "", ""), explore_settings)
+        actual_v = out.v if is_cmd_legal else 0.0
+        actual_w = out.w if is_cmd_legal else 0.0
+
+        sim.v = actual_v
+        sim.w = actual_w
         sim.last_cmd = t
         sim.step(t, dt)
 
@@ -120,6 +126,7 @@ def run_simulation(
             "bearing_rad": round(bearing_rel, 3),
             "v_cmd": round(out.v, 3),
             "w_cmd": round(out.w, 3),
+            "cmd_legal": is_cmd_legal,
             "mode": out.mode,
             "obstacle_override": out.obstacle_override,
         })
@@ -138,6 +145,9 @@ def run_simulation(
     hold_zero_trans = all(v == 0.0 for v in hold_speeds) if hold_speeds else False
     hold_modes = [h["mode"] for h in hold_samples]
     hold_confirmed = all(m == "HOLD" for m in hold_modes) if hold_modes else False
+    all_commands_legal = all(h["cmd_legal"] for h in history)
+    max_recenter_s = ctrl.hold.max_observed_recenter_time_s
+    recenter_valid = max_recenter_s <= 1.5
 
     event_names = [e["event"] for e in events_logged]
     stat_events = [e for e in events_logged if e["event"] == "TARGET_STATIONARY"]
@@ -150,14 +160,26 @@ def run_simulation(
     dwell_valid = bool(stationary_trigger_t and 5.8 <= stationary_trigger_t <= 6.8)
     exit_valid = bool(moving_trigger_t and 8.0 <= moving_trigger_t <= 9.0)
 
+    pass_all = bool(
+        dwell_valid
+        and exit_valid
+        and hold_zero_trans
+        and hold_confirmed
+        and all_commands_legal
+        and recenter_valid
+    )
+
     summary = {
-        "status": "PASS" if (dwell_valid and exit_valid and hold_zero_trans and hold_confirmed) else "FAIL",
+        "status": "PASS" if pass_all else "FAIL",
         "total_duration_s": total_time_s,
         "events": events_logged,
         "pursuit_mean_distance_m": round(mean_dist, 3),
         "pursuit_centered_ratio": round(centered_pct, 3),
         "hold_confirmed": hold_confirmed,
         "hold_zero_translation": hold_zero_trans,
+        "all_commands_legal": all_commands_legal,
+        "max_recenter_time_s": round(max_recenter_s, 3),
+        "recenter_requirement_met": recenter_valid,
         "stationary_trigger_t": stationary_trigger_t,
         "moving_trigger_t": moving_trigger_t,
         "dwell_requirement_met": dwell_valid,

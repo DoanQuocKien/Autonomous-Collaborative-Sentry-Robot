@@ -115,7 +115,13 @@ def test_vendored_bytetrack_backend_contract_and_low_confidence_association():
 
 
 def test_parity_between_vendored_and_ultralytics_bytetrack():
-    """Verify >= 95% ID agreement between vendored ByteTrack and Ultralytics ByteTrack."""
+    """Verify >= 95% ID agreement between vendored ByteTrack and Ultralytics ByteTrack.
+
+    Strict verification:
+    - Bipartite Hungarian matching on 1 - IoU with thresh=0.5.
+    - Unmatched/dropped tracks in either tracker are penalized as disagreements.
+    - Tests crossing paths, swaps, and occlusions.
+    """
     from ultralytics.trackers.byte_tracker import STrack as USTRack
     from third_party.bytetrack import BaseTrack as VBaseTrack
     USTRack.reset_id()
@@ -125,43 +131,47 @@ def test_parity_between_vendored_and_ultralytics_bytetrack():
     backend_ultralytics = ByteTrackBackend(cfg)
     backend_vendored = VendoredByteTrackBackend(cfg)
 
-    # Generate synthetic 2-person crossing scenario over 30 frames
-    # Person A: starts at x=50, moves East at 2 px/frame
-    # Person B: starts at x=200, moves West at 2 px/frame
-    total_detections = 0
-    agreed_detections = 0
+    agreed = 0
+    disagreed = 0
 
-    for f in range(30):
-        xa = 50.0 + f * 2.0
-        xb = 200.0 - f * 2.0
+    # Crossing scenario over 40 frames: Person A and Person B cross at center
+    for f in range(40):
+        xa = 50.0 + f * 3.0
+        xb = 170.0 - f * 3.0
 
-        # Alternate confidences to exercise high/low association
+        # Varying detection confidences
         conf_a = 0.90 if f % 4 != 2 else 0.18
         conf_b = 0.88 if f % 5 != 3 else 0.20
 
-        # At frame 15, simulate temporary occlusion of Person B
         rows = []
         rows.append([xa, 40.0, xa + 30.0, 100.0, conf_a, 0])
-        if f != 15:
+        # Occlusion during intersection (frames 18..22)
+        if not (18 <= f <= 22):
             rows.append([xb, 40.0, xb + 30.0, 100.0, conf_b, 0])
 
         res_u = backend_ultralytics.update(rows, (300, 300))
         res_v = backend_vendored.update(rows, (300, 300))
 
-        # Compare outputs: match detections by IoU > 0.7 and compare track IDs
-        if len(res_u) > 0 and len(res_v) > 0:
-            boxes_u = res_u[:, :4]
-            boxes_v = res_v[:, :4]
-            iou_mat = ious(boxes_u, boxes_v)
+        nu = len(res_u) if res_u is not None else 0
+        nv = len(res_v) if res_v is not None else 0
 
-            for i in range(len(res_u)):
-                j = np.argmax(iou_mat[i])
-                if iou_mat[i, j] >= 0.7:
-                    total_detections += 1
-                    id_u = int(res_u[i, 4])
-                    id_v = int(res_v[j, 4])
-                    if id_u == id_v:
-                        agreed_detections += 1
+        if nu == 0 and nv == 0:
+            continue
+        if nu == 0 or nv == 0:
+            disagreed += max(nu, nv)
+            continue
 
-    agreement_rate = (agreed_detections / total_detections) if total_detections > 0 else 0.0
-    assert agreement_rate >= 0.95, f"ID agreement {agreement_rate * 100:.1f}% below 95% threshold!"
+        cost = 1.0 - ious(res_u[:, :4], res_v[:, :4])
+        matches, ua, ub = linear_assignment(cost, thresh=0.5)
+
+        for r, c in matches:
+            if int(res_u[r, 4]) == int(res_v[c, 4]):
+                agreed += 1
+            else:
+                disagreed += 1
+
+        disagreed += len(ua) + len(ub)
+
+    total = agreed + disagreed
+    agreement_rate = (agreed / total) if total > 0 else 0.0
+    assert agreement_rate >= 0.95, f"ID agreement {agreement_rate * 100:.1f}% below 95% threshold! (agreed={agreed}, disagreed={disagreed})"

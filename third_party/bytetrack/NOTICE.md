@@ -1,10 +1,11 @@
-# ByteTrack (vendored)
+# ByteTrack (Vendored)
 
-Source: https://github.com/ifzhang/ByteTrack (MIT License, `LICENSE` in this folder).
+Source: https://github.com/ifzhang/ByteTrack (MIT License, see `LICENSE` in this directory).
 Paper: Y. Zhang, P. Sun, Y. Dong, Z. Wang, L. Jiang, T. Zhang, Q. Huang, Y. Chen, F. Liu, X. Wang, J. Sun, "ByteTrack: Multi-Object Tracking by Associating Every Detection Box", *European Conference on Computer Vision (ECCV)*, 2022.
 
 Vendored modifications for autonomous sentry edge deployment (Python 3.6 on Jetson Nano):
 - Python 3.6 syntax compatibility verified via `ast.parse(..., feature_version=(3, 6))`.
-- Pure numpy and scipy implementation: linear assignment uses `scipy.optimize.linear_sum_assignment` (with optional `lap.lapjv` fast path if present), eliminating compiled C++ dependencies on edge devices.
-- Removed PyTorch, torch, torchvision, cython, and cython-bbox dependencies.
-- Standardized track output format matching the project's PersonTrack representation.
+- Standalone pure NumPy and SciPy implementation: linear assignment uses standard `scipy.optimize.linear_sum_assignment`, eliminating compiled C++ dependencies (`lap`) on edge devices.
+- Removed PyTorch, torchvision, Cython, and `cython-bbox` dependencies.
+- Completely clean MIT lineage: independent of Ultralytics (AGPL-3.0); takes standard NumPy arrays `[x1, y1, x2, y2, score, ...]`.
+- Output tracks formatted for drop-in integration with `sentry.perception.tracker.PersonTrack`.

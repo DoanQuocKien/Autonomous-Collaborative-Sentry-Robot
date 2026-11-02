@@ -215,12 +215,27 @@ def test_linear_regression_filters_detector_noise():
     assert detector.in_hold
 
 
-def test_gap_in_observations_resets_history():
-    detector = HoldDetector(HoldConfig(dwell_time_s=1.0, max_observation_gap_s=1.0))
-    detector.update_world(1.0, 0.0, 0.0)
-    detector.update_world(1.1, 0.0, 0.0)
-    # Gap of 2.0 s (target occluded / lost)
-    detector.update_world(3.1, 0.0, 0.0)
-    # History was reset; minimum 2 samples required
-    st = detector.update_world(3.15, 0.0, 0.0)
-    assert not detector.in_hold
+def test_gap_in_observations_resets_history_and_releases_hold():
+    """Target lost across gap > 1.0 s releases HOLD state."""
+    detector = HoldDetector(HoldConfig(dwell_time_s=1.0, max_observation_gap_s=1.0, min_samples=5, min_window_span_s=0.2))
+    t = 0.0
+    for _ in range(30):
+        t += 0.05
+        detector.update_world(t, 0.0, 0.0)
+    assert detector.in_hold, "Must be in HOLD after 1.5 s stationary"
+
+    # Gap of 2.0 s: target lost from view
+    t += 2.0
+    st = detector.update_world(t, 0.0, 0.0)
+    assert not detector.in_hold, "Gap > 1.0 s must release HOLD"
+    assert st.dwell_progress_s == 0.0
+
+
+def test_minimum_samples_and_span_suppress_cluster_jitter():
+    """Two samples 33 ms apart with 1 cm jitter must NOT produce velocity spikes before min span."""
+    detector = HoldDetector(HoldConfig(min_samples=5, min_window_span_s=0.2))
+    # Frame 1 and 2 separated by 33 ms with 1 cm jitter
+    detector.update_world(1.000, 0.00, 0.0)
+    st = detector.update_world(1.033, 0.01, 0.0)
+    # Must return 0.0 speed because n < 5 and span < 0.2 s
+    assert st.speed_mps == 0.0

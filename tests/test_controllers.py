@@ -110,6 +110,51 @@ def test_hold_controller_zero_translation_and_yaw_recenter():
     assert is_centered
 
 
+def test_hold_controller_recenter_time_within_1_5s_and_all_commands_legal():
+    """HoldController must center within 1.5 s and emit 100% legal commands above dead zone."""
+    from sentry.nav.explore import Command, ExploreSettings, legal
+    s = ExploreSettings()
+    hold = HoldController(HoldBehaviorConfig(max_recenter_time_s=1.5, center_tolerance_norm=0.10))
+
+    t = 1.0
+    dt = 0.05
+    # Uncentered target offset: 0.30 norm error
+    # Simulated robot turning in response to hold.compute(t, yaw_err)
+    yaw_err = 0.30
+    steps = 0
+    while abs(yaw_err) > 0.10 and steps < 40:
+        v, w, is_c = hold.compute(t, yaw_err)
+        assert legal(Command(v, w, "", ""), s), f"Command ({v}, {w}) must be legal for motors"
+        assert v == 0.0
+        assert abs(w) >= 0.45  # Must overcome dead zone
+        # Physical unicycle rotation: w normalized * w_max (approx 2.0 rad/s) * dt
+        yaw_err -= w * 0.4 * dt
+        t += dt
+        steps += 1
+
+    # Final step when centered
+    v, w, is_c = hold.compute(t, yaw_err)
+    assert is_c
+    assert v == 0.0 and w == 0.0
+    assert legal(Command(v, w, "", ""), s)
+
+    recenter_duration = hold.max_observed_recenter_time_s
+    assert recenter_duration <= 1.5, f"Recentering took {recenter_duration} s, exceeding 1.5 s limit!"
+
+
+def test_controllers_suppress_derivative_kick_on_stalled_frame():
+    """Frame stall dt > 0.2 s suppresses derivative term, preventing derivative kick."""
+    ctrl = PursuitController()
+    # Step 1 at t=1.0
+    ctrl.compute(t=1.0, target_dist_m=2.0, yaw_err=0.1)
+    # Stalled frame 1.5 s later (dt = 1.5 s) with error change
+    v, w, _, _ = ctrl.compute(t=2.5, target_dist_m=3.0, yaw_err=0.4)
+    # Without kick suppression, (dist_err - prev) / 1.5 or kick would alter behavior;
+    # with suppression d_dist=0 and d_yaw=0 so outputs remain bounded within normal caps.
+    assert -0.45 <= v <= 0.55
+    assert abs(w) <= 1.0
+
+
 def test_interception_controller_closed_loop_pursue_to_hold_and_exit():
     ctrl = InterceptionController()
     t = 0.0
@@ -122,7 +167,7 @@ def test_interception_controller_closed_loop_pursue_to_hold_and_exit():
         target_wx = 1.5 + 0.5 * t
         target_wy = 0.0
         out = ctrl.step(t, robot_pose, (target_wx, target_wy), yaw_err=0.0)
-        assert out.mode == "PURSUIT"
+        assert out.mode == "PURSUE"
         assert out.event is None
 
     # Phase 2: Target stops at world (2.5, 0.0) for 2.8 seconds

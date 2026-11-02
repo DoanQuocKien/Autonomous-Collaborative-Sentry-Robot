@@ -4,14 +4,18 @@ Specification (§4.5) & Implementation Plan (§4.3):
 - PursuitController:
   * Proportional-Derivative (PD) control maintaining 1.2 m standoff distance from target
     and centering target bounding box / bearing in camera FOV.
+  * Motor dead zone enforcement: commands either stop cleanly (0, 0) or drive/spin with both
+    wheels at or above the dead zone threshold (0.40) to prevent motor whining/stalling.
   * Obstacle Override: when d_obs < 0.5 m, applies repulsive yaw deflection offset to bypass
     obstacle without losing target line-of-sight.
 - HoldController:
-  * Zero translation (v = 0.0 strictly) and yaw-only PD maintaining target bbox centering.
-  * No orbiting (which would place target 90 deg off-axis, dropping outside camera FOV).
-  * Centers bbox within +/- 10% of frame width within 1.5 s.
+  * Zero translation (v = 0.0 strictly) and yaw-only rotation maintaining target bbox centering.
+  * Active yaw commands overcome motor dead zone (w >= 0.45), centering bbox within +/- 10%
+    of frame width within 1.5 s without orbiting.
+  * Measures recentering duration and verifies against max_recenter_time_s = 1.5 s.
 - InterceptionController:
   * Combines PursuitController, HoldController, and HoldDetector for closed-loop Phase 3 execution.
+  * Standardizes mode states strictly as 'PURSUE' and 'HOLD' (matching sentry.app.state_machine.State).
 """
 from __future__ import annotations
 
@@ -20,6 +24,7 @@ import math
 from typing import Any, Optional, Tuple, Union
 
 from sentry.config import DEFAULT_PATH, load
+from sentry.nav.explore import Command, ExploreSettings, legal
 from sentry.nav.hold_detector import HoldConfig, HoldDetector, HoldState
 
 
@@ -33,8 +38,9 @@ class PursuitConfig:
     kp_yaw: float = 1.5                        # Proportional gain on centering error (rad or norm)
     kd_yaw: float = 0.2                        # Derivative gain on centering error
     v_max: float = 0.55                        # Maximum forward linear command
-    v_min_reverse: float = -0.3                # Maximum reverse linear command
+    v_min_reverse: float = -0.45               # Maximum reverse linear command (exceeds dead zone)
     w_max: float = 1.0                         # Maximum angular velocity command
+    w_spin: float = 0.45                       # In-place spin command (exceeds dead zone 0.40)
     min_pwm: float = 0.12                      # Motor dead-zone threshold
     max_speed_cap: float = 0.3                 # Hardware cap on robot
     obstacle_threshold_m: float = 0.5          # Override active when obstacle closer than this
@@ -53,16 +59,16 @@ class PursuitConfig:
         p = raw.get("pursuit", {})
         t = raw.get("thresholds", {})
         return cls(
-            target_distance_m=float(p.get("target_distance_m", t.get("standoff_m", 1.2))),
-            distance_tolerance_m=float(p.get("distance_tolerance_m", 0.2)),
+            target_distance_m=float(t.get("standoff_m", 1.2)),
+            distance_tolerance_m=float(t.get("standoff_tolerance_m", 0.2)),
+            obstacle_threshold_m=float(t.get("obstacle_pursuit_m", 0.5)),
             kp_distance=float(p.get("kp_distance", 0.8)),
             kd_distance=float(p.get("kd_distance", 0.1)),
             kp_yaw=float(p.get("kp_yaw", 1.5)),
             kd_yaw=float(p.get("kd_yaw", 0.2)),
             v_max=float(p.get("v_max", 0.55)),
-            v_min_reverse=float(p.get("v_min_reverse", -0.3)),
+            v_min_reverse=float(p.get("v_min_reverse", -0.45)),
             w_max=float(p.get("w_max", 1.0)),
-            obstacle_threshold_m=float(p.get("obstacle_threshold_m", t.get("obstacle_pursuit_m", 0.5))),
             obstacle_critical_m=float(p.get("obstacle_critical_m", 0.35)),
             obstacle_avoid_w=float(p.get("obstacle_avoid_w", 0.45)),
             center_tolerance_norm=float(p.get("center_tolerance_norm", 0.10)),
@@ -75,8 +81,16 @@ class HoldBehaviorConfig:
     kp_yaw: float = 1.5                        # Yaw centering proportional gain
     kd_yaw: float = 0.2                        # Yaw centering derivative gain
     w_max: float = 0.8                         # Max angular speed during hold
+    w_spin: float = 0.45                       # In-place spin command (exceeds dead zone 0.40)
+    min_pwm: float = 0.12                      # Motor dead-zone threshold
+    max_speed_cap: float = 0.3                 # Hardware cap on robot
     center_tolerance_norm: float = 0.10        # Centering requirement: within +/- 10% width
     max_recenter_time_s: float = 1.5           # Required to re-center within 1.5 s
+
+    @property
+    def dead_zone(self) -> float:
+        """Normalized command dead-zone: below this motors only whine."""
+        return self.min_pwm / self.max_speed_cap if self.max_speed_cap > 0 else 0.4
 
     @classmethod
     def from_toml(cls, config_path=DEFAULT_PATH) -> HoldBehaviorConfig:
@@ -97,7 +111,7 @@ class ControllerOutput:
     t: float
     v: float                                   # Linear command in [-1, 1]
     w: float                                   # Angular command in [-1, 1] (positive = left)
-    mode: str                                  # 'PURSUIT' or 'HOLD'
+    mode: str                                  # 'PURSUE' or 'HOLD'
     distance_error_m: float
     yaw_error: float
     is_centered: bool
@@ -145,40 +159,65 @@ class PursuitController:
 
         # Distance error: positive means target is farther than target_distance_m -> move forward
         dist_err = target_dist_m - self.cfg.target_distance_m
-        d_dist = (dist_err - self._prev_dist_err) / dt if (dt > 1e-6 and self._prev_dist_err is not None) else 0.0
+
+        # Limit derivative term when dt > 0.2 s or large gaps occur to eliminate derivative kick
+        if dt > 1e-6 and dt <= 0.2 and self._prev_dist_err is not None:
+            d_dist = (dist_err - self._prev_dist_err) / dt
+        else:
+            d_dist = 0.0
         self._prev_dist_err = dist_err
 
         # Centering error derivative
-        d_yaw = (yaw_err - self._prev_yaw_err) / dt if (dt > 1e-6 and self._prev_yaw_err is not None) else 0.0
+        if dt > 1e-6 and dt <= 0.2 and self._prev_yaw_err is not None:
+            d_yaw = (yaw_err - self._prev_yaw_err) / dt
+        else:
+            d_yaw = 0.0
         self._prev_yaw_err = yaw_err
 
         # PD control
-        v = self.cfg.kp_distance * dist_err + self.cfg.kd_distance * d_dist
-        w = self.cfg.kp_yaw * yaw_err + self.cfg.kd_yaw * d_yaw
+        v_raw = self.cfg.kp_distance * dist_err + self.cfg.kd_distance * d_dist
+        w_raw = self.cfg.kp_yaw * yaw_err + self.cfg.kd_yaw * d_yaw
 
         # Obstacle override
         obstacle_active = False
         if obstacle_dist_m is not None and obstacle_dist_m < self.cfg.obstacle_threshold_m:
             obstacle_active = True
-            # Add deflection offset away from obstacle
-            # If obstacle is to the left (bearing > 0), turn right (w -= avoid_w); else turn left
             avoid_dir = -1.0 if obstacle_bearing_rad >= 0 else +1.0
-            w += avoid_dir * self.cfg.obstacle_avoid_w
+            w_raw += avoid_dir * self.cfg.obstacle_avoid_w
 
-            # If critically close, suppress forward velocity to prevent collision
             if obstacle_dist_m < self.cfg.obstacle_critical_m:
-                v = min(0.0, v)
-
-        # Saturate outputs within configured caps
-        v = max(self.cfg.v_min_reverse, min(self.cfg.v_max, v))
-        w = max(-self.cfg.w_max, min(self.cfg.w_max, w))
+                v_raw = min(0.0, v_raw)
 
         is_centered = abs(yaw_err) <= self.cfg.center_tolerance_norm
+        in_standoff_band = abs(dist_err) <= self.cfg.distance_tolerance_m
+
+        # Saturate within configured caps
+        v = max(self.cfg.v_min_reverse, min(self.cfg.v_max, v_raw))
+        w = max(-self.cfg.w_max, min(self.cfg.w_max, w_raw))
+
+        # Dead zone handling for motors (dead zone ~ 0.40):
+        # 1. Standoff deadband: if in acceptable standoff band, centered, and no obstacle, stop cleanly
+        if in_standoff_band and is_centered and not obstacle_active:
+            v, w = 0.0, 0.0
+        else:
+            # 2. Overcome dead zone when motion is commanded
+            if abs(v) > 1e-4 and abs(v) < self.cfg.dead_zone:
+                if in_standoff_band:
+                    v = 0.0
+                else:
+                    v = math.copysign(max(abs(v), 0.45), v)
+
+            if v == 0.0 and abs(w) > 1e-4 and abs(w) < self.cfg.dead_zone:
+                if is_centered:
+                    w = 0.0
+                else:
+                    w = math.copysign(max(abs(w), self.cfg.w_spin), w)
+
         return v, w, is_centered, obstacle_active
 
 
 class HoldController:
-    """Standoff hold controller: strictly zero translation, yaw-only PD recentering."""
+    """Standoff hold controller: strictly zero translation, yaw-only recentering overcoming dead zone."""
 
     def __init__(self, config: Optional[HoldBehaviorConfig] = None):
         self.cfg = config or HoldBehaviorConfig()
@@ -186,18 +225,34 @@ class HoldController:
         self._prev_yaw_err: Optional[float] = None
         self._entered_t: Optional[float] = None
         self._first_centered_t: Optional[float] = None
+        self._uncentered_start_t: Optional[float] = None
+        self._max_observed_recenter_s: float = 0.0
+        self._last_recenter_duration_s: float = 0.0
 
     def reset(self) -> None:
         self._prev_t = None
         self._prev_yaw_err = None
         self._entered_t = None
         self._first_centered_t = None
+        self._uncentered_start_t = None
+        self._max_observed_recenter_s = 0.0
+        self._last_recenter_duration_s = 0.0
+
+    @property
+    def max_observed_recenter_time_s(self) -> float:
+        return self._max_observed_recenter_s
+
+    @property
+    def time_to_first_center_s(self) -> Optional[float]:
+        if self._entered_t is not None and self._first_centered_t is not None:
+            return self._first_centered_t - self._entered_t
+        return None
 
     def compute(self, t: float, yaw_err: float) -> Tuple[float, float, bool]:
         """Compute (v, w, is_centered).
 
-        v is ALWAYS 0.0 (no translation / orbiting).
-        w centers the target bbox using yaw-only PD.
+        v is ALWAYS 0.0 (strictly no translation / orbiting).
+        w centers the target bbox using yaw-only rotation with dead zone compensation.
         """
         if not math.isfinite(t):
             raise ValueError("timestamp must be finite")
@@ -210,19 +265,40 @@ class HoldController:
         dt = (t - self._prev_t) if self._prev_t is not None else 0.0
         self._prev_t = t
 
-        d_yaw = (yaw_err - self._prev_yaw_err) / dt if (dt > 1e-6 and self._prev_yaw_err is not None) else 0.0
+        # Prevent derivative kick on stalls or large frame gaps (dt > 0.2 s)
+        if dt > 1e-6 and dt <= 0.2 and self._prev_yaw_err is not None:
+            d_yaw = (yaw_err - self._prev_yaw_err) / dt
+        else:
+            d_yaw = 0.0
         self._prev_yaw_err = yaw_err
 
         # Translation strictly zero
         v = 0.0
 
-        # Yaw PD control
-        w = self.cfg.kp_yaw * yaw_err + self.cfg.kd_yaw * d_yaw
-        w = max(-self.cfg.w_max, min(self.cfg.w_max, w))
-
         is_centered = abs(yaw_err) <= self.cfg.center_tolerance_norm
-        if is_centered and self._first_centered_t is None:
-            self._first_centered_t = t
+
+        if is_centered:
+            # Stopped: both wheels 0, strictly legal
+            w = 0.0
+            if self._first_centered_t is None:
+                self._first_centered_t = t
+            if self._uncentered_start_t is not None:
+                duration = t - self._uncentered_start_t
+                self._max_observed_recenter_s = max(self._max_observed_recenter_s, duration)
+                self._last_recenter_duration_s = duration
+                self._uncentered_start_t = None
+        else:
+            # Active recentering
+            if self._uncentered_start_t is None:
+                self._uncentered_start_t = t
+            current_duration = t - self._uncentered_start_t
+            self._max_observed_recenter_s = max(self._max_observed_recenter_s, current_duration)
+
+            # Raw PD output
+            w_raw = self.cfg.kp_yaw * yaw_err + self.cfg.kd_yaw * d_yaw
+            # Overcome motor dead zone (0.40): commands below 0.40 only whine on JetBot
+            w_mag = max(abs(w_raw), self.cfg.w_spin)
+            w = math.copysign(min(self.cfg.w_max, w_mag), w_raw if abs(w_raw) > 1e-6 else yaw_err)
 
         return v, w, is_centered
 
@@ -239,7 +315,7 @@ class InterceptionController:
         self.pursuit = PursuitController(pursuit_cfg)
         self.hold = HoldController(hold_behavior_cfg)
         self.detector = HoldDetector(hold_detector_cfg)
-        self._mode = "PURSUIT"
+        self._mode = "PURSUE"
 
     @property
     def mode(self) -> str:
@@ -249,7 +325,7 @@ class InterceptionController:
         self.pursuit.reset()
         self.hold.reset()
         self.detector.reset()
-        self._mode = "PURSUIT"
+        self._mode = "PURSUE"
 
     def step(
         self,

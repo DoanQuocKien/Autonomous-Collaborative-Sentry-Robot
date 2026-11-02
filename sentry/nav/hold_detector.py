@@ -26,8 +26,9 @@ class HoldConfig:
     dwell_time_s: float = 2.0                 # Target must remain stationary for > this duration
     exit_speed_mps: float = 0.2               # Exit threshold: hysteresis prevents flickering
     window_s: float = 0.5                     # Sliding window for robust linear-regression velocity
-    min_samples: int = 2                      # Minimum observations required in window
-    max_observation_gap_s: float = 1.0        # Reset velocity history if gap between frames exceeds this
+    min_samples: int = 5                      # Minimum observations required in window
+    min_window_span_s: float = 0.2            # Minimum time span required in window to avoid jitter
+    max_observation_gap_s: float = 1.0        # Reset velocity history and hold state if gap exceeds this
 
     def __post_init__(self):
         if not (0.0 < self.speed_threshold_mps < self.exit_speed_mps):
@@ -38,6 +39,8 @@ class HoldConfig:
             raise ValueError("window_s must be positive and finite")
         if self.min_samples < 2:
             raise ValueError("min_samples must be at least 2")
+        if not (self.min_window_span_s > 0.0 and math.isfinite(self.min_window_span_s)):
+            raise ValueError("min_window_span_s must be positive and finite")
 
     @classmethod
     def from_toml(cls, config_path=DEFAULT_PATH) -> HoldConfig:
@@ -45,11 +48,12 @@ class HoldConfig:
         h = raw.get("hold", {})
         t = raw.get("thresholds", {})
         return cls(
-            speed_threshold_mps=float(h.get("speed_threshold_mps", t.get("stationary_speed_mps", 0.1))),
-            dwell_time_s=float(h.get("dwell_time_s", t.get("stationary_time_s", 2.0))),
-            exit_speed_mps=float(h.get("exit_speed_mps", t.get("stationary_exit_speed_mps", 0.2))),
+            speed_threshold_mps=float(t.get("stationary_speed_mps", 0.1)),
+            dwell_time_s=float(t.get("stationary_time_s", 2.0)),
+            exit_speed_mps=float(t.get("stationary_exit_speed_mps", 0.2)),
             window_s=float(h.get("window_s", 0.5)),
-            min_samples=int(h.get("min_samples", 2)),
+            min_samples=int(h.get("min_samples", 5)),
+            min_window_span_s=float(h.get("min_window_span_s", 0.2)),
             max_observation_gap_s=float(h.get("max_observation_gap_s", 1.0)),
         )
 
@@ -129,10 +133,11 @@ class HoldDetector:
         if self._last_t is not None and t <= self._last_t:
             raise ValueError(f"timestamp t={t} must be strictly greater than last_t={self._last_t}")
 
-        # If a large frame gap occurred, reset velocity history to prevent jump artifacts
+        # If a large frame gap occurred, reset velocity history and release hold if target left view
         if self._last_t is not None and (t - self._last_t) > self.cfg.max_observation_gap_s:
             self._history.clear()
             self._stationary_start_t = None
+            self._in_hold = False
 
         self._last_t = t
         self._history.append((t, wx, wy))
@@ -207,6 +212,10 @@ class HoldDetector:
         """Estimate (vx, vy, speed) in m/s using linear regression over the window."""
         n = len(self._history)
         if n < self.cfg.min_samples:
+            return 0.0, 0.0, 0.0
+
+        span = self._history[-1][0] - self._history[0][0]
+        if span < self.cfg.min_window_span_s:
             return 0.0, 0.0, 0.0
 
         sum_t = sum_x = sum_y = 0.0

@@ -10,8 +10,7 @@ def linear_assignment(cost_matrix, thresh):
             tuple(range(cost_matrix.shape[1])),
         )
 
-    # Use scipy linear_sum_assignment (always available, standard SciPy)
-    # If lap.lapjv is installed, we can optionally use it, but scipy is identical and robust.
+    # Use scipy linear_sum_assignment (always available in standard SciPy, pure Python/C backend)
     row_ind, col_ind = linear_sum_assignment(cost_matrix)
     matches = []
     unmatched_a = list(range(cost_matrix.shape[0]))
