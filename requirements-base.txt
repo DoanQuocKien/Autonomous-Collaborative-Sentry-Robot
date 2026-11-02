@@ -5,6 +5,7 @@ pyzmq
 pillow
 pytest
 ultralytics
+lap>=0.5.12        # ByteTrack assignment; install explicitly so inference never auto-installs it
 insightface
 torchreid
 tensorboard        # torchreid imports it but does not declare it

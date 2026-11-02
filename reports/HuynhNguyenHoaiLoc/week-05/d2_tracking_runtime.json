@@ -1,0 +1,38 @@
+{
+  "scope": "actual shared D2 full-clip runtime smoke, not D3 tracking accuracy",
+  "clips": [
+    {
+      "frames": 298,
+      "frames_with_tracks": 262,
+      "observed_track_instances": 694,
+      "max_people_tracked": 7,
+      "all_locks_unset_without_reference": true,
+      "model_id": "osnet_ain_x1_0:2f38acc25e28cb29407635db2be315edc08d5457a904b72a9a11e427f41f3242",
+      "manifest_sha256": "380aec0f26a2ac2e6bd8167ddc39214f0614cf905add6c2697bb4c6714c66256"
+    },
+    {
+      "frames": 258,
+      "frames_with_tracks": 242,
+      "observed_track_instances": 712,
+      "max_people_tracked": 6,
+      "all_locks_unset_without_reference": true,
+      "model_id": "osnet_ain_x1_0:2f38acc25e28cb29407635db2be315edc08d5457a904b72a9a11e427f41f3242",
+      "manifest_sha256": "58798125eae214659dea8bfac0447ed304c4c2cf3217147774103925a0a77fc4"
+    },
+    {
+      "frames": 266,
+      "frames_with_tracks": 234,
+      "observed_track_instances": 392,
+      "max_people_tracked": 3,
+      "all_locks_unset_without_reference": true,
+      "model_id": "osnet_ain_x1_0:2f38acc25e28cb29407635db2be315edc08d5457a904b72a9a11e427f41f3242",
+      "manifest_sha256": "402aafb4c2ff2c04921ee8aee80429240bba80fb61c676448edf479d0eadb71a"
+    }
+  ],
+  "frames_total": 822,
+  "timestamps": "uniform approximation from clip duration, not measured capture times",
+  "id_switches": null,
+  "target_lock_accuracy": null,
+  "t1_passed": false,
+  "motor_commands_sent": 0
+}
