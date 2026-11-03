@@ -191,9 +191,29 @@ def f21():
     plt.close(fig)
 
 
+def f19():
+    """Test functions (`def test_` in tests/) on main at the end of each week, counted from git history; parametrised cases and skipped tests are not separated (pytest counts, e.g. 618 passed on 2026-11-03, are higher)."""
+    import subprocess
+    weeks = [("W1\nOct 11", "2026-10-11 23:59"), ("W2\nOct 18", "2026-10-18 23:59"), ("W3\nOct 25", "2026-10-25 23:59"), ("W4\nNov 1", "2026-11-01 23:59"), ("W5 so far\nNov 3", "2026-11-03 23:59")]
+    counts = []
+    for label, when in weeks:
+        rev = subprocess.run(["git", "rev-list", "-1", "--before=" + when, "origin/main"], cwd=ROOT, capture_output=True, text=True).stdout.strip()
+        out = subprocess.run(["git", "grep", "-c", "^ *def test_", rev, "--", "tests"], cwd=ROOT, capture_output=True, text=True).stdout
+        counts.append(sum(int(line.rsplit(":", 1)[1]) for line in out.splitlines() if line.strip()))
+    fig, a = plt.subplots(figsize=(8, 4), dpi=150)
+    a.bar([w[0] for w in weeks], counts, color=BLUE)
+    for i, c in enumerate(counts):
+        a.text(i, c + 8, str(c), ha="center", fontsize=9)
+    a.set_ylabel("test functions on main")
+    a.set_title("F19 Test growth by week (def test_ in tests/, from git history)")
+    fig.tight_layout()
+    fig.savefig(OUT / "F19_test_growth.png")
+    plt.close(fig)
+
+
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
-    for fn in (f1, f2, f4, f5, f6, f20, f21):
+    for fn in (f1, f2, f4, f5, f6, f19, f20, f21):
         fn()
         print("made", fn.__name__)
 
