@@ -1,0 +1,27 @@
+# Kết quả HNHL để ghép Chương 7
+
+Snapshot 01/11/2026. Mã E01–E12 tra tại [evidence.md](evidence.md). “Đã đo” mô tả bằng chứng, không mặc định đồng nghĩa đạt nghiệm thu. KR có thể rút gọn các dòng này trong ngân sách chung 1,5 trang của Chương 7.
+
+Bổ sung 03/11: [bảng GPU từng model, D5 per-class và video/watchdog/Jetson](update-2026-11-03.md) cung cấp E13–E20. [Audit tuần 5](week-05-audit.md) cập nhật PR #92 đã merge; không dùng suite review nhánh KR để thay nghiệm thu D3 của HNHL.
+
+| Thành phần | Kết quả hiện có | So với yêu cầu và giới hạn | Nguồn |
+| :-- | :-- | :-- | :-- |
+| Khoảng cách ghế glossy | 8/9 ID có distance; median/p90 5,34%/20,91%; 3 ID held-out 5,37%/17,11% | p90 tổng chưa đạt20%; chưa ≥20 IDs/đủ floor sets. Báo missed ID21, không chỉ báo subset tốt | E01, F10 |
+| Fine-tune D5 | 397 ảnh; 307/90 cùng session; mAP50 320/416/640 =0,759/0,753/0,810 | Dev-val đã dùng chọn model/size, chưa independent T1. Giữ nguyên mục tiêu từng class | E02 |
+| Wire | Recall0 tại validation operating point sau sửa nhãn/training lại | Chưa đạt80%; không có segmentation benchmark. 12 masks chỉ annotation pilot | E02 |
+| Face whitelist | 125 face frames/21 entries/3 người; cosine0,45: TAR82,99%, FAR46,40% | Chưa đạt TAR95% tại FAR1%; nhãn largest-face và bystanders chưa review đầy đủ; frame queries tương quan | E03, F13 |
+| OSNet re-ID | Cả AIN và x0.25 chạy được; 23 crop người không mơ hồ | Thiếu gallery ở2/3 người; chưa có rank-1/CMC/ROC hợp lệ hoặc model thắng; không đủ gate5 identities | E03 |
+| Tracking | ByteTrack + appearance lock có API/tests; replay822 frame D2 hoàn tất | Runtime smoke, timestamp xấp xỉ; chưa có reviewed body IDs D3 nên ID switches và lock accuracy chưa đo | E04 |
+| GPU workload RTX5060 | Đủ model mỗi frame12,72 FPS; XFeat mỗi frame14,25; đủ model với door schedule19,65, actual door4,52 Hz; NVML peak0,939 GiB full mix | Hai mode mỗi-frame chưa đạt15 FPS. Scheduled đạt cho workload đo, chưa RTX4050/dual-stream; crop padding và DINO FP16 ghi rõ | E05–E07, F9 |
+| ONNX D5 conversion | 90/90 frame cùng count,294 reference boxes ghép đủ IoU≥0,9 | Parity laptop PyTorch/ORT, không phải accuracy hoặc TensorRT certification | E08 |
+| Edge stock models DQK | Cosine≥0,999; YOLOv8n cùng count205/208 | Phần count nguyên văn chưa đạt; không thay parity của custom D5/OSNet-AIN. DQK xác nhận narrative thiết bị | E09 |
+| T0/GPU checks | 584 CPU tests +4 GPU tests passed | Hai skip do D1 local thiếu; tests không thay T1/T2. Không motor commands trong phiên HNHL | E11–E12 |
+| Map/vantage và T2 | Có code và tests logic | Chưa có map evaluation/sweep truth hoặc run robot đủ protocol để nghiệm thu | W2/W5 reports |
+
+## Bổ sung baseline model riêng
+
+Baseline W1 RTX5060 (ảnh tổng hợp640, batch1 FP32,10 warmup/100 iterations, nguồn AC/battery chưa xác nhận): YOLOv8n49,18 FPS/p95 27,02ms; YOLOv8s26,06 FPS/p95 40,74ms. Đây là phép đo riêng từng model, không so ngang với throughput W5 theo điều kiện hoàn toàn giống nhau. Memory W1 là PyTorch allocator, W5 là sampled NVML toàn thiết bị. Nguồn E10; số đo RTX4050 từ DQK cần đặt ở cột thiết bị riêng.
+
+## Cách diễn đạt trong báo cáo
+
+Có thể ghi: “Pipeline đã được triển khai và kiểm tra runtime; một số chỉ tiêu accuracy và thử robot chưa hoàn tất.” Không ghi “hệ thống đạt toàn bộ yêu cầu”, “re-ID rank-1 đạt85%”, “tracking ≤1 ID-switch/phút” hoặc “GPU target RTX4050 đạt” khi chưa có phép đo tương ứng.

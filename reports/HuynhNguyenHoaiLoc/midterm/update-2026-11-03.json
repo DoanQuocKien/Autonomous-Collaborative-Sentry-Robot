@@ -1,0 +1,295 @@
+{
+  "snapshot_date": "2026-11-03",
+  "evidence": {
+    "E01": {
+      "path": "reports/HuynhNguyenHoaiLoc/week-02/issue-43/chairs_semantic.json",
+      "sha256": "6936d5a1a77ff9250b0504f2f4ba70c8149c7e1a45f3450fc8eeb3168bbacb0f"
+    },
+    "E02": {
+      "path": "reports/HuynhNguyenHoaiLoc/week-04/d5_corrected_validation.json",
+      "sha256": "c094f15ef2db9d21ed89d626d38fc7cf21c3afea70ff85d81263369b5cdcd828"
+    },
+    "E03": {
+      "path": "reports/HuynhNguyenHoaiLoc/week-04/d2_pilot.json",
+      "sha256": "3024bea82958c39c1ce72524e13affa933011aac5a276606b3440cfe35971367"
+    },
+    "E04": {
+      "path": "reports/HuynhNguyenHoaiLoc/week-05/d2_tracking_runtime.json",
+      "sha256": "6d419c587c3e1445c48fd50575ef22d481b9e9759903fd17f559cf265ed5b670"
+    },
+    "E05": {
+      "path": "reports/HuynhNguyenHoaiLoc/week-05/pipeline_both.json",
+      "sha256": "d718ed31ea0dc4d04796c73ff9a39d6a0e2c63c8c6ff4a70b43240b157df4686"
+    },
+    "E06": {
+      "path": "reports/HuynhNguyenHoaiLoc/week-05/pipeline_xfeat.json",
+      "sha256": "55e6275de93558cde4c61a64a974f5b02eacd69fc62f897834d2094abab45d49"
+    },
+    "E07": {
+      "path": "reports/HuynhNguyenHoaiLoc/week-05/pipeline_both_5hz.json",
+      "sha256": "58b6504a28f1f998995461ba04d1bb526bef8c7ca3ea1a3c3f188e4d5d24dd03"
+    },
+    "E08": {
+      "path": "reports/HuynhNguyenHoaiLoc/week-04/d5_onnx_real_parity.json",
+      "sha256": "62c21b2f977335021dd90bbb566b6dc3f8292aa35a2420862b7dac93688107a3"
+    },
+    "E09": {
+      "path": "reports/DoanQuocKien/week-04/edge_parity/parity_results.json",
+      "sha256": "89cb8814602beb2b53e1b6224c52a3f7f13dbf9f380ba09cefb4bf39a377a3c2"
+    },
+    "E10": {
+      "path": "reports/HuynhNguyenHoaiLoc/week-01/gpu_baseline.json",
+      "sha256": "6ac109a8ea1e85de317cb0bf4894aec9ce606537e92c5599046978850790d416"
+    },
+    "E11": {
+      "path": "reports/HuynhNguyenHoaiLoc/week-05/pytest_cpu.log",
+      "sha256": "bce97a9bf81830bc9ce7d3bed71412f634fe93d2f1781420cbc8f4b2e8fa9b7e"
+    },
+    "E12": {
+      "path": "reports/HuynhNguyenHoaiLoc/week-05/pytest_gpu.log",
+      "sha256": "5b2eae6ab722f065484bc5038d96f9a2c4cf7855c27de6b0ff886195466f844e"
+    },
+    "E13": {
+      "path": "reports/DoanQuocKien/week-01/gpu/gpu_baseline_rtx4050.json",
+      "sha256": "d59ae21d6d188a048e20209e2a88ce64e19f64f83be8240b766f4dc1c0667b22"
+    },
+    "E14": {
+      "path": "reports/DoanQuocKien/week-01/link_test_2026-10-04.txt",
+      "sha256": "3482135db29ef453aeb0431d4875471310f5ce848d1609fe4f6e099c5bd3da11"
+    },
+    "E15": {
+      "path": "reports/DoanQuocKien/week-01/estop_deadman_2026-10-06.txt",
+      "sha256": "c8716d6d0330a5de7e27b191089d61a9a2c6b1bb898e71ced67c59e93cbd9750"
+    },
+    "E16": {
+      "path": "reports/DoanQuocKien/week-04/edge_deploy/live_esp32_bench.json",
+      "sha256": "b7817b9ec72115747555b589944144cc4728820b0cbcd4574709cd3205433734"
+    },
+    "E17": {
+      "path": "reports/DoanQuocKien/week-04/edge_deploy/README.md",
+      "sha256": "ba72ef08441cbe4abfa6a04c3f9d5ba5c76bde9f7c971c9d78d44a30b0e0e48f"
+    },
+    "E18": {
+      "path": "reports/DoanQuocKien/week-05/f15/README.md",
+      "sha256": "e0752564c42710fef674522090d27db91dd4aa7e8c14744a6d5d2853c7689b86"
+    },
+    "E19": {
+      "path": "reports/DoanQuocKien/week-05/f15/tape_offsets_1030.json",
+      "sha256": "a373deb53731181129b53224b1ccfef62865331fab61eea3107f05b6adf8c9d2"
+    },
+    "E20": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/github-2026-11-03.json",
+      "sha256": "d7b09e3b355aa8bf90bfcab3fa9f83d1de3026d4640cd05df85b197740ed0d29"
+    }
+  },
+  "single_model_devices": [
+    {
+      "evidence": "E13",
+      "gpu": "NVIDIA GeForce RTX 4050 Laptop GPU",
+      "configuration": {
+        "models": [
+          "yolov8n.pt",
+          "yolov8s.pt"
+        ],
+        "imgsz": 640,
+        "warmup": 10,
+        "iterations": 100,
+        "seed": 532,
+        "device": 0,
+        "power_source": "unspecified"
+      },
+      "runtime": [
+        "NVIDIA GeForce RTX 4050 Laptop GPU, 581.86, 6141 MiB, [N/A], 80.00 W, P0, 42, 2055 MHz"
+      ],
+      "models": [
+        {
+          "model": "yolov8n.pt",
+          "weights_sha256": "f59b3d833e2ff32e194b5bb8e08d211dc7c5bdf144b90d2c8412c47ccfc83b36",
+          "fps": 110.61555345417099,
+          "p95_latency_ms": 10.700375001761131,
+          "peak_allocated_mib": 33.06884765625,
+          "peak_reserved_mib": 58.0
+        },
+        {
+          "model": "yolov8s.pt",
+          "weights_sha256": "1f47a78bf100391c2a140b7ac73a1caae18c32779be7d310658112f7ac9aa78a",
+          "fps": 106.27772983390803,
+          "p95_latency_ms": 13.34111999021843,
+          "peak_allocated_mib": 78.61572265625,
+          "peak_reserved_mib": 94.0
+        }
+      ]
+    },
+    {
+      "evidence": "E10",
+      "gpu": "NVIDIA GeForce RTX 5060 Laptop GPU",
+      "configuration": {
+        "models": [
+          "yolov8n.pt",
+          "yolov8s.pt"
+        ],
+        "imgsz": 640,
+        "warmup": 10,
+        "iterations": 100,
+        "seed": 532,
+        "device": 0,
+        "power_source": "unspecified"
+      },
+      "runtime": [
+        "NVIDIA GeForce RTX 5060 Laptop GPU, 591.74, 8151 MiB, [N/A], 20.00 W, P0, 42, 907 MHz"
+      ],
+      "models": [
+        {
+          "model": "yolov8n.pt",
+          "weights_sha256": "f59b3d833e2ff32e194b5bb8e08d211dc7c5bdf144b90d2c8412c47ccfc83b36",
+          "fps": 49.17888233099726,
+          "p95_latency_ms": 27.024689998506798,
+          "peak_allocated_mib": 33.544921875,
+          "peak_reserved_mib": 58.0
+        },
+        {
+          "model": "yolov8s.pt",
+          "weights_sha256": "1f47a78bf100391c2a140b7ac73a1caae18c32779be7d310658112f7ac9aa78a",
+          "fps": 26.059959536473343,
+          "p95_latency_ms": 40.73996000151964,
+          "peak_allocated_mib": 78.61572265625,
+          "peak_reserved_mib": 94.0
+        }
+      ]
+    }
+  ],
+  "evidence_hash_policy": "SHA256 after CRLF to LF; all other source bytes preserved",
+  "d5_640": {
+    "leg": {
+      "precision": 0.9405504307972042,
+      "recall": 0.96,
+      "map50": 0.9588839285714283,
+      "map50_95": 0.6501305706585814
+    },
+    "footwear": {
+      "precision": 0.6906146138134666,
+      "recall": 0.875,
+      "map50": 0.9092161089313467,
+      "map50_95": 0.7282650115467384
+    },
+    "backpack": {
+      "precision": 0.9183569129455855,
+      "recall": 1.0,
+      "map50": 0.995,
+      "map50_95": 0.9949999999999999
+    },
+    "bag": {
+      "precision": 0.6194475787402709,
+      "recall": 0.7727272727272727,
+      "map50": 0.8157959552615374,
+      "map50_95": 0.4194472828138348
+    },
+    "wire": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "map50": 0.05809307129241795,
+      "map50_95": 0.0067967674488179225
+    },
+    "chair": {
+      "precision": 0.5709610225167717,
+      "recall": 0.9193548387096774,
+      "map50": 0.8289940428524608,
+      "map50_95": 0.745942577513892
+    },
+    "table": {
+      "precision": 0.9874943409798904,
+      "recall": 0.7,
+      "map50": 0.9184782608695651,
+      "map50_95": 0.7090736024844719
+    },
+    "plant": {
+      "precision": 0.9888910490866761,
+      "recall": 1.0,
+      "map50": 0.995,
+      "map50_95": 0.9904400000000001
+    }
+  },
+  "github": {
+    "checked_date": "2026-11-03",
+    "timezone": "Asia/Bangkok",
+    "main_sha": "63c63ba",
+    "pull_requests": [
+      {
+        "number": 92,
+        "url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/pull/92",
+        "state": "closed",
+        "merged": true,
+        "head_sha": "76e1aeb758b23b880b43f4141649eab78ea39a7b",
+        "merge_commit_sha": "e487e976f7ae4e0b5de5fef194e7d7866048c018",
+        "merged_at": "2026-11-02T04:52:17Z"
+      },
+      {
+        "number": 94,
+        "url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/pull/94",
+        "merged": true,
+        "merge_commit_sha": "63c63ba"
+      },
+      {
+        "number": 93,
+        "url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/pull/93",
+        "state": "open",
+        "merged": false,
+        "head_sha": "8df830736cd77b51e7d2517ee3dfd9c77e2873ac",
+        "reviewed_head_sha": "0239832255242da13136c1b1f95d84c70be45e27",
+        "review_url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/pull/93#pullrequestreview-5741234175",
+        "latest_head_reviewed": false
+      }
+    ]
+  },
+  "link": {
+    "frames": 1200,
+    "seconds": 59.9,
+    "fps": 20.0,
+    "sequence_missing": 0,
+    "sequence_expected": 1200,
+    "p50_ms": 13,
+    "p95_ms": 53,
+    "max_ms": 127,
+    "latency_target_ms": 50,
+    "latency_target_met": false,
+    "raw_frame_latency_samples_available": false,
+    "watchdog_ms": [
+      313,
+      314,
+      315,
+      310,
+      305
+    ],
+    "watchdog_scope": "robot_udp dry-run log response; not mechanical stopping time",
+    "estop_first_cycle_cut_ms": [
+      3,
+      13,
+      3,
+      3,
+      12,
+      15
+    ],
+    "estop_scope": "real robot wheels raised; daemon-reported cut duration"
+  },
+  "jetson": {
+    "frames": 17999,
+    "seconds": 900.1,
+    "fps": 20.0,
+    "e2e_p95_ms": 69.74,
+    "door_runs": 4499,
+    "door_hz": 4.998333518497945,
+    "esp_frames": 2121,
+    "esp_fps": 2.36,
+    "wheels_moving": false,
+    "identity_accuracy_measured": false
+  },
+  "acceptance": {
+    "w5_code_merged": true,
+    "w5_fully_accepted": false,
+    "d3_id_switches_per_minute": null,
+    "target_relock_accuracy": null,
+    "rtx4050_combined_budget_accepted": false,
+    "osnet_fp16_rank1": null,
+    "real_map_vantage_accepted": false
+  }
+}

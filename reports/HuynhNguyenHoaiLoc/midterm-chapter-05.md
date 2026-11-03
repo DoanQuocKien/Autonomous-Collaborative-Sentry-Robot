@@ -1,5 +1,7 @@
 # Chương 5 — Nhận thức thị giác, tối ưu và triển khai
 
+**Bản rút gọn để ghép báo cáo:** [Word Chương5](midterm/HNHL-Chuong-5.docx), [Markdown cùng nội dung](midterm/chapter-05.md). Hồ sơ có F9/F10/F13, evidence catalog, các dòng Ch7 và phụ lục: [midterm/README.md](midterm/README.md). Phần dưới giữ diễn giải chi tiết để tham khảo khi chỉnh sửa.
+
 **Bản thảo HNHL, 2026-11-01.** Ngân sách chung chương khoảng 3,5 trang sau dàn trang; KR bổ sung nhận diện cửa, DQK hoàn thiện phần Jetson. Đây chưa phải bản nộp: các vị trí thiếu hình hoặc chưa đo được giữ trạng thái rõ ràng. Hình và số liệu chốt trước 16/11 theo kế hoạch nhóm.
 
 ## 5.1 Luồng xử lý và hệ tọa độ
@@ -24,7 +26,7 @@ D5 gồm 397 ảnh của một phòng, một session sàn bóng. Sau sửa nhãn
 
 640 được chọn làm development candidate, chưa là cấu hình triển khai robot. Wire chưa đạt recall80%; geometric fallback còn nhầm đường ron sàn. 12 wire masks là annotation pilot, chưa phải segmentation model đã được nghiệm thu. [Kết quả/class metrics](week-04.md), [JSON](week-04/d5_corrected_validation.json).
 
-**F10:** cần chèn scatter sai số/tape từ các cặp prediction–truth đã review, hiển thị cả missed IDs. **F11:** cần map/vantage trên sweep có pose và tọa độ cửa/vật thật; hình declared/synthetic nếu dùng phải ghi rõ, không mô tả là bản đồ đã tự khám phá.
+**F10:** đã dựng [scatter và error summary](midterm/figures/F10_distance.png) từ metrics E01, giữ rõ missed ID21 và subset held-out; chưa thay full T1. **F11:** cần map/vantage trên sweep có pose và tọa độ cửa/vật thật; hình declared/synthetic nếu dùng phải ghi rõ, không mô tả là bản đồ đã tự khám phá.
 
 ## 5.3 Nhận diện cửa — phối hợp KR/DQK
 

@@ -2,6 +2,8 @@
 
 Chuẩn bị/kiểm chứng **2026-11-01**, Asia/Bangkok, cho tuần 02–08/11. Nhánh `HuynhNguyenHoaiLoc/w05-tracking-gpu`, base **36cb701**. Phần triển khai và đo laptop đã có; **T1 D3 và RTX4050 còn chờ**, không đánh dấu toàn bộ tuần 5 đã nghiệm thu. [API/reproduction](W5-USAGE.md), [PR text](PR-W5-HNHL.md).
 
+**Đối chiếu 03/11/2026:** [PR #92](https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/pull/92) đã được review/merge ngày 02/11 tại `e487e97`. [Audit từng nhiệm vụ](midterm/week-05-audit.md): phần code hoàn thành, các T1 và extra FP16 rank-1 chưa hoàn tất. [Hồ sơ giữa kỳ](midterm/README.md) có Word 3 trang, F9/F10/F13 và [bổ sung 03/11](midterm/update-2026-11-03.md). Chưa có D3 mới hoặc combined workload RTX4050 để thay trạng thái nghiệm thu.
+
 ## Review và merge trước khi triển khai
 
 Theo yêu cầu HNHL, đã review và merge PR DQK **#88 → #89 → #91 → #90**. Sửa trực tiếp vào #90 trước merge: không CHECK PASS nếu thiếu/nonfinite measurement, không nhận session gain đã withdrawn hoặc nonphysical, marker median có age limit 1 s, replay ghi analysis_summary thay vì ghi đè summary gốc. Calibration provisional top-level được đánh dấu unusable; snapshot lịch sử trong reports giữ nguyên.
@@ -48,6 +50,6 @@ Logs cuối: [CPU](week-05/pytest_cpu.log) **584 passed**, 2 skipped (D1 checker
 | D3 ≤1 ID switch/phút, hai người | Chờ DQK ghi D3 và reviewed IDs/visibility/timestamps |
 | GPU budget toàn model | Có workload measurements RTX5060; RTX4050/live dual-stream còn chờ |
 | Extra OSNet FP16 rank-1 trên Nano | Chờ D2/D3 gallery hợp lệ, engine/Nano; không dùng conversion cosine thay rank-1 |
-| Báo cáo giữa kỳ | Có F9 và [Chương 5 draft](midterm-chapter-05.md); F10/F11/F14 còn cần bằng chứng tương ứng |
+| Báo cáo giữa kỳ | Có F9/F10/F13 và [hồ sơ Chương 5](midterm/README.md); F10 hiện là pilot ghế glossy, F7 CDF/F11/F14/F18 còn cần bằng chứng tương ứng |
 
-Không có ảnh/crops/vector/private predictions/model artifacts mới trong PR. Không có motor commands. Không tự ghi timesheet. Full Definition of Done vẫn cần T1 thật và review/merge PR.
+Không có ảnh/crops/vector/private predictions/model artifacts mới trong PR. Không có motor commands. Không tự ghi timesheet. Review/merge PR #92 đã xong; full Definition of Done vẫn cần T1 thật nêu trên.
