@@ -19,20 +19,24 @@ def evaluate_detector():
     det1 = HoldDetector(HoldConfig(speed_threshold_mps=0.1, dwell_time_s=2.0))
     t, dt = 0.0, 0.05
     stat_t = None
+    first_stat_t = None
     while t < 3.0:
         t += dt
         st = det1.update_world(t, 1.0, 0.0)
+        if st.speed_mps is not None and st.speed_mps < 0.1 and first_stat_t is None:
+            first_stat_t = t
         if st.event == "TARGET_STATIONARY":
             stat_t = t
             break
-    results["dwell_time_trigger_s"] = round(stat_t, 3) if stat_t else None
-    results["dwell_time_pass"] = bool(stat_t and abs(stat_t - 2.0) <= 0.15)
+    dwell_duration = (stat_t - first_stat_t) if (stat_t and first_stat_t) else None
+    results["dwell_time_trigger_s"] = round(dwell_duration, 3) if dwell_duration else None
+    results["dwell_time_pass"] = bool(dwell_duration and abs(dwell_duration - 2.0) <= 0.15)
 
     # Test 2: Hysteresis band [0.1, 0.2] m/s
     det2 = HoldDetector(HoldConfig(speed_threshold_mps=0.1, dwell_time_s=1.0, exit_speed_mps=0.2))
-    # Enter hold
+    # Enter hold: run past initial window fill (0.25 s) + dwell_time (1.0 s)
     t = 0.0
-    while t < 1.2:
+    while t < 1.5:
         t += dt
         det2.update_world(t, 0.0, 0.0)
     in_hold_at_start = det2.in_hold

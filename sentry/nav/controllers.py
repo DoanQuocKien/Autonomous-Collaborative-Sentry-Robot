@@ -153,6 +153,15 @@ class PursuitController:
             raise ValueError("timestamp must be finite")
         if self._prev_t is not None and t <= self._prev_t:
             raise ValueError(f"timestamp t={t} must be strictly greater than prev_t={self._prev_t}")
+        if not (isinstance(target_dist_m, (int, float)) and math.isfinite(target_dist_m) and target_dist_m >= 0.0):
+            raise ValueError(f"target_dist_m must be a finite non-negative number, got {target_dist_m}")
+        if not (isinstance(yaw_err, (int, float)) and math.isfinite(yaw_err)):
+            raise ValueError(f"yaw_err must be a finite number, got {yaw_err}")
+        if obstacle_dist_m is not None:
+            if not (isinstance(obstacle_dist_m, (int, float)) and math.isfinite(obstacle_dist_m) and obstacle_dist_m >= 0.0):
+                raise ValueError(f"obstacle_dist_m must be a finite non-negative number or None, got {obstacle_dist_m}")
+        if not (isinstance(obstacle_bearing_rad, (int, float)) and math.isfinite(obstacle_bearing_rad)):
+            raise ValueError(f"obstacle_bearing_rad must be a finite number, got {obstacle_bearing_rad}")
 
         dt = (t - self._prev_t) if self._prev_t is not None else 0.0
         self._prev_t = t
@@ -191,27 +200,44 @@ class PursuitController:
         is_centered = abs(yaw_err) <= self.cfg.center_tolerance_norm
         in_standoff_band = abs(dist_err) <= self.cfg.distance_tolerance_m
 
-        # Saturate within configured caps
-        v = max(self.cfg.v_min_reverse, min(self.cfg.v_max, v_raw))
-        w = max(-self.cfg.w_max, min(self.cfg.w_max, w_raw))
-
-        # Dead zone handling for motors (dead zone ~ 0.40):
-        # 1. Standoff deadband: if in acceptable standoff band, centered, and no obstacle, stop cleanly
+        # Dead zone handling for differential-drive wheel mixing:
+        # Every motion command must satisfy legal(Command(v, w), ExploreSettings())
         if in_standoff_band and is_centered and not obstacle_active:
+            # 1. Standoff deadband: in band, centered, no obstacle -> stop cleanly
             v, w = 0.0, 0.0
+        elif obstacle_active and obstacle_dist_m is not None and obstacle_dist_m < self.cfg.obstacle_critical_m:
+            # 2. Critical obstacle: forward translation forbidden; spin in place away from obstacle
+            v = 0.0
+            w_mag = max(abs(w_raw), self.cfg.w_spin)
+            w = math.copysign(min(self.cfg.w_max, w_mag), w_raw)
+        elif in_standoff_band and not obstacle_active:
+            # 3. In standoff distance band, but not centered: zero translation, yaw-only recentering
+            v = 0.0
+            w_mag = max(abs(w_raw), self.cfg.w_spin)
+            w = math.copysign(min(self.cfg.w_max, w_mag), w_raw if abs(w_raw) > 1e-6 else yaw_err)
+        elif v_raw < 0.0 and not in_standoff_band:
+            # 4. Target too close: back up cleanly. In reverse (v = -0.45), wheel mixing requires
+            # abs(w) <= |v| - dead - 0.01 = 0.04 to avoid wheel stall; straight reverse w = 0 is safest.
+            v = self.cfg.v_min_reverse
+            w = 0.0
         else:
-            # 2. Overcome dead zone when motion is commanded
-            if abs(v) > 1e-4 and abs(v) < self.cfg.dead_zone:
-                if in_standoff_band:
-                    v = 0.0
-                else:
-                    v = math.copysign(max(abs(v), 0.45), v)
+            # 5. Translating forward: saturate within [0.45, v_max]
+            v = max(0.45, min(self.cfg.v_max, v_raw))
+            # Bound steering so slower wheel stays strictly above motor dead zone after mix(v, w):
+            # min(v - w, v + w) = v - |w| >= dead_zone + 0.01  ==>  |w| <= v - dead_zone - 0.01
+            w_trans_max = max(0.0, v - self.cfg.dead_zone - 0.01)
+            w = math.copysign(min(abs(w_raw), w_trans_max), w_raw if abs(w_raw) > 1e-6 else yaw_err)
 
-            if v == 0.0 and abs(w) > 1e-4 and abs(w) < self.cfg.dead_zone:
-                if is_centered:
-                    w = 0.0
-                else:
-                    w = math.copysign(max(abs(w), self.cfg.w_spin), w)
+        # Enforce and verify legal wheel commands for JetBot differential drive
+        explore_s = ExploreSettings(
+            v_forward=self.cfg.v_max,
+            w_spin=self.cfg.w_spin,
+            min_pwm=self.cfg.dead_zone * 0.3,
+            max_speed=0.3,
+        )
+        assert legal(Command(v, w, "", ""), explore_s), (
+            f"Emitted command ({v}, {w}) violates legal wheel mixing dead zone!"
+        )
 
         return v, w, is_centered, obstacle_active
 
@@ -258,6 +284,8 @@ class HoldController:
             raise ValueError("timestamp must be finite")
         if self._prev_t is not None and t <= self._prev_t:
             raise ValueError(f"timestamp t={t} must be strictly greater than prev_t={self._prev_t}")
+        if not (isinstance(yaw_err, (int, float)) and math.isfinite(yaw_err)):
+            raise ValueError(f"yaw_err must be a finite number, got {yaw_err}")
 
         if self._entered_t is None:
             self._entered_t = t
@@ -299,6 +327,16 @@ class HoldController:
             # Overcome motor dead zone (0.40): commands below 0.40 only whine on JetBot
             w_mag = max(abs(w_raw), self.cfg.w_spin)
             w = math.copysign(min(self.cfg.w_max, w_mag), w_raw if abs(w_raw) > 1e-6 else yaw_err)
+
+        explore_s = ExploreSettings(
+            v_forward=0.55,
+            w_spin=self.cfg.w_spin,
+            min_pwm=self.cfg.dead_zone * 0.3,
+            max_speed=0.3,
+        )
+        assert legal(Command(v, w, "", ""), explore_s), (
+            f"Emitted hold command ({v}, {w}) violates legal wheel mixing dead zone!"
+        )
 
         return v, w, is_centered
 
@@ -345,7 +383,7 @@ class InterceptionController:
         if event == "TARGET_STATIONARY":
             self._mode = "HOLD"
             self.hold.reset()
-        elif event == "TARGET_MOVING":
+        elif event in ("TARGET_MOVING", "TARGET_LOST") or (self._mode == "HOLD" and not hstate.in_hold):
             self._mode = "PURSUE"
             self.pursuit.reset()
 

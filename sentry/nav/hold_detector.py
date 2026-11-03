@@ -64,11 +64,11 @@ class HoldState:
     t: float
     target_world_x: float
     target_world_y: float
-    speed_mps: float
-    vx_mps: float
-    vy_mps: float
+    speed_mps: Optional[float]
+    vx_mps: Optional[float]
+    vy_mps: Optional[float]
     in_hold: bool
-    event: Optional[str]                      # 'TARGET_STATIONARY', 'TARGET_MOVING', or None
+    event: Optional[str]                      # 'TARGET_STATIONARY', 'TARGET_MOVING', 'TARGET_LOST', or None
     dwell_progress_s: float                   # How long current stationary period has lasted
 
 
@@ -134,10 +134,13 @@ class HoldDetector:
             raise ValueError(f"timestamp t={t} must be strictly greater than last_t={self._last_t}")
 
         # If a large frame gap occurred, reset velocity history and release hold if target left view
+        had_hold = self._in_hold
+        gap_reset = False
         if self._last_t is not None and (t - self._last_t) > self.cfg.max_observation_gap_s:
             self._history.clear()
             self._stationary_start_t = None
             self._in_hold = False
+            gap_reset = True
 
         self._last_t = t
         self._history.append((t, wx, wy))
@@ -154,8 +157,11 @@ class HoldDetector:
         event = None
         dwell_progress = 0.0
 
+        if gap_reset and had_hold:
+            event = "TARGET_LOST"
+
         if not self._in_hold:
-            if speed < self.cfg.speed_threshold_mps:
+            if speed is not None and speed < self.cfg.speed_threshold_mps:
                 if self._stationary_start_t is None:
                     self._stationary_start_t = t
                 dwell_progress = t - self._stationary_start_t
@@ -166,14 +172,14 @@ class HoldDetector:
                 self._stationary_start_t = None
                 dwell_progress = 0.0
         else:
-            # Currently in HOLD: exit only if speed exceeds exit threshold (hysteresis)
-            if speed > self.cfg.exit_speed_mps:
+            # Currently in HOLD: exit only if speed is valid and exceeds exit threshold (hysteresis)
+            if speed is not None and speed > self.cfg.exit_speed_mps:
                 self._in_hold = False
                 self._stationary_start_t = None
                 dwell_progress = 0.0
                 event = "TARGET_MOVING"
             else:
-                # Retain hold during hysteresis band [speed_threshold_mps, exit_speed_mps]
+                # Retain hold during hysteresis band [speed_threshold_mps, exit_speed_mps] or while pending
                 dwell_progress = self.cfg.dwell_time_s
 
         return HoldState(
@@ -208,15 +214,18 @@ class HoldDetector:
         wx, wy = local_to_world_coords(robot_pose, fwd, left)
         return self.update_world(t, wx, wy)
 
-    def _estimate_velocity(self) -> Tuple[float, float, float]:
-        """Estimate (vx, vy, speed) in m/s using linear regression over the window."""
+    def _estimate_velocity(self) -> Tuple[Optional[float], Optional[float], Optional[float]]:
+        """Estimate (vx, vy, speed) in m/s using linear regression over the window.
+
+        Returns (None, None, None) if sample count or window time span is insufficient.
+        """
         n = len(self._history)
         if n < self.cfg.min_samples:
-            return 0.0, 0.0, 0.0
+            return None, None, None
 
         span = self._history[-1][0] - self._history[0][0]
         if span < self.cfg.min_window_span_s:
-            return 0.0, 0.0, 0.0
+            return None, None, None
 
         sum_t = sum_x = sum_y = 0.0
         for ti, xi, yi in self._history:

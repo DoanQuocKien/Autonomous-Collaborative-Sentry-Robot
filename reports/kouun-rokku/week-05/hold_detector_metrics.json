@@ -1,5 +1,5 @@
 {
-  "dwell_time_trigger_s": 2.05,
+  "dwell_time_trigger_s": 2.0,
   "dwell_time_pass": true,
   "hysteresis_band_maintained": true,
   "hysteresis_exit_verified": true,

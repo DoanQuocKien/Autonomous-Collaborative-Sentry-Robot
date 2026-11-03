@@ -58,18 +58,26 @@ def test_invalid_coordinates_and_timestamps_raise_value_error():
 
 
 def test_dwell_time_triggers_target_stationary_after_two_seconds():
-    # 1. Target stationary from start: triggers exactly after 2.0 s dwell
+    # 1. Target stationary from start: velocity verified at t=0.5 s (5 samples at 10 Hz), triggers at t=2.5 s
     detector = HoldDetector(HoldConfig(speed_threshold_mps=0.1, dwell_time_s=2.0, window_s=0.5))
     t = 0.0
     dt = 0.1
-    events = []
-    while t < 1.95:
+    # Before min samples (n=5, span=0.2 s reached at t=0.5 s), speed is None and dwell suspended
+    for _ in range(4):
+        t += dt
+        st = detector.update_world(t, wx=1.0, wy=0.0)
+        assert st.speed_mps is None
+        assert not detector.in_hold
+        assert st.dwell_progress_s == 0.0
+
+    # Step across dwell window (t in [0.5, 2.4])
+    while t < 2.35:
         t += dt
         st = detector.update_world(t, wx=1.0, wy=0.0)
         assert not detector.in_hold
         assert st.event is None
 
-    # Step across 2.0 s boundary
+    # Step across 2.0 s dwell boundary (at t=2.5 s, dwell progress = 2.0 s)
     t += dt
     st = detector.update_world(t, wx=1.0, wy=0.0)
     assert detector.in_hold
@@ -90,7 +98,7 @@ def test_dwell_time_triggers_target_stationary_after_two_seconds():
     while t < 4.0:
         t += dt
         st = detector.update_world(t, wx=0.5, wy=0.0)
-        if st.speed_mps < 0.1 and stationary_t is None:
+        if st.speed_mps is not None and st.speed_mps < 0.1 and stationary_t is None:
             stationary_t = t
         if st.event == "TARGET_STATIONARY":
             triggered = True
@@ -104,8 +112,8 @@ def test_hysteresis_between_enter_and_exit_thresholds():
     t = 0.0
     dt = 0.05
 
-    # Target stationary at x=0 for 1.2 s -> enters HOLD
-    while t < 1.2:
+    # Target stationary at x=0: initial window fill (0.25 s) + 1.0 s dwell -> enters HOLD by t=1.35
+    while t < 1.35:
         t += dt
         st = detector.update_world(t, wx=0.0, wy=0.0)
     assert detector.in_hold
@@ -229,6 +237,7 @@ def test_gap_in_observations_resets_history_and_releases_hold():
     st = detector.update_world(t, 0.0, 0.0)
     assert not detector.in_hold, "Gap > 1.0 s must release HOLD"
     assert st.dwell_progress_s == 0.0
+    assert st.event == "TARGET_LOST"
 
 
 def test_minimum_samples_and_span_suppress_cluster_jitter():
@@ -237,5 +246,25 @@ def test_minimum_samples_and_span_suppress_cluster_jitter():
     # Frame 1 and 2 separated by 33 ms with 1 cm jitter
     detector.update_world(1.000, 0.00, 0.0)
     st = detector.update_world(1.033, 0.01, 0.0)
-    # Must return 0.0 speed because n < 5 and span < 0.2 s
-    assert st.speed_mps == 0.0
+    # Must return None speed because n < 5 and span < 0.2 s (insufficient evidence != stationary)
+    assert st.speed_mps is None
+    assert not detector.in_hold
+    assert st.dwell_progress_s == 0.0
+
+
+def test_sparse_frame_low_rate_moving_target_never_triggers_hold():
+    """Low-rate 4 Hz stream with target moving at 1 m/s must NEVER trigger false HOLD.
+
+    Regression test for Review Item 2 (HNHL):
+    At 4 Hz with window_s=0.5 s, the window contains at most 3 samples (< min_samples 5).
+    Velocity must stay unknown/None and dwell must remain 0.0; in_hold must never become True.
+    """
+    detector = HoldDetector(HoldConfig(speed_threshold_mps=0.1, dwell_time_s=2.0, window_s=0.5, min_samples=5))
+    # Feed update_world(i * 0.25, i * 0.25, 0.0) for i = 0..16 (target moving along x at 1.0 m/s)
+    for i in range(17):
+        t = i * 0.25
+        x = i * 0.25  # dx/dt = 1.0 m/s
+        st = detector.update_world(t, wx=x, wy=0.0)
+        assert not detector.in_hold, f"Sparse 4 Hz moving target falsely entered HOLD at step {i} (t={t})!"
+        assert st.dwell_progress_s == 0.0, f"Dwell progress must be 0.0 on insufficient velocity evidence!"
+        assert st.event is None

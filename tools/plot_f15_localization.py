@@ -1,125 +1,114 @@
-"""Generates Figure F15: Real-world dead reckoning vs ArUco correction trajectory.
+"""Figure F15: Position error of dead reckoning with and without marker correction.
 
-Plotted from physical robot run logs (2026-10-24, run `t2_1024_2_follow`, PR #56):
-- Commands log: reports/DoanQuocKien/week-03/t2_dead_reckoning/t2_1024_2_follow/commands.csv
-- Summary results: reports/DoanQuocKien/week-03/t2_dead_reckoning/t2_1024_2_follow/summary.json
+Drawn strictly from REAL physical runs (end poses & tape ground truth; no simulated/invented curves).
+Reuses real physical run evidence from PR #94 (tools/plot_f15_dead_reckoning.py by DQK):
+- 2026-10-24 3 m runs (reports/DoanQuocKien/week-03/t2_dead_reckoning/*/summary.json):
+  Tape-measured ground truth endpoint and dead reckoning estimator endpoints.
+- Error in cm against technical plan limits (<= 15 cm with correction, <= 40 cm without correction).
+- 2026-10-30 deployment runs: tape offsets from sweet spot (reports/DoanQuocKien/week-05/f15/tape_offsets_1030.json).
 
-Saves: reports/kouun-rokku/week-05/F15_dead_reckoning_aruco.png
+Only endpoints and tape offsets exist for these runs (per-frame poses were not logged),
+so no intermediate synthetic paths are drawn.
 """
-import csv
 import json
 import math
 from pathlib import Path
-import matplotlib.pyplot as plt
-import numpy as np
 
-from sentry.nav.localization import LocalizationTracker
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
 
 ROOT = Path(__file__).resolve().parents[1]
-CMD_PATH = ROOT / "reports" / "DoanQuocKien" / "week-03" / "t2_dead_reckoning" / "t2_1024_2_follow" / "commands.csv"
-SUMMARY_PATH = ROOT / "reports" / "DoanQuocKien" / "week-03" / "t2_dead_reckoning" / "t2_1024_2_follow" / "summary.json"
-OUT_PATH = ROOT / "reports" / "kouun-rokku" / "week-05" / "F15_dead_reckoning_aruco.png"
+W3 = ROOT / "reports" / "DoanQuocKien" / "week-03" / "t2_dead_reckoning"
+OFFSETS = ROOT / "reports" / "DoanQuocKien" / "week-05" / "f15" / "tape_offsets_1030.json"
+OUT = ROOT / "reports" / "kouun-rokku" / "week-05" / "F15_dead_reckoning_aruco.png"
+RUNS = [("t2_1024_1", "run 1 (open loop)"), ("t2_1024_2_follow", "run 2 (closed loop)")]
+HOW_COLOUR = {
+    "followed board 2 to the end": "#2a7f3f",
+    "lost board 2, then dead reckoning": "#c9822b",
+    "dead reckoning only (provisional correction)": "#b03030",
+}
+
+
+def load_runs():
+    out = []
+    for folder, label in RUNS:
+        d = json.load(open(W3 / folder / "summary.json"))
+        pick = {bool(r["correction"]): r for r in d["results"] if r["scale"] == 1.0}
+        out.append((label, d["true_end"], pick[False], pick[True]))
+    return out
 
 
 def main():
-    with open(SUMMARY_PATH, "r", encoding="utf-8") as f:
-        summary = json.load(f)
+    runs = load_runs()
+    fig, (a, b, c) = plt.subplots(
+        1, 3, figsize=(16, 5), dpi=150, gridspec_kw={"width_ratios": [1.1, 0.9, 1.1]}
+    )
 
-    true_end = summary["true_end"]
-    gt_end_x = true_end["forward"]  # 2.95 m
-    gt_end_y = true_end["lateral"]  # 0.05 m
+    # Subplot A: Real Measured End Poses
+    for k, (label, te, no, yes) in enumerate(runs):
+        a.scatter(
+            te["forward"], te["lateral"], marker="*", s=220, c="k", zorder=5,
+            label="tape ground truth" if k == 0 else None,
+        )
+        for r, col, name in ((no, "#b03030", "no correction (pure DR)"), (yes, "#1f5fbf", "with ArUco markers")):
+            a.scatter(r["x"], r["y"], c=col, s=60, label=name if k == 0 else None, zorder=4)
+            a.plot([te["forward"], r["x"]], [te["lateral"], r["y"]], c=col, lw=1, ls=":")
+        a.annotate(
+            label.split(" (")[0], (te["forward"], te["lateral"]),
+            textcoords="offset points", xytext=(6, 6), fontsize=8,
+        )
+    a.axhline(0, c="#999", lw=0.8)
+    a.set_xlabel("forward from start (m)")
+    a.set_ylabel("left (m)")
+    a.set_title("A. End pose, tape vs estimate (2026-10-24)")
+    a.set_aspect("equal")
+    a.set_xlim(1.3, 3.3)
+    a.set_ylim(-1.1, 1.6)
+    a.legend(fontsize=8, loc="lower left")
+    a.grid(alpha=0.3)
 
-    # Pure dead reckoning trajectory from 304 recorded commands
-    tracker = LocalizationTracker()
-    tracker.scale = 1.0
-    tracker.set_pose(0.0, 0.0, 0.0)
+    # Subplot B: Error vs Plan Limits
+    xs = range(len(runs))
+    w = 0.35
+    nos = [r[2]["error_m"] * 100 for r in runs]
+    yess = [r[3]["error_m"] * 100 for r in runs]
+    b.bar([x - w / 2 for x in xs], nos, w, color="#b03030", label="no correction")
+    b.bar([x + w / 2 for x in xs], yess, w, color="#1f5fbf", label="with markers")
+    for x, v in zip(xs, nos):
+        b.text(x - w / 2, v + 3, "%.0f" % v, ha="center", fontsize=8)
+    for x, v in zip(xs, yess):
+        b.text(x + w / 2, v + 3, "%.1f" % v, ha="center", fontsize=8)
+    b.axhline(40, c="#b03030", ls="--", lw=1, label="limit 40 cm (no correction)")
+    b.axhline(15, c="#1f5fbf", ls="--", lw=1, label="limit 15 cm (with markers)")
+    b.set_xticks(list(xs))
+    b.set_xticklabels([r[0] for r in runs], fontsize=8)
+    b.set_ylabel("position error at end (cm)")
+    b.set_title("B. Error against plan limits (2 runs)")
+    b.legend(fontsize=7, loc="upper right")
 
-    dr_x, dr_y = [0.0], [0.0]
-    with open(CMD_PATH, "r", encoding="utf-8") as f:
-        r = csv.DictReader(f)
-        prev = None
-        for row in r:
-            t, v, w = float(row["t"]), float(row["v"]), float(row["w"])
-            if prev is None:
-                prev = t
-            tracker.update_odometry(v, w, t - prev, t)
-            prev = t
-            dr_x.append(tracker.pose.x)
-            dr_y.append(tracker.pose.y)
+    # Subplot C: 2026-10-30 Deployment Runs
+    off = json.load(open(OFFSETS))["runs"]
+    for i, r in enumerate(off):
+        e = math.hypot(r["dx"], r["dy"]) * 100
+        c.bar(i, e, color=HOW_COLOUR[r["how"]])
+        c.text(i, e + 2, "%.0f" % e, ha="center", fontsize=8)
+    c.set_xticks(range(len(off)))
+    c.set_xticklabels([r["run"] for r in off], fontsize=8)
+    c.set_ylabel("tape offset from sweet spot (cm)")
+    c.set_title("C. Deployment runs 2026-10-30")
+    handles = [plt.Rectangle((0, 0), 1, 1, color=col) for col in HOW_COLOUR.values()]
+    c.legend(handles, list(HOW_COLOUR), fontsize=7, loc="upper left")
 
-    dr_x = np.array(dr_x)
-    dr_y = np.array(dr_y)
-
-    # Result data from summary.json
-    res_no_corr = [r for r in summary["results"] if r["scale"] == 1.0 and not r["correction"]][0]
-    res_with_corr = [r for r in summary["results"] if r["scale"] == 1.0 and r["correction"]][0]
-
-    err_no_corr_cm = res_no_corr["error_m"] * 100  # 98.3 cm
-    err_with_corr_cm = res_with_corr["error_m"] * 100  # 14.5 cm
-
-    # Closed-loop ArUco trajectory (driven along the string with 59 visual corrections)
-    # The robot tracked board A bearing and stopped at (2.81, 0.013)
-    corr_end_x = res_with_corr["x"]  # 2.810 m
-    corr_end_y = res_with_corr["y"]  # 0.013 m
-
-    # Ground truth string path
-    gt_x = np.linspace(0.0, gt_end_x, 100)
-    gt_y = np.linspace(0.0, gt_end_y, 100)
-
-    # Reconstructed closed-loop path: follows string with slight PI steering oscillations
-    s_frac = np.linspace(0.0, 1.0, len(dr_x))
-    aruco_x = s_frac * corr_end_x
-    # Real steering integral recorded at -0.0143 with minor lateral oscillations
-    aruco_y = s_frac * corr_end_y + 0.018 * np.sin(s_frac * 4 * np.pi) * (1.0 - s_frac * 0.5)
-
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11.5, 4.8), dpi=200)
-
-    # Subplot 1: 2D Planar Trajectory
-    ax1.plot(gt_x, gt_y, "k--", label="Ground Truth (Tape String, 2.95 m)", linewidth=2.0)
-    ax1.plot(dr_x, dr_y, "r-", label=f"Pure Dead Reckoning (End Err: {err_no_corr_cm:.1f} cm)", linewidth=1.8, alpha=0.9)
-    ax1.plot(aruco_x, aruco_y, "b-", label=f"With ArUco PnP Fixes (End Err: {err_with_corr_cm:.1f} cm)", linewidth=1.8, alpha=0.9)
-
-    ax1.scatter([gt_end_x], [gt_end_y], color="black", marker="x", s=80, zorder=5, label="True Tape End (2.95, 0.05)")
-    ax1.scatter([dr_x[-1]], [dr_y[-1]], color="red", s=50, zorder=5)
-    ax1.scatter([corr_end_x], [corr_end_y], color="blue", s=50, zorder=5)
-
-    ax1.set_xlabel("Forward X (m)", fontsize=10, fontweight="bold")
-    ax1.set_ylabel("Lateral Y (m)", fontsize=10, fontweight="bold")
-    ax1.set_title("Planar Path (Run t2_1024_2_follow, 2026-10-24)", fontsize=11, fontweight="bold")
-    ax1.grid(True, linestyle=":", alpha=0.6)
-    ax1.legend(loc="lower left", fontsize=8.0)
-    ax1.set_aspect("equal", "datalim")
-
-    # Subplot 2: End-Point Error vs Technical Requirements
-    bars = ["Thuần Dead Reckoning\n(Không mốc, 1 lượt)", "Có mốc ArUco (59 fixes)\n(1/5 lượt, PENDING)"]
-    errors = [err_no_corr_cm, err_with_corr_cm]
-    colors = ["#d62728", "#1f77b4"]
-
-    b = ax2.bar(bars, errors, width=0.45, color=colors, alpha=0.85)
-    ax2.axhline(40.0, color="#d62728", linestyle="--", label="Ngưỡng đạt Thuần Odometry (<= 40 cm)", alpha=0.8)
-    ax2.axhline(15.0, color="#1f77b4", linestyle="--", label="Ngưỡng đạt ArUco T2 (<= 15 cm)", alpha=0.8)
-
-    ax2.set_ylabel("Sai số vị trí cuối (cm)", fontsize=10, fontweight="bold")
-    ax2.set_title("Sai số thực nghiệm so với ngưỡng T2", fontsize=11, fontweight="bold")
-    ax2.set_ylim(0, 115)
-    ax2.grid(axis="y", linestyle=":", alpha=0.6)
-    ax2.legend(loc="upper right", fontsize=8.0)
-
-    # Data value labels
-    for bar, val in zip(b, errors):
-        ax2.text(bar.get_x() + bar.get_width() / 2, val + 2.0, f"{val:.1f} cm", ha="center", fontweight="bold", fontsize=9.5)
-
-    # Footnote note
-    fig.text(0.5, 0.01,
-             "Ghi chú: Dữ liệu thực từ run t2_1024_2_follow (PR #56). Thuần DR trượt lái kết thúc ở -51.7° (FAIL).\n"
-             "ArUco đạt 14.5 cm trên 1 lượt (PENDING: tiêu chí T2 yêu cầu tối thiểu 5 lượt đạt liên tục).",
-             ha="center", fontsize=8.0, style="italic", color="#333333")
-
-    plt.tight_layout(rect=[0, 0.05, 1, 1])
-    OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    plt.savefig(OUT_PATH)
+    fig.suptitle(
+        "F15 Dead reckoning vs marker correction: real measured runs only (tape ground truth; no synthetic curves)",
+        fontsize=11,
+    )
+    fig.tight_layout()
+    OUT.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(OUT)
     plt.close()
-    print(f"[PlotF15] Saved to {OUT_PATH}")
+    print("wrote", OUT)
 
 
 if __name__ == "__main__":
