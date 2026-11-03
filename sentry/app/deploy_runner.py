@@ -77,10 +77,11 @@ def face_command(pose, target_xy, s=None):
 
 
 class DeployRunner(object):
-    def __init__(self, sm, speaker, vantage_xy, centre_xy, settings=None, servo=None, servo_stop_m=None, servo_board_xy=None):
+    def __init__(self, sm, speaker, vantage_xy, centre_xy, settings=None, servo=None, servo_stop_m=None, servo_board_xy=None, servo_margin_m=0.0):
         """servo: optional callable t -> (range_m, bearing_rad) of the target board when it is in view (fresh), else None: the approach then follows the board (stops at servo_stop_m) instead of dead reckoning."""
         self.sm, self.speaker = sm, speaker
         self.servo, self.servo_stop_m, self.servo_board_xy = servo, servo_stop_m, servo_board_xy
+        self.servo_margin_m = servo_margin_m   # the motors stop this much before servo_stop_m: the robot coasts about 0.043 m after the command goes to zero
         self.last_bearing = None              # bearing of the board when it was last in view: once it was seen, losing it must not send the approach back to dead reckoning
         self.pose_reset = None                # (x, y, yaw) the control loop must adopt: set when the board-following approach arrives (dead reckoning did not drive it)
         self.vantage_xy, self.centre_xy = tuple(vantage_xy), tuple(centre_xy)
@@ -124,7 +125,7 @@ class DeployRunner(object):
             obs = self.servo(t) if self.servo is not None else None
             if obs is not None:
                 self.last_bearing = obs[1]
-                v, w, arrived = servo_command(obs[0], obs[1], self.servo_stop_m, self.s)
+                v, w, arrived = servo_command(obs[0], obs[1], self.servo_stop_m + self.servo_margin_m, self.s)
                 if arrived and self.servo_board_xy is not None:
                     bx, by = self.servo_board_xy
                     self.pose_reset = (self.vantage_xy[0], self.vantage_xy[1], wrap(math.atan2(by - self.vantage_xy[1], bx - self.vantage_xy[0]) - obs[1]))   # at the sweet spot, heading = direction of the board minus its bearing

@@ -44,22 +44,33 @@ def rest_pose(frames, t0, t1, tracker_factory, max_range_m=2.2, min_frames=5, ma
     """Marker pose (x, y, yaw) in the frames stamped in [t0, t1]: the MEDIAN of each (a 2 m board's orientation is noisy: on 2026-10-30 one still robot read yaws from -17 to +8 deg and y from -0.32 to +0.54 m
     frame by frame, the median was within about 1.5 deg / 3 cm of the truth); None when too few frames saw a board within max_range_m or the middle half of them spreads over the limits.
     The tracker blends toward its start pose beyond 0.8 m unless its own range limit is huge, so the factory's limit is huge and the range limit is applied here by dropping the farther anchors."""
-    poses = []
+    poses, bearings = [], []
     for t, img in frames:
         if t0 <= t <= t1:
             tr = tracker_factory()
+            seen = []
             for d in tr.detect_markers(img):
                 if d.distance_m > max_range_m:
                     tr.anchors.pop(d.marker_id, None)
+                else:
+                    seen.append(d)
             tr.update_with_markers(img, alpha=1.0)
             if tr.corrections_count:
                 poses.append((tr.pose.x, tr.pose.y, tr.pose.theta))
+                bearings.append([(tr.anchors[d.marker_id], d.bearing_rad) for d in seen if d.marker_id in tr.anchors])
     if len(poses) < min_frames:
         return None
     p = np.array(poses)
     ref = p[0, 2]
     dyaw = np.array([wrap(a - ref) for a in p[:, 2]])
     yaw = wrap(ref + float(np.median(dyaw)))
+    # a 2 m board's own orientation is noisy (ratios 0.80-1.59 on 2026-10-30); its BEARING is not (0.95-1.09): the heading is the direction to the known anchor minus the bearing
+    # (the bearing is positive to the left), taken from the median position
+    mx, my = float(np.median(p[:, 0])), float(np.median(p[:, 1]))
+    by = [wrap(math.atan2(an.y - my, an.x - mx) - b) for frame_b in bearings for an, b in frame_b]
+    if len(by) >= min_frames:
+        ref_b = by[0]
+        yaw = wrap(ref_b + float(np.median([wrap(a - ref_b) for a in by])))
     iqr = lambda v: float(np.percentile(v, 75) - np.percentile(v, 25))
     if math.degrees(iqr(dyaw)) > max_yaw_spread_deg or max(iqr(p[:, 0]), iqr(p[:, 1])) > max_pos_spread_m:
         return None

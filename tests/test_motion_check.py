@@ -1,3 +1,4 @@
+import numpy as np
 import json
 import math
 
@@ -44,3 +45,25 @@ def test_unmeasurable_segments_do_not_count_and_a_missing_kind_refuses_the_fit()
     assert [r["measurable"] for r in rows] == [True, False, False]
     session, problems = mc.fit(rows, WheelModel())
     assert session is None and any("spin_right" in p for p in problems)
+
+
+def test_rest_heading_comes_from_the_bearing_not_from_the_noisy_board_orientation():
+    import math
+    from types import SimpleNamespace as NS
+    from tools.motion_check import rest_pose, wrap
+    true_yaw = math.radians(20)
+    anchor = NS(marker_id=7, x=2.0, y=0.5)
+    rng = np.random.RandomState(1)
+
+    def factory():
+        tr = NS(anchors={7: anchor}, corrections_count=0, pose=NS(x=0.0, y=0.0, theta=0.0))
+        bearing = wrap(math.atan2(anchor.y, anchor.x) - true_yaw)
+        tr.detect_markers = lambda img: [NS(marker_id=7, distance_m=2.0, bearing_rad=bearing)]
+
+        def update(img, alpha=1.0):
+            tr.corrections_count = 1
+            tr.pose = NS(x=0.0, y=0.0, theta=true_yaw + math.radians(rng.uniform(-6, 6)))     # the board's own orientation reads 6 deg off
+        tr.update_with_markers = update
+        return tr
+    p = rest_pose([(0.1 * i, None) for i in range(10)], 0.0, 1.0, factory, max_yaw_spread_deg=20.0)
+    assert abs(math.degrees(wrap(p[2] - true_yaw))) < 0.01

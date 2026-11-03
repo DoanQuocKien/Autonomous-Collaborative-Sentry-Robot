@@ -31,14 +31,14 @@ Words: **Pass** = the stated criterion met as measured. **Record** = typed into 
 
 ## 3. Laptop-only work (no robot; any time before 11-09)
 Cross-check `reports/DoanQuocKien/week-04/classroom_1030/analysis/next_session_1109.md` part A against current main. A1 (board-loss stop/search) is merged. PR #90 also made replay write `analysis_summary.json` and added a 1 s MarkerFix median age guard; PR #93 already replaced controller `assert legal(...)` with safe stop/log and removed the duplicate F15 script. Remaining work:
-- A2 stop margin: arrive when range <= stop - v x 0.20 s.
-- A3 grading answers as flags or a JSON (`--answers`), offsets in named axes, "furniture within 1 m: measured distance".
-- A4 log every handshake answer (t, in_view, inliers) and every frame's `seq`/`t_cap`; count MarkerFix calls and non-None results.
-- A5 remove the invalid `servo_motion` turn ratios from the summary.
-- A6 `motion_check`: investigate turns from board bearings and drives from range. Replay preservation is already fixed; keep raw summary unchanged and save new analyses separately.
+- A2 DONE (2026-11-03, this branch): `deploy_live --servo-margin` (default 0.044 m) stops the motors that much BEFORE the stop range (the robot coasts 0.043 m; the earlier wording "range <= stop - v x 0.2 s" had the sign wrong).
+- A3 DONE: `--answers FILE.json`, or the questions at the end when a terminal is attached (now with named axes x forward / y left and the furniture distance), or afterwards `python -m tools.tape_answers <run folder> --offset-x .. --offset-y ..`; with neither, the run prints a loud WARNING.
+- A4 DONE: `handshake.csv`, `frames.csv` (seq, t_cap) in the run folder; `marker_fix_calls` and `marker_fix_results` in summary.json.
+- A5 DONE: `servo_motion` (summary key, print, function, test) removed.
+- A6 PARTLY DONE: `rest_pose` now takes the heading from the board BEARING (direction to the known anchor minus the bearing) instead of the board's noisy orientation; UNVALIDATED: replaying `class_2` gives the same ratios as before (spin_left 0.894 and 1.134, still 6 of 15 segments measurable, fit refused), so either the bearing path did not engage or it changes nothing; the unit test passes with synthetic data only. Find out at home before trusting it. Original text: `motion_check`: investigate turns from board bearings and drives from range. Replay preservation is already fixed; keep raw summary unchanged and save new analyses separately.
 - A7 acquire a new marker-measured fit and an independent CHECK run for this floor. Keep `calib/motion_session_1030_provisional.json` withdrawn (`usable=false`); do not replace withdrawn gains with hand-picked numbers. Any `floor_model` candidate is exploratory until validated against new measurements.
-- A8 operator prompt "hold R1 until 2 beeps, at least 10 s; STANDBY: release R1".
-- A9 battery gate 11.4 V for graded runs.
+- A8 DONE: the loop prints "PLACE THE ESP32 and keep HOLDING R1 until the 2 beeps (at least 10 s)" at WAIT_CAMERA and "STANDBY: release R1 now".
+- A9 DONE: `deploy_live --min-battery` defaults to 11.4 V (graded runs).
 - Also: verify the existing MarkerFix age guard clears motion-contaminated rests; DQK's report sections (deployment, calibration, 5.x) from the Week 1-4 evidence. Controller/F15 changes already merged are not new session work.
 
 ## 4. Not at home (see the classroom document)
