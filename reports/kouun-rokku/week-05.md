@@ -38,7 +38,7 @@
     * `reports/kouun-rokku/midterm-appendix-a.md`: Phụ lục A — Bàn giao mã nguồn và hệ thống (1,0 trang).
   - Implemented plotting scripts and generated Figures F12, F15, F16:
     * `F12_entrance_bakeoff.png`: ORB vs XFeat vs DINOv2 AUC and TPR@5%FPR per door (`tools/plot_f12_entrance.py`), with non-obscured labels and clear baseline notation.
-    * `F15_dead_reckoning_aruco.png`: Position error & end poses plotted strictly from real measured runs (2026-10-24 tape ground truth vs estimates: 14.5 cm with correction, 98.3 cm without; 2026-10-30 deployment tape offsets; no synthetic paths).
+    * Canonical F15 `reports/DoanQuocKien/week-05/f15/F15_dead_reckoning.png`: Position error & end poses plotted strictly from real measured runs via `tools/plot_f15_dead_reckoning.py` (2026-10-24 tape ground truth vs estimates: 14.5 cm with correction, 98.3 cm without; 2026-10-30 deployment tape offsets; no synthetic paths).
     * `F16_state_machine.png`: Complete Phase 1–3 state machine diagram (`tools/plot_f16_state_machine.py`).
 
 ## Tests run

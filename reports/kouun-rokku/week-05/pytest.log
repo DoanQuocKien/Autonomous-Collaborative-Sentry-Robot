@@ -100,4 +100,4 @@ tests/test_wire_fallback.py .....                                        [ 97%]
 tests/test_yolo_post.py ...                                              [ 98%]
 tests/test_zmq_rx.py ..........                                          [100%]
 
-================ 604 passed, 5 skipped, 4 deselected in 24.63s =================
+================ 604 passed, 5 skipped, 4 deselected in 22.60s =================

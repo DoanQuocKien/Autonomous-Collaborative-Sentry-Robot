@@ -128,7 +128,7 @@ python3 -m tools.evaluate_hold_detector --out reports/kouun-rokku/week-05/hold_d
 
 # 4. Xuất các đồ thị F12, F15, F16:
 python3 -m tools.plot_f12_entrance
-python3 -m tools.plot_f15_localization
+python3 -m tools.plot_f15_dead_reckoning
 python3 -m tools.plot_f16_state_machine
 
 # 5. Chạy toàn bộ test suites tầng T0:

@@ -20,8 +20,11 @@ Specification (§4.5) & Implementation Plan (§4.3):
 from __future__ import annotations
 
 from dataclasses import dataclass
+import logging
 import math
 from typing import Any, Optional, Tuple, Union
+
+logger = logging.getLogger(__name__)
 
 from sentry.config import DEFAULT_PATH, load
 from sentry.nav.explore import Command, ExploreSettings, legal
@@ -228,16 +231,20 @@ class PursuitController:
             w_trans_max = max(0.0, v - self.cfg.dead_zone - 0.01)
             w = math.copysign(min(abs(w_raw), w_trans_max), w_raw if abs(w_raw) > 1e-6 else yaw_err)
 
-        # Enforce and verify legal wheel commands for JetBot differential drive
+        # Enforce legal wheel commands for JetBot differential drive:
+        # If an illegal command is ever generated, fail-safe to stop (0, 0) and log warning.
         explore_s = ExploreSettings(
             v_forward=self.cfg.v_max,
             w_spin=self.cfg.w_spin,
             min_pwm=self.cfg.dead_zone * 0.3,
             max_speed=0.3,
         )
-        assert legal(Command(v, w, "", ""), explore_s), (
-            f"Emitted command ({v}, {w}) violates legal wheel mixing dead zone!"
-        )
+        if not legal(Command(v, w, "", ""), explore_s):
+            logger.warning(
+                "PursuitController generated illegal command (v=%.3f, w=%.3f); safe stop (0, 0) applied",
+                v, w,
+            )
+            return 0.0, 0.0, is_centered, obstacle_active
 
         return v, w, is_centered, obstacle_active
 
@@ -334,9 +341,12 @@ class HoldController:
             min_pwm=self.cfg.dead_zone * 0.3,
             max_speed=0.3,
         )
-        assert legal(Command(v, w, "", ""), explore_s), (
-            f"Emitted hold command ({v}, {w}) violates legal wheel mixing dead zone!"
-        )
+        if not legal(Command(v, w, "", ""), explore_s):
+            logger.warning(
+                "HoldController generated illegal command (v=%.3f, w=%.3f); safe stop (0, 0) applied",
+                v, w,
+            )
+            return 0.0, 0.0, is_centered
 
         return v, w, is_centered
 
