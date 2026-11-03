@@ -1,0 +1,333 @@
+{
+  "snapshot_date": "2026-11-01",
+  "evidence": {
+    "E01": {
+      "path": "reports/HuynhNguyenHoaiLoc/week-02/issue-43/chairs_semantic.json",
+      "sha256": "6936d5a1a77ff9250b0504f2f4ba70c8149c7e1a45f3450fc8eeb3168bbacb0f"
+    },
+    "E02": {
+      "path": "reports/HuynhNguyenHoaiLoc/week-04/d5_corrected_validation.json",
+      "sha256": "c094f15ef2db9d21ed89d626d38fc7cf21c3afea70ff85d81263369b5cdcd828"
+    },
+    "E03": {
+      "path": "reports/HuynhNguyenHoaiLoc/week-04/d2_pilot.json",
+      "sha256": "3024bea82958c39c1ce72524e13affa933011aac5a276606b3440cfe35971367"
+    },
+    "E04": {
+      "path": "reports/HuynhNguyenHoaiLoc/week-05/d2_tracking_runtime.json",
+      "sha256": "6d419c587c3e1445c48fd50575ef22d481b9e9759903fd17f559cf265ed5b670"
+    },
+    "E05": {
+      "path": "reports/HuynhNguyenHoaiLoc/week-05/pipeline_both.json",
+      "sha256": "d718ed31ea0dc4d04796c73ff9a39d6a0e2c63c8c6ff4a70b43240b157df4686"
+    },
+    "E06": {
+      "path": "reports/HuynhNguyenHoaiLoc/week-05/pipeline_xfeat.json",
+      "sha256": "55e6275de93558cde4c61a64a974f5b02eacd69fc62f897834d2094abab45d49"
+    },
+    "E07": {
+      "path": "reports/HuynhNguyenHoaiLoc/week-05/pipeline_both_5hz.json",
+      "sha256": "58b6504a28f1f998995461ba04d1bb526bef8c7ca3ea1a3c3f188e4d5d24dd03"
+    },
+    "E08": {
+      "path": "reports/HuynhNguyenHoaiLoc/week-04/d5_onnx_real_parity.json",
+      "sha256": "62c21b2f977335021dd90bbb566b6dc3f8292aa35a2420862b7dac93688107a3"
+    },
+    "E09": {
+      "path": "reports/DoanQuocKien/week-04/edge_parity/parity_results.json",
+      "sha256": "89cb8814602beb2b53e1b6224c52a3f7f13dbf9f380ba09cefb4bf39a377a3c2"
+    },
+    "E10": {
+      "path": "reports/HuynhNguyenHoaiLoc/week-01/gpu_baseline.json",
+      "sha256": "6ac109a8ea1e85de317cb0bf4894aec9ce606537e92c5599046978850790d416"
+    },
+    "E11": {
+      "path": "reports/HuynhNguyenHoaiLoc/week-05/pytest_cpu.log",
+      "sha256": "bce97a9bf81830bc9ce7d3bed71412f634fe93d2f1781420cbc8f4b2e8fa9b7e"
+    },
+    "E12": {
+      "path": "reports/HuynhNguyenHoaiLoc/week-05/pytest_gpu.log",
+      "sha256": "5b2eae6ab722f065484bc5038d96f9a2c4cf7855c27de6b0ff886195466f844e"
+    }
+  },
+  "evidence_hash_policy": "SHA256 after CRLF to LF; all other source bytes preserved",
+  "distance": {
+    "ids": 9,
+    "ids_with_distance": 8,
+    "missing_ids": [
+      "21"
+    ],
+    "median_pct": 5.336569289715277,
+    "p90_pct": 20.91071736385677,
+    "held_ids": 3,
+    "held_median_pct": 5.370490321465282,
+    "held_p90_pct": 17.112718157221426,
+    "formal_t1_passed": false
+  },
+  "d5": {
+    "train_images": 307,
+    "val_images": 90,
+    "sessions": [
+      "1024"
+    ],
+    "models": {
+      "320": {
+        "map50": 0.7594120529171763,
+        "map50_95": 0.6259269736116513,
+        "classes": {
+          "leg": {
+            "precision": 0.9475838691181008,
+            "recall": 0.92,
+            "map50": 0.9229228070175441,
+            "map50_95": 0.5741571153859255
+          },
+          "footwear": {
+            "precision": 0.6554014424717487,
+            "recall": 0.8917073524094761,
+            "map50": 0.8422557264497921,
+            "map50_95": 0.5803982012297295
+          },
+          "backpack": {
+            "precision": 0.9552512280048491,
+            "recall": 1.0,
+            "map50": 0.995,
+            "map50_95": 0.9542777777777778
+          },
+          "bag": {
+            "precision": 1.0,
+            "recall": 0.4612676448682727,
+            "map50": 0.8230563800232958,
+            "map50_95": 0.6637933040642051
+          },
+          "wire": {
+            "precision": 1.0,
+            "recall": 0.0,
+            "map50": 0.10483216192944786,
+            "map50_95": 0.022832331815017662
+          },
+          "chair": {
+            "precision": 0.8079665545961808,
+            "recall": 0.7465358203738621,
+            "map50": 0.7855966948561058,
+            "map50_95": 0.6977922627021883
+          },
+          "table": {
+            "precision": 0.8471166220245704,
+            "recall": 0.5,
+            "map50": 0.6066326530612244,
+            "map50_95": 0.5276362244897959
+          },
+          "plant": {
+            "precision": 0.9928956135360043,
+            "recall": 1.0,
+            "map50": 0.995,
+            "map50_95": 0.9865285714285715
+          }
+        }
+      },
+      "416": {
+        "map50": 0.7526663669735127,
+        "map50_95": 0.6223524494602624,
+        "classes": {
+          "leg": {
+            "precision": 0.9070476992843732,
+            "recall": 0.92,
+            "map50": 0.9599311373672276,
+            "map50_95": 0.7414885403219993
+          },
+          "footwear": {
+            "precision": 0.48966041793998355,
+            "recall": 0.96875,
+            "map50": 0.8155575688514467,
+            "map50_95": 0.6431348110996128
+          },
+          "backpack": {
+            "precision": 0.9361824274460671,
+            "recall": 1.0,
+            "map50": 0.995,
+            "map50_95": 0.9949999999999999
+          },
+          "bag": {
+            "precision": 0.5859508257046718,
+            "recall": 0.2727272727272727,
+            "map50": 0.5386626890975483,
+            "map50_95": 0.4603857068335942
+          },
+          "wire": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "map50": 0.03219054892967834,
+            "map50_95": 0.00567917339588996
+          },
+          "chair": {
+            "precision": 0.6307206328041934,
+            "recall": 0.9032258064516129,
+            "map50": 0.7829519545051636,
+            "map50_95": 0.7341363001297383
+          },
+          "table": {
+            "precision": 0.824790584850339,
+            "recall": 0.9,
+            "map50": 0.902037037037037,
+            "map50_95": 0.40913058901541915
+          },
+          "plant": {
+            "precision": 0.9905383566660342,
+            "recall": 1.0,
+            "map50": 0.995,
+            "map50_95": 0.9898644748858448
+          }
+        }
+      },
+      "640": {
+        "map50": 0.8099326709723444,
+        "map50_95": 0.6556369765582921,
+        "classes": {
+          "leg": {
+            "precision": 0.9405504307972042,
+            "recall": 0.96,
+            "map50": 0.9588839285714283,
+            "map50_95": 0.6501305706585814
+          },
+          "footwear": {
+            "precision": 0.6906146138134666,
+            "recall": 0.875,
+            "map50": 0.9092161089313467,
+            "map50_95": 0.7282650115467384
+          },
+          "backpack": {
+            "precision": 0.9183569129455855,
+            "recall": 1.0,
+            "map50": 0.995,
+            "map50_95": 0.9949999999999999
+          },
+          "bag": {
+            "precision": 0.6194475787402709,
+            "recall": 0.7727272727272727,
+            "map50": 0.8157959552615374,
+            "map50_95": 0.4194472828138348
+          },
+          "wire": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "map50": 0.05809307129241795,
+            "map50_95": 0.0067967674488179225
+          },
+          "chair": {
+            "precision": 0.5709610225167717,
+            "recall": 0.9193548387096774,
+            "map50": 0.8289940428524608,
+            "map50_95": 0.745942577513892
+          },
+          "table": {
+            "precision": 0.9874943409798904,
+            "recall": 0.7,
+            "map50": 0.9184782608695651,
+            "map50_95": 0.7090736024844719
+          },
+          "plant": {
+            "precision": 0.9888910490866761,
+            "recall": 1.0,
+            "map50": 0.995,
+            "map50_95": 0.9904400000000001
+          }
+        }
+      }
+    },
+    "t1_passed": false
+  },
+  "face": {
+    "frames": 125,
+    "entries": 21,
+    "identities": 3,
+    "threshold": 0.45,
+    "tar": 0.8298969072164949,
+    "far": 0.464,
+    "t1_passed": false
+  },
+  "reid": {
+    "body_crops": 23,
+    "models": {
+      "osnet_ain_x1_0": {
+        "model_id": "osnet_ain_x1_0:2f38acc25e28cb29407635db2be315edc08d5457a904b72a9a11e427f41f3242",
+        "scored": false,
+        "missing_gallery_entries": 2,
+        "missing_query_entries": 9,
+        "total_query_entries": 18
+      },
+      "osnet_x0_25": {
+        "model_id": "osnet_x0_25:c0ff09177a21417a19bc73bbf5af4eb5d2b097c2074ed35e67819ee6cd93612c",
+        "scored": false,
+        "missing_gallery_entries": 2,
+        "missing_query_entries": 9,
+        "total_query_entries": 18
+      }
+    },
+    "rank1": null,
+    "recommended_model": null,
+    "t1_passed": false
+  },
+  "tracking": {
+    "frames": 822,
+    "id_switches": null,
+    "t1_passed": false
+  },
+  "gpu": [
+    {
+      "name": "All every frame",
+      "fps": 12.7191257357642,
+      "p95_ms": 90.75136000756174,
+      "peak_gib": 0.9385719299316406,
+      "door_hz": null,
+      "evidence": "E05",
+      "target_rtx4050_verified": false
+    },
+    {
+      "name": "XFeat every frame",
+      "fps": 14.245314777109556,
+      "p95_ms": 82.98569998005405,
+      "peak_gib": 0.6221656799316406,
+      "door_hz": null,
+      "evidence": "E06",
+      "target_rtx4050_verified": false
+    },
+    {
+      "name": "All scheduled door",
+      "fps": 19.652493220136776,
+      "p95_ms": 87.62138491729274,
+      "peak_gib": 0.9385719299316406,
+      "door_hz": 4.520073440631458,
+      "evidence": "E07",
+      "target_rtx4050_verified": false
+    }
+  ],
+  "single_models": [
+    {
+      "model": "yolov8n.pt",
+      "fps": 49.17888233099726,
+      "p95_latency_ms": 27.024689998506798,
+      "peak_allocated_mib": 33.544921875,
+      "peak_reserved_mib": 58.0
+    },
+    {
+      "model": "yolov8s.pt",
+      "fps": 26.059959536473343,
+      "p95_latency_ms": 40.73996000151964,
+      "peak_allocated_mib": 78.61572265625,
+      "peak_reserved_mib": 94.0
+    }
+  ],
+  "tests": {
+    "cpu_passed": 584,
+    "gpu_passed": 4
+  },
+  "pending": [
+    "F7 real robot CDF samples",
+    "F11 measured map/vantage",
+    "F14 valid re-ID gallery and D3",
+    "F18 paired FP32/FP16 accuracy",
+    "RTX4050 budget",
+    "real-robot T2",
+    "Wire target"
+  ]
+}

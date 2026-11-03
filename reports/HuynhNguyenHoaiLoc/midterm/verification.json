@@ -1,0 +1,38 @@
+{
+  "snapshot_date": "2026-11-01",
+  "evidence_sources_checked": 12,
+  "source_hashes_match": true,
+  "metrics_match_source": true,
+  "distance_aggregation_recomputed": true,
+  "missing_measurements_remain_null": true,
+  "python_syntax_passed": true,
+  "word": {
+    "path": "HNHL-Chuong-5.docx",
+    "sha256": "bd1e5bf03bdf6d22120434d1a078858e6d2a4d57635e24881be5c15bd290cc90",
+    "renderer": "Microsoft Word native PDF export, packaged render_docx.py rasterize with Poppler",
+    "pages": 3,
+    "visually_reviewed_pages": [
+      1,
+      2,
+      3
+    ],
+    "layout_review_passed": true,
+    "intermediates": "gitignored data/midterm_qa/",
+    "text_consistency_checked": true,
+    "paragraphs_checked": 29,
+    "embedded_figures": 3,
+    "tables": 2,
+    "pdf_sha256": "ce16373acc8d09baaae6f8a1f5c43db847c79f277931c717d08332b40c5c8702"
+  },
+  "model_inference_rerun": false,
+  "application_tests_rerun": false,
+  "inherited_test_evidence": {
+    "cpu": 584,
+    "gpu": 4,
+    "sources": [
+      "E11",
+      "E12"
+    ]
+  },
+  "local_markdown_links_checked": 27
+}
