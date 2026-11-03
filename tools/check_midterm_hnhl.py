@@ -35,7 +35,24 @@ def check():
     assert update['acceptance']['osnet_fp16_rank1'] is None
     assert update['d5_640']['backpack']['recall'] == 1
     assert update['d5_640']['footwear']['recall'] < .9
+    assert update['d5_640']['footwear']['precision'] < .8
+    assert update['d5_640']['bag']['recall'] < .9
+    assert update['d5_640']['bag']['precision'] < .8
     assert update['d5_640']['wire']['recall'] < .8
+    followup_path = OUT/'session-followup-2026-11-03.json'
+    followup_sources = 0
+    if followup_path.exists():
+        followup = read_json(followup_path)
+        assert {p['number'] for p in followup['pull_requests'] if p['merged']} == {93, 95, 96}
+        assert followup['validation']['passed'] == 26
+        assert not followup['validation']['new_d3_data']
+        assert not followup['validation']['new_t1_accuracy']
+        assert not followup['validation']['robot_trials']
+        for source in followup['sources'].values():
+            assert hashlib.sha256(evidence_bytes(ROOT/source['path'])).hexdigest() == source['sha256'], 'post-merge source drift'
+            followup_sources += 1
+        log = (ROOT/followup['validation']['log']).read_text(encoding='utf-8-sig')
+        assert re.search(r'26 passed', log), 'targeted test log differs'
     for source in update['evidence'].values():
         assert hashlib.sha256(evidence_bytes(ROOT/source['path'])).hexdigest() == source['sha256']
     word = OUT/'HNHL-Chuong-5.docx'
@@ -73,6 +90,7 @@ def check():
             assert target.exists(), f'broken link: {path}: {url}'
             count += 1
     return dict(checked_date='2026-11-03', evidence_sources_checked=len(update['evidence']),
+                postmerge_sources_checked=followup_sources,
                 source_hashes_match=True, both_saved_snapshots_match=True,
                 missing_acceptance_preserved=True, local_links_checked=count,
                 original_word_sha256=word_sha, original_word_visual_review_preserved=True,

@@ -4,6 +4,8 @@ Snapshot01/11/2026. Khi có cập nhật, bắt đầu từ nguồn evidence m�
 
 Đã kiểm tra lại 03/11: xem [audit tuần 5](week-05-audit.md) và [bổ sung evidence](update-2026-11-03.md). PR #92 đã merge; #94 cung cấp F15 measured endpoints; #93 có head sửa mới, chưa merge tại snapshot. Baseline RTX4050 single-model đã đưa vào F9 bổ sung; combined workload RTX4050, D3/gallery và real map vẫn thiếu.
 
+Snapshot tiếp sau đó: [#93/#95/#96 đã merge](session-followup-2026-11-03.md). Thực hiện [D3 handoff](D3-HANDOFF-HNHL.md) khi có data từ buổi 04/11 và lớp học 09/11; không đánh dấu các buổi tương lai là đã chạy. DQK/KR giữ phần robot và integration; HNHL review labels/evaluate và GPU/report.
+
 | Ưu tiên | Cập nhật cần có | Việc làm khi nhận được | Phần thay đổi |
 | :-- | :-- | :-- | :-- |
 | 1 | D2 reviewed walker/identity labels, body crops và gallery đúng model/hash | Review nhãn trước, tách entry/session trước khi xem scores; chạy evaluator với protocol phù hợp, giữ model selection ở calibration | F13/F14, mục face/re-ID, hàng Ch7 |

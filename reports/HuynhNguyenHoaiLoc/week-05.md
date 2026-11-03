@@ -4,6 +4,8 @@ Chuẩn bị/kiểm chứng **2026-11-01**, Asia/Bangkok, cho tuần 02–08/11.
 
 **Đối chiếu 03/11/2026:** [PR #92](https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/pull/92) đã được review/merge ngày 02/11 tại `e487e97`. [Audit từng nhiệm vụ](midterm/week-05-audit.md): phần code hoàn thành, các T1 và extra FP16 rank-1 chưa hoàn tất. [Hồ sơ giữa kỳ](midterm/README.md) có Word 3 trang, F9/F10/F13 và [bổ sung 03/11](midterm/update-2026-11-03.md). Chưa có D3 mới hoặc combined workload RTX4050 để thay trạng thái nghiệm thu.
 
+**Sau review/merge #96:** #93 KR và #95 HNHL đã merge; HNHL sửa các điểm checklist lỗi thời rồi approve/merge #96 tại `45765cf`. Nhóm controller/hold/ByteTrack/simulation: 26 passed (8,65s), không chạy hardware. [Ghi chú giữa kỳ sau merge](midterm/session-followup-2026-11-03.md) và [D3 handoff](midterm/D3-HANDOFF-HNHL.md) bổ sung đầu vào cần có cho buổi 04/11/09/11. T1/T2 còn thiếu giữ nguyên.
+
 ## Review và merge trước khi triển khai
 
 Theo yêu cầu HNHL, đã review và merge PR DQK **#88 → #89 → #91 → #90**. Sửa trực tiếp vào #90 trước merge: không CHECK PASS nếu thiếu/nonfinite measurement, không nhận session gain đã withdrawn hoặc nonphysical, marker median có age limit 1 s, replay ghi analysis_summary thay vì ghi đè summary gốc. Calibration provisional top-level được đánh dấu unusable; snapshot lịch sử trong reports giữ nguyên.

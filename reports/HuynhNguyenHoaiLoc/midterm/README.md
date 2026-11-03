@@ -4,6 +4,8 @@ Snapshot **01/11/2026**, dựa trên code/evidence hiện có. Hồ sơ này là
 
 **Cập nhật 03/11:** [Đối chiếu tuần 5](week-05-audit.md) xác nhận PR #92 đã merge, nhưng T1 D3 và combined GPU RTX4050 còn chờ. [Bổ sung giữa kỳ 03/11](update-2026-11-03.md) có baseline từng model RTX4050/5060, D5 per-class P/R, log đường truyền/watchdog, runtime Jetson/ESP32 và F15 đo điểm cuối từ PR #94. Word/Markdown 01/11 dưới đây giữ nguyên như snapshot đã kiểm tra; editor đọc thêm bản bổ sung trước khi ghép.
 
+**Sau merge #96:** #93, #95 và #96 đều đã merge; xem [ghi chú tích hợp mới nhất](session-followup-2026-11-03.md) và [D3 handoff cho HNHL](D3-HANDOFF-HNHL.md). Bảng D5 bổ sung đủ gate precision/recall cho cả bags. Lịch 04/11/09/11/16/11 là kế hoạch thu thập, chưa có D3 hoặc nghiệm thu mới. Metadata GitHub E20 cũ được giữ làm snapshot lịch sử; trạng thái mới ở file session-followup.
+
 ## Tài liệu để ghép báo cáo
 
 - [Chương 5 dạng Word](HNHL-Chuong-5.docx): bản ngắn, có F9/F10/F13 và nguồn E01–E12, chỉnh sửa được.
