@@ -15,6 +15,7 @@ git diff --check
 ```
 
 - Verified 20 source hashes, both saved metrics snapshots, missing-acceptance guards, local document links, and 29 Word/Markdown narrative blocks.
+- The document checker also passes in a clean Git worktree, including CRLF checkout conversion; this is a document check, not the final tag-midterm application/hardware run.
 - All three Word pages were exported through Microsoft Word and rendered/visually checked; its binary hash is unchanged in the 03/11 update. F9/F10/F13 and new single-model F9 reviewed for layout/units.
 - No application/model changes, new inference claims, motor commands, raw faces/crops/embeddings, private predictions or weights. W5 logs of 584 CPU/4 GPU tests are historical evidence, not rerun by document tooling. The 605-test #93 review belongs to a separate checkout.
 
