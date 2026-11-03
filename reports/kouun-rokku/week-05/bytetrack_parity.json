@@ -1,0 +1,23 @@
+{
+  "status": "PASS",
+  "num_frames_evaluated": 160,
+  "scenarios": {
+    "multi_object": {
+      "frames": 100,
+      "agreements": 294,
+      "disagreements": 0
+    },
+    "crossing_tracks": {
+      "frames": 60,
+      "agreements": 113,
+      "disagreements": 0
+    }
+  },
+  "total_evaluations": 407,
+  "identical_id_assignments": 407,
+  "disagreements_including_unmatched": 0,
+  "id_agreement_rate": 1.0,
+  "pass_threshold": 0.95,
+  "python36_ast_compatible": true,
+  "lap_dependency_free": true
+}

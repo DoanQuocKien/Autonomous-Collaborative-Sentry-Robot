@@ -4,8 +4,15 @@ __all__ = []
 
 from sentry.perception.reid import OSNetEncoder, PersonAppearance, PersonReID, ReIDResult, match_gallery
 __all__.extend(['OSNetEncoder', 'PersonAppearance', 'PersonReID', 'ReIDResult', 'match_gallery'])
-from sentry.perception.tracker import PersonTrack, PersonTracker, TargetLock, TrackingResult
-__all__.extend(['PersonTrack', 'PersonTracker', 'TargetLock', 'TrackingResult'])
+from sentry.perception.tracker import (
+    ByteTrackBackend,
+    PersonTrack,
+    PersonTracker,
+    TargetLock,
+    TrackingResult,
+    VendoredByteTrackBackend,
+)
+__all__.extend(['ByteTrackBackend', 'PersonTrack', 'PersonTracker', 'TargetLock', 'TrackingResult', 'VendoredByteTrackBackend'])
 
 try:
     from sentry.perception.entrance import (

@@ -1,0 +1,28 @@
+{
+  "status": "PASS",
+  "total_duration_s": 12.0,
+  "events": [
+    {
+      "t": 6.34,
+      "event": "TARGET_STATIONARY",
+      "mode": "HOLD"
+    },
+    {
+      "t": 8.26,
+      "event": "TARGET_MOVING",
+      "mode": "PURSUE"
+    }
+  ],
+  "pursuit_mean_distance_m": 2.242,
+  "pursuit_centered_ratio": 1.0,
+  "hold_confirmed": true,
+  "hold_zero_translation": true,
+  "all_commands_legal": true,
+  "max_recenter_time_s": 0.0,
+  "recenter_requirement_met": true,
+  "stationary_trigger_t": 6.34,
+  "moving_trigger_t": 8.26,
+  "dwell_requirement_met": true,
+  "hysteresis_exit_met": true,
+  "sample_count": 600
+}

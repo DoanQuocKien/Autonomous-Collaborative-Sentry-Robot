@@ -222,3 +222,25 @@ nvml_sample_s = 0.02
 iou_min = 0.50
 max_id_switches_per_minute = 1.0
 min_duration_s = 60.0           # evaluation protocol: at least one minute, not a new accuracy target
+
+[pursuit]
+kp_distance = 0.8
+kd_distance = 0.1
+kp_yaw = 1.5
+kd_yaw = 0.2
+v_max = 0.55
+v_min_reverse = -0.45
+w_max = 1.0
+obstacle_critical_m = 0.35
+obstacle_avoid_w = 0.45
+center_tolerance_norm = 0.10
+
+[hold]
+window_s = 0.5
+min_samples = 5
+kp_yaw = 1.5
+kd_yaw = 0.2
+w_max = 0.8
+center_tolerance_norm = 0.10
+max_recenter_time_s = 1.5
+
