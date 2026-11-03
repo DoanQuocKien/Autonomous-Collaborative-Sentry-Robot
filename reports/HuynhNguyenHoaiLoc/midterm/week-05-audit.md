@@ -4,6 +4,8 @@
 
 Nguồn phân công: [Implementation Plan — Week 5 và Definition of Done](../../../docs/Implementation%20Plan.md). Nguồn GitHub tại lúc kiểm tra: [snapshot 03/11](github-2026-11-03.json).
 
+Cập nhật sau merge #96: [metadata mới](session-followup-2026-11-03.json) xác nhận #93/#95/#96 đã merge; snapshot trước đó giữ nguyên để truy vết. Các nghiệm thu dữ liệu thật dưới đây vẫn chưa có kết quả mới.
+
 | Nhiệm vụ HNHL | Bằng chứng hiện có | Đánh giá |
 | :-- | :-- | :-- |
 | YOLOv8 + ByteTrack trên stream JetBot | `PersonTracker`, `tools.track_live`, `tools.track_replay`; [PR #92](https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/pull/92) đã merge ngày 02/11 tại `e487e97` | Code xong; live JetBot chưa chạy trong phiên HNHL |
@@ -13,7 +15,7 @@ Nguồn phân công: [Implementation Plan — Week 5 và Definition of Done](../
 | T1 GPU ≥15 FPS / ≤5,5 GB decimal | Scheduled workload 19,65 FPS, 0,939 GiB, actual door 4,52Hz trên RTX5060; hai mode mọi-stage mỗi frame dưới 15 FPS | Chỉ đạt workload đã ghi; chưa đạt Definition of Done cho target RTX4050 và live loop |
 | Extra: OSNet x0.25/AIN TensorRT FP16 rank-1 | Có code hai encoder và conversion parity stock; gallery D2 hiện thiếu 2/3 người | Chưa xong: cần gallery/query hợp lệ ≥5 identities, đúng hash/architecture và inference Nano; cosine parity không thay rank-1 |
 | Báo cáo giữa kỳ và hình HNHL | Word 3 trang, Markdown, F9/F10/F13, Ch7 rows, appendix, bổ sung 03/11 và F9 single-model | Bản đóng góp dùng được để editor ghép; F7 CDF/F11/F14/F18 còn chờ, cần rút gọn cùng KR/DQK theo page budget |
-| Review PR KR | Đã request changes cho head `0239832` của #93; KR đã cập nhật head `8df8307` | Head mới chưa review/merge tại snapshot này; không nhập code chưa chấp thuận vào main |
+| Review PR KR | Request changes HNHL cho head `0239832`; bản sửa cuối `213f81e` đã merge qua #93 | Code mới vào main; 26 controller/hold/ByteTrack tests được chạy lại trong lần review #96. Chưa phải D3/T2 |
 
 Logs W5 hiện có: [584 CPU passed](../week-05/pytest_cpu.log), [4 GPU passed](../week-05/pytest_gpu.log), không chạy lại inference trong lần biên soạn này. Suite review #93 đạt 605 CPU tests thuộc checkout tích hợp riêng, không được thay log release W5 của HNHL.
 

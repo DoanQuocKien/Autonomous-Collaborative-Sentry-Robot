@@ -1,0 +1,65 @@
+{
+  "checked_date": "2026-11-03",
+  "timezone": "Asia/Bangkok",
+  "base_main_sha": "45765cf0d4aa087f46af97dd72fb7265d9ef78b5",
+  "pull_requests": [
+    {
+      "number": 93,
+      "url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/pull/93",
+      "merged": true,
+      "head_sha": "213f81e43f74dc957023c67452353eb3fd62d4b0",
+      "merge_commit_sha": "8716668189d9d15eb495c23de959ed7481b32401",
+      "merged_at": "2026-11-03T15:50:21Z"
+    },
+    {
+      "number": 95,
+      "url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/pull/95",
+      "merged": true,
+      "head_sha": "10600e06e2ccfd4ed06441651275fa90d2426a2a",
+      "merge_commit_sha": "4688965a3d69b4b2122e594cfb310fa30ff8bf68",
+      "merged_at": "2026-11-03T15:37:19Z"
+    },
+    {
+      "number": 96,
+      "url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/pull/96",
+      "merged": true,
+      "head_sha": "43831ef0423fc644d8e7cd31ce89a4e2cb4f194b",
+      "merge_commit_sha": "45765cf0d4aa087f46af97dd72fb7265d9ef78b5",
+      "merged_at": "2026-11-03T16:21:55Z"
+    }
+  ],
+  "validation": {
+    "tests": 26,
+    "passed": 26,
+    "seconds": 8.65,
+    "scope": "CPU controller, hold detector, vendored ByteTrack and closed-loop simulation",
+    "log": "reports/HuynhNguyenHoaiLoc/reviews/PR-96-2026-11-03-tests.log",
+    "application_full_suite_rerun": false,
+    "new_d3_data": false,
+    "new_t1_accuracy": false,
+    "robot_trials": false
+  },
+  "evidence_hash_policy": "SHA256 after CRLF to LF; other bytes preserved",
+  "sources": {
+    "S01": {
+      "path": "docs/Home Session Checklist 2026-11-04.md",
+      "sha256": "5d5fa02cf4545b099e84332f07b1aefc786f80daf79b496a000247517713a1ca"
+    },
+    "S02": {
+      "path": "docs/Classroom Tasks Week 6.md",
+      "sha256": "f6e09e1604e5fe80fb40264b352fa3cad4fe35f5f8c07f83524dcc3a96166157"
+    },
+    "S03": {
+      "path": "docs/Implementation Plan.md",
+      "sha256": "e920dc7ee7192ea005e628e9c86c12ca879ba5e8182752b43d94997ab9fecf7b"
+    },
+    "S04": {
+      "path": "reports/HuynhNguyenHoaiLoc/reviews/PR-96-2026-11-03-tests.log",
+      "sha256": "75fca4c8006dc55fa8db7a07f486102c0fbe0bd7bbe548d4c1fa3670cd949639"
+    },
+    "S05": {
+      "path": "reports/HuynhNguyenHoaiLoc/reviews/PR-96-2026-11-03.json",
+      "sha256": "a610d0c0e2ae86d13b9abb0731c675af690f34b168062c72bd72a0825390fc83"
+    }
+  }
+}

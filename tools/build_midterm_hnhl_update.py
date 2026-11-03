@@ -118,12 +118,17 @@ def write_update(metrics, out):
     lines += ['', '640, batch 1, FP32, ảnh BGR tổng hợp cùng seed 532, 10 warmup/100 iterations; FPS gồm predict preprocessing/postprocessing. Enforced power limit ghi nhận RTX4050 80 W và RTX5060 20 W; nguồn AC/battery chưa xác nhận, drivers và clock khác nhau. Không suy ra GPU này nhanh hơn GPU kia theo kiến trúc, không lấy single-model FPS thay ngân sách toàn pipeline. Memory bảng này là PyTorch allocator; F9 workload W5 dùng sampled NVML toàn thiết bị.', '',
         '## D5 precision và recall phải tách riêng', '',
         'D5-640 là development validation đã dùng chọn checkpoint/input size: 307 train/90 val trong cùng session glossy. Các class không đạt vẫn được giữ nguyên. E02.', '',
-        '| Class | Precision % | Recall % | So mục tiêu recall của nhóm class bắt buộc |', '| :-- | --: | --: | :-- |']
+        '| Class | Precision % | Recall % | So gate P/R của nhóm class bắt buộc |', '| :-- | --: | --: | :-- |']
     for cls, row in metrics['d5_640'].items():
-        threshold = .8 if cls == 'wire' else .9 if cls in ('leg', 'footwear', 'backpack') else None
-        status = 'Chưa đặt gate tại bảng này' if threshold is None else ('Đạt số đo dev-val' if row['recall'] >= threshold else 'Chưa đạt') + f' / target {threshold:.0%}'
+        if cls in ('leg', 'footwear', 'backpack', 'bag'):
+            met = row['recall'] >= .9 and row['precision'] >= .8
+            status = ('P/R đạt trên dev-val' if met else 'Chưa đạt') + ' / R≥90%, P≥80%'
+        elif cls == 'wire':
+            status = 'Chưa đạt R≥80%; gate ≤1 alarm/20 empty frames chưa đo'
+        else:
+            status = 'Chưa đặt gate P/R tại bảng này'
         lines.append(f"| {cls} | {100*row['precision']:.2f} | {100*row['recall']:.2f} | {status} |")
-    lines += ['', 'Backpack recall là 100%; khoảng 91,84% là precision. Footwear recall 87,50% dưới 90%; Wire 0% dưới 80%. Bảng dev-val không chứng minh full T1 hoặc khả năng tổng quát sang floor/session mới.', '',
+    lines += ['', 'Backpack recall là 100%; khoảng 91,84% là precision. Footwear và bag đều thiếu cả recall≥90% lẫn precision≥80%; Wire recall 0% dưới 80% và chưa có số false alarms/20 empty-floor frames. Gate lấy từ [Implementation Plan §4.3](../../../docs/Implementation%20Plan.md), bao gồm cả bags. Các class đạt P/R trong dev-val vẫn chưa chứng minh full T1: còn held-out session, distance error và T2 drive-over/collision.', '',
         '## Đường truyền để ghép Chương 3 và Chương 7', '']
     link = metrics['link']
     wd = link['watchdog_ms']
