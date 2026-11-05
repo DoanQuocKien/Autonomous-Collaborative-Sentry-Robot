@@ -1,4 +1,4 @@
-# Chương 5 — Phần HNHL cập nhật 05/11/2026
+# Chương 5 — Phần HNHL cập nhật 06/11/2026
 
 Bản thảo Markdown hiện hành để KR ghép; Word 01/11 là snapshot lịch sử. Chương 5 chung có ngân sách 3,5 trang, gồm thêm phần cửa của KR và deployment của DQK; editor chọn hình/rút gọn khi dàn trang. Nguồn E01–E20: [evidence gốc](evidence.md), [bổ sung 03/11](update-2026-11-03.md); N01–N11: [bổ sung 05/11](update-2026-11-05.md).
 
@@ -36,6 +36,6 @@ F18 so native PyTorch CUDA FP32/FP16 bằng cùng checkpoint D5-640 và 90 ảnh
 
 D5 custom export ONNX opset11: 90/90 ảnh cùng bbox count, 294 reference boxes ghép đủ IoU≥0,9 giữa PyTorch CUDA FP32 và ORT CPU; đây là conversion parity, chưa TensorRT accuracy (E08). DQK bổ sung F20/F21 từ bằng chứng Nano đã có; G2/Stage A chưa đạt và không làm edge mới trước giữa kỳ theo plan sau PR #98. KR/DQK bổ sung XFeat/DINOv2 và F12, không dùng timing để suy ra accuracy cửa.
 
-Ngày 05/11 DQK báo camera JetBot hỏng; ghi D3/D5 mới và các phép đo video robot bị chặn. Sau sửa cần đo lại pose/height; thay module phải hiệu chuẩn fisheye mới và giữ đúng calibration cho từng session cũ/mới. F7 raw latency, F11 map truth, F14 gallery và T2 còn chờ. Nếu không đủ evidence trước 16/11, ghi chưa đo và dùng simulation/replay có nhãn nguồn; không hạ tiêu chí. Full draft nhóm 18/11, nộp 23/11. PR #99 chưa merge tại snapshot này, không phải bằng chứng pursuit đạt nghiệm thu.
+Camera JetBot hỏng rồi được DQK báo đã sửa socket gốc ngày 05/11; stream hoạt động lại khoảng 18,6 FPS, không thay module (R01–R04). HNHL chưa kiểm tra robot hoặc raw log sửa chữa. Trước thu D3/D5 cần kiểm tra stream, độ bền socket/cáp và đo lại self-pose/height vì mount có thể đã đổi; không mặc định data mới dùng pose cũ. Việc khôi phục stream chưa cung cấp reviewed D3, gallery ≥5 người, map truth hay nghiệm thu T1/T2. PR #99 chưa sửa bốn finding và chưa merge tại snapshot 06/11; #100 đang chờ DQK review. Nếu thiếu evidence trước 16/11 thì ghi chưa đo, dùng simulation/replay có nhãn nguồn, không hạ tiêu chí. Full draft 18/11, nộp 23/11. [Cập nhật camera và D3 handoff 06/11](update-2026-11-06.md).
 
 [Dòng Chương 7](chapter-07-rows.md), [appendix code](code-appendix.md), [checklist dữ liệu và bàn giao](update-checklist.md).

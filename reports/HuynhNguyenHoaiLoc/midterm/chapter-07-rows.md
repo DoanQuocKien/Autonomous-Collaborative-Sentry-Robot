@@ -1,5 +1,7 @@
 # Kết quả HNHL để ghép Chương 7
 
+**Trạng thái 06/11:** DQK báo camera sửa socket gốc, stream hoạt động khoảng 18,6 FPS; chưa có raw repair log hoặc HNHL HIL để xác minh. Camera mất stream đã được báo khắc phục, nhưng self-pose/height phải kiểm tra lại trước run được tính. Không dùng phép kiểm tra stream này làm F7 latency, D3 tracking hoặc T2 PASS. Adapter recording→D3 manifests đã qua T0, chưa có reviewed D3 mới. [Nguồn và cập nhật hiện hành](update-2026-11-06.md).
+
 **Bổ sung mới nhất 05/11:** [F18 và trạng thái sau PR #98](update-2026-11-05.md). Dòng mới để ghép: native PyTorch FP32/FP16 D5-640 trên RTX5060 đạt 123,59/107,38 FPS, p95 12,01/16,35 ms, Torch peak allocated 32,41/17,53 MiB; mAP50 81,071%/81,072% trên cùng 90 ảnh dev-val. FP16 chưa tăng tốc; chưa TensorRT/independent T1. Camera JetBot hỏng: các thử nghiệm cần video bị chặn. G2 chưa đạt, không làm Stage A/B mới trước giữa kỳ. Các kết quả lịch sử dưới đây giữ nguyên.
 
 Snapshot 01/11/2026. Mã E01–E12 tra tại [evidence.md](evidence.md). “Đã đo” mô tả bằng chứng, không mặc định đồng nghĩa đạt nghiệm thu. KR có thể rút gọn các dòng này trong ngân sách chung 1,5 trang của Chương 7.

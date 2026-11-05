@@ -153,7 +153,7 @@ def write_markdown(m):
     (OUT/'update-2026-11-05.md').write_text('\n'.join(lines), encoding='utf-8')
 
 
-def write_current_chapter(m):
+def current_chapter_text(m):
     """One current contribution for the editor; the reviewed Word stays frozen."""
     old = collect()[2]
     d, face, rows = old['distance'], old['face'], m['f18']['results']
@@ -178,7 +178,11 @@ def write_current_chapter(m):
         'D5 custom export ONNX opset11: 90/90 ảnh cùng bbox count, 294 reference boxes ghép đủ IoU≥0,9 giữa PyTorch CUDA FP32 và ORT CPU; đây là conversion parity, chưa TensorRT accuracy (E08). DQK bổ sung F20/F21 từ bằng chứng Nano đã có; G2/Stage A chưa đạt và không làm edge mới trước giữa kỳ theo plan sau PR #98. KR/DQK bổ sung XFeat/DINOv2 và F12, không dùng timing để suy ra accuracy cửa.', '',
         'Ngày 05/11 DQK báo camera JetBot hỏng; ghi D3/D5 mới và các phép đo video robot bị chặn. Sau sửa cần đo lại pose/height; thay module phải hiệu chuẩn fisheye mới và giữ đúng calibration cho từng session cũ/mới. F7 raw latency, F11 map truth, F14 gallery và T2 còn chờ. Nếu không đủ evidence trước 16/11, ghi chưa đo và dùng simulation/replay có nhãn nguồn; không hạ tiêu chí. Full draft nhóm 18/11, nộp 23/11. PR #99 chưa merge tại snapshot này, không phải bằng chứng pursuit đạt nghiệm thu.', '',
         '[Dòng Chương 7](chapter-07-rows.md), [appendix code](code-appendix.md), [checklist dữ liệu và bàn giao](update-checklist.md).', '']
-    (OUT/'chapter-05-current.md').write_text('\n'.join(lines), encoding='utf-8')
+    return '\n'.join(lines)
+
+
+def write_current_chapter(m):
+    (OUT/'chapter-05-current.md').write_text(current_chapter_text(m), encoding='utf-8')
 
 
 def main():

@@ -1,5 +1,7 @@
 # Hồ sơ giữa kỳ HNHL
 
+**Mới nhất 06/11:** [camera đã sửa và chuẩn bị D3](update-2026-11-06.md). DQK báo sửa socket gốc, stream hoạt động; cần recheck và đo lại camera pose/height trước run được tính. Chưa có D3/gallery/independent D5 hoặc T1/T2 mới. Commit sửa camera ở nhánh #98 cũ đã tích hợp vào PR #100 để DQK review. Bản Chương 5 hiện hành dưới đây đã cập nhật trạng thái này; ghi chú camera-blocked ngày 05/11 là snapshot lịch sử.
+
 **Mới nhất 05/11:** [addendum sau PR #98 và F18 đo thật](update-2026-11-05.md) cập nhật camera JetBot đang hỏng, G2 chưa đạt và lịch dự phòng. F18 so native PyTorch CUDA FP32/FP16 trên cùng 90 ảnh D5 development: FP16 giảm allocator nhưng chưa tăng tốc. PR #99 chưa merge; T1 D3/re-ID/independent D5 và T2 vẫn chờ. Editor ưu tiên trạng thái ở addendum này khi ghép; các snapshot cũ giữ để truy vết.
 
 Snapshot **01/11/2026**, dựa trên code/evidence hiện có. Hồ sơ này là phần HNHL để KR tổng hợp; không phải báo cáo cuối của toàn nhóm. Báo cáo nhóm 10–15 trang, nộp 23/11; thí nghiệm/hình chốt 16/11, full draft 18/11. Chương 5 có ngân sách chung khoảng 3,5 trang với đóng góp KR/DQK.
@@ -10,7 +12,7 @@ Snapshot **01/11/2026**, dựa trên code/evidence hiện có. Hồ sơ này là
 
 ## Tài liệu để ghép báo cáo
 
-- [Chương 5 hiện hành, Markdown 05/11](chapter-05-current.md): hợp nhất phương pháp, kết quả cũ và F18 mới, camera-blocked/giới hạn; dùng bản này để ghép nội dung hiện hành.
+- [Chương 5 hiện hành, Markdown 06/11](chapter-05-current.md): hợp nhất phương pháp, F18 và trạng thái camera repaired có điều kiện; dùng bản này để ghép nội dung hiện hành.
 - [Chương 5 dạng Word](HNHL-Chuong-5.docx): bản ngắn, có F9/F10/F13 và nguồn E01–E12, chỉnh sửa được.
 - [Chương 5 dạng Markdown](chapter-05.md): cùng nội dung, dễ review trong Git.
 - [Các dòng kết quả cho Chương 7](chapter-07-rows.md): có trạng thái và giới hạn nghiệm thu.
@@ -47,6 +49,7 @@ Không tự xác nhận timesheet, số liệu đối tác hay tag nộp bài. H
 .venv/Scripts/python.exe -m tools.build_midterm_hnhl
 .venv/Scripts/python.exe -m tools.build_midterm_hnhl_update
 .venv/Scripts/python.exe -m tools.build_midterm_hnhl_followup
+.venv/Scripts/python.exe -m tools.build_midterm_hnhl_recovery
 .venv/Scripts/python.exe -m tools.check_midterm_hnhl --out reports/HuynhNguyenHoaiLoc/midterm/update-verification.json
 # Dùng document-authoring runtime có python-docx, không dùng Python robot:
 <document-python> tools/export_midterm_hnhl_doc.py

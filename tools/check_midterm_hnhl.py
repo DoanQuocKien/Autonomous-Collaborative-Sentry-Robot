@@ -82,6 +82,20 @@ def check():
         assert latest['acceptance']['independent_d5_t1'] is False
         assert latest['acceptance']['g2_passed'] is False
         assert latest['f18']['tensorrt_measured'] is False
+    recovery_path = OUT/'update-2026-11-06.json'
+    recovery_sources = 0
+    if recovery_path.exists():
+        from tools.build_midterm_hnhl_recovery import collect_recovery, recovery_chapter_text
+        recovery = read_json(recovery_path)
+        assert recovery == collect_recovery(), '06/11 addendum drift; review sources'
+        for source in recovery['evidence'].values():
+            assert hashlib.sha256(source_bytes(source)).hexdigest() == source['sha256'], 'recovery source drift'
+            recovery_sources += 1
+        assert recovery['camera']['video_restored_reported'] is True
+        assert recovery['camera']['hn_hl_hardware_verified'] is False
+        assert recovery['d3_preparation']['reviewed_labels'] is False
+        assert recovery['acceptance']['new_t1_or_t2_pass'] is False
+        assert (OUT/'chapter-05-current.md').read_text(encoding='utf-8') == recovery_chapter_text(), 'current chapter drift'
     word = OUT/'HNHL-Chuong-5.docx'
     verification = read_json(OUT/'verification.json')
     word_sha = hashlib.sha256(word.read_bytes()).hexdigest()
@@ -117,9 +131,10 @@ def check():
             target = path.parent/unquote(url.split('#')[0])
             assert target.exists(), f'broken link: {path}: {url}'
             count += 1
-    return dict(checked_snapshot_date='2026-11-05' if latest_path.exists() else '2026-11-03', evidence_sources_checked=len(update['evidence']),
+    return dict(checked_snapshot_date='2026-11-06' if recovery_path.exists() else ('2026-11-05' if latest_path.exists() else '2026-11-03'), evidence_sources_checked=len(update['evidence']),
                 postmerge_sources_checked=followup_sources,
                 latest_sources_checked=latest_sources,
+                recovery_sources_checked=recovery_sources,
                 source_hashes_match=True, both_saved_snapshots_match=True,
                 missing_acceptance_preserved=True, local_links_checked=count,
                 original_word_sha256=word_sha, original_word_visual_review_preserved=True,
