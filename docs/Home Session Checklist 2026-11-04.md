@@ -1,5 +1,7 @@
 # Home session, Wed 2026-11-04 (not the classroom)
 
+> **BLOCKED (2026-11-05): the robot's camera is broken** (flat-cable socket torn off the camera board, see the plan's Week 5 status and the return checklist in `docs/JetBot Notes.md`). Nothing in this document that needs the robot's video can run until it is repaired; laptop-only items still can. Decision dates are in the plan.
+
 Rule: **the robot is on an unknown floor and room.** Everything measured here is labelled with the room and floor (matte or glossy, tile or carpet) and is NOT classroom evidence. The classroom list is `docs/Classroom Tasks Week 6.md`. Graded items first, optional ones last; do the maths afterwards, not during the session.
 
 Words: **Pass** = the stated criterion met as measured. **Record** = typed into the run's summary or the session README at the time. A logged pose is not a result: ask what the tape says.
