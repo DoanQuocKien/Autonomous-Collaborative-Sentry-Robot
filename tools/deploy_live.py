@@ -38,7 +38,7 @@ from sentry.nav.explore import ExploreSettings, Explorer, fresh_command
 from sentry.nav.wheel_model import WheelModel
 
 ESTOP_LATCH = "/home/jetbot/sentry/ESTOP"
-MIN_BATTERY_V = 11.3
+MIN_BATTERY_V = 11.4        # graded runs: the speed model is fitted at 11.28-11.70 V and the 2026-10-30 blind runs were all at 11.28-11.36 V
 ESP_FRESH_S = 1.0           # a handshake result older than this counts as "not in view"
 LINK_STALE_S = 0.5          # no robot frame for this long: stop
 LINK_GRACE_S = 1.0          # extra time for the first frame after the threads start
@@ -113,31 +113,7 @@ def fresh_flag(feed, now, max_age=ESP_FRESH_S):
     """feed: dict with in_view and t (when the detector last answered), or None -> True only for a fresh in-view answer."""
     return bool(feed and feed.get("t") is not None and now - feed["t"] <= max_age and feed.get("in_view"))
 
-
-def servo_motion(log, model):
-    """Measured motion from the followed board: log = [(t, range_m, bearing_rad, cmd_v, cmd_w)] (one row per sighting, the command in force then).
-    -> dict(speed_ratio, turn_ratio_left, turn_ratio_right) = measured / the model's prediction (None when there was no such motion in view); drives: range change over time while v > 0 and the steering is small;
-    spins: bearing change over time while the command is a spin (the board's bearing moves opposite to the robot's turn)."""
-    import numpy as np
-    out = dict(speed_ratio=None, turn_ratio_left=None, turn_ratio_right=None)
-    drive = [r for r in log if r[3] > 0 and abs(r[4]) < FIX_MAX_W]
-    if len(drive) >= 5 and drive[-1][0] - drive[0][0] >= 1.0:
-        slope = np.polyfit([r[0] for r in drive], [r[1] for r in drive], 1)[0]        # m/s, negative when closing in
-        pred = np.mean([model.body_speeds(r[3], r[4])[0] for r in drive])
-        out["speed_ratio"] = round(float(-slope / pred), 3) if pred > 0 else None
-    for name, sign in (("turn_ratio_left", 1), ("turn_ratio_right", -1)):
-        num = den = pred = 0.0
-        for r0, r1 in zip(log, log[1:]):
-            if r0[3] == 0 and r1[3] == 0 and r0[4] * sign > 0.3 and r1[4] * sign > 0.3 and 0 < r1[0] - r0[0] < 0.3:
-                num += -(r1[2] - r0[2])
-                den += r1[0] - r0[0]
-                pred += model.body_speeds(0.0, r0[4])[1] * (r1[0] - r0[0])
-        if den >= 0.15 and pred:
-            out[name] = round(num / pred, 3)
-    return out
-
-
-SPIN_PULSE_S, SPIN_PAUSE_S, FIX_STILL_S, FIX_MAX_W = 0.2, 0.5, 0.4, 0.15
+SPIN_PULSE_S, SPIN_PAUSE_S, FIX_STILL_S, FIX_MAX_W = 0.2, 0.5, 0.4, 0.15     # a spin goes in 0.2 s pulses with 0.5 s pauses when marker fixes are on; a fix needs the robot still for 0.4 s; steering below 0.15 counts as straight
 
 
 def blend_fix(pose, fix, gain):
@@ -154,6 +130,7 @@ def control_loop(runner, model, cmd, end, get_flag, get_link, seconds, clock=tim
     fix_seen, last_moving, spin_start, pause_until, end["fixes"] = 0, clock(), None, 0.0, 0     # get_fix(): (n, x, y, yaw, distance) of the newest marker pose or None
     t0 = last = clock()
     runner.start(0.0, 0.0)
+    last_state = None
     while end["reason"] is None:
         now = clock()
         t = now - t0
@@ -213,8 +190,13 @@ def control_loop(runner, model, cmd, end, get_flag, get_link, seconds, clock=tim
         prev = (v, w)
         cmd.update(v=v, w=w, t=now)
         rows.append((round(t, 3), round(x, 3), round(y, 3), round(yaw, 3), v, round(w, 3), runner.sm.state.value, int(flag)))
+        if runner.sm.state != last_state:
+            last_state = runner.sm.state
+            if last_state == State.WAIT_CAMERA:
+                print("PLACE THE ESP32 and keep HOLDING R1 until the 2 beeps (at least 10 s): verification takes 1-2 s after the camera is aimed", flush=True)
         if runner.sm.state == State.STANDBY:
             end["reason"] = "STANDBY reached"
+            print("STANDBY: release R1 now", flush=True)
             break
         if t > seconds:
             end["reason"] = "time limit"
@@ -268,14 +250,23 @@ def main():
     ap.add_argument("--fix-range", type=float, default=1.5, help="boards farther than this give no pose fix (their orientation is too noisy)")
     ap.add_argument("--servo-marker", type=int, default=None, help="approach by following this board (id) in the robot's video: spin in pulses until it is seen, drive at it steering by its bearing, stop at --servo-stop (dead reckoning only until it is first seen)")
     ap.add_argument("--servo-board", type=float, nargs=2, default=None, metavar=("X", "Y"), help="--servo-marker: the board's position in the start frame; on arrival the pose is set to the vantage with the heading toward it (so the turn to face the centre starts from the truth)")
+    ap.add_argument("--servo-margin", type=float, default=0.044, help="--servo-marker: stop the motors this much BEFORE the stop range: the robot coasts 0.043 m (sd 0.014, n = 5, 2026-10-30) after the command goes to zero")
     ap.add_argument("--servo-stop", type=float, default=0.87, help="--servo-marker: stop at this camera-to-board range (m) = the sweet spot's distance to the board")
     ap.add_argument("--min-battery", type=float, default=MIN_BATTERY_V, help="refuse to start below this pack voltage (project rule: 11.1 V is OK, 10.5 V stop; the speed model is calibrated at 11.8-12.2 V)")
     ap.add_argument("--no-save-frames", action="store_true", help="by default every robot video frame of the run is saved (JPEG q80, with its time) in <run>/frames for later analysis; faces may be in them: data/ stays local")
     ap.add_argument("--hs-span", type=float, default=5.0, help="handshake rule: window in seconds (the detector answers at about 1.5-2.2 fps in a live run: 5 s holds 7-11 answers)")
     ap.add_argument("--hs-frames", type=int, default=6, help="handshake rule: at least this many detector answers in the window")
     ap.add_argument("--hs-frac", type=float, default=0.7, help="handshake rule: at least this fraction of them in view (the camera is placed still: a real placement gives a steady majority)")
+    ap.add_argument("--answers", default=None, help="JSON file with the tape answers (keys as in summary.json tape_answers); without it they are asked at the end when a terminal is attached, else add them with tools.tape_answers")
     ap.add_argument("--no-audio", action="store_true", help="do not speak (rehearsal in a quiet room); the prompts are still logged")
     a = ap.parse_args()
+    answers_file = None
+    if a.answers:                                         # validate BEFORE the robot starts: a bad file must not cost a physical trial
+        from tools.tape_answers import load_answers_file
+        try:
+            answers_file = load_answers_file(a.answers)
+        except ValueError as exc:
+            raise SystemExit("ABORT: %s" % exc)
     a.dry_run = a.dry_run or a.no_robot
     if not 10 <= a.seconds <= 300:
         ap.error("seconds in [10, 300]")
@@ -309,6 +300,7 @@ def main():
         s = fixed["servo"]
         return (s[1], s[2]) if s is not None and time.time() - s[0] < 0.6 else None
     servo_tr, servo_log, frames_buf = None, [], []
+    hs_log, frame_log, fix_n = [], [], {"calls": 0, "hits": 0}      # every handshake answer (t, in_view, inliers), every robot frame (t_wall, seq, t_cap), MarkerFix calls and non-None results
     if a.servo_marker is not None:
         from sentry.nav.localization import LocalizationTracker
         servo_tr = LocalizationTracker(motion_calib=None, camera_calib="calib/camera.json", max_marker_distance_m=1e6)
@@ -333,7 +325,7 @@ def main():
             print("entrance detector loaded from %s" % a.entrance, flush=True)
     else:
         runner = DeployRunner(sm, speaker, vantage_xy=a.vantage, centre_xy=a.centre, settings=DeploySettings(),
-                              servo=(lambda t: servo_obs()) if a.servo_marker is not None else None, servo_stop_m=a.servo_stop, servo_board_xy=a.servo_board)
+                              servo=(lambda t: servo_obs()) if a.servo_marker is not None else None, servo_stop_m=a.servo_stop, servo_board_xy=a.servo_board, servo_margin_m=a.servo_margin)
 
     def entrance_feeder():
         """sim: the door counts as in view when the robot faces it (within 0.5 rad); manual: for 0.5 s after the key e. 20 Hz, like the robot's frames."""
@@ -363,6 +355,7 @@ def main():
                 esp.update(in_view=window.in_view(now), t=now, inliers=int(res.inliers), single_frame=bool(res.in_view))
                 esp["frames"] += 1
                 esp["in_view_frames"] += int(res.in_view)
+                hs_log.append((round(now, 3), int(res.in_view), int(res.inliers)))
         except Exception as exc:
             esp["error"] = repr(exc)
 
@@ -424,6 +417,7 @@ def main():
                 if f is None:
                     continue
                 link["t"] = time.time()
+                frame_log.append((round(time.time(), 3), f.seq, f.t_cap))
                 if not a.no_save_frames:
                     ok_, jpg = cv2.imencode(".jpg", f.frame_bgr, [cv2.IMWRITE_JPEG_QUALITY, 80])
                     if ok_:
@@ -436,7 +430,10 @@ def main():
                             break
                 if fixer is not None:
                     try:
-                        fixed["m"] = fixer.measure(f.frame_bgr) or fixed["m"]
+                        fix_n["calls"] += 1
+                        got = fixer.measure(f.frame_bgr)
+                        fix_n["hits"] += got is not None
+                        fixed["m"] = got or fixed["m"]
                     except Exception as exc:
                         end["reason"] = end["reason"] or "marker fix error: %r" % exc
                 if entrance_det is not None:
@@ -515,13 +512,19 @@ def main():
     print("ENDED: %s | %.1f s | DR path %.1f m | final DR pose (%.2f, %.2f, %.0f deg) | prompts %s" % (end["reason"], time.time() - t_wall, path, final[0], final[1], math.degrees(final[2]), runner.prompts), flush=True)
 
     answers = {}
-    if not a.dry_run:
+    if answers_file is not None:
+        answers = answers_file
+    elif not a.dry_run and sys.stdin is not None and sys.stdin.isatty():
         for key, q in (("door_distance_m_tape", "Distance from the robot to the entrance door (m, tape): "), ("line_of_sight_clear", "Clear line of sight to the entrance (y/n): "),
-                       ("near_boundary_or_furniture", "Adjacent wall or furniture within 1 m (y/n): "), ("collisions", "Collisions or touches (number): ")):
+                       ("near_boundary_or_furniture", "Adjacent wall or furniture within 1 m (y/n): "), ("furniture_distance_m_tape", "Distance to that wall or furniture (m, tape; blank if none): "),
+                       ("offset_x_forward_m", "Tape offset from the sweet spot along x (forward from the START, m, + ahead): "), ("offset_y_left_m", "Tape offset along y (left of the START, m, + left): "),
+                       ("collisions", "Collisions or touches (number): ")):
             try:
                 answers[key] = input(q).strip()
-            except EOFError:
-                answers[key] = ""
+            except (EOFError, KeyboardInterrupt, OSError):
+                answers[key] = ""          # unanswered: the evidence below is still saved; add them with tools.tape_answers
+    elif not a.dry_run:
+        print("WARNING: the tape answers were NOT captured (no terminal, no --answers file). Add them now: python -m tools.tape_answers <run folder> --offset-x .. --offset-y ..", flush=True)
     out_dir = Path(a.out)
     n = 1 + len(list(out_dir.glob(a.label + "_*"))) if out_dir.exists() else 1
     run_dir = out_dir / ("%s_%d" % (a.label, n))
@@ -544,9 +547,15 @@ def main():
                "dr_error_at_vantage_m": round(math.hypot(vp[0][0] - target[0], vp[0][1] - target[1]), 3) if vp and target else None,
                "state_changes": runner.log, "events": [(round(t, 2), name) for t, name, _ in runner.events], "prompts": runner.prompts,
                "handshake": {"mode": a.handshake, "rule": {"span_s": a.hs_span, "min_frames": a.hs_frames, "fraction": a.hs_frac}, "frames": esp["frames"], "in_view_frames": esp["in_view_frames"], "last_inliers": esp["inliers"], "error": esp.get("error")},
-               "marker_fixes": end.get("fixes"), "servo_motion": servo_motion(servo_log, model) if servo_log else None, "servo_sightings": len(servo_log), "anchors": a.anchors, "dr_path_m": round(path, 2), "dr_final_pose": [round(v, 3) for v in final], "battery_v_start": volts0, "battery_v_end": volts1,
+               "marker_fixes": end.get("fixes"), "marker_fix_calls": fix_n["calls"], "marker_fix_results": fix_n["hits"], "servo_sightings": len(servo_log), "anchors": a.anchors, "dr_path_m": round(path, 2), "dr_final_pose": [round(v, 3) for v in final], "battery_v_start": volts0, "battery_v_end": volts1,
                "camera_pose_file": a.camera_pose, "obstacle_check": bool(a.camera_pose), "tape_answers": answers, "date": time.strftime("%Y-%m-%d %H:%M")}
     (run_dir / "summary.json").write_text(json.dumps(summary, indent=1))
+    for name, head, data in (("handshake.csv", ("t", "in_view", "inliers"), hs_log), ("frames.csv", ("t_wall", "seq", "t_cap"), frame_log)):
+        if data:
+            with open(run_dir / name, "w", newline="") as fh:
+                w_ = csv.writer(fh)
+                w_.writerow(head)
+                w_.writerows(data)
     if frames_buf:
         (run_dir / "frames").mkdir(exist_ok=True)
         for t_, jpg in frames_buf:
@@ -557,7 +566,6 @@ def main():
             w_ = csv.writer(fh)
             w_.writerow(["t", "range_m", "bearing_rad", "cmd_v", "cmd_w"])
             w_.writerows([tuple(round(v, 4) for v in r) for r in servo_log])
-        print("measured from the board (%d sightings; ratio = measured / model): %s" % (len(servo_log), summary["servo_motion"]), flush=True)
     print("saved", run_dir)
 
 

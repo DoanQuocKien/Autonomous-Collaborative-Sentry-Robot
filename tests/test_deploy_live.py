@@ -14,15 +14,15 @@ class Speaker:
         return True
 
 
-def loop(get_flag=lambda now: False, get_link=lambda now: None, seconds=100.0, key=lambda: None, cfg=None):
+def loop(get_flag=lambda now: False, get_link=lambda now: None, seconds=100.0, key=lambda: None, cfg=None, get_fix=None, vantage=(1.2, 0.6)):
     clock_t = {"t": 0.0}
     sp = Speaker()
-    runner = DeployRunner(StateMachine(cfg or StateMachineConfig()), sp, vantage_xy=(1.2, 0.6), centre_xy=(3.0, 0.0))
+    runner = DeployRunner(StateMachine(cfg or StateMachineConfig()), sp, vantage_xy=vantage, centre_xy=(3.0, 0.0))
     cmd, end = {"v": 0.0, "w": 0.0, "t": 0.0}, {"reason": None}
 
     def sleep(d):
         clock_t["t"] += d
-    rows, pose, path = control_loop(runner, WheelModel(), cmd, end, lambda now: get_flag(now), get_link, seconds, clock=lambda: clock_t["t"], sleep=sleep, key=key)
+    rows, pose, path = control_loop(runner, WheelModel(), cmd, end, lambda now: get_flag(now), get_link, seconds, clock=lambda: clock_t["t"], sleep=sleep, key=key, get_fix=get_fix)
     return rows, end, runner, sp, cmd, path
 
 
@@ -136,13 +136,33 @@ def test_marker_fixes_pull_the_pose_and_spins_go_in_pulses():
     assert abs(x - 0.5) < 1e-9 and abs(math.degrees(yaw) - 180.0) < 1e-6                  # the short way round the circle, not through 0
 
 
-def test_servo_motion_recovers_a_slow_drive_and_an_uneven_turn_from_the_board_sightings():
-    from sentry.nav.wheel_model import WheelModel
-    from tools.deploy_live import servo_motion
-    m = WheelModel()
-    v_m = m.body_speeds(0.55, 0.0)[0]
-    log = [(0.05 * i, 3.0 - 0.8 * v_m * 0.05 * i, 0.0, 0.55, 0.0) for i in range(60)]                  # the robot closes at 0.8 of the model's speed
-    w_r = m.body_speeds(0.0, 0.45)[1]
-    log += [(10 + 0.05 * i, 1.0, 0.0 - 1.2 * w_r * 0.05 * i, 0.0, 0.45) for i in range(10)]            # a left spin at 1.2 of the model: the board's bearing goes negative
-    out = servo_motion(log, m)
-    assert abs(out["speed_ratio"] - 0.8) < 0.02 and abs(out["turn_ratio_left"] - 1.2) < 0.02 and out["turn_ratio_right"] is None
+def test_stop_margin_stops_the_motors_before_the_stop_range_and_the_arrival_pose_is_the_sweet_spot():
+    import math
+    from sentry.app.deploy_runner import DeployRunner
+    from sentry.app.state_machine import StateMachine, StateMachineConfig
+    r = DeployRunner(StateMachine(StateMachineConfig()), None, vantage_xy=(0.0, -1.8), centre_xy=(-2.0, -1.8), servo=lambda t: (0.90, 0.0), servo_stop_m=0.87, servo_board_xy=(0.0, -2.67), servo_margin_m=0.044)
+    r.start(0.0, 0.0)
+    assert r.step(0.1, (0.0, 0.0, 0.0)) == (0.0, 0.0)              # 0.90 m <= 0.87 + 0.044: stopped already (it coasts to about 0.86 m)
+    assert r.pose_reset is not None and abs(r.pose_reset[0]) < 1e-9 and abs(r.pose_reset[1] + 1.8) < 1e-9
+
+
+def test_the_control_loop_runs_with_marker_fixes_on_and_spins_in_pulses():
+    """Regression (found by HNHL's review of #98): removing servo_motion had removed the loop's constants, so every run with get_fix raised NameError."""
+    rows, end, runner, sp, cmd, path = loop(seconds=3.0, get_fix=lambda: None, vantage=(0.0, 2.0))      # the goal is 90 deg to the left: the robot spins first
+    spin = [r[5] for r in rows if r[0] < 2.9]
+    assert end["reason"] == "time limit" and any(w > 0.3 for w in spin) and any(w == 0.0 for w in spin)      # pulses with pauses
+    assert end["fixes"] == 0
+
+
+def test_a_missing_or_malformed_answers_file_aborts_before_any_hardware(monkeypatch, tmp_path):
+    import sys
+    import pytest
+    from tools import deploy_live
+    for name, content in (("missing.json", None), ("bad.json", "{not json"), ("list.json", "[1]")):
+        f = tmp_path / name
+        if content is not None:
+            f.write_text(content)
+        monkeypatch.setattr(sys, "argv", ["deploy_live", "--centre", "0", "0", "--no-robot", "--answers", str(f)])
+        with pytest.raises(SystemExit) as e:
+            deploy_live.main()
+        assert str(e.value).startswith("ABORT:")
