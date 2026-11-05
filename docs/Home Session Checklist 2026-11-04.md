@@ -1,6 +1,6 @@
 # Home session, Wed 2026-11-04 (not the classroom)
 
-> **BLOCKED (2026-11-05): the robot's camera is broken** (flat-cable socket torn off the camera board, see the plan's Week 5 status and the return checklist in `docs/JetBot Notes.md`). Nothing in this document that needs the robot's video can run until it is repaired; laptop-only items still can. Decision dates are in the plan.
+> **Camera repaired (2026-11-05):** the robot's camera socket was resoldered and the video stream works again (about 18.6 fps). Re-run `tools.self_pose` before any run that counts (the mount may have moved). Details in the plan's Week 5 status and `docs/JetBot Notes.md`.
 
 Rule: **the robot is on an unknown floor and room.** Everything measured here is labelled with the room and floor (matte or glossy, tile or carpet) and is NOT classroom evidence. The classroom list is `docs/Classroom Tasks Week 6.md`. Graded items first, optional ones last; do the maths afterwards, not during the session.
 

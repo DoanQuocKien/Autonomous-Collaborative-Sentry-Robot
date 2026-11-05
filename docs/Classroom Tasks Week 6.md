@@ -1,6 +1,6 @@
 # Tasks that need the classroom, to finish in Week 6 (Nov 9-15)
 
-> **BLOCKED (2026-11-05): the robot's camera is broken** (flat-cable socket torn off the camera board, see the plan's Week 5 status and the return checklist in `docs/JetBot Notes.md`). Nothing in this document that needs the robot's video can run until it is repaired; laptop-only items still can. Decision dates are in the plan.
+> **Camera repaired (2026-11-05):** the robot's camera socket was resoldered and the video stream works again (about 18.6 fps). Re-run `tools.self_pose` before any run that counts (the mount may have moved). Details in the plan's Week 5 status and `docs/JetBot Notes.md`.
 
 Sessions: **Mon Nov 9** (G2 day; the Week 5 session) and **Mon Nov 16** (pick-up; figures frozen). Everything here depends on the classroom's door, floor, boards or network. Home work is in `docs/Home Session Checklist 2026-11-04.md`. Rule of the day: graded runs first with the answers captured at run time; measurements for the maths second; the maths at home. Detailed run protocol and commands: `reports/DoanQuocKien/week-04/classroom_1030/analysis/next_session_1109.md` (part B).
 
