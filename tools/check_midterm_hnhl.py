@@ -7,6 +7,7 @@ import hashlib
 import json
 from pathlib import Path
 import re
+import subprocess
 from urllib.parse import unquote
 from zipfile import ZipFile
 import xml.etree.ElementTree as ET
@@ -18,6 +19,17 @@ from tools.export_midterm_hnhl_doc import blocks
 
 def read_json(path):
     return json.loads(path.read_text(encoding='utf-8'))
+
+
+def source_bytes(source):
+    """Historical mutable plans are checked at their explicit full Git commit."""
+    commit = source.get('git_commit')
+    if commit is None:
+        return evidence_bytes(ROOT/source['path'])
+    if not re.fullmatch(r'[0-9a-f]{40}', commit):
+        raise ValueError('source git_commit must be a full SHA')
+    return subprocess.run(['git', 'show', commit + ':' + source['path']], cwd=ROOT,
+                          capture_output=True, check=True).stdout.replace(b'\r\n', b'\n')
 
 
 def check():
@@ -49,12 +61,27 @@ def check():
         assert not followup['validation']['new_t1_accuracy']
         assert not followup['validation']['robot_trials']
         for source in followup['sources'].values():
-            assert hashlib.sha256(evidence_bytes(ROOT/source['path'])).hexdigest() == source['sha256'], 'post-merge source drift'
+            assert hashlib.sha256(source_bytes(source)).hexdigest() == source['sha256'], 'post-merge source drift'
             followup_sources += 1
         log = (ROOT/followup['validation']['log']).read_text(encoding='utf-8-sig')
         assert re.search(r'26 passed', log), 'targeted test log differs'
     for source in update['evidence'].values():
         assert hashlib.sha256(evidence_bytes(ROOT/source['path'])).hexdigest() == source['sha256']
+    latest_path = OUT/'update-2026-11-05.json'
+    latest_sources = 0
+    if latest_path.exists():
+        from tools.build_midterm_hnhl_followup import collect_followup
+        latest = read_json(latest_path)
+        assert latest == collect_followup(), '05/11 addendum drift; review sources before rebuilding'
+        for source in latest['evidence'].values():
+            assert hashlib.sha256(source_bytes(source)).hexdigest() == source['sha256'], 'latest source drift'
+            latest_sources += 1
+        assert latest['camera']['robot_video_available'] is False
+        assert latest['acceptance']['d3_id_switches_per_minute'] is None
+        assert latest['acceptance']['reid_rank1'] is None
+        assert latest['acceptance']['independent_d5_t1'] is False
+        assert latest['acceptance']['g2_passed'] is False
+        assert latest['f18']['tensorrt_measured'] is False
     word = OUT/'HNHL-Chuong-5.docx'
     verification = read_json(OUT/'verification.json')
     word_sha = hashlib.sha256(word.read_bytes()).hexdigest()
@@ -81,7 +108,8 @@ def check():
     assert len(doc.findall('.//wp:inline', ns)) == 3
     assert len(doc.findall('.//w:tbl', ns)) == 2
     count = 0
-    docs = list(OUT.glob('*.md')) + [OUT.parent/'week-05.md', OUT.parent/'midterm-chapter-05.md']
+    docs = (list(OUT.glob('*.md')) + list((OUT.parent/'week-06').glob('*.md'))
+            + [OUT.parent/'week-05.md', OUT.parent/'midterm-chapter-05.md'])
     for path in docs:
         for url in re.findall(r'!?\[[^\]]*\]\(([^)]+)\)', path.read_text(encoding='utf-8')):
             if '://' in url or url.startswith('#'):
@@ -89,15 +117,17 @@ def check():
             target = path.parent/unquote(url.split('#')[0])
             assert target.exists(), f'broken link: {path}: {url}'
             count += 1
-    return dict(checked_date='2026-11-03', evidence_sources_checked=len(update['evidence']),
+    return dict(checked_snapshot_date='2026-11-05' if latest_path.exists() else '2026-11-03', evidence_sources_checked=len(update['evidence']),
                 postmerge_sources_checked=followup_sources,
+                latest_sources_checked=latest_sources,
                 source_hashes_match=True, both_saved_snapshots_match=True,
                 missing_acceptance_preserved=True, local_links_checked=count,
                 original_word_sha256=word_sha, original_word_visual_review_preserved=True,
                 word_markdown_paragraphs_checked=paragraph_count,
                 additional_figure_sha256=hashlib.sha256((OUT/'figures/F9_single_models.png').read_bytes()).hexdigest(),
+                latest_figure_sha256=hashlib.sha256((OUT/'figures/F18_d5_precision.png').read_bytes()).hexdigest() if latest_path.exists() else None,
                 figure_visual_review_not_automated=True,
-                inference_rerun=False, application_tests_rerun=False)
+                checker_executes_inference=False, checker_executes_application_tests=False)
 
 
 def main():

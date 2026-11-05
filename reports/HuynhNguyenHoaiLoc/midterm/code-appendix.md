@@ -12,6 +12,8 @@
 | `sentry/perception/tracker.py` | ByteTrack + appearance lock/re-lock, epoch reset | `tests/test_tracker.py`, `test_tracker_gpu.py` |
 | `tools/track_live.py`, `track_replay.py`, `evaluate_tracking.py` | Receive-only video/replay và D3 metrics | E04; evaluator synthetic tests, real D3 còn chờ |
 | `tools/profile_pipeline.py` | Resident model workload, NVML memory và actual door Hz | E05–E07, profiler unit tests |
+| `tools/compare_d5_precision.py` | FP32/FP16 CUDA process riêng, accuracy cùng nhãn, dtype checks; giữ dataset gốc | F18/N05, test input/timing guards; chưa TensorRT/HIL |
+| `tools/build_midterm_hnhl_followup.py` | Addendum 05/11, F18 và nguồn plan theo commit | N01–N11; checker xác minh hashes, snapshot và nghiệm thu còn thiếu |
 | `tools/train_d5.py`, `freeze_d5.py`, `check_d5_onnx.py` | Train/export/freeze/parity development candidate | E02/E08; artifacts local |
 | `tools/build_midterm_hnhl.py`, `export_midterm_hnhl_doc.py` | Tạo lại hình, evidence snapshot và Chương5 | Kiểm tra source hashes, số liệu và render Word |
 | `tools/build_midterm_hnhl_update.py`, `check_midterm_hnhl.py` | Phụ lục 03/11, F9 single-model và kiểm tra metadata/links/Word hash | Không inference; giữ các nghiệm thu còn thiếu ở trạng thái chưa đo |

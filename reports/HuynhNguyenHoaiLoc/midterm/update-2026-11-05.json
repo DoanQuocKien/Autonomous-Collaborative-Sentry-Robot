@@ -1,0 +1,297 @@
+{
+  "snapshot_date": "2026-11-05",
+  "timezone": "Asia/Bangkok",
+  "base_main_sha": "4c041b647529153debd4679f5669905206c3aea6",
+  "evidence": {
+    "N01": {
+      "path": "docs/Implementation Plan.md",
+      "sha256": "834420fc8d39ee877911f4f52f2f4dd8f32a3395f24de72df9ca2973de725408",
+      "git_commit": "4c041b647529153debd4679f5669905206c3aea6"
+    },
+    "N02": {
+      "path": "docs/Home Session Checklist 2026-11-04.md",
+      "sha256": "28c1cec185f6b568050ccd25c9bc0423b79905df74af886fce1e9c00c1905ec9",
+      "git_commit": "4c041b647529153debd4679f5669905206c3aea6"
+    },
+    "N03": {
+      "path": "docs/Classroom Tasks Week 6.md",
+      "sha256": "9361f863b9efdff2b800ceba89b9d8bab21e188315de6f42e43e872e4d36092d",
+      "git_commit": "4c041b647529153debd4679f5669905206c3aea6"
+    },
+    "N04": {
+      "path": "docs/JetBot Notes.md",
+      "sha256": "09a9e673a3316a8e9d18cd0e957aa8be2bd33db8ae365001ebf08c891b937ead",
+      "git_commit": "4c041b647529153debd4679f5669905206c3aea6"
+    },
+    "N05": {
+      "path": "reports/HuynhNguyenHoaiLoc/week-06/d5_precision_2026-11-05.json",
+      "sha256": "e4a3cade18853730b5cb60a790ebd4ff445bb458678ec6da13734e25307296dd"
+    },
+    "N06": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/github-2026-11-05.json",
+      "sha256": "cc647f2034a6011a1845cb2d81fa0118829f513e98e24ea4656c700083fa0b72"
+    },
+    "N07": {
+      "path": "tools/compare_d5_precision.py",
+      "sha256": "30b2d24f705a9ffe76cac89c38a78533ebb8bfba6e18ffbae4d684fe4067014b"
+    },
+    "N08": {
+      "path": "reports/HuynhNguyenHoaiLoc/reviews/PR-98-2026-11-05.md",
+      "sha256": "7f4b532527781a148c6ed40e69f6a9213f073622cd9464ddec4898dd79d43739"
+    },
+    "N09": {
+      "path": "reports/HuynhNguyenHoaiLoc/reviews/PR-99-2026-11-05.md",
+      "sha256": "3bed4c2f4a396f138d3ddc2a77e4356c4e24d1d64dc686b179c21074e0440802"
+    },
+    "N10": {
+      "path": "reports/HuynhNguyenHoaiLoc/week-06/tests_cpu_2026-11-05.log",
+      "sha256": "f6493524e4d82ceb78035c7792ef2c39afc3e0d75611b68f970faf3b5902022b"
+    },
+    "N11": {
+      "path": "reports/HuynhNguyenHoaiLoc/week-04/d5_corrected_validation.json",
+      "sha256": "c094f15ef2db9d21ed89d626d38fc7cf21c3afea70ff85d81263369b5cdcd828"
+    }
+  },
+  "evidence_hash_policy": "SHA256 after CRLF to LF; historical plans use explicit git_commit",
+  "github": {
+    "checked_date": "2026-11-05",
+    "timezone": "Asia/Bangkok",
+    "pull_requests": [
+      {
+        "number": 98,
+        "url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/pull/98",
+        "state": "closed",
+        "merged": true,
+        "head_sha": "24f5a0490aabbae6c23dacdfb05c21c30e499de2",
+        "merge_commit_sha": "4c041b647529153debd4679f5669905206c3aea6",
+        "merged_at": "2026-11-05T07:21:14Z"
+      },
+      {
+        "number": 99,
+        "url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/pull/99",
+        "state": "open",
+        "merged": false,
+        "head_sha": "87a4a4ad6020fe974306781d5f735c82e9d67652",
+        "merge_commit_sha": "2f82d1572bddf9e94d9c293981f22d5dbab08ed6",
+        "merged_at": null
+      }
+    ]
+  },
+  "camera": {
+    "robot_video_available": false,
+    "incident_date": "2026-11-05",
+    "source": "N01/N04",
+    "repair_verified": false,
+    "new_camera_calibration_required_if_replaced": true
+  },
+  "f18": {
+    "protocol": {
+      "imgsz": 640,
+      "batch": 1,
+      "rect": false,
+      "warmup": 10,
+      "repeats": 3,
+      "order": [
+        32,
+        16
+      ],
+      "seed": 532,
+      "tf32": false,
+      "power_source": "unspecified",
+      "predict_conf": 0.25,
+      "accuracy_conf": 0.001,
+      "nms_iou": 0.7,
+      "max_det": 300,
+      "accuracy_operating_point": "Ultralytics P/R at validation best-F1; not a frozen deployment threshold",
+      "latency_scope": "decoded BGR in memory -> predict preprocessing/inference/NMS/results; synchronized wall time, excludes disk IO"
+    },
+    "results": {
+      "32": {
+        "gpu": "NVIDIA GeForce RTX 5060 Laptop GPU",
+        "actual_execution": {
+          "input_dtype": "torch.float32",
+          "parameter_dtype": "torch.float32",
+          "device": "cuda:0"
+        },
+        "latency": {
+          "samples": 270,
+          "fps": 123.59007187858438,
+          "mean_ms": 8.091264814397114,
+          "p50_ms": 7.447500014677644,
+          "p95_ms": 12.009020005643833
+        },
+        "torch_peak_allocated_mib": 32.4111328125,
+        "torch_peak_reserved_mib": 58.0,
+        "nvml_device_used_peak_mib": 433.09765625,
+        "accuracy": {
+          "images": 90,
+          "precision": 0.7575791326907577,
+          "recall": 0.7488425164696102,
+          "map50": 0.8107123989258104,
+          "map50_95": 0.6679644939440915,
+          "classes": {
+            "leg": {
+              "precision": 0.9625650313317122,
+              "recall": 0.96,
+              "map50": 0.954642256902761,
+              "map50_95": 0.639215162261274
+            },
+            "footwear": {
+              "precision": 0.8152897543634067,
+              "recall": 0.8125,
+              "map50": 0.9225531611165484,
+              "map50_95": 0.7368675839740961
+            },
+            "backpack": {
+              "precision": 0.9238426207294733,
+              "recall": 1.0,
+              "map50": 0.995,
+              "map50_95": 0.9949999999999999
+            },
+            "bag": {
+              "precision": 0.7523135807037201,
+              "recall": 0.7727272727272727,
+              "map50": 0.829520476952507,
+              "map50_95": 0.5115971941161599
+            },
+            "wire": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "map50": 0.04365349802603206,
+              "map50_95": 0.005451287125382159
+            },
+            "chair": {
+              "precision": 0.6173019273770134,
+              "recall": 0.9032258064516129,
+              "map50": 0.8248752529540891,
+              "map50_95": 0.747351196796864
+            },
+            "table": {
+              "precision": 1.0,
+              "recall": 0.5422870525779958,
+              "map50": 0.9204545454545454,
+              "map50_95": 0.7209558441558441
+            },
+            "plant": {
+              "precision": 0.9893201470207362,
+              "recall": 1.0,
+              "map50": 0.995,
+              "map50_95": 0.9872776831231113
+            }
+          }
+        }
+      },
+      "16": {
+        "gpu": "NVIDIA GeForce RTX 5060 Laptop GPU",
+        "actual_execution": {
+          "input_dtype": "torch.float16",
+          "parameter_dtype": "torch.float16",
+          "device": "cuda:0"
+        },
+        "latency": {
+          "samples": 270,
+          "fps": 107.3785530488811,
+          "mean_ms": 9.312846668224127,
+          "p50_ms": 8.067599992500618,
+          "p95_ms": 16.34727500932058
+        },
+        "torch_peak_allocated_mib": 17.5341796875,
+        "torch_peak_reserved_mib": 36.0,
+        "nvml_device_used_peak_mib": 411.09765625,
+        "accuracy": {
+          "images": 90,
+          "precision": 0.757718586933505,
+          "recall": 0.7488376458353059,
+          "map50": 0.8107176030580989,
+          "map50_95": 0.6687656256374452,
+          "classes": {
+            "leg": {
+              "precision": 0.9627031585855643,
+              "recall": 0.96,
+              "map50": 0.954642256902761,
+              "map50_95": 0.6367545572192131
+            },
+            "footwear": {
+              "precision": 0.815312970285142,
+              "recall": 0.8125,
+              "map50": 0.9225531611165484,
+              "map50_95": 0.7444355299391425
+            },
+            "backpack": {
+              "precision": 0.923856466003852,
+              "recall": 1.0,
+              "map50": 0.995,
+              "map50_95": 0.9949999999999999
+            },
+            "bag": {
+              "precision": 0.7528469576295662,
+              "recall": 0.7727272727272727,
+              "map50": 0.8328204123112659,
+              "map50_95": 0.5140923460230764
+            },
+            "wire": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "map50": 0.0435328345024282,
+              "map50_95": 0.005434290193721243
+            },
+            "chair": {
+              "precision": 0.6177211880083291,
+              "recall": 0.9032258064516129,
+              "map50": 0.823713898762223,
+              "map50_95": 0.7477850259247615
+            },
+            "table": {
+              "precision": 1.0,
+              "recall": 0.542248087503562,
+              "map50": 0.9184782608695651,
+              "map50_95": 0.7193155279503104
+            },
+            "plant": {
+              "precision": 0.9893079549555863,
+              "recall": 1.0,
+              "map50": 0.995,
+              "map50_95": 0.9873077278493365
+            }
+          }
+        }
+      }
+    },
+    "comparison": {
+      "predict_speedup": 0.8688283081052856,
+      "map50_change_pp": 0.0005204132288549879,
+      "map50_95_change_pp": 0.08011316933537183,
+      "torch_peak_allocated_change_mib": -14.876953125
+    },
+    "same_checkpoint_and_development_dataset_verified": true,
+    "tensorrt_measured": false,
+    "independent_accuracy": false,
+    "deployment_precision_changed": false
+  },
+  "acceptance": {
+    "w5_fully_accepted": false,
+    "d3_id_switches_per_minute": null,
+    "target_relock_accuracy": null,
+    "reid_rank1": null,
+    "independent_d5_t1": false,
+    "real_map_vantage": false,
+    "raw_latency_cdf": false,
+    "rtx4050_combined_budget": false,
+    "g2_passed": false
+  },
+  "deadlines": {
+    "figures_freeze": "2026-11-16",
+    "internal_draft": "2026-11-18",
+    "submission": "2026-11-23"
+  },
+  "validation": {
+    "cpu_passed": 633,
+    "missing_data_skips": 2,
+    "gpu_deselected": 4,
+    "seconds": 29.76,
+    "cuda_comparison_executed": true,
+    "robot_trials": false
+  },
+  "robot_trials": false,
+  "motor_commands_sent": 0
+}

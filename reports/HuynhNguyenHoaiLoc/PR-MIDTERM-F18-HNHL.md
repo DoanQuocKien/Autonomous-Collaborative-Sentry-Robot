@@ -1,0 +1,12 @@
+# Midterm HNHL: measured D5 FP32/FP16 F18 and camera-blocked report update
+
+The midterm package lacked a paired precision experiment and still described the Nov 4/9 robot sessions as available. Add native PyTorch CUDA FP32/FP16 measurements on the same D5 checkpoint and 90 development images, plus a consolidated current Chapter 5 Markdown draft, Chapter 7 update, F18 chart and the camera-failure contingency from merged PR #98.
+
+- New offline-only comparison tool uses fresh processes, synchronizes predict timing, checks actual input/parameter CUDA dtype in prediction and validation, reports accuracy and Torch/NVML memory separately, blocks downloads, and copies validation inputs so original data/checkpoint remain unchanged. Historical output paths cannot be overwritten.
+- RTX5060 FP32/FP16: **123.59/107.38 FPS**, p95 **12.01/16.35 ms**, peak allocated **32.41/17.53 MiB**, mAP50 **81.071/81.072%**. FP16 saves allocator memory but is slower in this run; deployment precision is unchanged. Single-model, same-session development evidence, not independent T1, RTX4050, TensorRT/Nano, or full-pipeline acceptance. Power/thermal/order limitations remain explicit.
+- Keep the reviewed Nov 1 Word binary and previous measurements intact. Pin the three historical Nov 3 plan sources to their original commit instead of replacing old source hashes after #98. Add a new registry for current evidence and verify raw timing summaries, matching checkpoint/dataset, null acceptance, document links and original Word/Markdown consistency.
+- Reflect camera-blocked D3/D5 recording and robot trials; G2 not passed and no new Stage A/B before midterm. PR #99 remains request-changes in the saved snapshot. Include the completed Nov 5 reviews as traceability, not robot evidence.
+
+Validation: **633 CPU tests passed, 2 missing-data skips, 4 GPU deselected in 29.76 s**; actual CUDA comparison ran separately (270 timing samples and 90 validation images per precision). F18 visually reviewed; evidence/document checker and whitespace checks passed. No robot connections or motor commands.
+
+Entry: `reports/HuynhNguyenHoaiLoc/midterm/update-2026-11-05.md`; reproduction: `reports/HuynhNguyenHoaiLoc/week-06/README.md`. Base main `4c041b6`; reviewer **DQK**. Independent D5, reviewed D3/re-ID gallery, F7 raw samples, F11 truth and combined RTX4050 remain pending; this PR does not claim full midterm experimental acceptance.

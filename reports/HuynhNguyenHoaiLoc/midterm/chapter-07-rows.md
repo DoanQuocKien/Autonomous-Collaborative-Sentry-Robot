@@ -1,5 +1,7 @@
 # Kết quả HNHL để ghép Chương 7
 
+**Bổ sung mới nhất 05/11:** [F18 và trạng thái sau PR #98](update-2026-11-05.md). Dòng mới để ghép: native PyTorch FP32/FP16 D5-640 trên RTX5060 đạt 123,59/107,38 FPS, p95 12,01/16,35 ms, Torch peak allocated 32,41/17,53 MiB; mAP50 81,071%/81,072% trên cùng 90 ảnh dev-val. FP16 chưa tăng tốc; chưa TensorRT/independent T1. Camera JetBot hỏng: các thử nghiệm cần video bị chặn. G2 chưa đạt, không làm Stage A/B mới trước giữa kỳ. Các kết quả lịch sử dưới đây giữ nguyên.
+
 Snapshot 01/11/2026. Mã E01–E12 tra tại [evidence.md](evidence.md). “Đã đo” mô tả bằng chứng, không mặc định đồng nghĩa đạt nghiệm thu. KR có thể rút gọn các dòng này trong ngân sách chung 1,5 trang của Chương 7.
 
 Bổ sung 03/11: [bảng GPU từng model, D5 per-class và video/watchdog/Jetson](update-2026-11-03.md) cung cấp E13–E20. [Audit tuần 5](week-05-audit.md) cập nhật PR #92 đã merge; không dùng suite review nhánh KR để thay nghiệm thu D3 của HNHL.

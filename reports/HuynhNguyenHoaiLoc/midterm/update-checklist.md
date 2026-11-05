@@ -1,5 +1,7 @@
 # Checklist tiếp tục hoàn thiện giữa kỳ HNHL
 
+**Cập nhật 05/11:** [PR #98 đã merge, camera hỏng và F18](update-2026-11-05.md). Việc cần video robot đang bị chặn cho tới khi DQK xác nhận sửa xong. Các ngày 04/11/09/11 bên dưới là kế hoạch lịch sử, không phải kết quả thu thập. F18 native CUDA D5 đã có paired latency/memory/accuracy trên dev-val; không cần chạy lại chỉ để đổi ngày. Còn combined RTX4050, các model khác và independent accuracy. PR #99 request changes, chưa là runner đã nghiệm thu.
+
 Snapshot01/11/2026. Khi có cập nhật, bắt đầu từ nguồn evidence mới và trạng thái GitHub; không chạy lại mọi benchmark nếu code/protocol không đổi. Không ghi đè log, checkpoint hoặc dataset lịch sử.
 
 Đã kiểm tra lại 03/11: xem [audit tuần 5](week-05-audit.md) và [bổ sung evidence](update-2026-11-03.md). PR #92 đã merge; #94 cung cấp F15 measured endpoints; #93 có head sửa mới, chưa merge tại snapshot. Baseline RTX4050 single-model đã đưa vào F9 bổ sung; combined workload RTX4050, D3/gallery và real map vẫn thiếu.
@@ -16,6 +18,8 @@ Snapshot tiếp sau đó: [#93/#95/#96 đã merge](session-followup-2026-11-03.m
 | 2 | RTX4050 hoặc paired FP32/FP16 runs | Cùng input, workload/cadence và accuracy set; tách NVML/allocator; không dùng cosine conversion thay accuracy | F9/F18, GPU/optimization |
 | 3 | Robot T2 hoặc evidence Jetson mới của DQK | Nhận log và các câu trả lời tape; xác nhận owner, devices, load, freshness; không coi review code là HIL pass | F20/F21 và Ch7 |
 | 3 | Raw clock-synced latency CSV JetBot + watchdog/e-stop logs | CDF/FPS có clock/seq flags, công bố sample count; tách localhost synthetic khỏi robot | F7 cùng DQK |
+
+Khi camera sửa xong: DQK đo lại mount/self-pose; nếu thay module thì cần fisheye calibration mới. HNHL gắn đúng camera/calibration/session cho data mới, giữ calibration cũ cho D1/D2/D5 cũ. Nếu không đủ dữ liệu trước 16/11, chuyển các kết quả còn thiếu sang chưa đo/giới hạn và dùng replay/simulation có nhãn nguồn cho demo.
 
 ## Lệnh sau khi có D3 thật
 
