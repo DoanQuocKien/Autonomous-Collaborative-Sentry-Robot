@@ -1,4 +1,4 @@
-"""DQK's report figures that can be made from existing evidence (Mid-Term Report Plan section 3): F1 and F2 (diagrams), F4, F5, F6, F20, F21. Every number is read from a committed file.
+"""DQK's report figures that can be made from existing evidence (Mid-Term Report Plan section 3): F1 and F2 (diagrams), F4, F5, F6, F20, F21. Every number is read from a committed file (F19 from git history).
 
   python -m tools.plot_dqk_report_figures            # writes reports/DoanQuocKien/week-05/figures/F*.png
 
@@ -28,7 +28,7 @@ def box(ax, x, y, w, h, text, color="#dce8fa", fs=8):
 def arrow(ax, x0, y0, x1, y1, text="", fs=7):
     ax.annotate("", xy=(x1, y1), xytext=(x0, y0), arrowprops=dict(arrowstyle="->", color="#335"))
     if text:
-        ax.text((x0 + x1) / 2, (y0 + y1) / 2 + 0.2, text, ha="center", fontsize=fs)
+        ax.text((x0 + x1) / 2, (y0 + y1) / 2 + 0.25, text, ha="center", va="bottom", fontsize=fs, bbox=dict(fc="white", ec="none", pad=1))
 
 
 def f1():
@@ -36,11 +36,11 @@ def f1():
     ax.set_xlim(0, 22)
     ax.set_ylim(0, 10.5)
     ax.axis("off")
-    box(ax, 0.5, 6.7, 5.0, 2.8, "JetBot (Jetson Nano)\ncamera, motors, e-stop\ncaptures frames, drives", "#e8f3e8")
+    box(ax, 0.5, 6.7, 4.0, 2.8, "JetBot (Jetson Nano)\ncamera, motors, e-stop\ncaptures frames, drives", "#e8f3e8")
     box(ax, 8.0, 5.2, 6.0, 4.6, "Laptop\nYOLOv8, pose, InsightFace, OSNet,\nXFeat + DINOv2, state machine,\nobstacle map, pursuit controller", "#dce8fa")
     box(ax, 16.5, 6.7, 5.0, 2.8, "ESP32-CAM at the door\n(placed by the robot)\nface + door view", "#f6ecd8")
-    arrow(ax, 5.5, 9.2, 8.0, 9.2, "video: ZeroMQ, JPEG q60")
-    arrow(ax, 8.0, 7.2, 5.5, 7.2, "UDP (v, omega)")
+    arrow(ax, 4.5, 8.8, 8.0, 8.8, "video: ZeroMQ, JPEG q60")
+    arrow(ax, 8.0, 7.4, 4.5, 7.4, "UDP (v, omega)")
     arrow(ax, 16.5, 8.1, 14.0, 8.1, "HTTP MJPEG, VGA")
     phases = [("Phase 1: deploy", "explore -> find the door -> sweet spot\n-> place the ESP32 -> verified -> standby"),
               ("Phase 2: monitor", "face verification at the door,\nintruder queue, departure sector"),
@@ -60,17 +60,17 @@ def f2():
     ax.set_xlim(0, 22)
     ax.set_ylim(0, 9)
     ax.axis("off")
-    box(ax, 0.3, 5.5, 4.5, 2.6, "Robot camera\n640x480, 10-20 fps", "#e8f3e8")
-    box(ax, 0.3, 1.0, 4.5, 2.6, "Gamepad / e-stop\nR1 dead-man, Start arm", "#e8f3e8")
+    box(ax, 0.3, 5.5, 3.6, 2.6, "Robot camera\n640x480, 10-20 fps", "#e8f3e8")
+    box(ax, 0.3, 1.0, 3.6, 2.6, "Gamepad / e-stop\nR1 dead-man, Start arm", "#e8f3e8")
     box(ax, 8.5, 5.5, 5.0, 2.6, "Laptop pipeline\nundistort, detect, pose,\nverify, track", "#dce8fa")
     box(ax, 8.5, 1.0, 5.0, 2.6, "State machine +\ncontrollers (30 Hz)", "#dce8fa")
     box(ax, 17.0, 5.5, 4.5, 2.6, "ESP32-CAM\nOV2640 VGA MJPEG", "#f6ecd8")
     box(ax, 17.0, 1.0, 4.5, 2.6, "Robot motors\nwatchdog 0.3 s", "#e8f3e8")
-    arrow(ax, 4.8, 6.8, 8.5, 6.8, "ZeroMQ JPEG q60, seq + t_cap")
+    arrow(ax, 3.9, 6.8, 8.5, 6.8, "ZeroMQ JPEG q60, seq + t_cap")
     arrow(ax, 17.0, 6.8, 13.5, 6.8, "HTTP MJPEG :81")
     arrow(ax, 11, 5.5, 11, 3.6, "events")
     arrow(ax, 13.5, 2.3, 17.0, 2.3, "UDP (v, omega) 30 Hz")
-    arrow(ax, 4.8, 2.3, 8.5, 2.3, "latch file ESTOP via SSH poll 5 Hz")
+    arrow(ax, 3.9, 2.3, 8.5, 2.3, "ESTOP latch file, SSH poll 5 Hz")
     fig.suptitle("F2 Data flow: links, rates and formats", fontsize=11)
     fig.savefig(OUT / "F2_data_flow.png")
     plt.close(fig)
@@ -88,7 +88,7 @@ def f4():
     ax.set_xlabel("checkerboard view (sorted)")
     ax.set_ylabel("reprojection error (px)")
     ax.legend(fontsize=8, loc="upper left")
-    ax.set_title("F4 Fisheye calibration (equidistant model, 2026-10-11): per-view error of the FIRST fit (all views); red = the %d views then dropped" % len(dropped))
+    ax.set_title("F4 Fisheye calibration (equidistant model, 2026-10-11)\nper-view error of the FIRST fit (all views); red = the %d views then dropped" % len(dropped), fontsize=10)
     fig.tight_layout()
     fig.savefig(OUT / "F4_fisheye_error.png")
     plt.close(fig)
@@ -101,16 +101,19 @@ def f5():
         if j.get("pitch_down_deg") is None or "attempt1" in f or "locked" in f:
             continue
         rows.append((Path(f).stem.replace("camera_pose_", ""), j["pitch_down_deg"], j.get("H_cam_m")))
-    rows.append(("deployment runs 10-30 (video)", 6.1, None))
+    fm = json.load(open(R / "week-04" / "classroom_1030" / "analysis" / "floor_model_1030.json"))["camera"]["pitch_down_deg_marker"]
+    dep = list(fm["deploy_runs"].values())
+    rows.append(("deployment runs 10-30\n(marker in the video)", sum(dep) / len(dep), None))
     fig, ax = plt.subplots(figsize=(11, 4.2), dpi=150)
     ax.bar(range(len(rows)), [r[1] for r in rows], color=[RED if r[0].startswith("deployment") else BLUE for r in rows])
     for i, r in enumerate(rows):
-        ax.text(i, r[1] + (0.3 if r[1] >= 0 else -0.9), "%.1f" % r[1], ha="center", fontsize=8)
+        ax.text(i, r[1] + (0.3 if r[1] >= 0 else -0.9), "%.1f" % r[1] + ("" if r[2] is None else "\nH %.3f m" % r[2]), ha="center", fontsize=7)
     ax.axhline(0, c="#444", lw=0.8)
     ax.set_xticks(range(len(rows)))
     ax.set_xticklabels([r[0] for r in rows], rotation=25, ha="right", fontsize=7)
     ax.set_ylabel("camera pitch, positive = looking down (deg)")
-    ax.set_title("F5 Camera pitch over sessions (mount is tiltable; lens height fixed at 0.100 m): methods differ, see the pose files")
+    ax.set_title("F5 Camera pitch per session (tiltable mount). Pose files from different fit methods and heights H (shown); the red bar is the mean of %d\n"
+                 "marker readings %.2f-%.2f deg in the 10-30 videos (classroom_1030/analysis/floor_model_1030.json)" % (len(dep), min(dep), max(dep)), fontsize=9)
     fig.tight_layout()
     fig.savefig(OUT / "F5_camera_pitch_sessions.png")
     plt.close(fig)
@@ -132,12 +135,13 @@ def f6():
     b.set_xlabel("run")
     b.set_ylabel("lateral / forward (m per m)")
     b.set_title("B. Drift to the side per metre")
-    runs = {"11.58-11.70 V\n(0.2239-0.2245)": 0.2242, "11.39-11.44 V\n(0.2156-0.2159)": 0.2157}   # means of the per-drive fits in classroom_1030/analysis
-    c.bar(list(runs), list(runs.values()), color=BLUE)
-    for i, v in enumerate(runs.values()):
-        c.text(i, v + 0.002, "%.4f" % v, ha="center", fontsize=8)
+    sv = json.load(open(R / "week-04" / "classroom_1030" / "analysis" / "speed_vs_battery.json"))["data"]
+    for name, row in sv.items():
+        c.errorbar(row["battery_mean"], row["speed"], yerr=row["speed_se"], fmt="o", color=BLUE)
+        c.annotate(name, (row["battery_mean"], row["speed"]), textcoords="offset points", xytext=(4, 5), fontsize=7)
+    c.set_xlabel("battery (V)")
     c.set_ylim(0.2, 0.23)
-    c.set_ylabel("speed at v = 0.55 (m/s)")
+    c.set_ylabel("speed at v = 0.55 (m/s), one drive each")
     c.set_title("C. Speed vs battery (10-30, -3.9 %)")
     fig.suptitle("F6 Motion model: measured speed, drift and battery dependence (end points from the committed runs)", fontsize=10)
     fig.tight_layout()
@@ -197,7 +201,7 @@ def f19():
     weeks = [("W1\nOct 11", "2026-10-11 23:59"), ("W2\nOct 18", "2026-10-18 23:59"), ("W3\nOct 25", "2026-10-25 23:59"), ("W4\nNov 1", "2026-11-01 23:59"), ("W5 so far\nNov 3", "2026-11-03 23:59")]
     counts = []
     for label, when in weeks:
-        rev = subprocess.run(["git", "rev-list", "-1", "--before=" + when, "origin/main"], cwd=ROOT, capture_output=True, text=True).stdout.strip()
+        rev = subprocess.run(["git", "rev-list", "-1", "--before=" + when + " +0700", "origin/main"], cwd=ROOT, capture_output=True, text=True).stdout.strip()   # Asia/Bangkok, first-parent history of origin/main
         out = subprocess.run(["git", "grep", "-c", "^ *def test_", rev, "--", "tests"], cwd=ROOT, capture_output=True, text=True).stdout
         counts.append(sum(int(line.rsplit(":", 1)[1]) for line in out.splitlines() if line.strip()))
     fig, a = plt.subplots(figsize=(8, 4), dpi=150)
@@ -205,7 +209,8 @@ def f19():
     for i, c in enumerate(counts):
         a.text(i, c + 8, str(c), ha="center", fontsize=9)
     a.set_ylabel("test functions on main")
-    a.set_title("F19 Test growth by week (def test_ in tests/, from git history)")
+    head = subprocess.run(["git", "rev-parse", "--short", "origin/main"], cwd=ROOT, capture_output=True, text=True).stdout.strip()
+    a.set_title("F19 Test growth by week (def test_ in tests/, git history of origin/main @ %s,\nweek ends Sunday 23:59 Asia/Bangkok)" % head, fontsize=9)
     fig.tight_layout()
     fig.savefig(OUT / "F19_test_growth.png")
     plt.close(fig)

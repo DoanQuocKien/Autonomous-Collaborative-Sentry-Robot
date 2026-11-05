@@ -113,6 +113,8 @@ def fresh_flag(feed, now, max_age=ESP_FRESH_S):
     """feed: dict with in_view and t (when the detector last answered), or None -> True only for a fresh in-view answer."""
     return bool(feed and feed.get("t") is not None and now - feed["t"] <= max_age and feed.get("in_view"))
 
+SPIN_PULSE_S, SPIN_PAUSE_S, FIX_STILL_S, FIX_MAX_W = 0.2, 0.5, 0.4, 0.15     # a spin goes in 0.2 s pulses with 0.5 s pauses when marker fixes are on; a fix needs the robot still for 0.4 s; steering below 0.15 counts as straight
+
 
 def blend_fix(pose, fix, gain):
     """Move the dead-reckoned pose toward a marker pose by `gain` (yaw along the short way)."""
@@ -258,6 +260,13 @@ def main():
     ap.add_argument("--answers", default=None, help="JSON file with the tape answers (keys as in summary.json tape_answers); without it they are asked at the end when a terminal is attached, else add them with tools.tape_answers")
     ap.add_argument("--no-audio", action="store_true", help="do not speak (rehearsal in a quiet room); the prompts are still logged")
     a = ap.parse_args()
+    answers_file = None
+    if a.answers:                                         # validate BEFORE the robot starts: a bad file must not cost a physical trial
+        from tools.tape_answers import load_answers_file
+        try:
+            answers_file = load_answers_file(a.answers)
+        except ValueError as exc:
+            raise SystemExit("ABORT: %s" % exc)
     a.dry_run = a.dry_run or a.no_robot
     if not 10 <= a.seconds <= 300:
         ap.error("seconds in [10, 300]")
@@ -503,8 +512,8 @@ def main():
     print("ENDED: %s | %.1f s | DR path %.1f m | final DR pose (%.2f, %.2f, %.0f deg) | prompts %s" % (end["reason"], time.time() - t_wall, path, final[0], final[1], math.degrees(final[2]), runner.prompts), flush=True)
 
     answers = {}
-    if a.answers:
-        answers = json.loads(Path(a.answers).read_text())
+    if answers_file is not None:
+        answers = answers_file
     elif not a.dry_run and sys.stdin is not None and sys.stdin.isatty():
         for key, q in (("door_distance_m_tape", "Distance from the robot to the entrance door (m, tape): "), ("line_of_sight_clear", "Clear line of sight to the entrance (y/n): "),
                        ("near_boundary_or_furniture", "Adjacent wall or furniture within 1 m (y/n): "), ("furniture_distance_m_tape", "Distance to that wall or furniture (m, tape; blank if none): "),
@@ -512,8 +521,8 @@ def main():
                        ("collisions", "Collisions or touches (number): ")):
             try:
                 answers[key] = input(q).strip()
-            except EOFError:
-                answers[key] = ""
+            except (EOFError, KeyboardInterrupt, OSError):
+                answers[key] = ""          # unanswered: the evidence below is still saved; add them with tools.tape_answers
     elif not a.dry_run:
         print("WARNING: the tape answers were NOT captured (no terminal, no --answers file). Add them now: python -m tools.tape_answers <run folder> --offset-x .. --offset-y ..", flush=True)
     out_dir = Path(a.out)
