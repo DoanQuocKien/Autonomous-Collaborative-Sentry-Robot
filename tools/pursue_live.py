@@ -41,13 +41,14 @@ REACQ_DIST_GATE_M = 1.0
 REACQ_MAX_LOST_S = 3.0
 
 
-def foot_point(ground_point, undistort_points, xyxy, size):
+def foot_point(ground_point, undistort_points, xyxy, size, feet_row_offset_px=0.0):
     """-> (GroundPoint or None, feet_cut, yaw_err). The feet are the bottom centre of the person box (raw pixels, undistorted for the floor ray). yaw_err = (image centre - box centre) / half width, + = the person is to the LEFT.
-    feet_cut: the box touches the bottom image edge, so its lower edge is not the floor contact."""
+    feet_cut: the box touches the bottom image edge, so its lower edge is not the floor contact.
+    feet_row_offset_px: the detector box bottom sits a few pixels below the real floor contact (2.5-6 px measured on 2026-11-07, bare feet); the floor ray is taken that many pixels higher."""
     w, h = size
     x1, y1, x2, y2 = xyxy
     feet_cut = y2 >= h - FEET_MARGIN_PX
-    (uf, vf), (uc, _) = undistort_points([[(x1 + x2) / 2.0, y2], [(x1 + x2) / 2.0, (y1 + y2) / 2.0]])
+    (uf, vf), (uc, _) = undistort_points([[(x1 + x2) / 2.0, y2 - feet_row_offset_px], [(x1 + x2) / 2.0, (y1 + y2) / 2.0]])
     yaw_err = (w / 2.0 - uc) / (w / 2.0)
     gp = None if feet_cut else ground_point(float(uf), float(vf))
     return gp, feet_cut, float(yaw_err)
@@ -56,9 +57,10 @@ def foot_point(ground_point, undistort_points, xyxy, size):
 class Pursuit(object):
     """The pure decision logic (no hardware): feed it the tracked boxes of each frame, get (v, w) and a log row. Testable with fakes."""
 
-    def __init__(self, controller, model, ground_point, undistort_points, size, lock_range_m=3.5, lost_stop_s=OBS_STALE_S, lost_end_s=5.0):
+    def __init__(self, controller, model, ground_point, undistort_points, size, lock_range_m=3.5, lost_stop_s=OBS_STALE_S, lost_end_s=5.0, feet_row_offset_px=0.0):
         self.ctl, self.model, self.ground_point, self.undistort_points, self.size = controller, model, ground_point, undistort_points, size
         self.lock_range_m, self.lost_stop_s, self.lost_end_s = lock_range_m, lost_stop_s, lost_end_s
+        self.feet_row_offset_px = feet_row_offset_px
         self.target_id = None
         self.pose = [0.0, 0.0, 0.0]               # dead reckoning from the commands: the hold detector needs the robot's own motion
         self.cmd, self.t_prev, self.t_seen = (0.0, 0.0), None, None
@@ -83,7 +85,7 @@ class Pursuit(object):
                    tracks=";".join("%d:%d,%d,%d,%d" % ((tid,) + tuple(int(q) for q in xyxy)) for tid, xyxy in tracks))
         valid, reacq = {}, False
         for tid, xyxy in tracks:
-            gp, cut, ye = foot_point(self.ground_point, self.undistort_points, xyxy, self.size)
+            gp, cut, ye = foot_point(self.ground_point, self.undistort_points, xyxy, self.size, self.feet_row_offset_px)
             valid[tid] = (xyxy, gp, cut, ye)
         if self.target_id is None:
             cands = [(max(0.0, (b[0][2] - b[0][0]) * (b[0][3] - b[0][1])), tid) for tid, b in valid.items() if b[1] is not None and b[1].distance_m <= self.lock_range_m]
@@ -184,13 +186,14 @@ def main():
     from sentry.nav.controllers import InterceptionController
     from sentry.nav.explore import fresh_command
     from sentry.nav.wheel_model import WheelModel
+    from sentry.config import load
     from sentry.perception.camera import CameraGeometry
 
     geom = CameraGeometry.from_files(a.camera, a.camera_pose)
     ground_point = geom.ground_point
     ctl = InterceptionController()
     model = WheelModel.from_session(a.motion_session) if a.motion_session else WheelModel()
-    pursuit = Pursuit(ctl, model, ground_point, geom.undistort_points, geom.size, a.lock_range, lost_end_s=a.lost_end_s)
+    pursuit = Pursuit(ctl, model, ground_point, geom.undistort_points, geom.size, a.lock_range, lost_end_s=a.lost_end_s, feet_row_offset_px=float(load()["pursuit"].get("feet_row_offset_px", 0.0)))
     perceive = make_perception()
     print("camera pose %s: pitch %.2f deg, lens %.3f m. NO OBSTACLE AVOIDANCE: keep the floor clear, hold R1, release at any problem." % (a.camera_pose, math.degrees(geom.pitch), geom.height_m), flush=True)
 

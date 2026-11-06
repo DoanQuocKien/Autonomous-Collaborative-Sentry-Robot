@@ -110,3 +110,12 @@ def test_a_new_track_id_for_the_only_person_near_the_old_position_is_relocked_bu
     r.update(0.0, [(1, box_at(2.0, u=300))])
     r.update(0.1, [(5, box_at(0.8, u=330))])
     assert r.target_id == 1                                              # far from the last distance: another person
+
+
+def test_the_feet_row_offset_moves_the_floor_ray_up_so_the_person_reads_farther():
+    box = box_at(1.5)
+    near, _, _ = foot_point(ground, undist, box, (W, H))
+    far, _, _ = foot_point(ground, undist, box, (W, H), feet_row_offset_px=4.0)
+    assert far.forward_m > near.forward_m
+    cut, c, _ = foot_point(ground, undist, (0, 0, 10, H), (W, H), feet_row_offset_px=4.0)
+    assert cut is None and c                                             # feet cut off at the image bottom stays cut off

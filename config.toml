@@ -234,6 +234,8 @@ w_max = 1.0
 obstacle_critical_m = 0.35
 obstacle_avoid_w = 0.45
 center_tolerance_norm = 0.10
+# Person box bottom sits below the real floor contact (tools/pursue_live.py): 4.6 px at 1.2 m, 2.5 px at 1.8 m, 6.1 px at 2.4 m (bare feet, 2026-11-07, one floor, one person); 3.5 px is the compromise for <= 1.8 m. Not a general constant: re-measure with the tape marks.
+feet_row_offset_px = 3.5
 
 [hold]
 window_s = 0.5
