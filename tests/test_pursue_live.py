@@ -85,3 +85,28 @@ def test_the_dead_reckoned_pose_follows_the_commands():
     for k in range(11):
         p.update(k / 10.0, [(1, box_at(3.0))])
     assert p.pose[0] > 0.1 and math.isfinite(p.pose[2])
+
+
+def test_yaw_only_commands_are_short_pulses_and_none_inside_the_centre_band():
+    p = new()
+    p.update(0.0, [(1, box_at(1.2, u=320))])                             # lock, centred
+    ws = [abs(p.update(0.05 * k, [(1, box_at(1.2, u=450))])[1]) for k in range(1, 13)]   # 1.2 m, person off to one side: hold-distance yaw-only
+    assert sum(1 for w in ws if w > 0) <= len(ws) // 3 + 1               # at most one frame in three turns
+    q = new()
+    q.update(0.0, [(1, box_at(1.2, u=320))])
+    assert all(q.update(0.05 * k, [(1, box_at(1.2, u=335))])[1] == 0.0 for k in range(1, 13))   # inside +/-10 %: no turn at all
+
+
+def test_a_new_track_id_for_the_only_person_near_the_old_position_is_relocked_but_two_people_are_not():
+    p = new()
+    p.update(0.0, [(1, box_at(2.0, u=300))])
+    p.update(0.1, [(9, box_at(2.1, u=330))])
+    assert p.target_id == 9 and p.rows[-1]["event"] == "REACQUIRE"
+    q = new()
+    q.update(0.0, [(1, box_at(2.0, u=300))])
+    q.update(0.1, [(8, box_at(2.1, u=330)), (9, box_at(2.2, u=350))])
+    assert q.target_id == 1 and q.rows[-1]["mode"] == "NO_TARGET"        # two candidates: never guess
+    r = new()
+    r.update(0.0, [(1, box_at(2.0, u=300))])
+    r.update(0.1, [(5, box_at(0.8, u=330))])
+    assert r.target_id == 1                                              # far from the last distance: another person

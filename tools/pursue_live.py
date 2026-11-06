@@ -32,7 +32,13 @@ ESTOP_LATCH = "/home/jetbot/sentry/ESTOP"
 MIN_BATTERY_V = 11.4
 LINK_STALE_S = 0.5
 OBS_STALE_S = 0.6
+MAX_PROCESS_S = 0.5                           # longer than this for one frame: stop instead of driving on it
 FEET_MARGIN_PX = 3
+YAW_DEADBAND = 0.10                           # |yaw_err| inside the +/-10 % centre band: no yaw-only command (the smallest legal turn, 0.45, is about 125 deg/s)
+YAW_PULSE_PERIOD = 3                          # yaw-only commands: one frame on, two frames off (about 6 deg per pulse instead of 14+ deg bursts)
+REACQ_YAW_GATE = 0.6                          # re-lock gate: the only person in view within this yaw_err (normalised, 0.6 = about 48 deg) and 1.0 m of the last position
+REACQ_DIST_GATE_M = 1.0
+REACQ_MAX_LOST_S = 3.0
 
 
 def foot_point(ground_point, undistort_points, xyxy, size):
@@ -59,6 +65,8 @@ class Pursuit(object):
         self.end_reason = None
         self.rows = []
         self.hold_events = []
+        self.last_seen = None                      # (yaw_err, distance or None) of the target when last seen
+        self._yaw_phase = 0
 
     def _advance(self, t):
         if self.t_prev is not None:
@@ -71,8 +79,9 @@ class Pursuit(object):
     def update(self, t, tracks):
         """tracks: [(track_id, (x1, y1, x2, y2))] of this frame in raw pixels. -> (v, w)."""
         self._advance(t)
-        row = dict(t=round(t, 3), track_id=None, dist_m=None, forward_m=None, left_m=None, yaw_err=None, feet_cut=None, v=0.0, w=0.0, mode="NO_TARGET", event=None)
-        valid = {}
+        row = dict(t=round(t, 3), track_id=None, dist_m=None, forward_m=None, left_m=None, yaw_err=None, feet_cut=None, v=0.0, w=0.0, mode="NO_TARGET", event=None,
+                   tracks=";".join("%d:%d,%d,%d,%d" % ((tid,) + tuple(int(q) for q in xyxy)) for tid, xyxy in tracks))
+        valid, reacq = {}, False
         for tid, xyxy in tracks:
             gp, cut, ye = foot_point(self.ground_point, self.undistort_points, xyxy, self.size)
             valid[tid] = (xyxy, gp, cut, ye)
@@ -80,6 +89,13 @@ class Pursuit(object):
             cands = [(max(0.0, (b[0][2] - b[0][0]) * (b[0][3] - b[0][1])), tid) for tid, b in valid.items() if b[1] is not None and b[1].distance_m <= self.lock_range_m]
             if cands:
                 self.target_id = max(cands)[1]
+        if self.target_id is not None and self.target_id not in valid and self.t_seen is not None and self.last_seen is not None and t - self.t_seen <= REACQ_MAX_LOST_S:
+            # the tracker may have given the same person a new id after a blur: re-lock only on ONE person near the last position
+            near = [tid for tid, b in valid.items() if abs(b[3] - self.last_seen[0]) <= REACQ_YAW_GATE
+                    and (b[1] is None or self.last_seen[1] is None or abs(b[1].distance_m - self.last_seen[1]) <= REACQ_DIST_GATE_M)]
+            if len(valid) == 1 and len(near) == 1:
+                self.target_id = near[0]
+                reacq = True
         if self.target_id is not None and self.target_id in valid:
             self.t_seen = t
             xyxy, gp, cut, ye = valid[self.target_id]
@@ -93,12 +109,21 @@ class Pursuit(object):
                 row.update(dist_m=round(gp.distance_m, 3), forward_m=round(gp.forward_m, 3), left_m=round(gp.left_m, 3), mode=out.mode, event=out.event)
                 if out.event:
                     self.hold_events.append((round(t, 2), out.event))
+            self.last_seen = (ye, gp.distance_m if gp is not None else None)
+            if abs(v) < 1e-9 and w != 0.0:                           # yaw-only: dead band, then short pulses
+                self._yaw_phase = (self._yaw_phase + 1) % YAW_PULSE_PERIOD
+                if abs(ye) <= YAW_DEADBAND or self._yaw_phase != 1:
+                    w = 0.0
+            else:
+                self._yaw_phase = 0
         else:
             v = w = 0.0                                              # no target this frame: stop now (the sender also stops a stale command)
             if self.target_id is not None and self.t_seen is not None and t - self.t_seen >= self.lost_end_s:
                 self.end_reason = "target lost for %.1f s" % self.lost_end_s
         self.cmd = (v, w)
         row.update(v=round(v, 3), w=round(w, 3))
+        if reacq:
+            row["event"] = "REACQUIRE"
         self.rows.append(row)
         return v, w
 
@@ -175,7 +200,10 @@ def main():
     rx = ssh = None
 
     def process(frame, t):
+        t0 = time.time()
         v, w = pursuit.update(t, perceive(frame))
+        if time.time() - t0 > MAX_PROCESS_S:                    # a slow frame is an old view of the world: never drive on it
+            v, w = 0.0, 0.0
         cmd.update(v=v, w=w, t=time.time())
         if pursuit.end_reason and end["reason"] is None:
             end["reason"] = pursuit.end_reason
@@ -216,6 +244,9 @@ def main():
                 break
         if first is None:
             raise SystemExit("ABORT: no video frame from the robot")
+        print("warming up the person detector (first frame is slow, done before R1 is needed)...", flush=True)
+        for _ in range(3):
+            perceive(first.frame_bgr)
         print("start checks passed: battery, video", flush=True)
         r1 = {"held": True, "fail": 0}
         if not a.dry_run:
@@ -298,7 +329,7 @@ def main():
     n = 1 + len(list(out_dir.glob(a.label + "_*"))) if out_dir.exists() else 1
     run_dir = out_dir / ("%s_%d" % (a.label, n))
     run_dir.mkdir(parents=True, exist_ok=True)
-    cols = ["t", "track_id", "dist_m", "forward_m", "left_m", "yaw_err", "feet_cut", "v", "w", "mode", "event"]
+    cols = ["t", "track_id", "dist_m", "forward_m", "left_m", "yaw_err", "feet_cut", "v", "w", "mode", "event", "tracks"]
     with open(run_dir / "log.csv", "w", newline="") as fh:
         wr = csv.DictWriter(fh, fieldnames=cols)
         wr.writeheader()
