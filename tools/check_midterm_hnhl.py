@@ -7,6 +7,7 @@ import hashlib
 import json
 from pathlib import Path
 import re
+import subprocess
 from urllib.parse import unquote
 from zipfile import ZipFile
 import xml.etree.ElementTree as ET
@@ -18,6 +19,17 @@ from tools.export_midterm_hnhl_doc import blocks
 
 def read_json(path):
     return json.loads(path.read_text(encoding='utf-8'))
+
+
+def source_bytes(source):
+    """Historical mutable plans are checked at their explicit full Git commit."""
+    commit = source.get('git_commit')
+    if commit is None:
+        return evidence_bytes(ROOT/source['path'])
+    if not re.fullmatch(r'[0-9a-f]{40}', commit):
+        raise ValueError('source git_commit must be a full SHA')
+    return subprocess.run(['git', 'show', commit + ':' + source['path']], cwd=ROOT,
+                          capture_output=True, check=True).stdout.replace(b'\r\n', b'\n')
 
 
 def check():
@@ -49,12 +61,57 @@ def check():
         assert not followup['validation']['new_t1_accuracy']
         assert not followup['validation']['robot_trials']
         for source in followup['sources'].values():
-            assert hashlib.sha256(evidence_bytes(ROOT/source['path'])).hexdigest() == source['sha256'], 'post-merge source drift'
+            assert hashlib.sha256(source_bytes(source)).hexdigest() == source['sha256'], 'post-merge source drift'
             followup_sources += 1
         log = (ROOT/followup['validation']['log']).read_text(encoding='utf-8-sig')
         assert re.search(r'26 passed', log), 'targeted test log differs'
     for source in update['evidence'].values():
         assert hashlib.sha256(evidence_bytes(ROOT/source['path'])).hexdigest() == source['sha256']
+    latest_path = OUT/'update-2026-11-05.json'
+    latest_sources = 0
+    if latest_path.exists():
+        from tools.build_midterm_hnhl_followup import collect_followup
+        latest = read_json(latest_path)
+        assert latest == collect_followup(), '05/11 addendum drift; review sources before rebuilding'
+        for source in latest['evidence'].values():
+            assert hashlib.sha256(source_bytes(source)).hexdigest() == source['sha256'], 'latest source drift'
+            latest_sources += 1
+        assert latest['camera']['robot_video_available'] is False
+        assert latest['acceptance']['d3_id_switches_per_minute'] is None
+        assert latest['acceptance']['reid_rank1'] is None
+        assert latest['acceptance']['independent_d5_t1'] is False
+        assert latest['acceptance']['g2_passed'] is False
+        assert latest['f18']['tensorrt_measured'] is False
+    recovery_path = OUT/'update-2026-11-06.json'
+    team_path = OUT/'update-2026-11-07.json'
+    recovery_sources = 0
+    if recovery_path.exists():
+        from tools.build_midterm_hnhl_recovery import collect_recovery, recovery_chapter_text
+        recovery = read_json(recovery_path)
+        assert recovery == collect_recovery(), '06/11 addendum drift; review sources'
+        for source in recovery['evidence'].values():
+            assert hashlib.sha256(source_bytes(source)).hexdigest() == source['sha256'], 'recovery source drift'
+            recovery_sources += 1
+        assert recovery['camera']['video_restored_reported'] is True
+        assert recovery['camera']['hn_hl_hardware_verified'] is False
+        assert recovery['d3_preparation']['reviewed_labels'] is False
+        assert recovery['acceptance']['new_t1_or_t2_pass'] is False
+        if not team_path.exists():
+            assert (OUT/'chapter-05-current.md').read_text(encoding='utf-8') == recovery_chapter_text(), 'current chapter drift'
+    team_sources = 0
+    if team_path.exists():
+        from tools.build_midterm_hnhl_team_update import collect_team, team_chapter_text
+        team = read_json(team_path)
+        assert team == collect_team(), '07/11 team evidence drift'
+        for source in team['evidence'].values():
+            assert hashlib.sha256(source_bytes(source)).hexdigest() == source['sha256'], 'team source drift'
+            team_sources += 1
+        assert team['source_pr_merged'] is False
+        assert team['source_review_state'] == 'CHANGES_REQUESTED'
+        assert not any(team['acceptance'].values())
+        assert team['runs']['home_1_3']['withdrawn_distance_fraction']
+        assert team['runs']['home_3_1']['not_a_pursuit_test']
+        assert (OUT/'chapter-05-current.md').read_text(encoding='utf-8') == team_chapter_text(team), 'current chapter drift'
     word = OUT/'HNHL-Chuong-5.docx'
     verification = read_json(OUT/'verification.json')
     word_sha = hashlib.sha256(word.read_bytes()).hexdigest()
@@ -81,7 +138,8 @@ def check():
     assert len(doc.findall('.//wp:inline', ns)) == 3
     assert len(doc.findall('.//w:tbl', ns)) == 2
     count = 0
-    docs = list(OUT.glob('*.md')) + [OUT.parent/'week-05.md', OUT.parent/'midterm-chapter-05.md']
+    docs = (list(OUT.glob('*.md')) + list((OUT.parent/'week-06').glob('*.md'))
+            + [OUT.parent/'week-05.md', OUT.parent/'midterm-chapter-05.md'])
     for path in docs:
         for url in re.findall(r'!?\[[^\]]*\]\(([^)]+)\)', path.read_text(encoding='utf-8')):
             if '://' in url or url.startswith('#'):
@@ -89,15 +147,20 @@ def check():
             target = path.parent/unquote(url.split('#')[0])
             assert target.exists(), f'broken link: {path}: {url}'
             count += 1
-    return dict(checked_date='2026-11-03', evidence_sources_checked=len(update['evidence']),
+    return dict(checked_snapshot_date='2026-11-07' if team_path.exists() else ('2026-11-06' if recovery_path.exists() else ('2026-11-05' if latest_path.exists() else '2026-11-03')), evidence_sources_checked=len(update['evidence']),
                 postmerge_sources_checked=followup_sources,
+                latest_sources_checked=latest_sources,
+                recovery_sources_checked=recovery_sources,
+                team_sources_checked=team_sources,
                 source_hashes_match=True, both_saved_snapshots_match=True,
                 missing_acceptance_preserved=True, local_links_checked=count,
                 original_word_sha256=word_sha, original_word_visual_review_preserved=True,
                 word_markdown_paragraphs_checked=paragraph_count,
                 additional_figure_sha256=hashlib.sha256((OUT/'figures/F9_single_models.png').read_bytes()).hexdigest(),
+                latest_figure_sha256=hashlib.sha256((OUT/'figures/F18_d5_precision.png').read_bytes()).hexdigest() if latest_path.exists() else None,
+                team_figure_sha256=hashlib.sha256((OUT/'figures/F17_home_pilot.png').read_bytes()).hexdigest() if team_path.exists() else None,
                 figure_visual_review_not_automated=True,
-                inference_rerun=False, application_tests_rerun=False)
+                checker_executes_inference=False, checker_executes_application_tests=False)
 
 
 def main():

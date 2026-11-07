@@ -1,5 +1,7 @@
 # Dữ liệu cần bàn giao cho HNHL sau buổi 04/11 và 09/11
 
+**Cập nhật 06/11:** DQK báo camera đã sửa; kiểm tra lại stream/socket và đo self-pose/height trước quay. Chưa có recording D3 mới trong lần cập nhật. Dùng `python -m tools.prepare_d3_recording --recording data/D3/<session> --out-dir data/D3/<session>/prepared` để xuất manifest từ `jetbot_meta.jsonl`; chỉ dùng khi có `READY.json`, giữ folder recording gốc cùng manifests. `truth-template.json` là template objects rỗng, `reviewed=false`, phải gán nhãn thật và lưu `truth.json` trước evaluator. Các epoch restart đánh giá riêng. [Quy trình và giới hạn](update-2026-11-06.md).
+
 Đây là protocol thu thập/bàn giao; chưa có D3 thật hoặc nhãn mới được xác nhận trong hồ sơ này. Nguồn lịch: [checklist tại nhà 04/11](../../../docs/Home%20Session%20Checklist%202026-11-04.md), [công việc lớp học tuần 6](../../../docs/Classroom%20Tasks%20Week%206.md). Phân công quay vẫn theo nhóm; tài liệu này không thay consent hoặc ghi nhận ai đã tham dự.
 
 ## 1. Tracking D3 khác với gallery re-ID
@@ -36,7 +38,7 @@ Ví dụ schema bên dưới chỉ có hai frame minh họa, không phải dữ 
 }
 ```
 
-`frames.json` dùng đúng các timestamp này và đường dẫn ảnh tương đối như `frames/000001.jpg`. Mọi decoded frame phải xuất hiện ở cả manifest, truth và predictions. `tools.record` output cần được xuất sang JSON manifest của `track_replay`; không đổi tên CSV thành JSON. Giữ source recording nguyên vẹn.
+`frames.json` dùng đúng các timestamp này và đường dẫn ảnh tương đối. Mọi decoded frame phải xuất hiện ở cả manifest, truth và predictions. `tools.prepare_d3_recording` xuất các `prepared/epoch-NNN/frames.json` trỏ về JPEG gốc, không đổi tên CSV thành JSON hoặc thay timestamp bằng FPS xấp xỉ. Giữ source recording nguyên vẹn.
 
 ## 3. Chạy khi dữ liệu thật đã sẵn sàng
 

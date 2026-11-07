@@ -1,16 +1,21 @@
 {
-  "checked_date": "2026-11-03",
+  "checked_snapshot_date": "2026-11-07",
   "evidence_sources_checked": 20,
   "postmerge_sources_checked": 5,
+  "latest_sources_checked": 11,
+  "recovery_sources_checked": 8,
+  "team_sources_checked": 25,
   "source_hashes_match": true,
   "both_saved_snapshots_match": true,
   "missing_acceptance_preserved": true,
-  "local_links_checked": 101,
+  "local_links_checked": 153,
   "original_word_sha256": "bd1e5bf03bdf6d22120434d1a078858e6d2a4d57635e24881be5c15bd290cc90",
   "original_word_visual_review_preserved": true,
   "word_markdown_paragraphs_checked": 29,
   "additional_figure_sha256": "4730d9a3e587db47b1c4fe4a350c3163f315f348b479b24c78b0f1db683edf92",
+  "latest_figure_sha256": "f73f50782687024cccc5e0156dfb3a73beb49d131c8fef0835da9b8239bbc333",
+  "team_figure_sha256": "63cbf57bbb230f92a7ebf5931e23b94989c4dc4a22b7b8b9f0bc330fe3914741",
   "figure_visual_review_not_automated": true,
-  "inference_rerun": false,
-  "application_tests_rerun": false
+  "checker_executes_inference": false,
+  "checker_executes_application_tests": false
 }

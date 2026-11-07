@@ -1,5 +1,11 @@
 # Hồ sơ giữa kỳ HNHL
 
+**Mới nhất 07/11:** [đối chiếu evidence của DQK/KR](update-2026-11-07.md) bổ sung pose camera sau sửa, distance diagnostic và [F17 home pilot](figures/F17_home_pilot.png). Nguồn ở PR #99 mới, chưa merge/request-changes; giữ rút kết quả `home_1_3`, không coi run `home_3_1` là pursuit test. Một HOLD endpoint 1,25 m do DQK báo chưa thay T2. Bảng audit chỉ rõ phần người khác đã làm và phần D3/re-ID/map/D5/RTX4050 vẫn thiếu.
+
+**Mới nhất 06/11:** [camera đã sửa và chuẩn bị D3](update-2026-11-06.md). DQK báo sửa socket gốc, stream hoạt động; cần recheck và đo lại camera pose/height trước run được tính. Chưa có D3/gallery/independent D5 hoặc T1/T2 mới. Commit sửa camera ở nhánh #98 cũ đã tích hợp vào PR #100 để DQK review. Bản Chương 5 hiện hành dưới đây đã cập nhật trạng thái này; ghi chú camera-blocked ngày 05/11 là snapshot lịch sử.
+
+**Mới nhất 05/11:** [addendum sau PR #98 và F18 đo thật](update-2026-11-05.md) cập nhật camera JetBot đang hỏng, G2 chưa đạt và lịch dự phòng. F18 so native PyTorch CUDA FP32/FP16 trên cùng 90 ảnh D5 development: FP16 giảm allocator nhưng chưa tăng tốc. PR #99 chưa merge; T1 D3/re-ID/independent D5 và T2 vẫn chờ. Editor ưu tiên trạng thái ở addendum này khi ghép; các snapshot cũ giữ để truy vết.
+
 Snapshot **01/11/2026**, dựa trên code/evidence hiện có. Hồ sơ này là phần HNHL để KR tổng hợp; không phải báo cáo cuối của toàn nhóm. Báo cáo nhóm 10–15 trang, nộp 23/11; thí nghiệm/hình chốt 16/11, full draft 18/11. Chương 5 có ngân sách chung khoảng 3,5 trang với đóng góp KR/DQK.
 
 **Cập nhật 03/11:** [Đối chiếu tuần 5](week-05-audit.md) xác nhận PR #92 đã merge, nhưng T1 D3 và combined GPU RTX4050 còn chờ. [Bổ sung giữa kỳ 03/11](update-2026-11-03.md) có baseline từng model RTX4050/5060, D5 per-class P/R, log đường truyền/watchdog, runtime Jetson/ESP32 và F15 đo điểm cuối từ PR #94. Word/Markdown 01/11 dưới đây giữ nguyên như snapshot đã kiểm tra; editor đọc thêm bản bổ sung trước khi ghép.
@@ -8,6 +14,7 @@ Snapshot **01/11/2026**, dựa trên code/evidence hiện có. Hồ sơ này là
 
 ## Tài liệu để ghép báo cáo
 
+- [Chương 5 hiện hành, Markdown 07/11](chapter-05-current.md): hợp nhất kết quả HNHL và pilot mới do DQK cung cấp, giữ đúng giới hạn; dùng để ghép nội dung hiện hành.
 - [Chương 5 dạng Word](HNHL-Chuong-5.docx): bản ngắn, có F9/F10/F13 và nguồn E01–E12, chỉnh sửa được.
 - [Chương 5 dạng Markdown](chapter-05.md): cùng nội dung, dễ review trong Git.
 - [Các dòng kết quả cho Chương 7](chapter-07-rows.md): có trạng thái và giới hạn nghiệm thu.
@@ -28,7 +35,8 @@ Bản Word dài 3 trang là bản đóng góp để editor chọn/rút gọn. Kh
 | F7 | Video latency CDF JetBot thật | Chờ raw CSV clock-synced; không dùng localhost CDF thay thế |
 | F11 | Map và sweet spot trên sweep thật | Chờ pose, door range/world truth và map artifacts |
 | F14 | OSNet rank-1/CMC/ROC hợp lệ | Chờ gallery body crops và D2/D3 protocol |
-| F18 | FP32/FP16 trước và sau tối ưu | Chờ phép so latency/memory/accuracy trên cùng dữ liệu |
+| [F17 bổ sung](figures/F17_home_pilot.png) | DQK home_4_1: estimated distance/centre và logged HOLD | Một người, endpoint tape chưa time-aligned; chưa full pursuit/HOLD T2 |
+| [F18](figures/F18_d5_precision.png) | FP32/FP16 native PyTorch trên cùng D5-640, RTX5060 | Có paired dev latency/memory/accuracy ngày 05/11; chưa TensorRT/independent T1 hoặc toàn pipeline |
 
 F12 và phần nhận diện cửa do KR/DQK xác nhận, F20/F21 do DQK hoàn thiện. Chưa tạo hình map hoặc re-ID giả chỉ để đủ số lượng hình. Các hình này không chứa ảnh cá nhân.
 
@@ -43,6 +51,9 @@ Không tự xác nhận timesheet, số liệu đối tác hay tag nộp bài. H
 ```powershell
 .venv/Scripts/python.exe -m tools.build_midterm_hnhl
 .venv/Scripts/python.exe -m tools.build_midterm_hnhl_update
+.venv/Scripts/python.exe -m tools.build_midterm_hnhl_followup
+.venv/Scripts/python.exe -m tools.build_midterm_hnhl_recovery
+.venv/Scripts/python.exe -m tools.build_midterm_hnhl_team_update
 .venv/Scripts/python.exe -m tools.check_midterm_hnhl --out reports/HuynhNguyenHoaiLoc/midterm/update-verification.json
 # Dùng document-authoring runtime có python-docx, không dùng Python robot:
 <document-python> tools/export_midterm_hnhl_doc.py
