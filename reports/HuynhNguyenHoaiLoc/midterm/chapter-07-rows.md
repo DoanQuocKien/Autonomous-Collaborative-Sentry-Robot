@@ -1,5 +1,7 @@
 # Kết quả HNHL để ghép Chương 7
 
+**Bổ sung 07/11 từ DQK:** [home pilot và camera/tape diagnostics](update-2026-11-07.md). Pose mới pitch −4,68..−4,49°, roll biến thiên chưa giải thích; readings tại tape 1,2/1,8/2,4 m được DQK báo 1,02/1,57/1,63 m. `home_4_1` có 362 log rows, logged HOLD tại 7,45 s và một tape endpoint 1,25 m do DQK báo, chưa time-aligned. Không dùng `home_1_3` in-band đã withdraw hoặc `home_3_1` start-near để báo pursuit PASS. PR nguồn #99 chưa merge; đây không phải kết quả HNHL chạy robot hoặc full T1/T2.
+
 **Trạng thái 06/11:** DQK báo camera sửa socket gốc, stream hoạt động khoảng 18,6 FPS; chưa có raw repair log hoặc HNHL HIL để xác minh. Camera mất stream đã được báo khắc phục, nhưng self-pose/height phải kiểm tra lại trước run được tính. Không dùng phép kiểm tra stream này làm F7 latency, D3 tracking hoặc T2 PASS. Adapter recording→D3 manifests đã qua T0, chưa có reviewed D3 mới. [Nguồn và cập nhật hiện hành](update-2026-11-06.md).
 
 **Bổ sung mới nhất 05/11:** [F18 và trạng thái sau PR #98](update-2026-11-05.md). Dòng mới để ghép: native PyTorch FP32/FP16 D5-640 trên RTX5060 đạt 123,59/107,38 FPS, p95 12,01/16,35 ms, Torch peak allocated 32,41/17,53 MiB; mAP50 81,071%/81,072% trên cùng 90 ảnh dev-val. FP16 chưa tăng tốc; chưa TensorRT/independent T1. Camera JetBot hỏng: các thử nghiệm cần video bị chặn. G2 chưa đạt, không làm Stage A/B mới trước giữa kỳ. Các kết quả lịch sử dưới đây giữ nguyên.

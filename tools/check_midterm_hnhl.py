@@ -83,6 +83,7 @@ def check():
         assert latest['acceptance']['g2_passed'] is False
         assert latest['f18']['tensorrt_measured'] is False
     recovery_path = OUT/'update-2026-11-06.json'
+    team_path = OUT/'update-2026-11-07.json'
     recovery_sources = 0
     if recovery_path.exists():
         from tools.build_midterm_hnhl_recovery import collect_recovery, recovery_chapter_text
@@ -95,7 +96,22 @@ def check():
         assert recovery['camera']['hn_hl_hardware_verified'] is False
         assert recovery['d3_preparation']['reviewed_labels'] is False
         assert recovery['acceptance']['new_t1_or_t2_pass'] is False
-        assert (OUT/'chapter-05-current.md').read_text(encoding='utf-8') == recovery_chapter_text(), 'current chapter drift'
+        if not team_path.exists():
+            assert (OUT/'chapter-05-current.md').read_text(encoding='utf-8') == recovery_chapter_text(), 'current chapter drift'
+    team_sources = 0
+    if team_path.exists():
+        from tools.build_midterm_hnhl_team_update import collect_team, team_chapter_text
+        team = read_json(team_path)
+        assert team == collect_team(), '07/11 team evidence drift'
+        for source in team['evidence'].values():
+            assert hashlib.sha256(source_bytes(source)).hexdigest() == source['sha256'], 'team source drift'
+            team_sources += 1
+        assert team['source_pr_merged'] is False
+        assert team['source_review_state'] == 'CHANGES_REQUESTED'
+        assert not any(team['acceptance'].values())
+        assert team['runs']['home_1_3']['withdrawn_distance_fraction']
+        assert team['runs']['home_3_1']['not_a_pursuit_test']
+        assert (OUT/'chapter-05-current.md').read_text(encoding='utf-8') == team_chapter_text(team), 'current chapter drift'
     word = OUT/'HNHL-Chuong-5.docx'
     verification = read_json(OUT/'verification.json')
     word_sha = hashlib.sha256(word.read_bytes()).hexdigest()
@@ -131,16 +147,18 @@ def check():
             target = path.parent/unquote(url.split('#')[0])
             assert target.exists(), f'broken link: {path}: {url}'
             count += 1
-    return dict(checked_snapshot_date='2026-11-06' if recovery_path.exists() else ('2026-11-05' if latest_path.exists() else '2026-11-03'), evidence_sources_checked=len(update['evidence']),
+    return dict(checked_snapshot_date='2026-11-07' if team_path.exists() else ('2026-11-06' if recovery_path.exists() else ('2026-11-05' if latest_path.exists() else '2026-11-03')), evidence_sources_checked=len(update['evidence']),
                 postmerge_sources_checked=followup_sources,
                 latest_sources_checked=latest_sources,
                 recovery_sources_checked=recovery_sources,
+                team_sources_checked=team_sources,
                 source_hashes_match=True, both_saved_snapshots_match=True,
                 missing_acceptance_preserved=True, local_links_checked=count,
                 original_word_sha256=word_sha, original_word_visual_review_preserved=True,
                 word_markdown_paragraphs_checked=paragraph_count,
                 additional_figure_sha256=hashlib.sha256((OUT/'figures/F9_single_models.png').read_bytes()).hexdigest(),
                 latest_figure_sha256=hashlib.sha256((OUT/'figures/F18_d5_precision.png').read_bytes()).hexdigest() if latest_path.exists() else None,
+                team_figure_sha256=hashlib.sha256((OUT/'figures/F17_home_pilot.png').read_bytes()).hexdigest() if team_path.exists() else None,
                 figure_visual_review_not_automated=True,
                 checker_executes_inference=False, checker_executes_application_tests=False)
 

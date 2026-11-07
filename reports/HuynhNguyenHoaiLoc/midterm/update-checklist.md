@@ -1,5 +1,7 @@
 # Checklist tiếp tục hoàn thiện giữa kỳ HNHL
 
+**Cập nhật hiện hành 07/11:** [audit bằng chứng DQK/KR](update-2026-11-07.md) xác nhận DQK đã đo pose sau sửa và chạy pilot home một người. Đã bổ sung số đo/giới hạn vào bản thảo; không yêu cầu nhóm làm lại các nguồn GPU/entrance/edge/simulation đã có. Còn thiếu reviewed D3 hai người, re-ID gallery≥5 identities, D5 độc lập, world truth và raw latency/combined RTX4050. PR #99 head mới vẫn request-changes; phần pilot không biến thành PASS hoặc dữ liệu D3.
+
 **Trạng thái hiện hành 06/11:** [DQK báo camera đã sửa](update-2026-11-06.md), stream hoạt động trở lại; cần recheck socket/cáp, self-pose và height trước thu D3/D5/run được tính. Không còn trạng thái mất stream theo báo cáo DQK; HNHL chưa kiểm tra robot trực tiếp. Tool `prepare_d3_recording` đã chuẩn bị bước chuyển JSONL→replay epochs, giữ timestamp thật và tạo template nhãn chưa review. PR #99 chưa sửa, #100 chờ DQK. Các ghi chú blocked phía dưới là lịch sử ngày 05/11.
 
 **Cập nhật 05/11:** [PR #98 đã merge, camera hỏng và F18](update-2026-11-05.md). Việc cần video robot đang bị chặn cho tới khi DQK xác nhận sửa xong. Các ngày 04/11/09/11 bên dưới là kế hoạch lịch sử, không phải kết quả thu thập. F18 native CUDA D5 đã có paired latency/memory/accuracy trên dev-val; không cần chạy lại chỉ để đổi ngày. Còn combined RTX4050, các model khác và independent accuracy. PR #99 request changes, chưa là runner đã nghiệm thu.

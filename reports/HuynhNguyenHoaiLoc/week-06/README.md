@@ -1,5 +1,7 @@
 # F18 — native PyTorch FP32/FP16, đo sớm ngày 05/11/2026
 
+**Bổ sung 07/11:** [pilot/pose/tape của DQK và audit phần nhóm đã làm](../midterm/update-2026-11-07.md). Sau các builder 05/11 và 06/11, chạy `tools.build_midterm_hnhl_team_update` rồi checker để bản hiện hành giữ trạng thái mới nhất. Bản archive nguồn đã có trong Git; không chạy lại `--import-source` hoặc model chỉ để tái tạo hình.
+
 **Cập nhật 06/11:** [camera đã sửa và D3 adapter](../midterm/update-2026-11-06.md), [27 targeted CPU tests](tests_recovery_2026-11-06.log). Phép đo F18 dưới đây giữ nguyên ngày/protocol, không chạy lại để đổi ngày. Tạo lại addenda theo thứ tự `build_midterm_hnhl_followup`, `build_midterm_hnhl_recovery`, rồi `check_midterm_hnhl` để bản Chương 5 hiện hành phản ánh camera repaired.
 
 Đầu việc tối ưu dự kiến tuần 6, chạy bằng dữ liệu hiện có trong tuần 5. [Metrics đầy đủ](d5_precision_2026-11-05.json), [log CPU regression](tests_cpu_2026-11-05.log), [FP32 validator](fp32_2026-11-05.log), [FP16 validator](fp16_2026-11-05.log). Kết luận, hình và đoạn ghép Chương 5: [addendum 05/11](../midterm/update-2026-11-05.md).
