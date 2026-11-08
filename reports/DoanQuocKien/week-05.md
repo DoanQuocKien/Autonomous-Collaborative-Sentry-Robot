@@ -25,6 +25,7 @@
 - Pursuit evidence in the report: first supervised live trials, limits stated, no acceptance numbers.
 
 ## Open / next
+- **Workload note (DQK, 2026-11-08):** next week (Nov 9-15) carries about two to three weeks of work: the classroom session that was pushed (graded T2 runs, Part C, handshake retest, Phase 2, obstacle retest, calibration, F7/F17), the open PR work (#99, #100, #102), the remaining figures and the report sections, with the figure freeze on Mon Nov 16 and the draft on Wed Nov 18. Cut line if time runs short (highest first): must = `self_pose`, T2 deployment 5 of 5, Part C; should = handshake retest, Phase 2 live; cut and report as 'in progress with its plan' = pursuit/hold trials beyond the first live runs, obstacle retest, clean `motion_check`, F7/F17.
 - **Supervisor:** tell them about the camera damage and the repair (robot is school property).
 - **PR #99:** HNHL's remaining findings; then merge. **PR #100 (HNHL):** needs DQK's review.
 - **Classroom Mon 2026-11-09 (G2 day):** `self_pose` first (it drifts), T2 deployment runs 5 of 5 (4 counted so far), Part C, handshake with the live rule (7/10 and 9/10 earlier), obstacle retest, clean `motion_check`. Home items not done: `motion_check` at full battery, D3 recording (HNHL), link-unplugged safety (done on 11-08: 0.48-0.52 s upper bounds, the 0.35 s plan limit is NOT demonstrated; R1-release stop not done); the matte-floor D5 batch was removed from the plan on 11-08.
