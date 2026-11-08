@@ -1,5 +1,7 @@
 # Tasks that need the classroom, to finish in Week 6 (Nov 9-15)
 
+> **Session moved (2026-11-08, DQK): the classroom session of Mon Nov 9 is pushed to NEXT WEEK (date to be fixed).** Everything below that needs the room waits for it; the figure freeze (Mon Nov 16), the internal draft (Wed Nov 18) and the report due date (Mon Nov 23) did not move, so all graded classroom runs, F7 and F17 land in one session close to the freeze. Use this week for the home and laptop items listed under 'Before the session' and for the rehearsals.
+
 > **Camera repaired (2026-11-05):** the robot's camera socket was resoldered and the video stream works again (about 18.6 fps). Re-run `tools.self_pose` before any run that counts (the mount may have moved). Details in the plan's Week 5 status and `docs/JetBot Notes.md`.
 
 Sessions: **Mon Nov 9** (G2 day; the Week 5 session) and **Mon Nov 16** (pick-up; figures frozen). Everything here depends on the classroom's door, floor, boards or network. Home work is in `docs/Home Session Checklist 2026-11-04.md`. Rule of the day: graded runs first with the answers captured at run time; measurements for the maths second; the maths at home. Detailed run protocol and commands: `reports/DoanQuocKien/week-04/classroom_1030/analysis/next_session_1109.md` (part B).
@@ -41,6 +43,14 @@ Remaining tool work in section 3 of the home checklist (check what is already me
 - **HNHL:** reviewed D3 per-frame body boxes/track IDs/visibility, timestamps and empty frames for >=60 s two-person tracking (<=1 ID switch/min). Re-ID is a separate gallery/query protocol: >=5 identities, rank-1 >=85%, held-out split fixed before selection. FP16 vs FP32 latency/memory/accuracy on the RTX4050 is laptop-only work (requires the evaluation inputs and GPU, not the classroom); live overlay recordings need the relevant run. A three-person session remains useful pilot evidence, not a five-identity re-ID pass.
 - **KR:** PURSUE/HOLD wired to the hold detector and the controller commands, Phase 1-3 transitions replayed from logged events, then driven live in A.3; the door pictures and the ESP32 view for the video; the 3-consecutive handshake rule concern (the live rule is the windowed one).
 - **All:** agree on Nov 9 which tasks slip to Nov 16 and write anything not working into the report as "in progress with its plan", not rushed.
+
+## Bring list (check the evening before)
+- **Robot** fully charged (>= 12.2 V; the 11.4 V gate stops a run), the charger and a second charge slot if any; **gamepad** with its receiver (arm: hold Start 1.5 s, move: hold R1); the robot's Wi-Fi profile is `DoanQuocKien` only.
+- **Laptop** + charger, the conda `sentry` environment and a clean checkout of `main`, `JETBOT_PASSWORD=jetbot` set; **phone hotspot on MOBILE DATA** (with the uplink shared the robot video fell to 2.5-5 fps on 10-30; with mobile data it was 19.5 fps), robot, ESP32 and laptop on it.
+- **ArUco boards** 150 mm (`assets/print/aruco_4x4_50_ids0-5_150mm.pdf`, 7 pages, matte paper) mounted flat on foam board or a book, plus something to stand them upright (the page bottom edge ON the floor for `self_pose`); **tape measure** (5 m), masking tape, a pen, the printed answers sheet for `--answers`, a plumb weight or any weight on a string (the spot under the lens).
+- **ESP32-CAM** + power bank + cable (OV2640 MJPEG firmware), and for the handshake the glazed-partition negative.
+- **People:** the three team members if possible (Phase 2 needs the one not enrolled); consenting people only.
+- Nothing printed or soldered needs to be redone; the camera calibration file is still valid (the original module, repaired 2026-11-05).
 
 ## Order on the day (about 3 h)
 0 battery, link, e-stop log; 1 `self_pose`; A.1 (5 T2 runs, graded, answers via `--answers`); A.2 Part C; A.4; A.3 and A.5 if teammates are present; B.6; C.9-12; D shots last. Charge between runs when below 11.4 V.
