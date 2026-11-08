@@ -27,7 +27,7 @@
 ## Open / next
 - **Supervisor:** tell them about the camera damage and the repair (robot is school property).
 - **PR #99:** HNHL's remaining findings; then merge. **PR #100 (HNHL):** needs DQK's review.
-- **Classroom Mon 2026-11-09 (G2 day):** `self_pose` first (it drifts), T2 deployment runs 5 of 5 (4 counted so far), Part C, handshake with the live rule (7/10 and 9/10 earlier), obstacle retest, clean `motion_check`. Home items not done: `motion_check` at full battery, D3 recording (HNHL), second D5 batch on a matte floor, link-unplugged safety (5 measured stops).
+- **Classroom Mon 2026-11-09 (G2 day):** `self_pose` first (it drifts), T2 deployment runs 5 of 5 (4 counted so far), Part C, handshake with the live rule (7/10 and 9/10 earlier), obstacle retest, clean `motion_check`. Home items not done: `motion_check` at full battery, D3 recording (HNHL), link-unplugged safety (5 measured stops); the matte-floor D5 batch was removed from the plan on 11-08.
 - **Report:** remaining figures F3, F7, F8, F11, F14, F17, F18; my sections; the hold-exit and re-centring trials if time allows.
 - **Unresolved:** why the camera pitch drifts (the repaired FPC socket is a guess); sup3 zero marker fixes; board-loss causes in t2_3 to t2_5; the bearing-based rest heading; the MPU6050.
 
