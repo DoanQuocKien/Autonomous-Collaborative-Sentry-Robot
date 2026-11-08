@@ -30,7 +30,7 @@ Reading = `tools.pursue_live` ground distance of the person box bottom centre.
 
 Reading: the runner reads 6-17 % short up to 1.8 m, always in the same direction (safe side: it thinks you are nearer). Beyond about 1.8 m the reading hardly changes (1.57 -> 1.63 for a true 1.8 -> 2.4 m): with the lens 0.100 m high, 1 px is about 0.1 m at 1.8 m and 0.2 m at 2.4 m, so distances past about 2 m are not usable from the foot point. The box bottom sits 4.6 / 2.5 / 6.1 px below the ideal contact row at 1.2 / 1.8 / 2.4 m (about 4 px, plus detector noise of about 2 px); bare feet against a floor of similar colour add about 3 px (a dark surface moved the box bottom up 3 px; the surface was 2-3 cm thick, so that reading is not used for the offset).
 Unexplained: one static check with "feet on the 1.8 m mark" read 1.20 m (sd small). Not repeated; not used.
-Action: `[pursuit] feet_row_offset_px = 3.5` in `config.toml` (one floor, one person; replay of the 1.8 m frames then reads 1.93 m). It is a calibration of today's conditions, not a constant.
+Action: a per-session `--feet-row-offset-px 3.5` (the runs `home_4_1` used it; one floor, one person; replay of the 1.8 m frames then reads 1.93 m). Since 2026-11-08 the `config.toml` default is 0 (uncalibrated) and the effective offset is written into every `summary.json`. It is a calibration of today's conditions, not a constant.
 
 ## 3. Pursuit runner (`tools.pursue_live`, PR #99), runs in `pursuit/`
 | run | what happened | result |

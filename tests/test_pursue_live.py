@@ -119,3 +119,23 @@ def test_the_feet_row_offset_moves_the_floor_ray_up_so_the_person_reads_farther(
     assert far.forward_m > near.forward_m
     cut, c, _ = foot_point(ground, undist, (0, 0, 10, H), (W, H), feet_row_offset_px=4.0)
     assert cut is None and c                                             # feet cut off at the image bottom stays cut off
+
+
+def test_a_yaw_pulse_expires_by_wall_clock_even_when_the_next_frame_stalls():
+    from tools.pursue_live import YAW_PULSE_S, command_to_send
+    cmd = {"v": 0.0, "w": -1.0, "t": 100.0}
+    assert command_to_send(cmd, 100.0 + YAW_PULSE_S / 2) == (0.0, -1.0)      # inside the pulse
+    assert command_to_send(cmd, 100.24) == (0.0, 0.0)                         # a stalled frame: the 0.25 s freshness alone would still turn
+    assert command_to_send({"v": 0.5, "w": 0.1, "t": 100.0}, 100.2) == (0.5, 0.1)   # driving commands keep the normal freshness
+    assert command_to_send({"v": 0.5, "w": 0.1, "t": 100.0}, 100.3) == (0.0, 0.0)
+
+
+def test_save_run_keeps_evidence_with_an_unknown_end_voltage_and_never_overwrites(tmp_path):
+    from tools.pursue_live import save_run
+    p = new()
+    p.update(0.1, [(1, box_at(2.0))])
+    summary = dict(p.summary(), battery_v_start=12.0, battery_v_end=None, end_reason="error: OSError: ssh")
+    d1 = save_run(str(tmp_path), "x", p.rows, summary, [(0.1, b"jpg")])
+    d2 = save_run(str(tmp_path), "x", p.rows, summary, [])
+    assert d1 != d2 and (d1 / "log.csv").exists() and (d1 / "frames" / "0.100.jpg").exists()
+    assert '"battery_v_end": null' in (d1 / "summary.json").read_text()

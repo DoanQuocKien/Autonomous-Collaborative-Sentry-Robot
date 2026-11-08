@@ -28,10 +28,13 @@ from pathlib import Path
 
 import numpy as np
 
+from sentry.nav.explore import fresh_command
+
 ESTOP_LATCH = "/home/jetbot/sentry/ESTOP"
 MIN_BATTERY_V = 11.4
 LINK_STALE_S = 0.5
 OBS_STALE_S = 0.6
+YAW_PULSE_S = 0.08                            # a yaw-only pulse is sent for at most this long (wall clock, enforced by the sender)
 MAX_PROCESS_S = 0.5                           # longer than this for one frame: stop instead of driving on it
 FEET_MARGIN_PX = 3
 YAW_DEADBAND = 0.10                           # |yaw_err| inside the +/-10 % centre band: no yaw-only command (the smallest legal turn, 0.45, is about 125 deg/s)
@@ -39,6 +42,35 @@ YAW_PULSE_PERIOD = 3                          # yaw-only commands: one frame on,
 REACQ_YAW_GATE = 0.6                          # re-lock gate: the only person in view within this yaw_err (normalised, 0.6 = about 48 deg) and 1.0 m of the last position
 REACQ_DIST_GATE_M = 1.0
 REACQ_MAX_LOST_S = 3.0
+
+
+COLS = ["t", "track_id", "dist_m", "forward_m", "left_m", "yaw_err", "feet_cut", "v", "w", "mode", "event", "tracks"]
+
+
+def command_to_send(cmd, now):
+    """-> (v, w) the sender may transmit at `now`. Freshness as everywhere (0.25 s), and a yaw-only command (a pulse) expires YAW_PULSE_S after it was computed,
+    whatever the video does: a stalled next frame must not turn a one-frame pulse into 0.25 s of rotation (HNHL review of PR #99)."""
+    if cmd["v"] == 0.0 and cmd["w"] != 0.0 and now - cmd["t"] > YAW_PULSE_S:
+        return 0.0, 0.0
+    return fresh_command(cmd["v"], cmd["w"], cmd["t"], now)
+
+
+def save_run(out, label, rows, summary, saved):
+    """Write log.csv, summary.json and (optionally) the frames into a NEW run directory <out>/<label>_<n>; -> the directory."""
+    out_dir = Path(out)
+    n = 1 + len(list(out_dir.glob(label + "_*"))) if out_dir.exists() else 1
+    run_dir = out_dir / ("%s_%d" % (label, n))
+    run_dir.mkdir(parents=True, exist_ok=True)
+    with open(run_dir / "log.csv", "w", newline="") as fh:
+        wr = csv.DictWriter(fh, fieldnames=COLS)
+        wr.writeheader()
+        wr.writerows(rows)
+    (run_dir / "summary.json").write_text(json.dumps(summary, indent=1, allow_nan=False))
+    if saved:
+        (run_dir / "frames").mkdir(exist_ok=True)
+        for t_, jpg in saved:
+            (run_dir / "frames" / ("%.3f.jpg" % t_)).write_bytes(jpg)
+    return run_dir
 
 
 def foot_point(ground_point, undistort_points, xyxy, size, feet_row_offset_px=0.0):
@@ -178,13 +210,13 @@ def main():
     ap.add_argument("--dry-run", action="store_true", help="robot connected and video processed, NO commands are sent")
     ap.add_argument("--replay", default=None, help="folder of images (no robot at all): commands are only logged")
     ap.add_argument("--save-frames", action="store_true", help="save the video frames (people are in them: stays under data/, never committed)")
+    ap.add_argument("--feet-row-offset-px", type=float, default=None, help="box bottom sits this many px below the floor contact (session calibration; default [pursuit] feet_row_offset_px, 0 = uncalibrated)")
     ap.add_argument("--out", default="data/pursuit")
     a = ap.parse_args()
     a.dry_run = a.dry_run or a.replay is not None
 
     import cv2
     from sentry.nav.controllers import InterceptionController
-    from sentry.nav.explore import fresh_command
     from sentry.nav.wheel_model import WheelModel
     from sentry.config import load
     from sentry.perception.camera import CameraGeometry
@@ -193,7 +225,7 @@ def main():
     ground_point = geom.ground_point
     ctl = InterceptionController()
     model = WheelModel.from_session(a.motion_session) if a.motion_session else WheelModel()
-    pursuit = Pursuit(ctl, model, ground_point, geom.undistort_points, geom.size, a.lock_range, lost_end_s=a.lost_end_s, feet_row_offset_px=float(load()["pursuit"].get("feet_row_offset_px", 0.0)))
+    pursuit = Pursuit(ctl, model, ground_point, geom.undistort_points, geom.size, a.lock_range, lost_end_s=a.lost_end_s, feet_row_offset_px=a.feet_row_offset_px if a.feet_row_offset_px is not None else float(load()["pursuit"].get("feet_row_offset_px", 0.0)))
     perceive = make_perception()
     print("camera pose %s: pitch %.2f deg, lens %.3f m. NO OBSTACLE AVOIDANCE: keep the floor clear, hold R1, release at any problem." % (a.camera_pose, math.degrees(geom.pitch), geom.height_m), flush=True)
 
@@ -212,6 +244,19 @@ def main():
             end["reason"] = pursuit.end_reason
 
     t_wall = time.time()
+    written = {"done": False}
+
+    def write_outputs():
+        """Called from the live loop's finally (also after an error or Ctrl+C), so the evidence of a stopped run is never lost."""
+        if written["done"]:
+            return
+        written["done"] = True
+        summary = dict(pursuit.summary(), label=a.label, dry_run=a.dry_run, replay=a.replay, end_reason=end["reason"], camera_pose_file=a.camera_pose, pitch_down_deg=round(math.degrees(geom.pitch), 2),
+                       feet_row_offset_px=pursuit.feet_row_offset_px, battery_v_start=volts0, battery_v_end=volts1, seconds=round(time.time() - t_wall, 1), date=time.strftime("%Y-%m-%d %H:%M"), obstacle_avoidance=False)
+        run_dir = save_run(a.out, a.label, pursuit.rows, summary, saved)
+        print("ENDED: %s | %s" % (end["reason"], json.dumps({k: summary[k] for k in ("frames", "fraction_distance_within_band", "fraction_centred_within_10pct", "hold_events")})), flush=True)
+        print("saved", run_dir, flush=True)
+
     if a.replay is not None:
         files = sorted(p for p in Path(a.replay).iterdir() if p.suffix.lower() in (".jpg", ".jpeg", ".png"))
         if not files:
@@ -271,7 +316,7 @@ def main():
             try:
                 while not done.is_set():
                     if s is not None:
-                        s.send(*fresh_command(cmd["v"], cmd["w"], cmd["t"], time.time()))
+                        s.send(*command_to_send(cmd, time.time()))
                     time.sleep(1 / 30.0)
             finally:
                 if s is not None:
@@ -319,33 +364,27 @@ def main():
                         end["reason"] = "operator pressed q"
                 except ImportError:
                     pass
+        except BaseException as e:                                            # inference error, Ctrl+C, ...: keep the reason in the evidence
+            if end["reason"] is None:
+                end["reason"] = "error: %s: %s" % (type(e).__name__, e)
+            raise
         finally:
             cmd.update(v=0.0, w=0.0, t=time.time())
             time.sleep(0.4)
             done.set()
-            rx.close()
-        from tools import jetbot_ssh as _js
-        volts1 = ina219_bus_volts(_js.sudo(ssh, "i2cget -y 1 0x41 0x02 w", password))
+            try:
+                rx.close()
+            except Exception:
+                pass
+            try:
+                from tools import jetbot_ssh as _js
+                volts1 = ina219_bus_volts(_js.sudo(ssh, "i2cget -y 1 0x41 0x02 w", password))
+            except Exception:
+                volts1 = None                                                 # end voltage unknown: written as null
+            write_outputs()
         time.sleep(0.8)
 
-    out_dir = Path(a.out)
-    n = 1 + len(list(out_dir.glob(a.label + "_*"))) if out_dir.exists() else 1
-    run_dir = out_dir / ("%s_%d" % (a.label, n))
-    run_dir.mkdir(parents=True, exist_ok=True)
-    cols = ["t", "track_id", "dist_m", "forward_m", "left_m", "yaw_err", "feet_cut", "v", "w", "mode", "event", "tracks"]
-    with open(run_dir / "log.csv", "w", newline="") as fh:
-        wr = csv.DictWriter(fh, fieldnames=cols)
-        wr.writeheader()
-        wr.writerows(pursuit.rows)
-    summary = dict(pursuit.summary(), label=a.label, dry_run=a.dry_run, replay=a.replay, end_reason=end["reason"], camera_pose_file=a.camera_pose, pitch_down_deg=round(math.degrees(geom.pitch), 2),
-                   battery_v_start=volts0, battery_v_end=volts1, seconds=round(time.time() - t_wall, 1), date=time.strftime("%Y-%m-%d %H:%M"), obstacle_avoidance=False)
-    (run_dir / "summary.json").write_text(json.dumps(summary, indent=1, allow_nan=False))
-    if saved:
-        (run_dir / "frames").mkdir(exist_ok=True)
-        for t_, jpg in saved:
-            (run_dir / "frames" / ("%.3f.jpg" % t_)).write_bytes(jpg)
-    print("ENDED: %s | %s" % (end["reason"], json.dumps({k: summary[k] for k in ("frames", "fraction_distance_within_band", "fraction_centred_within_10pct", "hold_events")})), flush=True)
-    print("saved", run_dir)
+    write_outputs()                                                           # replay (live runs wrote them in the finally above)
 
 
 if __name__ == "__main__":
