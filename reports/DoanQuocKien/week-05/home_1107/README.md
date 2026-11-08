@@ -55,3 +55,26 @@ Fixes made because of these runs (all in PR #99, 9 tests): detector warm-up befo
 1. Walk-back 0.5 m and stop, then step 0.5 m sideways and stop: `python -m tools.pursue_live --label home_5 --camera-pose calib/camera_pose_self_<today>.json --save-frames`; note the real stop times and tape the true hold distance each time.
 2. Re-run `tools.self_pose` first (the mount moves).
 3. Fix the stall (controller dead zone) if the walk-back trial shows it matters.
+
+## 6. Addendum 2026-11-08: corrections and what the later runs showed
+
+Several explanations given on 2026-11-07/08 for why the tape and the log disagreed were guesses, and the data contradicted them. Corrected here:
+- **Withdrawn: "the camera mount slipped / jolted during the run".** `self_pose` after the run showed -4.26 deg against -4.48 deg before (0.22 deg). The frame-to-frame jumps in `home_5_1` (0.4-0.7 m in one frame at 0.6 s, 4.3 s) are real in the log but their cause is not established (candidates: the detector box bottom jumping, motor start-stop pulses and gear slack; not separated).
+- **Withdrawn: "the foot stance explains the difference".** The feet were together in the frames.
+- **Phone distance:** moving the phone closer removed the large jumps in one run (`home_6_1`: none above 0.2 m), but that run was an easy approach with no walk-back, so the link is not shown to be the cause.
+
+New runs (numbers only, `pursuit/`):
+| run | what happened | result |
+|---|---|---|
+| `static_1p8_0108_1` | dry-run, 3.5 px offset, pose `1108_2`, DQK on the 1.8 m mark | forward 1.70 m (tape 1.80), left 0.01 |
+| `home_5_1` | supervised, 15.6 s, battery 12.34 -> 12.32 V | closed from 2.26 m reported (tape start 2.4 m), followed a walk-back, HOLD at 7.2 s, TARGET_MOVING at 11.2 s, HOLD again at 13.3 s; reported hold 1.3 m, tape after the run 1.8 m forward (robot clanked and shifted several times; displacement not established). Longest frame gap 0.08 s |
+| `home_6_1` | supervised, 31.6 s, phone closer | reported 1.25 m by 1.5 s and held (HOLD at 3.4 s, steady 1.25-1.31 m for 28 s); **tape 1.77 m forward, 0.02 left: the robot had moved only about 0.1 m**; the box was 249 px tall (239 px at the static 1.8 m check), the floor reading 1.27 m. The runner believed it had arrived and stopped commanding |
+
+Findings:
+1. **The camera pitch changes by itself.** `self_pose` (lens fixed 0.100 m): -4.68 (11-06), -4.49 and -4.55 (11-07), -4.48 and -4.26 (11-08, before and after the runs), **-0.64 deg at about 17:40 on 11-08 with nobody touching the robot** (`pose/camera_pose_self_1108_3.json`). That is 3.6 deg, about 20 px of foot row (marks run: bottom rows 265 / 261 / 262 px for tape 1.2 / 1.8 / 2.4 m, 20 px above the earlier 294 / 283 / 282). The cause is not found; the repaired FPC socket and cable are the only hardware change in the period, a guess. Every floor distance needs a `self_pose` immediately before the run, and may still drift during it.
+2. **Foot-point range noise:** the detector box bottom sits 3-7 px below the visible feet and varies between sessions (static check box bottom 283 px, runs 288-289 px for the same tape distance). With the lens 0.100 m high, 1 px is about 0.1 m at 1.8 m and 0.2 m at 2.4 m, so the foot-row range is good only up to about 1.2-1.5 m with a fresh pose.
+3. **Ankle keypoints are unusable as a floor point:** the YOLOv8-pose ankle row is about 15 px above the box bottom (ankles are about 8-10 cm above the floor, almost level with the 0.100 m lens), and the floor-intersection distance came out 3.4-4.6 m for a tape distance of 1.8 m.
+4. **Box-height ranging (k = height x distance) works only beyond about 2.2 m:** 2.4 m mark 192 px (sd 0.9, k = 461, matches 463 of an earlier capture), but at 1.2 m and 1.8 m the box height is 241 and 202 px with sd 15-19 (the head probably cut by the top of the image: the lens is 0.100 m high). Not adopted. `height_marks_1108_box_heights.json` has the per-frame heights.
+5. **Between about 1.5 m and 2.2 m neither cue is reliable** with this camera height: the working band of a pursuit robot. A higher camera would fix the geometry (a design finding for the report, not an action).
+
+Review state of PR #99 (HNHL, head `bb9f341`): 5 findings. Fixed in `bfaa2a6`: yaw pulses now expire in the sender by wall clock (`command_to_send`), evidence is saved in the loop's `finally` (error, Ctrl+C, failed end-battery read; null end voltage), `feet_row_offset_px` default 0 and logged in every summary. Open: load `[pursuit]`/`[hold]` from config into the controller, centring metric in full-width units and by time, command-based pose integration (`_advance` 0.2 s cap), no main-path fault-injection tests (only `command_to_send` and `save_run` are tested).
