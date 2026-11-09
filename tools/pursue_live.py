@@ -30,6 +30,8 @@ from pathlib import Path
 import numpy as np
 
 from sentry.nav.explore import fresh_command
+from sentry.perception.body_range import iou, trunk_range
+from sentry.perception.camera import GroundPoint
 
 ESTOP_LATCH = "/home/jetbot/sentry/ESTOP"
 MIN_BATTERY_V = 11.4
@@ -38,6 +40,8 @@ OBS_STALE_S = 0.6
 YAW_PULSE_S = 0.08                            # a yaw-only pulse is sent for at most this long (wall clock, enforced by the sender)
 FRESH_S = 0.25                                # command freshness on the wire (sentry.nav.explore.fresh_command default)
 DIST_MEDIAN_N = 5                             # frames in the median that decides the standoff dead band (the foot-row range jitters by 0.2 m when the robot starts or stops)
+TRUNK_WINDOW = 10                             # causal median over the last frames of the trunk-based range (0.5 s at 20 fps)
+TRUNK_IOU = 0.4                               # pose person matched to a tracked box by IoU
 TIME_CAP_S = 0.25                             # an interval between two processed frames counts at most this much in the time-based fractions
 CENTRE_TOL_WIDTH = 0.10                       # plan: bbox centre within +/- 10 % of the FULL frame width
 MAX_PROCESS_S = 0.5                           # longer than this for one frame: stop instead of driving on it
@@ -49,7 +53,7 @@ REACQ_DIST_GATE_M = 1.0
 REACQ_MAX_LOST_S = 3.0
 
 
-COLS = ["t", "track_id", "dist_m", "forward_m", "left_m", "yaw_err", "feet_cut", "v_req", "w_req", "v", "w", "suppressed", "mode", "event", "tracks"]
+COLS = ["t", "track_id", "dist_m", "forward_m", "left_m", "yaw_err", "feet_cut", "range_src", "foot_forward_m", "v_req", "w_req", "v", "w", "suppressed", "mode", "event", "tracks"]
 
 
 def command_to_send(cmd, now):
@@ -94,7 +98,9 @@ def foot_point(ground_point, undistort_points, xyxy, size, feet_row_offset_px=0.
 class Pursuit(object):
     """The pure decision logic (no hardware): feed it the tracked boxes of each frame, get (v, w) and a log row. Testable with fakes."""
 
-    def __init__(self, controller, model, ground_point, undistort_points, size, lock_range_m=3.5, lost_stop_s=OBS_STALE_S, lost_end_s=5.0, feet_row_offset_px=0.0, integrate=True):
+    def __init__(self, controller, model, ground_point, undistort_points, size, lock_range_m=3.5, lost_stop_s=OBS_STALE_S, lost_end_s=5.0, feet_row_offset_px=0.0, integrate=True, trunk_fn=None):
+        self.trunk_fn = trunk_fn                   # callable(kxy, kconf) -> (forward_m, left_m) or None; None = foot-row range only
+        self._trunk_hist = {}                      # track id -> recent (forward, left) from the trunk length
         self.integrate = integrate                 # False in dry-run and replay: no command reaches the robot, so the dead-reckoned pose must not move
         self.ctl, self.model, self.ground_point, self.undistort_points, self.size = controller, model, ground_point, undistort_points, size
         self.lock_range_m, self.lost_stop_s, self.lost_end_s = lock_range_m, lost_stop_s, lost_end_s
@@ -134,15 +140,29 @@ class Pursuit(object):
         if self.rows:
             self.rows[-1].update(v=round(v, 3), w=round(w, 3), suppressed=1)
 
-    def update(self, t, tracks):
-        """tracks: [(track_id, (x1, y1, x2, y2))] of this frame in raw pixels. -> (v, w)."""
+    def update(self, t, tracks, people=None):
+        """tracks: [(track_id, (x1, y1, x2, y2))] of this frame in raw pixels; people: [(box, keypoints_xy, keypoints_conf)] from the pose model (only with trunk_fn). -> (v, w)."""
         self._advance(t)
-        row = dict(t=round(t, 3), track_id=None, dist_m=None, forward_m=None, left_m=None, yaw_err=None, feet_cut=None, v_req=0.0, w_req=0.0, v=0.0, w=0.0, suppressed=0, mode="NO_TARGET", event=None,
+        row = dict(t=round(t, 3), track_id=None, dist_m=None, forward_m=None, left_m=None, yaw_err=None, feet_cut=None, range_src=None, foot_forward_m=None, v_req=0.0, w_req=0.0, v=0.0, w=0.0, suppressed=0, mode="NO_TARGET", event=None,
                    tracks=";".join("%d:%d,%d,%d,%d" % ((tid,) + tuple(int(q) for q in xyxy)) for tid, xyxy in tracks))
         valid, reacq = {}, False
         for tid, xyxy in tracks:
             gp, cut, ye = foot_point(self.ground_point, self.undistort_points, xyxy, self.size, self.feet_row_offset_px)
             valid[tid] = (xyxy, gp, cut, ye)
+        src = {}
+        if self.trunk_fn is not None:
+            for tid, (xyxy, gp, cut, ye) in list(valid.items()):
+                best = max(((iou(xyxy, pb), (kx, kc)) for pb, kx, kc in (people or [])), key=lambda m: m[0], default=None)
+                est = self.trunk_fn(*best[1]) if best is not None and best[0] >= TRUNK_IOU else None
+                if est is None:
+                    src[tid] = "foot"
+                    continue
+                hist = (self._trunk_hist.get(tid, []) + [est])[-TRUNK_WINDOW:]
+                self._trunk_hist[tid] = hist
+                fwd, left = float(np.median([h[0] for h in hist])), float(np.median([h[1] for h in hist]))
+                src[tid] = "trunk"
+                valid[tid] = (xyxy, GroundPoint(fwd, left), cut, ye)                 # the trunk range replaces the foot-row range (the feet may even be cut off)
+                src[tid] = ("trunk", gp.forward_m if gp is not None else None)
         if self.target_id is None:
             cands = [(max(0.0, (b[0][2] - b[0][0]) * (b[0][3] - b[0][1])), tid) for tid, b in valid.items() if b[1] is not None and b[1].distance_m <= self.lock_range_m]
             if cands:
@@ -158,6 +178,9 @@ class Pursuit(object):
             self.t_seen = t
             xyxy, gp, cut, ye = valid[self.target_id]
             row.update(track_id=self.target_id, yaw_err=round(ye, 4), feet_cut=int(cut))
+            tr = src.get(self.target_id)
+            if self.trunk_fn is not None:
+                row.update(range_src=("trunk" if isinstance(tr, tuple) else "foot"), foot_forward_m=(round(tr[1], 3) if isinstance(tr, tuple) and tr[1] is not None else None))
             if gp is None:                                           # feet cut off / no floor intersection: no translation, yaw centring only
                 v, w, _ = self.ctl.hold.compute(t, ye)
                 row.update(mode="YAW_ONLY")
@@ -223,6 +246,25 @@ class Pursuit(object):
                 "plan_thresholds": "distance 1.2 +/- 0.2 m and bbox centre within +/- 10 % of the frame width for 80 % of the time (plan 4.3 'Pursuit PD')"}
 
 
+def make_pose(weights, cfg):
+    """YOLOv8-pose -> callable(frame_bgr) -> [(box xyxy, keypoints (17, 2), confidences (17,))] (for the trunk-length range)."""
+    from ultralytics import YOLO
+    root = Path(__file__).resolve().parents[1]
+    path = Path(weights) if weights else root / cfg["reid"].get("pose_weights", "data/models/yolov8n-pose.pt")
+    if not path.exists():
+        path = root / "yolov8n-pose.pt"
+    if not path.exists():
+        raise SystemExit("ABORT: no pose weights (%s): pass --pose-weights" % path)
+    model, device = YOLO(str(path)), cfg["reid"].get("person_device", "0")
+
+    def run(frame):
+        r = model(frame, verbose=False, conf=0.3, device=device)[0]
+        if r.keypoints is None or len(r.boxes) == 0:
+            return []
+        return [(tuple(float(v) for v in b), k, c) for b, k, c in zip(r.boxes.xyxy.cpu().numpy(), r.keypoints.xy.cpu().numpy(), r.keypoints.conf.cpu().numpy())]
+    return run
+
+
 def make_perception(device_cfg=None):
     """YOLO person detector + vendored ByteTrack; -> callable(frame_bgr) -> [(track_id, xyxy)]."""
     from sentry.config import load
@@ -260,6 +302,8 @@ def main():
     ap.add_argument("--replay", default=None, help="folder of images (no robot at all): commands are only logged")
     ap.add_argument("--save-frames", action="store_true", help="save the video frames (people are in them: stays under data/, never committed)")
     ap.add_argument("--feet-row-offset-px", type=float, default=None, help="box bottom sits this many px below the floor contact (session calibration; default [pursuit] feet_row_offset_px, 0 = uncalibrated)")
+    ap.add_argument("--range-source", choices=("foot", "trunk"), default="foot", help="foot: floor distance of the box bottom (default); trunk: range from the shoulder-to-hip length with a population prior, foot-row fallback when the keypoints are not confident (a lead, see sentry/perception/body_range.py)")
+    ap.add_argument("--pose-weights", default=None, help="YOLOv8-pose weights for --range-source trunk (default [reid] pose_weights, else yolov8n-pose.pt in the repo root)")
     ap.add_argument("--out", default="data/pursuit")
     a = ap.parse_args()
     a.dry_run = a.dry_run or a.replay is not None
@@ -280,6 +324,12 @@ def main():
     pursuit = Pursuit(ctl, model, ground_point, geom.undistort_points, geom.size, a.lock_range, lost_end_s=a.lost_end_s, feet_row_offset_px=a.feet_row_offset_px if a.feet_row_offset_px is not None else float(load()["pursuit"].get("feet_row_offset_px", 0.0)),
                       integrate=not a.dry_run)
     perceive = make_perception()
+    trunk_m = float(load()["pursuit"].get("trunk_length_m", 0.50))
+    trunk_conf = float(load()["pursuit"].get("trunk_conf_min", 0.8))
+    pose_fn = None
+    if a.range_source == "trunk":
+        pose_fn = make_pose(a.pose_weights, load())
+        pursuit.trunk_fn = lambda kxy, kconf: trunk_range(kxy, kconf, geom.undistort_points, geom.K, geom.pitch, trunk_m, trunk_conf)
     print("camera pose %s: pitch %.2f deg, lens %.3f m. NO OBSTACLE AVOIDANCE: keep the floor clear, hold R1, release at any problem." % (a.camera_pose, math.degrees(geom.pitch), geom.height_m), flush=True)
 
     cmd, end, done = {"v": 0.0, "w": 0.0, "t": 0.0}, {"reason": None}, threading.Event()
@@ -289,7 +339,8 @@ def main():
 
     def process(frame, t):
         t0 = time.time()
-        v, w = pursuit.update(t, perceive(frame))
+        tracks = perceive(frame)
+        v, w = pursuit.update(t, tracks, pose_fn(frame) if pose_fn is not None else None)
         if time.time() - t0 > MAX_PROCESS_S:                    # a slow frame is an old view of the world: never drive on it
             v, w = 0.0, 0.0
             pursuit.override_command(v, w)                      # the pose and the log say what was really sent
@@ -306,7 +357,7 @@ def main():
             return
         written["done"] = True
         summary = dict(pursuit.summary(), label=a.label, dry_run=a.dry_run, replay=a.replay, end_reason=end["reason"], camera_pose_file=a.camera_pose, pitch_down_deg=round(math.degrees(geom.pitch), 2),
-                       feet_row_offset_px=pursuit.feet_row_offset_px, config=effective_config, battery_v_start=volts0, battery_v_end=volts1, seconds=round(time.time() - t_wall, 1), date=time.strftime("%Y-%m-%d %H:%M"), obstacle_avoidance=False)
+                       feet_row_offset_px=pursuit.feet_row_offset_px, range_source=a.range_source, trunk_length_m=trunk_m, trunk_conf_min=trunk_conf, trunk_frames=sum(1 for r in pursuit.rows if r.get("range_src") == "trunk"), config=effective_config, battery_v_start=volts0, battery_v_end=volts1, seconds=round(time.time() - t_wall, 1), date=time.strftime("%Y-%m-%d %H:%M"), obstacle_avoidance=False)
         run_dir = save_run(a.out, a.label, pursuit.rows, summary, saved)
         print("ENDED: %s | %s" % (end["reason"], json.dumps({k: summary[k] for k in ("frames", "run_time_s", "coverage_tracked_fraction", "time_fraction_distance_in_band_of_run", "time_fraction_centred_of_run", "hold_events")})), flush=True)
         print("saved", run_dir, flush=True)
