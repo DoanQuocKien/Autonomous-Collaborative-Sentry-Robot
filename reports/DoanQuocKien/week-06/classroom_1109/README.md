@@ -62,3 +62,16 @@ Fixed before running: trunk prior 0.50 m, all four keypoints above 0.8 confidenc
 | 1.77 m (`home_6_1`) | 455 / 455 | -0.02 m, 100 %, 0.03 | -0.02 m, 100 %, 0.02 |
 | 1.80 m (`box_1p8_1`) | 122 / 122 | +0.16 m, 34 %, 0.02 | +0.16 m, 32 %, 0.01 |
 Frame-to-frame noise is small (sd 0.01-0.03 m; the floor-row range moved by 0.4 m between sessions). The error is a per-set bias (+0.16, -0.02, +0.16 m; the two 1.8 m sets differ by 0.18 m), probably the stance (a lean or a turn changes the trunk's pixel length); smoothing cannot remove it. Verdict: the experiment's pass rule (within +/- 0.15 m per frame, every tile) is NOT met (29-39 % in two sets); against the plan's pursuit tolerance (1.2 +/- 0.2 m) all three sets stay within 0.16 m. One person, three sets, no frame at 1.2 m or 2.4 m, no other person: a promising lead that needs the validation recording (1.2, 1.8, 2.4 m, at least two other people) before it can replace or back up the foot-row range. A possible integration (not done): the pose model also gives person boxes, so the runner could use one pose pass for boxes and keypoints and take the standoff dead-band range from the trunk cue when the keypoints are confident, falling back to the foot row otherwise.
+
+### Experiment A, round 8 (2026-11-10 night, pre-registered): other body cues and fusion with the foot row
+Fixed before running (`experiment_A_anthro_fusion.json`): priors from the Drillis and Contini proportions with stature 1.70 m (trunk 0.49, hip-knee 0.42, knee-ankle 0.42, shoulder-ankle 1.32 m), gates 0.8 (trunk keypoints) and 0.6 (leg keypoints), causal median of 10, fusion = 50/50 mean of the body-cue median and the foot-row range (box bottom of the pose box, offset 3.5 px, pose `1109_4`). Bias in metres against the tape (smoothed median), sets 1.25 / 1.77 / 1.80 m:
+| cue | 1.25 | 1.77 | 1.80 | mean abs bias | sets within +/- 0.15 m |
+|---|---|---|---|---|---|
+| foot row | +0.16 | -0.34 | +0.11 | 0.20 | 1 of 3 |
+| **trunk** | **+0.13** | **-0.05** | **+0.12** | **0.10** | **3 of 3** |
+| hip-knee | +0.35 | +0.34 | +0.48 | 0.39 | 0 of 3 |
+| knee-ankle | +0.49 | +0.43 | +0.60 | 0.50 | 0 of 3 |
+| shoulder-ankle | +0.28 | +0.19 | +0.35 | 0.27 | 0 of 3 |
+| body median | +0.32 | +0.27 | +0.41 | 0.33 | 0 of 3 |
+| fusion with the foot row | +0.23 | -0.04 | +0.26 | 0.18 | 1 of 3 |
+Findings: (1) the leg-based cues read 0.2-0.6 m too far with the same sign at all three distances (the leg segments look shorter from a 0.10 m lens than the proportion tables say; cause not established: foreshortening or the pose model's leg points); (2) fusing with the foot row is worse than the trunk alone, because the foot-row bias swings between sets (-0.34 to +0.16 m); a heavier trunk weight would be tuning on the same three sets and was not done; (3) the trunk prior here is 0.49 m (round 7 used 0.50 m): the literature value, set before the run, but it lowers the bias from +0.16 to +0.13 m; the sensitivity is about 0.04 m of range per 0.01 m of prior at 1.8 m; (4) all body segments scale with the person's stature, so fusing them reduces keypoint noise but not the population spread. Conclusion: keep the trunk cue alone (with the foot-row fallback already in `--range-source trunk`); more rounds on these three sets would only fit them. Needed: frames at 1.2, 1.8, 2.4 m from several people.
