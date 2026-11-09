@@ -132,6 +132,18 @@ def check():
         assert not proxy['mechanical_stop_measured']
         assert proxy['r1_not_held_at_end_trials'] == [4]
         assert (OUT/'chapter-05-current.md').read_text(encoding='utf-8') == chapter_text(nov09), 'current chapter drift'
+    kr_followup_sources = 0
+    if (OUT/'followup-pr101-2026-11-09.json').exists():
+        from tools.build_midterm_hnhl_pr101_followup import collect_followup, NAME
+        kr_followup = read_json(OUT/(NAME+'.json'))
+        assert kr_followup == collect_followup(), 'PR101 follow-up drift'
+        for source in kr_followup['evidence'].values():
+            assert hashlib.sha256(source_bytes(source)).hexdigest() == source['sha256'], 'PR101 source drift'
+            kr_followup_sources += 1
+        assert not kr_followup['source_pr_merged']
+        assert not kr_followup['new_experimental_data']
+        assert not any(kr_followup['acceptance'].values())
+        assert not kr_followup['validation']['reproductions']['page_audit']['rendered_layout_verified']
     word = OUT/'HNHL-Chuong-5.docx'
     verification = read_json(OUT/'verification.json')
     word_sha = hashlib.sha256(word.read_bytes()).hexdigest()
@@ -173,6 +185,7 @@ def check():
                 recovery_sources_checked=recovery_sources,
                 team_sources_checked=team_sources,
                 nov09_sources_checked=nov09_sources,
+                kr_followup_sources_checked=kr_followup_sources,
                 source_hashes_match=True, both_saved_snapshots_match=True,
                 missing_acceptance_preserved=True, local_links_checked=count,
                 original_word_sha256=word_sha, original_word_visual_review_preserved=True,

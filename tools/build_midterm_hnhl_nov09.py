@@ -144,7 +144,11 @@ def chapter_text(metrics):
         'không thay D3 hoặc thử robot. Lịch lớp 09/11 và scope matte đang được đề xuất đổi trong PR #102 chưa merge; '
         'chốt hình 16/11, draft 18/11, nộp 23/11 giữ nguyên. D3/re-ID/D5 độc lập/F11/raw latency/combined RTX4050 vẫn thiếu. '
         '[Audit mới và nội dung sửa cho editor](update-2026-11-09.md).')
-    return text.replace(old,new)
+    text = text.replace(old,new)
+    if (OUT/'followup-pr101-2026-11-09.json').exists():
+        from tools.build_midterm_hnhl_pr101_followup import update_chapter
+        text = update_chapter(text)
+    return text
 
 
 def write_reports(m):

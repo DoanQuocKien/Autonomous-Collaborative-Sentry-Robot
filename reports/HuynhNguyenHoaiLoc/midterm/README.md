@@ -1,5 +1,7 @@
 # Hồ sơ giữa kỳ HNHL
 
+**Sau bản sửa KR cùng ngày09/11:** [follow-up PR101 head969a5e0](followup-pr101-2026-11-09.md). KR đã sửa các ví dụ stale/handoff/projector hữu hạn và các image links; bản draft đã sửa phần lớn số liệu HNHL. Review58 tests vẫn phát hiện observation API không được consume, state/controller lệch sau gap, NaN projector thành full-forward và distance T1 PASS chưa đúng. Đã review lại, chưa merge; không có dữ liệu thí nghiệm mới. Những findings cũ đã sửa không còn là lý do chặn bản mới.
+
 **Mới nhất 09/11:** [audit PR và nguồn mới DQK/KR](update-2026-11-09.md), [các sửa đổi cụ thể cho editor](HNHL-EDITOR-CORRECTIONS-1109.md). DQK rút lại giải thích mount-slip/foot-stance; các run mới vẫn sai lệch với tape. Năm video stop-proxy có median516 ms, chưa chứng minh motor stop≤350ms; trial4 có R1 end=0. KR đã có Phase3 và bản thảo nhóm nhưng #101 còn lỗi stale/handoff/command legality. #99/#101/#102 đều request-changes; #100 chờ DQK. Lịch09/11 bị đề xuất dời, bỏ matte là proposal chưa merge; không tự đổi gate nghiệm thu. Đọc bản hiện hành09/11 thay cho các snapshot lịch sử dưới đây.
 
 **Mới nhất 07/11:** [đối chiếu evidence của DQK/KR](update-2026-11-07.md) bổ sung pose camera sau sửa, distance diagnostic và [F17 home pilot](figures/F17_home_pilot.png). Nguồn ở PR #99 mới, chưa merge/request-changes; giữ rút kết quả `home_1_3`, không coi run `home_3_1` là pursuit test. Một HOLD endpoint 1,25 m do DQK báo chưa thay T2. Bảng audit chỉ rõ phần người khác đã làm và phần D3/re-ID/map/D5/RTX4050 vẫn thiếu.
@@ -57,10 +59,13 @@ Không tự xác nhận timesheet, số liệu đối tác hay tag nộp bài. H
 .venv/Scripts/python.exe -m tools.build_midterm_hnhl_recovery
 .venv/Scripts/python.exe -m tools.build_midterm_hnhl_team_update
 .venv/Scripts/python.exe -m tools.build_midterm_hnhl_nov09
+.venv/Scripts/python.exe -m tools.build_midterm_hnhl_pr101_followup
 .venv/Scripts/python.exe -m tools.check_midterm_hnhl --out reports/HuynhNguyenHoaiLoc/midterm/update-verification.json
 # Dùng document-authoring runtime có python-docx, không dùng Python robot:
 <document-python> tools/export_midterm_hnhl_doc.py
 ```
+
+Nguồn PR101 chưa merge đã có bản archive kèm original/transformed hashes trong Git; không dùng `--import-source` để ghi đè. Các lần build/check sau không cần Git objects của nhánh KR chưa merge.
 
 Sau export Word phải render lại tất cả trang và kiểm tra layout trước khi đưa vào báo cáo. Bản hiện tại kiểm tra bằng Microsoft Word trên Windows và rasterizer của document runtime; QA page images/PDF chỉ là intermediates trong data/midterm_qa. Không cần chạy lại model để vẽ lại số đo cũ. Nếu nguồn metrics hoặc nội dung thay đổi, sửa snapshot/narrative rồi kiểm tra lại; không ghi đè dữ liệu thí nghiệm lịch sử.
 

@@ -1,5 +1,7 @@
 # Checklist tiếp tục hoàn thiện giữa kỳ HNHL
 
+**Sau bản sửa KR09/11:** [PR101 follow-up](followup-pr101-2026-11-09.md) ghi các lỗi cũ đã sửa và các lỗi còn tái hiện. Phần báo cáo HNHL đã được KR sửa đáng kể; còn cần bỏ distance T1 PASS, sửa destination của appearance vector, đưa F18/caveats vào bản ghép. Chưa có D3/gallery/D5 độc lập/map/latency/combined4050 mới; không chuyển các mục này sang PASS.
+
 **Hiện hành09/11:** [đối chiếu mới](update-2026-11-09.md) và [gói sửa Chương5 cho KR](HNHL-EDITOR-CORRECTIONS-1109.md). Phần nhóm đã có thêm: poses/run08/11,5 video stop-proxy, Phase3 T0 và bản thảo nhóm. Đã bổ sung có giới hạn; chưa đủ D3/re-ID/D5 độc lập/F11/F7 raw/combined4050/T2. Các PR99/101/102 có findings, chưa merge. Converter D3 và F18 đã triển khai/đo trong #100, chờ review; không cần viết lại vì dòng kế hoạch cũ “offered, not written”. Buổi lớp09/11 và bỏ matte là thay đổi đang đề xuất; chưa tự đổi nghiệm thu. Mốc16/18/23-11 giữ nguyên.
 
 **Cập nhật hiện hành 07/11:** [audit bằng chứng DQK/KR](update-2026-11-07.md) xác nhận DQK đã đo pose sau sửa và chạy pilot home một người. Đã bổ sung số đo/giới hạn vào bản thảo; không yêu cầu nhóm làm lại các nguồn GPU/entrance/edge/simulation đã có. Còn thiếu reviewed D3 hai người, re-ID gallery≥5 identities, D5 độc lập, world truth và raw latency/combined RTX4050. PR #99 head mới vẫn request-changes; phần pilot không biến thành PASS hoặc dữ liệu D3.

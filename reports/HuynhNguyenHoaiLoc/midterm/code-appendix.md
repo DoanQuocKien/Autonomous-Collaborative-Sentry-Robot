@@ -17,6 +17,7 @@
 | `tools/build_midterm_hnhl_followup.py` | Addendum 05/11, F18 và nguồn plan theo commit | N01–N11; checker xác minh hashes, snapshot và nghiệm thu còn thiếu |
 | `tools/build_midterm_hnhl_team_update.py` | Snapshot numeric DQK không track IDs/boxes, audit các phần nhóm đã làm, F17 pilot | Archived source hashes/provenance, tests aggregate/clock guards; không chạy inference/HIL |
 | `tools/build_midterm_hnhl_nov09.py` | Đính chính source08/11, tổng hợp video stop-proxy, audit Phase3/report draft và kế hoạch | Pinned source heads, provenance, proxy/input guards; không cấp safety/accuracy PASS |
+| `tools/build_midterm_hnhl_pr101_followup.py` | Theo dõi bản sửa KR sau snapshot09/11, giữ findings đã sửa và giới hạn còn thiếu | Pinned source/actual review logs; không phải D3 hoặc HIL |
 | `tools/train_d5.py`, `freeze_d5.py`, `check_d5_onnx.py` | Train/export/freeze/parity development candidate | E02/E08; artifacts local |
 | `tools/build_midterm_hnhl.py`, `export_midterm_hnhl_doc.py` | Tạo lại hình, evidence snapshot và Chương5 | Kiểm tra source hashes, số liệu và render Word |
 | `tools/build_midterm_hnhl_update.py`, `check_midterm_hnhl.py` | Phụ lục 03/11, F9 single-model và kiểm tra metadata/links/Word hash | Không inference; giữ các nghiệm thu còn thiếu ở trạng thái chưa đo |
