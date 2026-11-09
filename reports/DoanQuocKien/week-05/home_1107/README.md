@@ -79,7 +79,7 @@ Findings:
 
 Review state of PR #99 (HNHL, head `bb9f341`): 5 findings. Fixed in `bfaa2a6`: yaw pulses now expire in the sender by wall clock (`command_to_send`), evidence is saved in the loop's `finally` (error, Ctrl+C, failed end-battery read; null end voltage), `feet_row_offset_px` default 0 and logged in every summary. Fixed in `a471d8f` (config.toml into the controllers with the effective config in every summary; centring in full-width units; time-based fractions with coverage, labelled not an acceptance; pose integrated over the interval the robot actually received, static in dry-run, slow-frame override logged as requested vs applied; main-path fault-injection tests: normal run, inference failure, Ctrl+C, failed end-battery read).
 
-## 7. Addendum 2026-11-09: tile trials and the standoff dead band
+## 7. Addendum 2026-11-09: tile trials and the standoff dead band (CLASSROOM, glossy tile floor with 0.6 m tiles; label corrected by DQK on 11-09: everything from this section on was recorded in the classroom, not at home)
 Fresh `self_pose` `1109_2` (pitch -4.34 deg, roll -1.56, spread 0.09, 45 frames). Floor tiles are 0.6 m squares; the trial: start 3 tiles (1.8 m) ahead, let it close and hold, walk back 1 tile, step 1 tile aside. DQK stood still after the first hold.
 | run | offset | what happened |
 |---|---|---|
