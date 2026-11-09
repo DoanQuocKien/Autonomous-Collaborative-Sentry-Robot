@@ -22,7 +22,7 @@
 
 ## Findings for the report (design, not patches)
 - A 0.100 m lens makes monocular ranging weak in the working band: foot-row range is good to about 1.2-1.5 m with a fresh pose; ankle keypoints do not work as a floor point (the ankle is about level with the lens); box-height ranging works only beyond about 2.2 m (the head clips at the top of the frame closer); between 1.5 and 2.2 m neither is reliable. A higher camera mount would fix it (not planned).
-- Pursuit evidence in the report: first supervised live trials, limits stated, no acceptance numbers.
+- Pursuit evidence in the report: first supervised live trials, limits stated, no acceptance numbers. The measured limits, the height-versus-error table and the proposals (higher mount, more tilt, a better model) are in `docs/Mid-Term Report Plan.md` section 8 and plan risk 31.
 
 ## Open / next
 - **Workload note (DQK, 2026-11-08):** next week (Nov 9-15) carries about two to three weeks of work: the classroom session that was pushed (graded T2 runs, Part C, handshake retest, Phase 2, obstacle retest, calibration, F7/F17), the open PR work (#99, #100, #102), the remaining figures and the report sections, with the figure freeze on Mon Nov 16 and the draft on Wed Nov 18. The full list of unfinished and planned items is in the plan, Week 6 section ('Carried over from Weeks 4-5'). Cut line if time runs short (highest first): must = `self_pose`, T2 deployment 5 of 5, Part C; should = handshake retest, Phase 2 live; cut and report as 'in progress with its plan' = pursuit/hold trials beyond the first live runs, obstacle retest, clean `motion_check`, F7/F17.
