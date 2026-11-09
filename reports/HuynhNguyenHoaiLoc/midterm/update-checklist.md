@@ -1,5 +1,7 @@
 # Checklist tiếp tục hoàn thiện giữa kỳ HNHL
 
+**Hiện hành09/11:** [đối chiếu mới](update-2026-11-09.md) và [gói sửa Chương5 cho KR](HNHL-EDITOR-CORRECTIONS-1109.md). Phần nhóm đã có thêm: poses/run08/11,5 video stop-proxy, Phase3 T0 và bản thảo nhóm. Đã bổ sung có giới hạn; chưa đủ D3/re-ID/D5 độc lập/F11/F7 raw/combined4050/T2. Các PR99/101/102 có findings, chưa merge. Converter D3 và F18 đã triển khai/đo trong #100, chờ review; không cần viết lại vì dòng kế hoạch cũ “offered, not written”. Buổi lớp09/11 và bỏ matte là thay đổi đang đề xuất; chưa tự đổi nghiệm thu. Mốc16/18/23-11 giữ nguyên.
+
 **Cập nhật hiện hành 07/11:** [audit bằng chứng DQK/KR](update-2026-11-07.md) xác nhận DQK đã đo pose sau sửa và chạy pilot home một người. Đã bổ sung số đo/giới hạn vào bản thảo; không yêu cầu nhóm làm lại các nguồn GPU/entrance/edge/simulation đã có. Còn thiếu reviewed D3 hai người, re-ID gallery≥5 identities, D5 độc lập, world truth và raw latency/combined RTX4050. PR #99 head mới vẫn request-changes; phần pilot không biến thành PASS hoặc dữ liệu D3.
 
 **Trạng thái hiện hành 06/11:** [DQK báo camera đã sửa](update-2026-11-06.md), stream hoạt động trở lại; cần recheck socket/cáp, self-pose và height trước thu D3/D5/run được tính. Không còn trạng thái mất stream theo báo cáo DQK; HNHL chưa kiểm tra robot trực tiếp. Tool `prepare_d3_recording` đã chuẩn bị bước chuyển JSONL→replay epochs, giữ timestamp thật và tạo template nhãn chưa review. PR #99 chưa sửa, #100 chờ DQK. Các ghi chú blocked phía dưới là lịch sử ngày 05/11.

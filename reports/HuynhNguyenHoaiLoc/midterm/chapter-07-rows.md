@@ -1,5 +1,7 @@
 # Kết quả HNHL để ghép Chương 7
 
+**Hiện hành09/11:** [nguồn mới và đính chính](update-2026-11-09.md). DQK rút lại giả thuyết mount-slip/foot-stance; nguyên nhân ranging vẫn chưa rõ. `home_6_1` log≈1,27m nhưng tape1,77m, chưa accuracy/T2 PASS. Link-cut có5 video stop-proxy, median516ms/range481–524ms; chưa đo mechanical stop hoặc chứng minh≤350ms, trial4 có R1 end=0. KR có Phase3 T0/bản thảo nhưng còn findings ở #101; không thay D3 hoặc robot acceptance. D3/gallery/D5 độc lập/F11/F7 raw/combined4050 vẫn pending. [Sửa claim và figure paths cho editor](HNHL-EDITOR-CORRECTIONS-1109.md).
+
 **Bổ sung 07/11 từ DQK:** [home pilot và camera/tape diagnostics](update-2026-11-07.md). Pose mới pitch −4,68..−4,49°, roll biến thiên chưa giải thích; readings tại tape 1,2/1,8/2,4 m được DQK báo 1,02/1,57/1,63 m. `home_4_1` có 362 log rows, logged HOLD tại 7,45 s và một tape endpoint 1,25 m do DQK báo, chưa time-aligned. Không dùng `home_1_3` in-band đã withdraw hoặc `home_3_1` start-near để báo pursuit PASS. PR nguồn #99 chưa merge; đây không phải kết quả HNHL chạy robot hoặc full T1/T2.
 
 **Trạng thái 06/11:** DQK báo camera sửa socket gốc, stream hoạt động khoảng 18,6 FPS; chưa có raw repair log hoặc HNHL HIL để xác minh. Camera mất stream đã được báo khắc phục, nhưng self-pose/height phải kiểm tra lại trước run được tính. Không dùng phép kiểm tra stream này làm F7 latency, D3 tracking hoặc T2 PASS. Adapter recording→D3 manifests đã qua T0, chưa có reviewed D3 mới. [Nguồn và cập nhật hiện hành](update-2026-11-06.md).

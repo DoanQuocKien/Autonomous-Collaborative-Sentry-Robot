@@ -1,4 +1,4 @@
-# Chương 5 — Phần HNHL cập nhật 07/11/2026
+# Chương 5 — Phần HNHL cập nhật 09/11/2026
 
 Bản thảo Markdown hiện hành để KR ghép; Word 01/11 là snapshot lịch sử. Chương 5 chung có ngân sách 3,5 trang, gồm thêm phần cửa của KR và deployment của DQK; editor chọn hình/rút gọn khi dàn trang. Nguồn E01–E20: [evidence gốc](evidence.md), [bổ sung 03/11](update-2026-11-03.md); N01–N11: [bổ sung 05/11](update-2026-11-05.md).
 
@@ -36,6 +36,6 @@ F18 so native PyTorch CUDA FP32/FP16 bằng cùng checkpoint D5-640 và 90 ảnh
 
 D5 custom export ONNX opset11: 90/90 ảnh cùng bbox count, 294 reference boxes ghép đủ IoU≥0,9 giữa PyTorch CUDA FP32 và ORT CPU; đây là conversion parity, chưa TensorRT accuracy (E08). DQK bổ sung F20/F21 từ bằng chứng Nano đã có; G2/Stage A chưa đạt và không làm edge mới trước giữa kỳ theo plan sau PR #98. KR/DQK bổ sung XFeat/DINOv2 và F12, không dùng timing để suy ra accuracy cửa.
 
-DQK đã bổ sung pose sau sửa và các pilot một người tại nhà 06–07/11, còn ở PR #99 chưa merge. Pitch mới −4,68 đến −4,49° khác pose 30/10 khoảng 6,8°; roll thay đổi chưa được giải thích. Một lần HOLD có tape endpoint do DQK báo 1,25 m, nhưng chưa có step response/stop-time truth, hold exit hoặc người thứ hai. Không dùng pilot này thay D3, re-ID ≥5 identities hoặc T2 PASS. F7 raw latency, F11 world truth, independent D5 và combined RTX4050 vẫn thiếu. PR #99 tại head bb9f341 vẫn request-changes; #100 chờ DQK review. [Bảng đối chiếu bằng chứng của các thành viên và pilot mới](update-2026-11-07.md). Chốt hình 16/11, full draft 18/11, nộp 23/11; các mục chưa có bằng chứng giữ chưa đo.
+DQK đã bổ sung các run 08/11 và rút lại giải thích mount-slip/foot-stance; nguyên nhân sai lệch vẫn chưa rõ. Self-pose pitch estimates đổi từ −4,26° sang −0,64°; đây chưa chứng minh cơ chế phần cứng. home_6_1 dừng khi log khoảng 1,27 m nhưng tape do DQK báo 1,77 m, nên không lấy in-band estimates làm accuracy hoặc pursuit PASS. Ankle/box-height ranging thử nghiệm chưa được chọn dùng. PR #102 báo video stop-proxy 481–524 ms; chưa chứng minh stop≤350 ms hay vi phạm, trial4 có R1 end=0. PR #101 thêm Phase3 và báo cáo nhóm nhưng còn lỗi stale/handoff/legality; không thay D3 hoặc thử robot. Lịch lớp 09/11 và scope matte đang được đề xuất đổi trong PR #102 chưa merge; chốt hình 16/11, draft 18/11, nộp 23/11 giữ nguyên. D3/re-ID/D5 độc lập/F11/raw latency/combined RTX4050 vẫn thiếu. [Audit mới và nội dung sửa cho editor](update-2026-11-09.md).
 
 [Dòng Chương 7](chapter-07-rows.md), [appendix code](code-appendix.md), [checklist dữ liệu và bàn giao](update-checklist.md).

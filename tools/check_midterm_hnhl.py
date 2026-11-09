@@ -84,6 +84,7 @@ def check():
         assert latest['f18']['tensorrt_measured'] is False
     recovery_path = OUT/'update-2026-11-06.json'
     team_path = OUT/'update-2026-11-07.json'
+    nov09_path = OUT/'update-2026-11-09.json'
     recovery_sources = 0
     if recovery_path.exists():
         from tools.build_midterm_hnhl_recovery import collect_recovery, recovery_chapter_text
@@ -111,7 +112,26 @@ def check():
         assert not any(team['acceptance'].values())
         assert team['runs']['home_1_3']['withdrawn_distance_fraction']
         assert team['runs']['home_3_1']['not_a_pursuit_test']
-        assert (OUT/'chapter-05-current.md').read_text(encoding='utf-8') == team_chapter_text(team), 'current chapter drift'
+        if not nov09_path.exists():
+            assert (OUT/'chapter-05-current.md').read_text(encoding='utf-8') == team_chapter_text(team), 'current chapter drift'
+    nov09_sources = 0
+    if nov09_path.exists():
+        from tools.build_midterm_hnhl_nov09 import collect_update as collect_nov09, chapter_text
+        nov09 = read_json(nov09_path)
+        assert nov09 == collect_nov09(), '09/11 teammate evidence drift'
+        for source in nov09['evidence'].values():
+            assert hashlib.sha256(source_bytes(source)).hexdigest() == source['sha256'], '09/11 source drift'
+            nov09_sources += 1
+        assert not nov09['all_new_source_prs_merged']
+        assert not any(nov09['acceptance'].values())
+        assert not nov09['kr_phase3']['robot_acceptance']
+        assert not nov09['plan_proposals']['merged']
+        assert not nov09['source_corrections']['physical_cause_known']
+        proxy = nov09['link_video_proxy']
+        assert not proxy['limit_350ms_proven'] and not proxy['violation_proven']
+        assert not proxy['mechanical_stop_measured']
+        assert proxy['r1_not_held_at_end_trials'] == [4]
+        assert (OUT/'chapter-05-current.md').read_text(encoding='utf-8') == chapter_text(nov09), 'current chapter drift'
     word = OUT/'HNHL-Chuong-5.docx'
     verification = read_json(OUT/'verification.json')
     word_sha = hashlib.sha256(word.read_bytes()).hexdigest()
@@ -147,11 +167,12 @@ def check():
             target = path.parent/unquote(url.split('#')[0])
             assert target.exists(), f'broken link: {path}: {url}'
             count += 1
-    return dict(checked_snapshot_date='2026-11-07' if team_path.exists() else ('2026-11-06' if recovery_path.exists() else ('2026-11-05' if latest_path.exists() else '2026-11-03')), evidence_sources_checked=len(update['evidence']),
+    return dict(checked_snapshot_date='2026-11-09' if nov09_path.exists() else ('2026-11-07' if team_path.exists() else ('2026-11-06' if recovery_path.exists() else ('2026-11-05' if latest_path.exists() else '2026-11-03'))), evidence_sources_checked=len(update['evidence']),
                 postmerge_sources_checked=followup_sources,
                 latest_sources_checked=latest_sources,
                 recovery_sources_checked=recovery_sources,
                 team_sources_checked=team_sources,
+                nov09_sources_checked=nov09_sources,
                 source_hashes_match=True, both_saved_snapshots_match=True,
                 missing_acceptance_preserved=True, local_links_checked=count,
                 original_word_sha256=word_sha, original_word_visual_review_preserved=True,
