@@ -13,27 +13,34 @@
     * When target accelerates past $0,2\text{ m/s}$ (hysteresis exit), dispatches `TARGET_MOVING` $\rightarrow$ resumes `PURSUE`.
     * If target lunges (`STRIKE`), preempts active pursuit/hold into `EVADE` with an evasive reverse pulse ($v=-1,0$) steering away from the obstacle for 400 ms, then auto-resumes `PURSUE`.
     * Upon `TARGET_EXITED`, completes active intruder, pops next target from FIFO `TargetQueue` $\rightarrow$ searches and resumes pursuit. When queue is empty, returns cleanly to `STANDBY`.
-  - **Motor Dead-Zone Projection:** Enforces JetBot physical motor dead zone ($\text{dead} = 0,40$):
-    * In `HOLD`, commands are strictly $v = 0,0$ with $|w| \ge 0,45$ or full stop $(0, 0)$ when centered $\pm 10\%$.
-    * In active drive, projects $(v, w)$ so that the inner wheel never falls below $\text{dead}$ after differential mix normalization: $|w| \le \frac{1 - \text{dead}}{1 + \text{dead}} |v| = 0,428 |v|$. All emitted commands pass `legal()`.
+  - **Target Observation Freshness & Identity Separation:**
+    * Separates control ticks from observation updates. `HoldDetector` / dwell timer is strictly updated only upon genuine new target observations (`target_pos is not None`).
+    * Enforces freshness contract (`obs_freshness_timeout_s = 0,25\text{ s}`): when an observation goes stale, motor commands safely drop to $(0, 0)$ instead of driving towards phantom positions.
+    * In `HOLD`, when observation gap exceeds `target_lost_timeout_s = 1,0\text{ s}`, cleanly releases `HOLD` via `TARGET_MOVING` back to `PURSUE`.
+    * On target handoff (or active identity change), observation caches, dwell timer, filter history, and controllers are immediately reset; requires a fresh observation associated with the new target before pursuit.
+  - **Piecewise Motor Dead-Zone Projection (`project_legal_command`):**
+    * Satisfies JetBot physical motor dead zone ($\text{dead} = 0,40$):
+      - In `HOLD`, commands are strictly $v = 0,0$ with $|w| \ge 0,45$ or full stop $(0, 0)$ when centered $\pm 10\%$.
+      - In active drive, accounts for differential mixing across both unscaled regime ($|w| \le |v| - \text{dead}$) when $|v| \le \frac{1 + \text{dead}}{2}$ and saturated normalized regime ($|w| \le \frac{1 - \text{dead}}{1 + \text{dead}} |v|$) when $|v| > \frac{1 + \text{dead}}{2}$.
+      - Re-verifies legality via `legal()` and fails safe to zero $(0, 0)$ if any boundary edge case occurs. Guaranteed 100% legal output across all inputs.
 - **Closed-Loop Replay Tool (`tools/replay_phase3.py`):**
   - Replays closed-loop Phase 3 multi-target scenario against `SimRobot`: T1 pursuit, dwell trigger at $t=6,32\text{ s}$, standoff hold with zero translation, T2 FIFO queue stacking, hysteresis exit at $t=8,26\text{ s}$, strike evasion pulse, and two-target sequential handoff upon exit.
   - Evaluates metrics and outputs structured JSON summary to `reports/kouun-rokku/week-06/phase3_replay_summary.json`.
 - **Unit Tests for Phase 2 $\rightarrow$ Phase 3 Event Chain (`tests/test_phase3_runner.py`):**
-  - Added 8 comprehensive unit tests covering: standby monitoring, intruder activation, stationary dwell trigger, yaw recentering within tolerance, hysteresis exit, multi-target queue sequencing, strike evasion pulse, and obstacle repulsion.
-- **Mid-Term Report Editor Consolidation (`reports/midterm_report_draft.md`, `tools/check_midterm_page_budget.py`):**
-  - Merged chapter drafts across all members: KR (Ch 1, 2, 6, 7, Appendix A), HNHL (Ch 5, Ch 7 rows, Appendix inputs), and DQK outlines (Ch 3, 4, 8, section 5.x).
-  - Developed audit tool `tools/check_midterm_page_budget.py`: verified **5.591 words**, estimated **12,4 trang** (chuẩn hóa nằm trong dải quy định 10–15 trang).
-  - Tracked 6 canonical figures (F1, F9, F10, F12, F13, F15) and 15 verified citations.
+  - Expanded suite to 13 comprehensive unit tests, adding regression coverage for review items: single-observation disappearance without false hold, FIFO identity handoff cache reset, handoff while T1 in HOLD with unseen T2, recovery of known case $(0,55, 0,30)$, and exhaustive 441-point input sweep across custom explore settings.
+- **Mid-Term Report Consolidation & Honest Audit (`reports/midterm_report_draft.md`, `tools/check_midterm_page_budget.py`):**
+  - Reconciled consolidated Chapter 5 with HNHL primary evidence: D5 307/90 same-session dev-val, Wire recall 0,000, 8/9 chair distance points, Face TAR 82,99% with FAR 46,40% non-acceptance, ByteTrack Python 3.6 backend parity (non-person identity), and RTX 5060 sequential workload profiling caveats.
+  - Repaired 5 broken local Markdown image paths (F1, F15, F10, F13, F9_gpu.png).
+  - Upgraded audit tool `tools/check_midterm_page_budget.py`: verified **5.893 words**, estimated **13,1 trang** (nằm trong dải quy định 10–15 trang), validates 9/9 required chapters, verifies existence of all 5 image assets, and scopes rendered compliance honestly as an estimate.
 
 ## Tests run
 
 | Tier | Command | Result | Evidence |
 | :-- | :-- | :-- | :-- |
-| T0 | `pytest tests/test_phase3_runner.py` | 8 passed (intruder queued deploy, hold dwell trigger, hold zero translation, hysteresis exit, multi-target FIFO handoff, strike evade pulse, obstacle deflection, 100% legal commands) | `reports/kouun-rokku/week-06/pytest.log` |
-| T0 | `pytest -m "not gpu and not hil"` | **625 passed, 5 skipped, 4 deselected** (full CPU test suite clean, 0 regressions) | `reports/kouun-rokku/week-06/pytest.log` |
-| T0 | `python -m tools.replay_phase3 --out reports/kouun-rokku/week-06/phase3_replay_summary.json` | Dwell trigger $t=6,32\text{ s}$, zero translation verified, recenter time $0,26\text{ s} \le 1,5\text{ s}$, hysteresis exit $t=8,26\text{ s}$, 2 targets completed, 0 illegal commands $\rightarrow$ **PASS** | `reports/kouun-rokku/week-06/phase3_replay_summary.json` |
-| T0 | `python -m tools.check_midterm_page_budget --file reports/midterm_report_draft.md` | Total words: 5.591, estimated pages: **12,4 pages** (target 10–15 pages), 9 chapters complete $\rightarrow$ **PASS** | `reports/midterm_report_draft.md` |
+| T0 | `pytest tests/test_phase3_runner.py` | **13 passed** (deploy, dwell, hold zero-translation, hysteresis exit, FIFO handoff, strike evade, repulsion, single-sample disappearance, handoff cache reset, handoff in hold, v=0.55 w=0.3 projection, 441-point legality sweep) | `reports/kouun-rokku/week-06/pytest.log` |
+| T0 | `pytest -m "not gpu and not hil"` | **630 passed, 5 skipped, 4 deselected** (full CPU test suite clean, 0 regressions) | `reports/kouun-rokku/week-06/pytest.log` |
+| T0 | `python -m tools.replay_phase3 --out reports/kouun-rokku/week-06/phase3_replay_summary.json` | Dwell trigger $t=6,32\text{ s}$, zero translation verified, recenter time $0,00\text{ s} \le 1,5\text{ s}$, hysteresis exit $t=8,26\text{ s}$, 2 targets completed, 0 illegal commands $\rightarrow$ **PASS** | `reports/kouun-rokku/week-06/phase3_replay_summary.json` |
+| T0 | `python -m tools.check_midterm_page_budget --file reports/midterm_report_draft.md` | Total words: 5.893, estimated pages: **13,1 pages** (target 10–15 pages), 9/9 chapters complete, 5/5 assets verified $\rightarrow$ **PASS** | `reports/midterm_report_draft.md` |
 
 ## Acceptance criteria status (Implementation Plan §4.3)
 

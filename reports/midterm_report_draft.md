@@ -78,7 +78,7 @@ Hệ thống phân tách kiến trúc thành 3 khối vật lý chuyên biệt:
 - **Robot di động (SparkFun JetBot):** Đóng vai trò thiết bị thu nhận và cơ cấu chấp hành (actuator). JetBot chỉ thực hiện hai nhiệm vụ nhẹ: nén ảnh camera fisheye gửi qua ZeroMQ và tiếp nhận gói điều khiển vận tốc $(v, \omega)$ qua UDP non-blocking ở tần số 30 Hz.
 - **Trạm tính toán trung tâm (Laptop PC):** Tập trung toàn bộ tải tính toán nặng bao gồm giải nén video, chạy các mạng nơ-ron tích chập (YOLOv8, SCRFD, MobileFaceNet, OSNet, XFeat, DINOv2), ước lượng tư thế dead-reckoning, quản lý hàng đợi và vận hành máy trạng thái.
 
-![F1_system_architecture](figures/F1_system_overview.png)
+![F1_system_architecture](DoanQuocKien/week-05/figures/F1_system_overview.png)
 *Hình F1: Sơ đồ kiến trúc phân tán giữa ESP32-CAM, Laptop điều khiển và Robot JetBot.*
 
 ## 3.2 Giao thức mạng và luồng dữ liệu thời gian thực
@@ -116,7 +116,7 @@ Robot JetBot sử dụng 2 động cơ DC gắn hộp giảm tốc không có en
 1. **Vùng chết động cơ (Dead Zone):** Giá trị điều khiển chuẩn hóa $|u| < 0,12$ (tương đương 40% trần tốc độ 0,3) không đủ lực thắng ma sát tĩnh, làm động cơ rít lên và đứng yên. Bộ trộn bánh vi sai (`common/mixing.py`) và các bộ điều khiển bắt buộc phải triệt tiêu lệnh trong vùng chết hoặc đẩy bật lên ngưỡng tối thiểu $|u| \ge 0,40$.
 2. **Sai số trôi dạt tích lũy (Dead-Reckoning Drift):** Robot có xu hướng lệch trái tự nhiên khoảng $0,19\text{ rad/m}$. Khi không có mốc hiệu chỉnh ArUco, sai số vị trí sau 3 mét di chuyển lên tới 98,3 cm. Khi tích hợp mốc ArUco định vị lại tọa độ (`sentry/nav/localization.py`), sai số vị trí điểm cuối giảm xuống còn **14,5 cm**.
 
-![F15_dead_reckoning](reports/DoanQuocKien/week-05/f15/F15_dead_reckoning.png)
+![F15_dead_reckoning](DoanQuocKien/week-05/f15/F15_dead_reckoning.png)
 *Hình F15: Quỹ đạo di chuyển thực tế và sai số điểm cuối giữa dead-reckoning thuần túy (đỏ) và có mốc ArUco hỗ trợ (xanh).*
 
 ---
@@ -128,17 +128,17 @@ Robot JetBot sử dụng 2 động cơ DC gắn hộp giảm tốc không có en
 ## 5.1 Ước lượng khoảng cách vật cản mặt sàn
 
 Hệ thống phát hiện vật cản bằng YOLOv8n kết hợp ước lượng điểm tiếp xúc chân vật thể trên sàn. Sàn nhà có độ bóng cao tạo ra hình ảnh phản chiếu gương gây nhầm lẫn điểm chân bounding box. Module `sentry/perception/contact.py` áp dụng bộ lọc cạnh ngang và kiểm tra độ tin cậy hình học để từ chối các ước lượng không đủ bằng chứng.
-- Thử nghiệm trên 9 vị trí ghế thực tế trên sàn glossy (Hình F10) đạt sai số trung vị (median) **5,34%** và phân vị p90 là **20,91%**.
+- Thử nghiệm trên 8/9 vị trí ghế thực tế trên sàn glossy (Hình F10, vị trí ID21 bị thiếu do cắt mép ảnh) đạt sai số trung vị (median) **5,34%** và phân vị p90 là **20,91%**; ba vị trí held-out đạt 5,37% / 17,11% [E01].
 
-![F10_distance](reports/HuynhNguyenHoaiLoc/midterm/figures/F10_distance.png)
+![F10_distance](HuynhNguyenHoaiLoc/midterm/figures/F10_distance.png)
 *Hình F10: Độ chính xác ước lượng khoảng cách chân ghế trên mặt sàn bóng qua camera fisheye nắn thẳng.*
 
 ## 5.2 Huấn luyện phát hiện vật cản sàn nhà (Tập dữ liệu D5)
 
-Tập dữ liệu D5 gồm 397 ảnh chụp thực tế từ góc nhìn sát sàn của JetBot (chân bàn ghế, ba lô, giày dép, cây cảnh, dây cáp đen/trắng). Mô hình YOLOv8n được fine-tune qua 30 epochs:
-- Độ chính xác mAP50 đạt **0,810** ở độ phân giải 640×640.
-- Recall phát hiện chân bàn/ghế đạt **96,0%**.
-- Vật cản dây cáp mỏng là đối tượng thách thức nhất (recall thấp do kích thước chỉ vài pixel), được hệ thống bổ sung lớp fallback hình học cạnh sàn (`sentry/perception/wire_fallback.py`).
+Tập dữ liệu D5 gồm 397 ảnh chụp thực tế trong một phòng và một session glossy từ góc nhìn sát sàn của JetBot (chân bàn ghế, ba lô, giày dép, cây cảnh, dây cáp đen/trắng). Phân chia 307 train / 90 dev-val theo nhóm khoảng cách (kết quả là development validation, chưa độc lập về mặt sàn/session) [E02]:
+- Checkpoint 640×640 đạt mAP50 **0,810** (mAP50-95 đạt 0,656) trong quá trình phát triển (chưa kích hoạt làm mặc định trên robot).
+- Recall phát hiện chân bàn/ghế đạt **96,0%** (24/25 chân ghế).
+- Vật cản dây cáp: Wire recall là **0,000 (0,0%)**, chưa đạt mục tiêu 80%; fallback hình học còn nhầm ron sàn và 12 masks dây mới chỉ ở mức pilot annotation.
 
 ## 5.3 Nhận diện lối vào (Entrance Matching Bake-off)
 
@@ -151,26 +151,29 @@ Trong Giai đoạn 1, robot phải nhận diện đúng cửa vào phòng từ k
 
 Trạm ESP32-CAM thu nhận khuôn mặt người bước vào cửa. Module `FaceVerifier` (`sentry/perception/face.py`) sử dụng SCRFD phát hiện khuôn mặt và MobileFaceNet tạo vector đặc trưng 512D chuẩn hóa.
 - Đối soát với tập người đăng ký (whitelist) dựa trên độ tương đồng cosine cực đại (ngưỡng 0,45).
-- Thử nghiệm pilot trên 125 frame mặt người (tập D2 cafe, 3 thành viên DQK, HNHL, KR) theo phương pháp leave-one-out cho thấy tại ngưỡng 0,45 đạt tỷ lệ chấp thuận thực TAR 82,99% (Hình F13).
+- Thử nghiệm pilot cùng session trên 125 frame mặt người (tập D2 cafe, 21 lượt vào của 3 thành viên DQK, HNHL, KR) theo phương pháp leave-one-member-out, enrollment từ lượt vào đầu tiên [E03]:
+  * Tại ngưỡng cosine 0,45, hệ thống đạt tỷ lệ chấp thuận thực TAR **82,99%** nhưng tỷ lệ chấp thuận sai FAR lên tới **46,40%**, chưa đạt tiêu chuẩn nghiệm thu TAR 95% @ FAR 1% (Hình F13).
+  * Ngưỡng 0,45 chỉ là ngưỡng tạm thời (provisional), không dùng chính pilot để chọn lại threshold và tự báo PASS.
 
-![F13_face_roc](reports/HuynhNguyenHoaiLoc/midterm/figures/F13_face_roc.png)
+![F13_face_roc](HuynhNguyenHoaiLoc/midterm/figures/F13_face_roc.png)
 *Hình F13: Đường cong ROC kiểm định Face Verification trên tập dữ liệu lối vào D2.*
 
 ## 5.5 Nhận dạng lại ngoại hình (Re-ID) và Theo dõi mục tiêu (ByteTrack)
 
 Khi kẻ xâm nhập bị từ chối tại cửa, một vector đặc trưng toàn thân 512D được trích xuất qua mạng `OSNet-AIN x1.0`. Vector này được đóng gói cùng thông tin sector di chuyển (Trái/Giữa/Phải dựa trên độ trôi bounding box 2 giây) gửi sang robot JetBot.
-- Trên robot, module `PersonTracker` (`sentry/perception/tracker.py`) kết hợp phát hiện người YOLOv8n và bộ theo dõi ByteTrack thuần Python 3.6 do nhóm tự vendor (`third_party/bytetrack/`).
-- Thuật toán khóa mục tiêu (Target Lock) so khớp cosine giữa vector ngoại hình quan sát với vector mục tiêu ban đầu (ngưỡng 0,70), đảm bảo robot bám đúng đối tượng xâm nhập ngay cả khi có người khác xuất hiện trong tầm nhìn.
-- Đánh giá trên tập benchmark hoán đổi quỹ đạo (crossing tracks) đạt độ khớp ID **100,0%** so với bản gốc Ultralytics.
+- Module theo dõi chạy hoàn toàn trên laptop. Đánh giá trên tập benchmark hoán đổi quỹ đạo (crossing tracks) đạt độ khớp ID **100,0%** so với bản gốc Ultralytics — đây là kiểm thử parity thuần túy giữa bản vendor Python 3.6 và bản gốc, **chưa phải độ chính xác theo dõi danh tính người thật**.
+- Về Re-ID: Tập D2 hiện mới có 23 body crops không mơ hồ và thiếu gallery ở 2/3 người, do đó **chưa có kết quả rank-1 / CMC hợp lệ**, chưa chọn được mô hình chiến thắng chính thức và chưa nghiệm thu gate rank-1 $\ge 85\%$ (với $\ge 5$ danh tính gallery).
+- Về Target Lock: Đã replay 822 frame D2 nhưng do chưa có body ID ground truth nên chưa có độ chính xác ID-switch. Kịch bản D3 hai người có ID/tầm nhìn được review vẫn còn thiếu; mục tiêu $\le 1$ switch/phút chưa được nghiệm thu [E04, E11, E12].
 
 ## 5.6 Tối ưu hóa và kiểm thử hiệu năng GPU (Workload Profiling)
 
-Đo đạc toàn diện trên GPU laptop (RTX 5060/4050) khi nạp đồng thời toàn bộ các mô hình (YOLOv8n + ByteTrack + OSNet + YOLOv8-pose + SCRFD + MobileFaceNet + XFeat/DINOv2):
-- Bộ nhớ VRAM chiếm dụng ở trạng thái resident ổn định ở mức **0,939 GiB** (thấp hơn rất nhiều so với trần 5,5 GB quy định).
-- Tốc độ xử lý khi điều phối luồng cửa định kỳ đạt **19,65 FPS**, đáp ứng hoàn toàn yêu cầu thời gian thực (>15 FPS).
+Đo đạc workload tổng hợp trên GPU laptop **RTX 5060** (trên RTX 4050 hiện mới chỉ có bằng chứng đo từng mô hình đơn lẻ; chưa đo đồng thời trên RTX 4050) [E05-E07]:
+- Khi nạp đồng thời toàn bộ các mô hình (YOLOv8n + OSNet-AIN + YOLOv8n-pose + SCRFD/MobileFaceNet + XFeat + DINOv2-B FP16): bộ nhớ VRAM chiếm dụng ở mức **0,939 GiB** (thấp hơn trần 5,5 GB decimal tức 5,12 GiB; đo qua NVML device-used 20 ms, chưa tính transport và điều khiển).
+- Thử nghiệm có chèn ít nhất 2 crop tổng hợp (synthetic padding) cho body/face khi thiếu detection (đây là bài đo workload, không phải đo accuracy).
+- Lập lịch tuần tự (scheduled): khi điều phối luồng cửa định kỳ đạt throughput **19,65 FPS** (độ trễ p95 là 87,62 ms), tần số cập nhật cửa thực tế đạt **4,52 Hz** (kế hoạch yêu cầu 5 Hz). Hai chế độ nạp full model mỗi frame chỉ đạt 12,72 và 14,25 FPS (< 15 FPS). Do đó chưa thể coi là hoàn tất nghiệm thu thời gian thực trên mọi cấu hình.
 
-![F9_gpu_pie](reports/HuynhNguyenHoaiLoc/midterm/figures/F9_gpu_pie.png)
-*Hình F9: Phân bổ tài nguyên VRAM và độ trễ tính toán giữa các mô hình học sâu.*
+![F9_gpu](HuynhNguyenHoaiLoc/midterm/figures/F9_gpu.png)
+*Hình F9: Throughput workload và dung lượng VRAM chiếm dụng trên GPU laptop RTX 5060 [E05-E07].*
 
 ---
 
@@ -242,16 +245,16 @@ Nguyên tắc bất di bất dịch của báo cáo: **Mọi con số đều ph�
 | **Bù góc camera động LiveTilt** | **ĐẠT (T1/T2)**| Sai số khoảng cách 0,5%–6,0% tĩnh, 3,0%–20,0% động | `calib/camera_pose_classroom.json` |
 | **Mô hình di chuyển & ArUco** | **ĐẠT (T1/T2)**| Sai số vị trí sau 3 m: 98,3 cm (không mốc) $\rightarrow$ **14,5 cm** (có ArUco) | `reports/DoanQuocKien/week-05/f15/` |
 | **Nhận diện cửa vào (Bake-off)** | **ĐẠT (T1)** | XFeat đạt AUC **0,99–1,00**, vượt trội so với ORB (0,91) | `reports/kouun-rokku/week-05/F12_*.png` |
-| **Khoảng cách vật cản mặt sàn** | **ĐẠT (T1)** | Sai số trung vị 5,34%, p90 là 20,91% trên sàn bóng | `reports/HuynhNguyenHoaiLoc/midterm/` |
-| **Fine-tune YOLOv8n vật cản D5** | **ĐẠT (T1)** | mAP50 đạt 0,810 (input 640); recall chân ghế 96,0% | `reports/HuynhNguyenHoaiLoc/midterm/` |
-| **Phát hiện dây cáp sàn nhà** | *CHƯA ĐẠT* | Recall 0,0% tại điểm vận hành; chuyển sang fallback hình học | `reports/HuynhNguyenHoaiLoc/midterm/` |
-| **Xác thực khuôn mặt cửa D2** | *PILOT T1* | Ngưỡng cosine 0,45: TAR 82,99%, FAR 46,40% (chưa đạt TAR95%@FAR1%) | `reports/HuynhNguyenHoaiLoc/midterm/` |
+| **Khoảng cách vật cản mặt sàn** | **ĐẠT (T1)** | Sai số trung vị 5,34%, p90 là 20,91% (8/9 vị trí ghế, thiếu ID21 mép ảnh) | `reports/HuynhNguyenHoaiLoc/midterm/` |
+| **Fine-tune YOLOv8n vật cản D5** | **DEV-VAL (T1)** | mAP50 đạt 0,810 (input 640); recall chân ghế 96,0%; 307/90 cùng session | `reports/HuynhNguyenHoaiLoc/midterm/` |
+| **Phát hiện dây cáp sàn nhà** | *CHƯA ĐẠT* | Recall 0,000 (0,0%) tại điểm vận hành; chuyển sang fallback hình học | `reports/HuynhNguyenHoaiLoc/midterm/` |
+| **Xác thực khuôn mặt cửa D2** | *PILOT (T1)* | Ngưỡng cosine 0,45: TAR 82,99%, FAR 46,40% (chưa đạt tiêu chuẩn nghiệm thu TAR95%@FAR1%) | `reports/HuynhNguyenHoaiLoc/midterm/` |
 | **Phân loại Sector lối vào** | **ĐẠT (T0)** | Độ chính xác phân loại hướng đi Trái/Giữa/Phải đạt **96,7%** | `reports/kouun-rokku/week-04/` |
-| **ByteTrack Parity Python 3.6** | **ĐẠT (T0)** | Đạt **100,0%** độ khớp ID trên kịch bản phân nhánh/giao cắt | `reports/kouun-rokku/week-05/bytetrack_*.json` |
+| **ByteTrack Parity Python 3.6** | **ĐẠT (T0)** | 100,0% parity backend với Ultralytics (chưa có rank-1 / D3 tracking accuracy người thật) | `reports/kouun-rokku/week-05/bytetrack_*.json` |
 | **Bộ phát hiện dừng bước (Hold)** | **ĐẠT (T0)** | Kích hoạt dwell time 2,05 s; 0 lần báo giả khi robot tự quay | `reports/kouun-rokku/week-05/hold_*.json` |
 | **Điều khiển Standoff Hold** | **ĐẠT (T0)** | Vận tốc tịnh tiến $v=0,0$ tuyệt đối; xoay canh giữa trong $\le 0,26\text{ s}$ | `reports/kouun-rokku/week-06/phase3_*.json` |
 | **Chuỗi Phase 2 $\rightarrow$ Phase 3** | **ĐẠT (T0)** | 100% lệnh hợp lệ vùng chết; chuyển giao hàng đợi đa mục tiêu trơn tru | `tests/test_phase3_runner.py` |
-| **Tải GPU Laptop (Workload)** | **ĐẠT (T1)** | 19,65 FPS có điều phối cửa; chiếm dụng VRAM **0,939 GiB** | `reports/HuynhNguyenHoaiLoc/midterm/` |
+| **Tải GPU Laptop (Workload)** | **ĐẠT (T1 / RTX 5060)** | 19,65 FPS scheduled (door 4,52 Hz, synthetic padding); VRAM 0,939 GiB (RTX 4050 chỉ có single-model) | `reports/HuynhNguyenHoaiLoc/midterm/` |
 
 ---
 

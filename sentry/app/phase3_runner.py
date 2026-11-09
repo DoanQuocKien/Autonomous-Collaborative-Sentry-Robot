@@ -36,9 +36,61 @@ logger = logging.getLogger("sentry.phase3")
 @dataclass(frozen=True)
 class Phase3Settings:
     """Configuration settings for Phase 3 runner."""
-    target_lost_timeout_s: float = 3.0
+    obs_freshness_timeout_s: float = 0.25      # Commands stop if observation is older than this
+    target_lost_timeout_s: float = 1.0         # Release target / exit HOLD when no observation for > 1.0 s
     evade_turn_sign_default: float = 1.0
     min_track_confidence: float = 0.30
+
+
+def project_legal_command(v: float, w: float, s: ExploreSettings) -> Tuple[float, float]:
+    """Project (v, w) onto the legal set satisfying ExploreSettings dead-zone constraints.
+
+    Uses the differential-drive mix(v, w) contract from common.mixing:
+    - Saturated regime (|v| + |w| > 1.0): |w| <= ((1 - dead) / (1 + dead)) * |v|
+    - Unscaled regime (|v| + |w| <= 1.0): |w| <= |v| - dead
+    The continuous transition between regimes occurs at |v| = (1 + dead) / 2.
+    Rechecks legality and fails safe to (0.0, 0.0) if still invalid.
+    """
+    v = max(-1.0, min(1.0, float(v)))
+    w = max(-1.0, min(1.0, float(w)))
+
+    cmd = NavCommand(v, w, "", "")
+    if legal(cmd, s):
+        return v, w
+
+    dead = s.dead
+    abs_v = abs(v)
+    abs_w = abs(w)
+
+    if abs_v < dead:
+        # Cannot translate legally; either spin in place or stop cleanly
+        if abs_w < dead:
+            return 0.0, 0.0
+        w_spin = math.copysign(max(abs_w, s.w_spin), w)
+        w_spin = max(-1.0, min(1.0, w_spin))
+        if legal(NavCommand(0.0, w_spin, "", ""), s):
+            return 0.0, w_spin
+        return 0.0, 0.0
+
+    # Translating with abs_v >= dead
+    boundary = (1.0 + dead) / 2.0
+    if abs_v <= boundary:
+        max_w = max(0.0, abs_v - dead)
+    else:
+        max_w = ((1.0 - dead) / (1.0 + dead)) * abs_v
+
+    w_proj = math.copysign(min(abs_w, max_w), w)
+    w_proj = max(-1.0, min(1.0, w_proj))
+
+    if legal(NavCommand(v, w_proj, "", ""), s):
+        return v, w_proj
+
+    # Fallback to zero steering if numerical edge case
+    if legal(NavCommand(v, 0.0, "", ""), s):
+        return v, 0.0
+
+    # Ultimate fail safe to clean stop
+    return 0.0, 0.0
 
 
 @dataclass
@@ -80,12 +132,35 @@ class Phase3Runner:
         self.log: List[Tuple[float, str]] = []
         self.events: List[Tuple[float, str, Any]] = []
 
-        # Internal tracking caches
+        # Internal tracking caches & identity management
+        self._active_target_id: Optional[str] = self.sm.active_target
         self._last_target_obs: Optional[Tuple[float, float]] = None
         self._last_target_t: Optional[float] = None
+        self._last_obs_target_id: Optional[str] = None
+        self._last_ctrl_v: float = 0.0
+        self._last_ctrl_w: float = 0.0
+        self._last_ctrl_t: Optional[float] = None
         self._last_obs_dist: Optional[float] = None
         self._last_obs_bearing: float = 0.0
         self._evade_w: float = self.sm.cfg.evade_w
+
+    def _reset_target_tracking(self) -> None:
+        """Reset observation caches, dwell timer, filter history, and controllers on target identity change."""
+        self._last_target_obs = None
+        self._last_target_t = None
+        self._last_obs_target_id = None
+        self._last_ctrl_v = 0.0
+        self._last_ctrl_w = 0.0
+        self._last_ctrl_t = None
+        self.controller.reset()
+
+    def _sync_active_target(self) -> None:
+        """Check if active target identity has changed; if so, clear caches and require a fresh observation."""
+        curr_id = self.sm.active_target
+        if curr_id != self._active_target_id:
+            logger.info("Target identity handoff: %r -> %r. Clearing tracking caches.", self._active_target_id, curr_id)
+            self._active_target_id = curr_id
+            self._reset_target_tracking()
 
     @property
     def state(self) -> State:
@@ -117,6 +192,7 @@ class Phase3Runner:
         if self.sm.state != prev:
             self.log.append((t, self.sm.state.value))
             logger.info("Phase 3 transition at t=%.3f: %s -> %s (event: %s)", t, prev.value, self.sm.state.value, name)
+        self._sync_active_target()
         return res
 
     def start(self, t: float = 0.0, target_id: Optional[str] = None) -> None:
@@ -164,12 +240,21 @@ class Phase3Runner:
         if prev == State.STANDBY and res.state == State.PURSUE:
             self.queue.pop(t=now)
 
+        self._sync_active_target()
         return res
 
-    def observe_target(self, target_obs: Union[Tuple[float, float], Any], t: float) -> None:
+    def observe_target(self, target_obs: Union[Tuple[float, float], Any], t: float, target_id: Optional[str] = None) -> None:
         """Cache fresh target position in local robot coordinates (forward_m, left_m)."""
+        self._sync_active_target()
         if target_obs is None:
             self._last_target_obs = None
+            self._last_target_t = None
+            self._last_obs_target_id = None
+            return
+
+        tid = target_id or self.sm.active_target
+        # If an observation arrives for a different target than the active target, ignore
+        if tid is not None and self.sm.active_target is not None and tid != self.sm.active_target:
             return
 
         if hasattr(target_obs, "forward_m") and hasattr(target_obs, "left_m"):
@@ -184,6 +269,7 @@ class Phase3Runner:
             raise ValueError(f"Unrecognized target observation format: {target_obs!r}")
 
         self._last_target_t = float(t)
+        self._last_obs_target_id = tid
 
     def observe_obstacle(self, dist_m: Optional[float], bearing_rad: float = 0.0, t: Optional[float] = None) -> None:
         """Cache nearest obstacle detection."""
@@ -213,6 +299,7 @@ class Phase3Runner:
             if self.queue.active_target is None or self.queue.active_target.id != self.sm.active_target:
                 self.queue.pop(t=t)
 
+        self._sync_active_target()
         return res
 
     def step(
@@ -224,7 +311,8 @@ class Phase3Runner:
         obstacle_bearing_rad: float = 0.0,
     ) -> Tuple[float, float]:
         """Execute one control step at timestamp t -> (v, w) legal motor command."""
-        # 1. Update StateMachine timer ticks and evaluate timeouts
+        # 1. Synchronize target identity & update StateMachine ticks
+        self._sync_active_target()
         prev_sm_state = self.sm.state
         tick_res = self.sm.tick(t)
         if tick_res.command and tick_res.command.play:
@@ -232,11 +320,14 @@ class Phase3Runner:
         if self.sm.state != prev_sm_state:
             self.log.append((t, self.sm.state.value))
 
+        self._sync_active_target()
         curr_state = self.sm.state
 
-        # 2. Update observations
+        # 2. Update observations: track observation arrival explicitly
+        is_new_obs = False
         if target_pos is not None:
             self.observe_target(target_pos, t)
+            is_new_obs = (self._last_target_obs is not None)
         if obstacle_dist_m is not None:
             self.observe_obstacle(obstacle_dist_m, obstacle_bearing_rad, t)
 
@@ -257,17 +348,32 @@ class Phase3Runner:
 
         elif curr_state in (State.PURSUE, State.HOLD):
             target_obs = self._last_target_obs
+            obs_age = (
+                (t - self._last_target_t)
+                if (self._last_target_t is not None and target_obs is not None)
+                else float("inf")
+            )
             target_is_fresh = (
                 target_obs is not None
-                and self._last_target_t is not None
-                and (t - self._last_target_t) <= self.s.target_lost_timeout_s
+                and self._last_obs_target_id == self.active_target
+                and obs_age <= self.s.obs_freshness_timeout_s
             )
 
-            if target_is_fresh and target_obs is not None:
+            # Freshness contract: release target from HOLD if stale past target_lost_timeout_s
+            if curr_state == State.HOLD and obs_age > self.s.target_lost_timeout_s:
+                logger.info(
+                    "Target %r lost while in HOLD (age=%.2fs > %.2fs); releasing HOLD -> PURSUE",
+                    self.active_target, obs_age, self.s.target_lost_timeout_s,
+                )
+                self._dispatch_event("TARGET_MOVING", t)
+                curr_state = self.sm.state
+                self.controller.reset()
+
+            if is_new_obs and target_obs is not None:
+                # Genuinely new target observation: step closed-loop controller & update HoldDetector
                 fwd_m, left_m = target_obs
                 yaw_err = math.atan2(left_m, max(1e-6, fwd_m))
 
-                # Step the closed-loop InterceptionController
                 ctrl_out = self.controller.step(
                     t=t,
                     robot_pose=robot_pose,
@@ -288,15 +394,28 @@ class Phase3Runner:
 
                 # Emitted command depending on resolved state:
                 if curr_state == State.HOLD:
-                    # In HOLD: translation strictly v = 0.0
                     v = 0.0
                     w = ctrl_out.w
                 else:
-                    # In PURSUE: forward distance PD + yaw centering PD + obstacle repulsion
                     v = ctrl_out.v
                     w = ctrl_out.w
+
+                self._last_ctrl_v = v
+                self._last_ctrl_w = w
+                self._last_ctrl_t = t
+
+            elif target_is_fresh:
+                # No new observation this tick, but recent observation is still fresh (<= 0.25s).
+                # Do NOT call HoldDetector (prevents false stationary dwell accumulation).
+                # Coast with the latest valid controller command.
+                if curr_state == State.HOLD:
+                    v = 0.0
+                    w = self._last_ctrl_w
+                else:
+                    v = self._last_ctrl_v
+                    w = self._last_ctrl_w
             else:
-                # Target is not currently observed: hold position
+                # Target is not observed or observation has become stale: stop cleanly
                 v, w = 0.0, 0.0
 
         elif curr_state == State.SEARCH:
@@ -304,19 +423,5 @@ class Phase3Runner:
             v, w = steady.v, steady.w
 
         # 4. Enforce JetBot motor dead-zone legality
-        cmd_candidate = NavCommand(v, w, "", "")
-        if not legal(cmd_candidate, self.explore_settings):
-            # If command violates dead-zone rules, project to legal safe state:
-            if abs(v) < self.explore_settings.dead:
-                v = 0.0
-                if abs(w) < self.explore_settings.dead:
-                    w = 0.0
-                else:
-                    w = math.copysign(max(abs(w), self.explore_settings.w_spin), w)
-            else:
-                # Active translation: keep inner wheel at or above dead zone after mix normalization
-                dead = self.explore_settings.dead
-                max_w_allowed = ((1.0 - dead) / (1.0 + dead)) * abs(v)
-                w = math.copysign(min(abs(w), max_w_allowed), w)
-
+        v, w = project_legal_command(v, w, self.explore_settings)
         return v, w

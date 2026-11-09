@@ -234,3 +234,143 @@ def test_obstacle_repulsion_during_pursuit(runner, explore_settings):
     assert legal(NavCommand(v, w, "", ""), explore_settings)
     # Should steer left (positive deflection offset) away from right obstacle
     assert w > 0.0
+
+
+def test_target_disappearance_after_single_sample_does_not_hold_or_keep_driving(runner, explore_settings):
+    """Regression test for Review Item 1 (HNHL):
+    Enqueue A at t=0, observe (2,0) once at t=0.1, then step t=0.2..2.8 with no further observations.
+    Runner must stop when observation becomes stale (t=1.0) and must NOT promote cached observation
+    to trigger TARGET_STATIONARY/HOLD at t=2.5.
+    """
+    runner.enqueue_intruder("intruder_A", t=0.0)
+    assert runner.state == State.PURSUE
+
+    # Single real observation at t=0.1
+    v_first, w_first = runner.step(t=0.1, robot_pose=(0.0, 0.0, 0.0), target_pos=(2.0, 0.0))
+    assert v_first > 0.40  # Initial pursuit drive
+
+    # Step without further observations:
+    # At t=1.0 s (> 0.25 s freshness timeout), runner must stop cleanly (0, 0), not drive forward 0.55
+    v_1s, w_1s = runner.step(t=1.0, robot_pose=(0.0, 0.0, 0.0), target_pos=None)
+    assert v_1s == 0.0 and w_1s == 0.0
+    assert runner.state == State.PURSUE
+
+    # Continue stepping up to t=2.8 s: HoldDetector must never trigger TARGET_STATIONARY / HOLD
+    t = 1.0
+    while t < 2.85:
+        t = round(t + 0.1, 2)
+        v, w = runner.step(t=t, robot_pose=(0.0, 0.0, 0.0), target_pos=None)
+        assert v == 0.0 and w == 0.0
+        assert runner.state != State.HOLD, f"HOLD was falsely triggered at t={t} from a single observation!"
+        assert legal(NavCommand(v, w, "", ""), explore_settings)
+
+    assert "hold_position" not in runner.prompts
+
+
+def test_fifo_handoff_clears_caches_and_requires_fresh_observation_for_new_target(runner, explore_settings):
+    """Regression test for Review Item 2 (HNHL):
+    After observing A at (2,0), enqueue B, exit A, dispatch TARGET_FOUND for B, then step without B observation.
+    Active target is B, but output must be clean stop (0,0) instead of (0.55,0) using A's cached (2,0).
+    """
+    runner.enqueue_intruder("target_A", t=0.0)
+    runner.step(t=0.1, robot_pose=(0.0, 0.0, 0.0), target_pos=(2.0, 0.0))
+    runner.enqueue_intruder("target_B", t=0.2)
+    assert runner.active_target == "target_A"
+
+    # Exit A -> SEARCH for B
+    runner.notify_target_exited(t=0.3)
+    assert runner.state == State.SEARCH
+    assert runner.active_target == "target_B"
+
+    # Vision dispatches TARGET_FOUND for B -> PURSUE
+    runner._dispatch_event("TARGET_FOUND", t=0.4, data={"target_id": "target_B"})
+    assert runner.state == State.PURSUE
+    assert runner.active_target == "target_B"
+
+    # Step at t=0.5 without observation for target B
+    v, w = runner.step(t=0.5, robot_pose=(0.0, 0.0, 0.0), target_pos=None)
+    # Output must NOT use A's cached (2,0) position; must stop safely
+    assert v == 0.0 and w == 0.0
+    assert legal(NavCommand(v, w, "", ""), explore_settings)
+
+    # Now observe B fresh at (1.8, 0.1) -> pursuit engages normally
+    v_b, w_b = runner.step(t=0.6, robot_pose=(0.0, 0.0, 0.0), target_pos=(1.8, 0.1))
+    assert v_b > 0.40
+    assert legal(NavCommand(v_b, w_b, "", ""), explore_settings)
+
+
+def test_fifo_handoff_while_t1_in_hold(runner, explore_settings):
+    """Regression test for Review Item 2 (HNHL):
+    Target T1 enters HOLD. T2 is enqueued. T1 exits. T2 becomes active while unseen.
+    Ensures controllers/hold state are reset and unseen T2 does not inherit T1's hold state.
+    """
+    runner.enqueue_intruder("T1", t=0.0)
+    t = 0.0
+    dt = 0.05
+    for _ in range(50):  # 2.5 s stationary -> HOLD
+        t += dt
+        runner.step(t=t, robot_pose=(0.0, 0.0, 0.0), target_pos=(1.5, 0.0))
+
+    assert runner.state == State.HOLD
+
+    # T2 enqueued while T1 in HOLD
+    t += dt
+    runner.enqueue_intruder("T2", t=t)
+
+    # T1 exits
+    t += dt
+    runner.notify_target_exited(t=t)
+    assert runner.state == State.SEARCH
+    assert runner.active_target == "T2"
+
+    # T2 found -> transitions to PURSUE
+    t += dt
+    runner._dispatch_event("TARGET_FOUND", t=t, data={"target_id": "T2"})
+    assert runner.state == State.PURSUE
+
+    # Step without T2 observation: robot must stop, not move
+    t += dt
+    v, w = runner.step(t=t, robot_pose=(0.0, 0.0, 0.0), target_pos=None)
+    assert v == 0.0 and w == 0.0
+    assert legal(NavCommand(v, w, "", ""), explore_settings)
+
+
+def test_command_projection_recovers_known_case_v055_w03():
+    """Regression test for Review Item 3 (HNHL):
+    v = 0.55, w = 0.3 with standard ExploreSettings (dead=0.40).
+    Previous formula projected to w=0.235714 (for which legal() was False).
+    New projector must produce legal output with inner wheel >= dead zone.
+    """
+    from sentry.app.phase3_runner import project_legal_command
+    s = ExploreSettings()
+    v_proj, w_proj = project_legal_command(0.55, 0.3, s)
+    cmd = NavCommand(v_proj, w_proj, "", "")
+    assert legal(cmd, s), f"Projected command (v={v_proj}, w={w_proj}) failed legal check!"
+    # Unscaled regime: |w| <= |v| - dead = 0.55 - 0.40 = 0.15
+    assert abs(w_proj) <= 0.15 + 1e-6
+
+
+def test_motor_command_projector_legality_sweep():
+    """Regression test for Review Item 3 (HNHL):
+    Exhaustively sweep (v, w) across forward, reverse, spin, and custom settings.
+    Guarantees 100% legal output regardless of controller input.
+    """
+    from sentry.app.phase3_runner import project_legal_command
+    settings_configs = [
+        ExploreSettings(),  # default: dead=0.40, w_spin=0.45
+        ExploreSettings(min_pwm=0.15, max_speed=0.30),  # dead=0.50
+        ExploreSettings(min_pwm=0.09, max_speed=0.30),  # dead=0.30
+        ExploreSettings(min_pwm=0.10, max_speed=0.25),  # dead=0.40
+    ]
+
+    for s in settings_configs:
+        for v_int in range(-10, 11):
+            for w_int in range(-10, 11):
+                v_in = v_int / 10.0
+                w_in = w_int / 10.0
+                v_out, w_out = project_legal_command(v_in, w_in, s)
+                cmd = NavCommand(v_out, w_out, "", "")
+                assert legal(cmd, s), (
+                    f"Failed legality with s.dead={s.dead:.3f}: input ({v_in}, {w_in}) "
+                    f"projected to ({v_out}, {w_out})"
+                )

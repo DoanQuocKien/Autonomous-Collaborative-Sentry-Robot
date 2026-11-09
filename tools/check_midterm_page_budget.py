@@ -59,6 +59,31 @@ def audit_midterm_report(report_path: Path) -> Dict:
         "Phụ lục A": {"pages": 1.0, "owner": "KR (+HNHL, DQK)"},
     }
 
+    # Verify required chapter completeness
+    found_chapter_keys = set()
+    for title, _ in chapters:
+        for b_key in budget_target:
+            if title.startswith(b_key):
+                found_chapter_keys.add(b_key)
+                break
+    missing_chapters = sorted([k for k in budget_target if k not in found_chapter_keys])
+
+    # Validate referenced image assets relative to report path
+    report_dir = report_path.parent
+    image_regex = re.compile(r"!\[(.*?)\]\((.*?)\)")
+    image_refs = image_regex.findall(text)
+
+    verified_assets = []
+    broken_assets = []
+    for alt, img_rel_path in image_refs:
+        # Strip anchors or query strings if any
+        clean_path = img_rel_path.split("#")[0].split("?")[0].strip()
+        asset_file = report_dir / clean_path
+        if asset_file.exists():
+            verified_assets.append({"alt": alt, "path": clean_path, "resolved": str(asset_file)})
+        else:
+            broken_assets.append({"alt": alt, "path": clean_path, "attempted": str(asset_file)})
+
     # Count words and estimate pages (~450 Vietnamese words per page with tables/code)
     WORDS_PER_PAGE = 450.0
 
@@ -96,18 +121,29 @@ def audit_midterm_report(report_path: Path) -> Dict:
     total_est_pages = round(total_words / WORDS_PER_PAGE, 1)
 
     budget_pass = 10.0 <= total_est_pages <= 15.0
+    structure_pass = len(missing_chapters) == 0
+    assets_pass = len(broken_assets) == 0
+
+    overall_pass = budget_pass and structure_pass and assets_pass
 
     return {
-        "status": "PASS" if budget_pass else "WARN",
+        "status": "PASS" if overall_pass else "WARN",
         "file": str(report_path),
         "total_word_count": total_words,
         "total_estimated_pages": total_est_pages,
         "page_budget_range": [10.0, 15.0],
-        "budget_requirement_met": budget_pass,
+        "budget_estimate_met": budget_pass,
+        "structure_complete": structure_pass,
+        "missing_chapters": missing_chapters,
+        "assets_verified": assets_pass,
+        "broken_assets": broken_assets,
+        "verified_assets_count": len(verified_assets),
         "chapter_count": len(chapters),
         "figures_referenced": all_figures,
         "figures_count": len(all_figures),
         "chapter_breakdown": chapter_stats,
+        "rendered_layout_verified": False,
+        "rendered_layout_note": "Word count estimate only (~450 words/p); actual 10-15 rendered page compliance unverified until layout is rendered.",
     }
 
 
@@ -118,10 +154,15 @@ def main():
 
     summary = audit_midterm_report(args.file)
     print(f"[MidTermAudit] Report: {summary['file']}")
-    print(f"  Status: {summary['status']} (Estimated pages: {summary['total_estimated_pages']} / Target 10-15 pages)")
-    print(f"  Total words: {summary['total_word_count']}")
-    print(f"  Total chapters: {summary['chapter_count']}")
-    print(f"  Total unique figures referenced: {summary['figures_count']} ({', '.join(summary['figures_referenced'])})")
+    print(f"  Status: {summary['status']}")
+    print(f"  Word count estimate: {summary['total_estimated_pages']} pages ({summary['total_word_count']} words, target 10-15 pages)")
+    print(f"  Chapters present: {summary['chapter_count']}/9 (Missing: {summary['missing_chapters'] if summary['missing_chapters'] else 'None'})")
+    print(f"  Referenced figures: {summary['figures_count']} ({', '.join(summary['figures_referenced'])})")
+    print(f"  Asset link integrity: {'PASS (all ' + str(summary['verified_assets_count']) + ' images exist)' if summary['assets_verified'] else 'FAIL: ' + str(len(summary['broken_assets'])) + ' missing'}")
+    if summary['broken_assets']:
+        for b in summary['broken_assets']:
+            print(f"    - Missing: {b['path']} (attempted: {b['attempted']})")
+    print(f"  Rendered compliance note: {summary['rendered_layout_note']}")
     print("\n--- Chapter Breakdown ---")
     for ch in summary["chapter_breakdown"]:
         print(f"  {ch['chapter'][:40]:<40} | Owner: {ch['owner']:<15} | Target: {ch['target_pages']} p | Est: {ch['estimated_pages']} p ({ch['words']} words) | Figs: {len(ch['figures'])}")

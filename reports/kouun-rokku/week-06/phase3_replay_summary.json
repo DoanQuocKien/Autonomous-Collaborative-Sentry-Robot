@@ -9,7 +9,7 @@
     "hysteresis_exit_met": true,
     "hold_zero_translation_verified": true,
     "hold_sample_count": 111,
-    "max_recenter_time_s": 0.26,
+    "max_recenter_time_s": 0.0,
     "recenter_requirement_met": true,
     "all_commands_legal": true,
     "illegal_command_count": 0,
