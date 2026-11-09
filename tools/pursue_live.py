@@ -37,6 +37,7 @@ LINK_STALE_S = 0.5
 OBS_STALE_S = 0.6
 YAW_PULSE_S = 0.08                            # a yaw-only pulse is sent for at most this long (wall clock, enforced by the sender)
 FRESH_S = 0.25                                # command freshness on the wire (sentry.nav.explore.fresh_command default)
+DIST_MEDIAN_N = 5                             # frames in the median that decides the standoff dead band (the foot-row range jitters by 0.2 m when the robot starts or stops)
 TIME_CAP_S = 0.25                             # an interval between two processed frames counts at most this much in the time-based fractions
 CENTRE_TOL_WIDTH = 0.10                       # plan: bbox centre within +/- 10 % of the FULL frame width
 MAX_PROCESS_S = 0.5                           # longer than this for one frame: stop instead of driving on it
@@ -106,6 +107,7 @@ class Pursuit(object):
         self.hold_events = []
         self.last_seen = None                      # (yaw_err, distance or None) of the target when last seen
         self._yaw_phase = 0
+        self._dist_hist = []                       # recent ranges of the target (m), for the dead band
 
     def _advance(self, t):
         """Integrate the command the robot actually received since the last frame: it stays on the wire for its freshness window (FRESH_S, a yaw pulse only YAW_PULSE_S),
@@ -166,6 +168,11 @@ class Pursuit(object):
                 if out.event:
                     self.hold_events.append((round(t, 2), out.event))
             row.update(v_req=round(v, 3), w_req=round(w, 3))
+            if gp is not None:
+                self._dist_hist = (self._dist_hist + [gp.distance_m])[-DIST_MEDIAN_N:]
+                band = self.ctl.pursuit.cfg.distance_tolerance_m
+                if v != 0.0 and abs(float(np.median(self._dist_hist)) - self.ctl.pursuit.cfg.target_distance_m) <= band:
+                    v = 0.0                                          # inside the plan's standoff band: stand still (no creeping, no reversing); the hold detector can then see a still target
             self.last_seen = (ye, gp.distance_m if gp is not None else None)
             if abs(v) < 1e-9 and w != 0.0:                           # yaw-only: dead band, then short pulses
                 self._yaw_phase = (self._yaw_phase + 1) % YAW_PULSE_PERIOD

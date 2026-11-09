@@ -191,3 +191,23 @@ def test_centring_is_reported_in_full_width_units_and_by_time_with_coverage():
     t.update(0.0, [(1, box_at(1.2))])
     t.update(10.0, [(1, box_at(1.2))])                                   # a 10 s gap earns at most TIME_CAP_S, not 10 s
     assert t.summary()["run_time_s"] <= 0.31
+
+
+def test_inside_the_standoff_band_the_runner_stands_still_and_the_hold_can_trigger():
+    p = new()
+    for k in range(40):
+        d = 1.30 + (0.08 if k % 2 else -0.08)                            # a still person whose range jitters +/- 0.08 m, median inside the 1.2 +/- 0.2 band
+        v, w = p.update(k * 0.1, [(1, box_at(d))])
+        assert v == 0.0 or k < 2                                        # no creeping after the first frames (the median needs a few samples)
+    h = new()
+    for k in range(60):
+        h.update(k * 0.1, [(1, box_at(1.3 + 0.01 * (k % 2)))])           # a still person with a small jitter: HOLD after about 2 s
+    assert h.rows[-1]["mode"] == "HOLD" and any(e == "TARGET_STATIONARY" for _, e in h.hold_events)
+    q = new()
+    for k in range(8):
+        v, w = q.update(k * 0.1, [(1, box_at(1.7))])                    # outside the band: it still drives forward
+    assert v > 0
+    r = new()
+    for k in range(8):
+        v, w = r.update(k * 0.1, [(1, box_at(0.7))])                    # far inside the near limit: it still reverses
+    assert v < 0
