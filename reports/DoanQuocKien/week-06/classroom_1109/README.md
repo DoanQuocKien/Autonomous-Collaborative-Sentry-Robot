@@ -16,3 +16,13 @@ At 1.2 m YOLOv8n sees the chair at only 0.05-0.09 confidence; YOLOv8s sees the s
 
 ## Not done
 The table (robot to be placed 1.2, 1.8 and 2.4 m from it), the end-of-session `self_pose` after moving the robot, T2, Part C, handshake, Phase 2, the classroom-floor calibration (`motion_check`), the demo shots.
+
+## Experiment B, offline pass 1 (2026-11-09 evening, saved chair frames, 12 per distance, pose `1109_4`, `--floor glossy`; `experiment_B_offline_pass1.json`)
+| candidate | 1.2 m det / with distance | 1.8 m | 2.4 m |
+|---|---|---|---|
+| base (YOLOv8n, 0.25) | 0 / 0 | 6 / 0 (all `reflection_unresolved`) | 0 / 0 |
+| YOLOv8s | 5 / 0 (`reflection_unresolved`) | 1 / 0 | 12 / **5**, median 2.21 m |
+| YOLO-World (`open_vocabulary`) | 0 / 0 | 8 / 0 | 12 / 0 (all `reflection_unresolved`) |
+| SegFormer floor analyzer (`semantic_floor`) | same as base | same as base | same as base |
+| YOLOv8s + SegFormer | same as YOLOv8s | | |
+No candidate meets the session diagnostic (distance in >= 10/12 frames within +/- 0.15 m up to 1.5 m). The live check gave 4/12 at 1.8 m for the base; the saved JPEG frames give 6/12 (frame sampling). **The common blocker is the glossy-floor logic (`reflection_unresolved`), not only the detector confidence:** a larger detector finds the chair more often, but its distance is rejected because the mirror image of the legs cannot be separated from the box. Next (tonight): the reflection thresholds in `[obstacle]` (`reflection_min_score` 0.85, `reflection_min_peak_margin`, `reflection_peak_separation_px`, ...) on these frames, the empty-floor frames for false stops, then the live check of the best setting. The 2.4 m YOLOv8s distance (2.21 m against a tape of 2.4 m from the robot's front) is 0.4 m short at the front-to-lens offset of about 0.2 m. Offline numbers are not an acceptance.
