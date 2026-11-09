@@ -32,3 +32,15 @@ Model: Depth Anything V2 Metric Indoor Small (Hypersim fine-tune), run on the re
 - Pass 1 (native view): about 2.1x too far for a person at 1.77-1.80 m (3.7-3.8 m). Thin metal chair: unusable (see-through frame, unstable). Not a person effect: the factor was the same in two sessions.
 - Pass 2 (hold-out; `experiment_A_depth_zoom_holdout.json`): ratio model / tape, native view 2.10 and 2.07 (1.8 m sets), **2.52 on the held-out 1.25 m set**; with a virtual zoom of 1.7 the ratios are 1.10, 1.20 and **1.48**. A zoom chosen on the 1.8 m sets (x1.8, 1.79 m for 1.80 m) does not transfer: at 1.25 m the model is about 0.6 m too far. The error is not one scale factor: the output is compressed with distance (it behaves like an added offset of about 1.7 m in the near range).
 - Verdict: pass rule (every tile within +/- 0.15 m) NOT met. A fine-tune on metric ground truth from this camera would be needed (the saved data has only 1.25 and about 1.8 m; the 2.4 m and 1.2 m marks were not saved as frames). Not a quick fix; left as a proposal.
+
+### Experiment A, rounds 3-5 (2026-11-10 night): four more models and a floor-plane anchor, all fail
+Round 3, metric models zero-shot on the same saved person sets (ratio = model forward / tape; native view | 1.4x zoom; `experiment_A_models_trial.json`):
+| model | 1.80 m | 1.77 m | 1.25 m (hold-out) |
+|---|---|---|---|
+| DA-V2 Metric Indoor Base | 2.58 \| 1.98 | 2.64 \| 2.20 | 3.15 \| 2.57 |
+| DA-V2 Metric Indoor Large | 2.50 \| 1.99 | 2.38 \| 1.93 | 2.80 \| 2.17 |
+| Depth Pro | 1.87 \| 1.66 | 1.65 \| 1.42 | 2.02 \| 1.70 |
+| ZoeDepth NYU | 1.91 \| 1.50 | 1.82 \| 1.51 | 2.32 \| 2.07 |
+All read too far and worse at the near range (the output is compressed). Shared cause (hypothesis, not tested): these models learned depth from eye-level cameras (about 1-1.6 m) and use the vertical image position as a cue, which breaks with a lens 0.10 m above the floor.
+Round 4-5, floor-plane scale anchor (relative Depth Anything V2 Small, known H = 0.100 m and the pitch from `self_pose`, robust fit of the model output to the geometric floor depth per frame, no per-person constant; `experiment_A_floor_anchor_trial.json`): floor strip 0.4-3.0 m: ratios 7.6 (blown up), 0.97, 1.60; strip 0.3-1.2 m: 2.76, 0.89, 1.57; strip 0.3-1.6 m: 3.02, 0.86, 1.55. **Two sets at the same 1.8 m give ratios of about 3.0 and 0.9**, so the error depends on the scene (glossy floor reflections leave only 40-70 % of the floor pixels on a straight line), not on the distance: no constant can calibrate it.
+Verdict: no off-the-shelf monocular metric depth approach meets +/- 0.15 m at 1.2-2.4 m with this camera on this floor. Remaining options (not done): fine-tune a depth or contact-point model on the target viewpoint (ORG dataset downloading, 7.1 GB), and the plan's higher mount. The foot-contact route (experiment B) with a reflection-robust segmentation is the better use of the dataset.
