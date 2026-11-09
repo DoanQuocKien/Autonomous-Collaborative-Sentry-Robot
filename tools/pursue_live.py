@@ -18,6 +18,7 @@ hold events, end reason, battery). Video frames are NOT saved unless --save-fram
 """
 import argparse
 import csv
+import dataclasses
 import json
 import math
 import os
@@ -35,6 +36,9 @@ MIN_BATTERY_V = 11.4
 LINK_STALE_S = 0.5
 OBS_STALE_S = 0.6
 YAW_PULSE_S = 0.08                            # a yaw-only pulse is sent for at most this long (wall clock, enforced by the sender)
+FRESH_S = 0.25                                # command freshness on the wire (sentry.nav.explore.fresh_command default)
+TIME_CAP_S = 0.25                             # an interval between two processed frames counts at most this much in the time-based fractions
+CENTRE_TOL_WIDTH = 0.10                       # plan: bbox centre within +/- 10 % of the FULL frame width
 MAX_PROCESS_S = 0.5                           # longer than this for one frame: stop instead of driving on it
 FEET_MARGIN_PX = 3
 YAW_DEADBAND = 0.10                           # |yaw_err| inside the +/-10 % centre band: no yaw-only command (the smallest legal turn, 0.45, is about 125 deg/s)
@@ -44,7 +48,7 @@ REACQ_DIST_GATE_M = 1.0
 REACQ_MAX_LOST_S = 3.0
 
 
-COLS = ["t", "track_id", "dist_m", "forward_m", "left_m", "yaw_err", "feet_cut", "v", "w", "mode", "event", "tracks"]
+COLS = ["t", "track_id", "dist_m", "forward_m", "left_m", "yaw_err", "feet_cut", "v_req", "w_req", "v", "w", "suppressed", "mode", "event", "tracks"]
 
 
 def command_to_send(cmd, now):
@@ -89,7 +93,8 @@ def foot_point(ground_point, undistort_points, xyxy, size, feet_row_offset_px=0.
 class Pursuit(object):
     """The pure decision logic (no hardware): feed it the tracked boxes of each frame, get (v, w) and a log row. Testable with fakes."""
 
-    def __init__(self, controller, model, ground_point, undistort_points, size, lock_range_m=3.5, lost_stop_s=OBS_STALE_S, lost_end_s=5.0, feet_row_offset_px=0.0):
+    def __init__(self, controller, model, ground_point, undistort_points, size, lock_range_m=3.5, lost_stop_s=OBS_STALE_S, lost_end_s=5.0, feet_row_offset_px=0.0, integrate=True):
+        self.integrate = integrate                 # False in dry-run and replay: no command reaches the robot, so the dead-reckoned pose must not move
         self.ctl, self.model, self.ground_point, self.undistort_points, self.size = controller, model, ground_point, undistort_points, size
         self.lock_range_m, self.lost_stop_s, self.lost_end_s = lock_range_m, lost_stop_s, lost_end_s
         self.feet_row_offset_px = feet_row_offset_px
@@ -103,17 +108,34 @@ class Pursuit(object):
         self._yaw_phase = 0
 
     def _advance(self, t):
-        if self.t_prev is not None:
-            dt = min(t - self.t_prev, 0.2)
-            v_m, w_r = self.model.body_speeds(*self.cmd)
-            x, y, yaw = self.pose
-            self.pose = [x + v_m * math.cos(yaw) * dt, y + v_m * math.sin(yaw) * dt, math.atan2(math.sin(yaw + w_r * dt), math.cos(yaw + w_r * dt))]
+        """Integrate the command the robot actually received since the last frame: it stays on the wire for its freshness window (FRESH_S, a yaw pulse only YAW_PULSE_S),
+        whatever the frame gap, then the robot is stopped. Sub-stepped so a long interval stays accurate. Simulated pose (commands, not odometry)."""
+        if self.t_prev is not None and self.integrate:
+            v, w = self.cmd
+            fresh = YAW_PULSE_S if (v == 0.0 and w != 0.0) else FRESH_S
+            applied = max(0.0, min(t - self.t_prev, fresh))
+            if applied > 0.0:
+                n = max(1, int(math.ceil(applied / 0.02)))
+                h = applied / n
+                v_m, w_r = self.model.body_speeds(v, w)
+                x, y, yaw = self.pose
+                for _ in range(n):
+                    x += v_m * math.cos(yaw) * h
+                    y += v_m * math.sin(yaw) * h
+                    yaw = math.atan2(math.sin(yaw + w_r * h), math.cos(yaw + w_r * h))
+                self.pose = [x, y, yaw]
         self.t_prev = t
+
+    def override_command(self, v, w):
+        """The caller did not send the command computed by update() (a slow frame): the pose and the log must describe what was really sent."""
+        self.cmd = (v, w)
+        if self.rows:
+            self.rows[-1].update(v=round(v, 3), w=round(w, 3), suppressed=1)
 
     def update(self, t, tracks):
         """tracks: [(track_id, (x1, y1, x2, y2))] of this frame in raw pixels. -> (v, w)."""
         self._advance(t)
-        row = dict(t=round(t, 3), track_id=None, dist_m=None, forward_m=None, left_m=None, yaw_err=None, feet_cut=None, v=0.0, w=0.0, mode="NO_TARGET", event=None,
+        row = dict(t=round(t, 3), track_id=None, dist_m=None, forward_m=None, left_m=None, yaw_err=None, feet_cut=None, v_req=0.0, w_req=0.0, v=0.0, w=0.0, suppressed=0, mode="NO_TARGET", event=None,
                    tracks=";".join("%d:%d,%d,%d,%d" % ((tid,) + tuple(int(q) for q in xyxy)) for tid, xyxy in tracks))
         valid, reacq = {}, False
         for tid, xyxy in tracks:
@@ -143,6 +165,7 @@ class Pursuit(object):
                 row.update(dist_m=round(gp.distance_m, 3), forward_m=round(gp.forward_m, 3), left_m=round(gp.left_m, 3), mode=out.mode, event=out.event)
                 if out.event:
                     self.hold_events.append((round(t, 2), out.event))
+            row.update(v_req=round(v, 3), w_req=round(w, 3))
             self.last_seen = (ye, gp.distance_m if gp is not None else None)
             if abs(v) < 1e-9 and w != 0.0:                           # yaw-only: dead band, then short pulses
                 self._yaw_phase = (self._yaw_phase + 1) % YAW_PULSE_PERIOD
@@ -161,17 +184,36 @@ class Pursuit(object):
         self.rows.append(row)
         return v, w
 
-    def summary(self, pursuit_band=0.2, centre_tol=0.10):
-        tracked = [r for r in self.rows if r["dist_m"] is not None]
-        pursue = [r for r in tracked if r["mode"] != "HOLD"]
-        near = [r for r in pursue if abs(r["dist_m"] - self.ctl.pursuit.cfg.target_distance_m) <= pursuit_band]
-        centred = [r for r in self.rows if r["yaw_err"] is not None and abs(r["yaw_err"]) <= centre_tol]
-        n_yaw = len([r for r in self.rows if r["yaw_err"] is not None])
-        return {"frames": len(self.rows), "frames_with_distance": len(tracked), "pursue_frames": len(pursue),
-                "fraction_distance_within_band": round(len(near) / len(pursue), 3) if pursue else None,
-                "fraction_centred_within_10pct": round(len(centred) / n_yaw, 3) if n_yaw else None,
-                "hold_events": self.hold_events, "target_id": self.target_id,
-                "plan_thresholds": "distance 1.2 +/- 0.2 m and centre within +/- 10 % of the frame width for 80 % of the time (plan 4.3 'Pursuit PD'); these are first-trial numbers, not an acceptance"}
+    def _weights(self):
+        """Seconds each row stands for: the gap to the next row, at most TIME_CAP_S (the last row counts 0.05 s). Longer gaps are unobserved time, not credit."""
+        ts = [r["t"] for r in self.rows]
+        return [min(b - a, TIME_CAP_S) for a, b in zip(ts, ts[1:])] + ([0.05] if ts else [])
+
+    def summary(self, pursuit_band=0.2):
+        rows, wts = self.rows, self._weights()
+        target = self.ctl.pursuit.cfg.target_distance_m
+        tracked = [(r, w) for r, w in zip(rows, wts) if r["yaw_err"] is not None]
+        ranged = [(r, w) for r, w in tracked if r["dist_m"] is not None]
+        pursue = [r for r, _ in ranged if r["mode"] != "HOLD"]
+        near_f = [r for r in pursue if abs(r["dist_m"] - target) <= pursuit_band]
+        centred_f = [r for r, _ in tracked if abs(r["yaw_err"]) / 2.0 <= CENTRE_TOL_WIDTH]
+        run_s = sum(wts)
+        tracked_s = sum(w for _, w in tracked)
+        ranged_s = sum(w for _, w in ranged)
+        in_band_s = sum(w for r, w in ranged if abs(r["dist_m"] - target) <= pursuit_band)
+        centred_s = sum(w for r, w in tracked if abs(r["yaw_err"]) / 2.0 <= CENTRE_TOL_WIDTH)
+
+        def frac(a, b):
+            return round(a / b, 3) if b > 0 else None
+        return {"frames": len(rows), "frames_with_distance": len(ranged), "pursue_frames": len(pursue),
+                "run_time_s": round(run_s, 2), "tracked_time_s": round(tracked_s, 2), "coverage_tracked_fraction": frac(tracked_s, run_s),
+                "time_fraction_distance_in_band_of_tracked": frac(in_band_s, ranged_s), "time_fraction_distance_in_band_of_run": frac(in_band_s, run_s),
+                "time_fraction_centred_of_tracked": frac(centred_s, tracked_s), "time_fraction_centred_of_run": frac(centred_s, run_s),
+                "diag_frame_fraction_distance_in_band": frac(len(near_f), len(pursue)), "diag_frame_fraction_centred": frac(len(centred_f), len(tracked)),
+                "centre_unit": "|bbox centre - image centre| / full frame width <= %.2f (yaw_err in the log is relative to HALF the width: divided by 2 here)" % CENTRE_TOL_WIDTH,
+                "hold_events": self.hold_events, "reacquires": sum(1 for r in rows if r["event"] == "REACQUIRE"), "target_id": self.target_id,
+                "acceptance": "NOT EVALUATED: first supervised trials; the time fractions are diagnostics (no-target time counts in the 'of_run' versions), not the plan's 80 % acceptance",
+                "plan_thresholds": "distance 1.2 +/- 0.2 m and bbox centre within +/- 10 % of the frame width for 80 % of the time (plan 4.3 'Pursuit PD')"}
 
 
 def make_perception(device_cfg=None):
@@ -216,16 +258,20 @@ def main():
     a.dry_run = a.dry_run or a.replay is not None
 
     import cv2
-    from sentry.nav.controllers import InterceptionController
+    from sentry.nav.controllers import HoldBehaviorConfig, InterceptionController, PursuitConfig
+    from sentry.nav.hold_detector import HoldConfig
     from sentry.nav.wheel_model import WheelModel
     from sentry.config import load
     from sentry.perception.camera import CameraGeometry
 
     geom = CameraGeometry.from_files(a.camera, a.camera_pose)
     ground_point = geom.ground_point
-    ctl = InterceptionController()
+    pcfg, hbcfg, hdcfg = PursuitConfig.from_toml(), HoldBehaviorConfig.from_toml(), HoldConfig.from_toml()
+    ctl = InterceptionController(pcfg, hbcfg, hdcfg)
+    effective_config = {"pursuit": dataclasses.asdict(pcfg), "hold_behavior": dataclasses.asdict(hbcfg), "hold_detector": dataclasses.asdict(hdcfg)}
     model = WheelModel.from_session(a.motion_session) if a.motion_session else WheelModel()
-    pursuit = Pursuit(ctl, model, ground_point, geom.undistort_points, geom.size, a.lock_range, lost_end_s=a.lost_end_s, feet_row_offset_px=a.feet_row_offset_px if a.feet_row_offset_px is not None else float(load()["pursuit"].get("feet_row_offset_px", 0.0)))
+    pursuit = Pursuit(ctl, model, ground_point, geom.undistort_points, geom.size, a.lock_range, lost_end_s=a.lost_end_s, feet_row_offset_px=a.feet_row_offset_px if a.feet_row_offset_px is not None else float(load()["pursuit"].get("feet_row_offset_px", 0.0)),
+                      integrate=not a.dry_run)
     perceive = make_perception()
     print("camera pose %s: pitch %.2f deg, lens %.3f m. NO OBSTACLE AVOIDANCE: keep the floor clear, hold R1, release at any problem." % (a.camera_pose, math.degrees(geom.pitch), geom.height_m), flush=True)
 
@@ -239,6 +285,7 @@ def main():
         v, w = pursuit.update(t, perceive(frame))
         if time.time() - t0 > MAX_PROCESS_S:                    # a slow frame is an old view of the world: never drive on it
             v, w = 0.0, 0.0
+            pursuit.override_command(v, w)                      # the pose and the log say what was really sent
         cmd.update(v=v, w=w, t=time.time())
         if pursuit.end_reason and end["reason"] is None:
             end["reason"] = pursuit.end_reason
@@ -252,9 +299,9 @@ def main():
             return
         written["done"] = True
         summary = dict(pursuit.summary(), label=a.label, dry_run=a.dry_run, replay=a.replay, end_reason=end["reason"], camera_pose_file=a.camera_pose, pitch_down_deg=round(math.degrees(geom.pitch), 2),
-                       feet_row_offset_px=pursuit.feet_row_offset_px, battery_v_start=volts0, battery_v_end=volts1, seconds=round(time.time() - t_wall, 1), date=time.strftime("%Y-%m-%d %H:%M"), obstacle_avoidance=False)
+                       feet_row_offset_px=pursuit.feet_row_offset_px, config=effective_config, battery_v_start=volts0, battery_v_end=volts1, seconds=round(time.time() - t_wall, 1), date=time.strftime("%Y-%m-%d %H:%M"), obstacle_avoidance=False)
         run_dir = save_run(a.out, a.label, pursuit.rows, summary, saved)
-        print("ENDED: %s | %s" % (end["reason"], json.dumps({k: summary[k] for k in ("frames", "fraction_distance_within_band", "fraction_centred_within_10pct", "hold_events")})), flush=True)
+        print("ENDED: %s | %s" % (end["reason"], json.dumps({k: summary[k] for k in ("frames", "run_time_s", "coverage_tracked_fraction", "time_fraction_distance_in_band_of_run", "time_fraction_centred_of_run", "hold_events")})), flush=True)
         print("saved", run_dir, flush=True)
 
     if a.replay is not None:

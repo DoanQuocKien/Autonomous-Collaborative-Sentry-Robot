@@ -77,7 +77,7 @@ def test_a_person_who_stands_still_triggers_hold_after_about_two_seconds_with_no
     first = next(r["t"] for r in p.rows if r["mode"] == "HOLD")
     assert 1.5 < first < 3.5
     s = p.summary()
-    assert s["fraction_centred_within_10pct"] == 1.0 and s["frames_with_distance"] == len(p.rows)
+    assert s["diag_frame_fraction_centred"] == 1.0 and s["frames_with_distance"] == len(p.rows)
 
 
 def test_the_dead_reckoned_pose_follows_the_commands():
@@ -139,3 +139,55 @@ def test_save_run_keeps_evidence_with_an_unknown_end_voltage_and_never_overwrite
     d2 = save_run(str(tmp_path), "x", p.rows, summary, [])
     assert d1 != d2 and (d1 / "log.csv").exists() and (d1 / "frames" / "0.100.jpg").exists()
     assert '"battery_v_end": null' in (d1 / "summary.json").read_text()
+
+
+def test_the_pose_integrates_the_interval_the_robot_actually_received_not_a_fixed_cap():
+    p = new()
+    p.update(0.0, [(1, box_at(3.0))])                                    # far: drives forward
+    v, w = p.cmd
+    assert v > 0
+    p.update(0.24, [(1, box_at(3.0))])                                   # next frame 0.24 s later: the command was fresh for all of it
+    expect, _ = WheelModel().body_speeds(v, w)
+    assert abs(p.pose[0] - expect * 0.24 * math.cos(0.0)) < 5e-3
+    q = new()
+    q.update(0.0, [(1, box_at(3.0))])
+    q.update(1.5, [(1, box_at(3.0))])                                    # a 1.5 s stall: only the 0.25 s freshness window moved the robot
+    assert abs(q.pose[0] - expect * 0.25) < 5e-3
+    d = Pursuit(InterceptionController(), WheelModel(), ground, undist, (W, H), integrate=False)
+    d.update(0.0, [(1, box_at(3.0))])
+    d.update(0.2, [(1, box_at(3.0))])
+    assert d.pose == [0.0, 0.0, 0.0]                                     # dry-run / replay: no command was sent, the pose stays
+
+
+def test_an_overridden_slow_frame_command_is_what_the_pose_and_the_log_describe():
+    p = new()
+    p.update(0.0, [(1, box_at(3.0))])
+    assert p.rows[-1]["v"] > 0 and p.rows[-1]["v_req"] == p.rows[-1]["v"]
+    p.override_command(0.0, 0.0)
+    assert p.rows[-1]["suppressed"] == 1 and p.rows[-1]["v"] == 0.0 and p.rows[-1]["v_req"] > 0
+    p.update(0.1, [(1, box_at(3.0))])
+    assert p.pose[0] == 0.0                                              # nothing was sent, nothing moved
+
+
+def test_centring_is_reported_in_full_width_units_and_by_time_with_coverage():
+    p = new()
+    p.update(0.0, [(1, box_at(2.0, u=368))])                             # 48 px off centre in 640 px: 7.5 % of the full width
+    p.update(0.1, [(1, box_at(2.0, u=368))])
+    s = p.summary()
+    assert s["time_fraction_centred_of_tracked"] == 1.0                  # inside +/- 10 % of the full width
+    q = new()
+    q.update(0.0, [(1, box_at(2.0, u=320 + 70))])                        # 70 px = 10.9 %: outside
+    q.update(0.1, [(1, box_at(2.0, u=320 + 70))])
+    assert q.summary()["time_fraction_centred_of_tracked"] == 0.0
+    r = new()
+    r.update(0.0, [(1, box_at(1.2))])
+    r.update(0.1, [(1, box_at(1.2))])
+    for k in range(2, 7):
+        r.update(0.1 + 0.5 * k, [])                                      # target lost: these half-seconds count in the run, not as tracked
+    s = r.summary()
+    assert s["coverage_tracked_fraction"] < 0.5 and s["time_fraction_distance_in_band_of_run"] < s["time_fraction_distance_in_band_of_tracked"]
+    assert "NOT EVALUATED" in s["acceptance"]
+    t = new()
+    t.update(0.0, [(1, box_at(1.2))])
+    t.update(10.0, [(1, box_at(1.2))])                                   # a 10 s gap earns at most TIME_CAP_S, not 10 s
+    assert t.summary()["run_time_s"] <= 0.31
