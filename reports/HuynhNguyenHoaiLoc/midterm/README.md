@@ -1,5 +1,7 @@
 # Hồ sơ giữa kỳ HNHL
 
+**Mới nhất10/11:** [thử lớp09/11 và các phương án ranging DQK đã làm](update-2026-11-10.md). Thêm0/36 distance ghế, [F10 availability supplement](figures/F10_availability_1109.png), kết quả depth/zoom/floor-anchor thất bại, trunk0,50/0,49m và giới hạn khác protocol. Không gộp chair front-tape với person lens-forward hoặc F10 cũ. Source giới hạn một người/ghế; chưa D3/D5 độc lập hay T2. PR99 đã sửa config/main tests/pose cap nhưng còn overwrite log; PR102 cleanup motor chưa sửa. #101 không đổi; #100 chờ DQK. Những dòng09/11 dưới đây là snapshot lịch sử theo từng head.
+
 **Sau bản sửa KR cùng ngày09/11:** [follow-up PR101 head969a5e0](followup-pr101-2026-11-09.md). KR đã sửa các ví dụ stale/handoff/projector hữu hạn và các image links; bản draft đã sửa phần lớn số liệu HNHL. Review58 tests vẫn phát hiện observation API không được consume, state/controller lệch sau gap, NaN projector thành full-forward và distance T1 PASS chưa đúng. Đã review lại, chưa merge; không có dữ liệu thí nghiệm mới. Những findings cũ đã sửa không còn là lý do chặn bản mới.
 
 **Mới nhất 09/11:** [audit PR và nguồn mới DQK/KR](update-2026-11-09.md), [các sửa đổi cụ thể cho editor](HNHL-EDITOR-CORRECTIONS-1109.md). DQK rút lại giải thích mount-slip/foot-stance; các run mới vẫn sai lệch với tape. Năm video stop-proxy có median516 ms, chưa chứng minh motor stop≤350ms; trial4 có R1 end=0. KR đã có Phase3 và bản thảo nhóm nhưng #101 còn lỗi stale/handoff/command legality. #99/#101/#102 đều request-changes; #100 chờ DQK. Lịch09/11 bị đề xuất dời, bỏ matte là proposal chưa merge; không tự đổi gate nghiệm thu. Đọc bản hiện hành09/11 thay cho các snapshot lịch sử dưới đây.
@@ -18,7 +20,7 @@ Snapshot **01/11/2026**, dựa trên code/evidence hiện có. Hồ sơ này là
 
 ## Tài liệu để ghép báo cáo
 
-- [Chương 5 hiện hành, Markdown 09/11](chapter-05-current.md): hợp nhất kết quả HNHL, pilot và đính chính mới do DQK cung cấp; dùng để ghép nội dung hiện hành cùng gói sửa cho editor.
+- [Chương 5 hiện hành, Markdown10/11](chapter-05-current.md): hợp nhất kết quả HNHL, pilot và giới hạn mới do DQK cung cấp; dùng cùng các bảng/bổ sung mới nhất cho editor.
 - [Chương 5 dạng Word](HNHL-Chuong-5.docx): bản ngắn, có F9/F10/F13 và nguồn E01–E12, chỉnh sửa được.
 - [Chương 5 dạng Markdown](chapter-05.md): cùng nội dung, dễ review trong Git.
 - [Các dòng kết quả cho Chương 7](chapter-07-rows.md): có trạng thái và giới hạn nghiệm thu.
@@ -35,6 +37,7 @@ Bản Word dài 3 trang là bản đóng góp để editor chọn/rút gọn. Kh
 | [F9](figures/F9_gpu.png) | Model cùng nạp trên RTX5060; mỗi frame và scheduled door | Đã có số đo workload; chưa thay RTX4050/live acceptance |
 | [F9 bổ sung](figures/F9_single_models.png) | Từng model trên RTX4050 và RTX5060, recorded power limits khác nhau | Có baseline cả hai thiết bị; chưa phải controlled GPU comparison |
 | [F10](figures/F10_distance.png) | Scatter median Z theo ID, thống kê error; 8/9 ID có distance; held-out tách riêng | Đã dựng từ E01; thiếu full T1/floor controls |
+| [F10 bổ sung09/11](figures/F10_availability_1109.png) | Ghế lớp học: detection/accepted distance theo marker phía đầu robot | 4/36 detection,0/36 distance; không cùng gốc với lens-forward truth, không error scatter |
 | [F13](figures/F13_face_roc.png) | ROC D2 thật tại threshold0,45 | Pilot, nhãn tự động cần review; chưa đạt target |
 | F7 | Video latency CDF JetBot thật | Chờ raw CSV clock-synced; không dùng localhost CDF thay thế |
 | F11 | Map và sweet spot trên sweep thật | Chờ pose, door range/world truth và map artifacts |
@@ -60,6 +63,7 @@ Không tự xác nhận timesheet, số liệu đối tác hay tag nộp bài. H
 .venv/Scripts/python.exe -m tools.build_midterm_hnhl_team_update
 .venv/Scripts/python.exe -m tools.build_midterm_hnhl_nov09
 .venv/Scripts/python.exe -m tools.build_midterm_hnhl_pr101_followup
+.venv/Scripts/python.exe -m tools.build_midterm_hnhl_nov10
 .venv/Scripts/python.exe -m tools.check_midterm_hnhl --out reports/HuynhNguyenHoaiLoc/midterm/update-verification.json
 # Dùng document-authoring runtime có python-docx, không dùng Python robot:
 <document-python> tools/export_midterm_hnhl_doc.py

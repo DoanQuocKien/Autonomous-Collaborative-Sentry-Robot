@@ -1,0 +1,27 @@
+{
+  "head": "45416e7ed13293df805e2f4e9255b4dd9e1d3393",
+  "save_run_destination": "x_3",
+  "synthetic_old_marker_lost": true,
+  "actual_sample_span_s": 10,
+  "summary": {
+    "frames": 2,
+    "frames_with_distance": 2,
+    "pursue_frames": 2,
+    "run_time_s": 0.3,
+    "tracked_time_s": 0.3,
+    "coverage_tracked_fraction": 1.0,
+    "time_fraction_distance_in_band_of_tracked": 1.0,
+    "time_fraction_distance_in_band_of_run": 1.0,
+    "time_fraction_centred_of_tracked": 1.0,
+    "time_fraction_centred_of_run": 1.0,
+    "diag_frame_fraction_distance_in_band": 1.0,
+    "diag_frame_fraction_centred": 1.0,
+    "centre_unit": "|bbox centre - image centre| / full frame width <= 0.10 (yaw_err in the log is relative to HALF the width: divided by 2 here)",
+    "hold_events": [],
+    "reacquires": 0,
+    "target_id": 1,
+    "acceptance": "NOT EVALUATED: first supervised trials; the time fractions are diagnostics (no-target time counts in the 'of_run' versions), not the plan's 80 % acceptance",
+    "plan_thresholds": "distance 1.2 +/- 0.2 m and bbox centre within +/- 10 % of the frame width for 80 % of the time (plan 4.3 'Pursuit PD')"
+  },
+  "motor_commands_sent": 0
+}

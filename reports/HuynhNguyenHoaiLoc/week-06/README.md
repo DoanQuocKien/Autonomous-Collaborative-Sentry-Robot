@@ -1,5 +1,7 @@
 # F18 — native PyTorch FP32/FP16, đo sớm ngày 05/11/2026
 
+**Cập nhật10/11:** [bằng chứng lớp học/ranging DQK và review99/102 mới](../midterm/update-2026-11-10.md), [21 evidence/source tests](tests_evidence_2026-11-10.log). Chạy `tools.build_midterm_hnhl_nov10` sau follow-up09/11 và trước checker; archive đã có thì không dùng `--import-source`. F18 giữ số đo05/11; không có GPU benchmark mới.
+
 **Follow-up PR101 ngày09/11:** [bản sửa KR và review lại](../midterm/followup-pr101-2026-11-09.md),58 targeted CPU tests. Chạy `tools.build_midterm_hnhl_pr101_followup` sau builder09/11 và trước checker để giữ trạng thái mới. Chưa có dữ liệu GPU/accuracy/robot mới.
 
 **Bổ sung09/11:** [đính chính DQK, stop-proxy và bản thảo KR](../midterm/update-2026-11-09.md). Sau builder07/11 chạy `tools.build_midterm_hnhl_nov09`, rồi checker. Archive đã commit thì không dùng lại `--import-source`. F18 dưới đây giữ nguyên phép đo05/11; các nguồn mới không tạo thêm accuracy hoặc robot PASS.

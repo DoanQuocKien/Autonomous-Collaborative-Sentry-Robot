@@ -1,5 +1,7 @@
 # Checklist tiếp tục hoàn thiện giữa kỳ HNHL
 
+**Hiện hành10/11:** [DQK đã thử lớp, depth và body cues](update-2026-11-10.md); đưa thất bại/coverage vào báo cáo, không làm lại các comparisons này chỉ để đổi ngày. DQK đang làm B/reflection/contact; cần scripts/config/weights hashes, chair+table+empty-floor controls và held-out raw samples để HNHL đánh giá. Chưa có candidate đủ thay detector mặc định. Trunk chọn trên cùng một người/ba sets, cần người khác và mốc1,2/1,8/2,4m. D3/gallery/F11/raw latency/combined4050 vẫn pending; official session/ESP32/T2 chưa được thay bằng buổi DQK một mình09/11.
+
 **Sau bản sửa KR09/11:** [PR101 follow-up](followup-pr101-2026-11-09.md) ghi các lỗi cũ đã sửa và các lỗi còn tái hiện. Phần báo cáo HNHL đã được KR sửa đáng kể; còn cần bỏ distance T1 PASS, sửa destination của appearance vector, đưa F18/caveats vào bản ghép. Chưa có D3/gallery/D5 độc lập/map/latency/combined4050 mới; không chuyển các mục này sang PASS.
 
 **Hiện hành09/11:** [đối chiếu mới](update-2026-11-09.md) và [gói sửa Chương5 cho KR](HNHL-EDITOR-CORRECTIONS-1109.md). Phần nhóm đã có thêm: poses/run08/11,5 video stop-proxy, Phase3 T0 và bản thảo nhóm. Đã bổ sung có giới hạn; chưa đủ D3/re-ID/D5 độc lập/F11/F7 raw/combined4050/T2. Các PR99/101/102 có findings, chưa merge. Converter D3 và F18 đã triển khai/đo trong #100, chờ review; không cần viết lại vì dòng kế hoạch cũ “offered, not written”. Buổi lớp09/11 và bỏ matte là thay đổi đang đề xuất; chưa tự đổi nghiệm thu. Mốc16/18/23-11 giữ nguyên.

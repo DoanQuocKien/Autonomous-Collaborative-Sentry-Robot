@@ -1,5 +1,7 @@
 # Gói sửa nội dung HNHL cho editor KR — 09/11/2026
 
+**Đọc thêm nguồn10/11:** [failure/coverage ghế và các phương án range](update-2026-11-10.md) bổ sung0/36 distances, không phải0 error. Thêm failure này bên cạnh F10 cũ, tách gốc tape. Các thử trunk/depth còn một người/dev sets, không T1/T2 hay re-ID. Chương5 hiện hành đã nhận trạng thái này.
+
 **Đã đối chiếu lại head969a5e0:** KR đã sửa phần lớn các dòng dưới (coverage, D5/Wire, FAR, deployment laptop, GPU scope và5 image links). Bảng giữ làm nội dung chuẩn để ghép, không nói các lỗi đó vẫn nguyên. Còn Chương7 distance “ĐẠT T1”, câu gửi appearance vector sang JetBot, F18 và caveats ranging DQK cần sửa/bổ sung. [Review bản mới](followup-pr101-2026-11-09.md).
 
 Đối chiếu Chapter5 của PR #101 head `4d733af`. Bản draft nhóm là bước tổng hợp mới, chưa phải bản chốt. Dùng [Chương5 hiện hành](chapter-05-current.md), [bảng Chương7](chapter-07-rows.md), [F18](figures/F18_d5_precision.png) và [audit09/11](update-2026-11-09.md) để thay các đoạn dưới; Word01/11 vẫn là snapshot cũ, chưa export lại theo nội dung mới.

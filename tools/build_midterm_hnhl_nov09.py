@@ -148,6 +148,9 @@ def chapter_text(metrics):
     if (OUT/'followup-pr101-2026-11-09.json').exists():
         from tools.build_midterm_hnhl_pr101_followup import update_chapter
         text = update_chapter(text)
+    if (OUT/'update-2026-11-10.json').exists():
+        from tools.build_midterm_hnhl_nov10 import update_chapter as update_nov10
+        text = update_nov10(text)
     return text
 
 

@@ -144,6 +144,21 @@ def check():
         assert not kr_followup['new_experimental_data']
         assert not any(kr_followup['acceptance'].values())
         assert not kr_followup['validation']['reproductions']['page_audit']['rendered_layout_verified']
+    nov10_sources = 0
+    nov10_path = OUT/'update-2026-11-10.json'
+    if nov10_path.exists():
+        from tools.build_midterm_hnhl_nov10 import collect_nov10
+        nov10 = read_json(nov10_path)
+        assert nov10 == collect_nov10(), '10/11 evidence drift'
+        for source in nov10['evidence'].values():
+            assert hashlib.sha256(source_bytes(source)).hexdigest() == source['sha256'], '10/11 source drift'
+            nov10_sources += 1
+        assert not nov10['source_prs_merged']
+        assert not any(nov10['acceptance'].values())
+        assert sum(c['ranged'] for c in nov10['chairs']) == 0
+        assert all(c['median_error_m'] is None for c in nov10['chairs'])
+        assert not nov10['tile3_source_available']
+        assert nov10['temporal_trunk_prior_m'] != nov10['fusion_trunk_prior_m']
     word = OUT/'HNHL-Chuong-5.docx'
     verification = read_json(OUT/'verification.json')
     word_sha = hashlib.sha256(word.read_bytes()).hexdigest()
@@ -179,13 +194,14 @@ def check():
             target = path.parent/unquote(url.split('#')[0])
             assert target.exists(), f'broken link: {path}: {url}'
             count += 1
-    return dict(checked_snapshot_date='2026-11-09' if nov09_path.exists() else ('2026-11-07' if team_path.exists() else ('2026-11-06' if recovery_path.exists() else ('2026-11-05' if latest_path.exists() else '2026-11-03'))), evidence_sources_checked=len(update['evidence']),
+    return dict(checked_snapshot_date='2026-11-10' if nov10_path.exists() else ('2026-11-09' if nov09_path.exists() else ('2026-11-07' if team_path.exists() else ('2026-11-06' if recovery_path.exists() else ('2026-11-05' if latest_path.exists() else '2026-11-03')))), evidence_sources_checked=len(update['evidence']),
                 postmerge_sources_checked=followup_sources,
                 latest_sources_checked=latest_sources,
                 recovery_sources_checked=recovery_sources,
                 team_sources_checked=team_sources,
                 nov09_sources_checked=nov09_sources,
                 kr_followup_sources_checked=kr_followup_sources,
+                nov10_sources_checked=nov10_sources,
                 source_hashes_match=True, both_saved_snapshots_match=True,
                 missing_acceptance_preserved=True, local_links_checked=count,
                 original_word_sha256=word_sha, original_word_visual_review_preserved=True,
@@ -193,6 +209,7 @@ def check():
                 additional_figure_sha256=hashlib.sha256((OUT/'figures/F9_single_models.png').read_bytes()).hexdigest(),
                 latest_figure_sha256=hashlib.sha256((OUT/'figures/F18_d5_precision.png').read_bytes()).hexdigest() if latest_path.exists() else None,
                 team_figure_sha256=hashlib.sha256((OUT/'figures/F17_home_pilot.png').read_bytes()).hexdigest() if team_path.exists() else None,
+                nov10_figure_sha256=hashlib.sha256((OUT/'figures/F10_availability_1109.png').read_bytes()).hexdigest() if nov10_path.exists() else None,
                 figure_visual_review_not_automated=True,
                 checker_executes_inference=False, checker_executes_application_tests=False)
 
