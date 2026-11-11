@@ -72,6 +72,7 @@ def main():
     ap.add_argument("v", type=float)
     ap.add_argument("seconds", type=float)
     ap.add_argument("--label", default="run")
+    ap.add_argument("--max-start-m", type=float, default=2.6, help="start check: the marker may be at most this far (m); --stop-at still ends the run")
     ap.add_argument("--steer", action="store_true", help="steer toward the marker (off by default)")
     ap.add_argument("--wait", type=float, default=20.0, help="seconds to wait for R1 after the beeps; the command starts once R1 has been held for 0.5 s")
     ap.add_argument("--stop-at", type=float, default=0.8, help="stop the commands when the marker is closer than this (m)")
@@ -124,10 +125,10 @@ def main():
             r0 = marker_range(g, obj, f.frame_bgr) if f is not None else None
             if r0:
                 break
-        if r0 is None or not 1.4 <= r0[0] <= 2.6:
+        if r0 is None or not 1.4 <= r0[0] <= a.max_start_m:
             done.set()
             th.join()
-            print("ABORT: start check failed (%s)" % ("marker not seen" if r0 is None else "marker %.2f m away, need 1.4-2.6 m" % r0[0]))
+            print("ABORT: start check failed (%s)" % ("marker not seen" if r0 is None else "marker %.2f m away, need 1.4-%.1f m" % (r0[0], a.max_start_m)))
             raise SystemExit(1)
         print("start: marker %.2f m away, bearing %+.1f deg. HOLD R1 at the beeps." % r0, flush=True)
         t0 = time.time()
