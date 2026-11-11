@@ -310,10 +310,33 @@ def f25():
     plt.close(fig)
 
 
+def f7():
+    """Video latency (JetBot capture -> laptop decode, after UDP clock sync) of two 120 s runs on 2026-11-11, robot stationary next to the laptop (-31 dBm), and the delivered frame rate.
+    Source: week-06/latency_1111/*.csv and .json (tools.log_latency). The e-stop / watchdog stop times are NOT in this figure (they need motion)."""
+    base = R / "week-06" / "latency_1111"
+    fig, ax = plt.subplots(figsize=(7.5, 4.4))
+    for tag, name, c in (("video_latency_1111", "run 1 (2 min after boot, Jetson load 3.6)", BLUE), ("video_latency_1111_settled", "run 2 (4 min after boot, load 1.0)", RED)):
+        x = sorted(float(r["decoded_latency_ms"]) for r in csv.DictReader(open(base / (tag + ".csv"))))
+        d = json.load(open(base / (tag + ".json")))
+        ax.plot(x, [(i + 1) / len(x) for i in range(len(x))], color=c, label="%s: %.1f fps, p50 %.0f, p95 %.0f, max %.0f ms" % (name, d["run_fps"], x[len(x) // 2], x[int(0.95 * len(x))], x[-1]))
+    ax.axvline(50, color=GREY, ls="--", lw=1)
+    ax.text(52, 0.05, "config p95 limit 50 ms", fontsize=7, color=GREY)
+    ax.axvline(500, color=GREEN, ls=":", lw=1)
+    ax.text(470, 0.5, "video-freshness guard 0.5 s", fontsize=7, color=GREEN, rotation=90, ha="right")
+    ax.set_xlabel("decoded latency (ms)")
+    ax.set_ylabel("cumulative fraction of frames")
+    ax.set_xlim(0, 550)
+    ax.set_title("F7 Video latency CDF, 2 x 120 s (2,351 and 2,325 frames); delivered 19.6 and 19.4 fps (config minimum 20)", fontsize=8.5)
+    ax.legend(fontsize=7, loc="lower right")
+    fig.tight_layout()
+    fig.savefig(OUT6 / "F7_video_latency.png")
+    plt.close(fig)
+
+
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     OUT6.mkdir(parents=True, exist_ok=True)
-    for fn in (f1, f2, f4, f5, f6, f19, f20, f21, f22, f23, f24, f25):
+    for fn in (f1, f2, f4, f5, f6, f19, f20, f21, f7, f22, f23, f24, f25):
         fn()
         print("made", fn.__name__)
 
