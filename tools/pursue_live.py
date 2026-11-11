@@ -504,6 +504,10 @@ def main():
             cmd.update(v=0.0, w=0.0, t=time.time())
             time.sleep(0.4)
             done.set()
+            # Finish sender cleanup before returning/re-raising to the caller.
+            # The sender's finally sends a stop and closes its socket.
+            for th in threads:
+                th.join(timeout=2.0)
             try:
                 rx.close()
             except Exception:
