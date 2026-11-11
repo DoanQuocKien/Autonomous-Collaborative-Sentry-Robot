@@ -1,0 +1,11 @@
+t,track_id,dist_m,forward_m,left_m,yaw_err,feet_cut,v,w,mode,event
+0.007,1,1.002,0.997,0.093,0.2037,0,0.0,0.45,PURSUE,
+4.657,,,,,,,0.0,0.0,NO_TARGET,
+4.718,,,,,,,0.0,0.0,NO_TARGET,
+4.741,,,,,,,0.0,0.0,NO_TARGET,
+4.793,,,,,,,0.0,0.0,NO_TARGET,
+4.867,,,,,,,0.0,0.0,NO_TARGET,
+4.901,,,,,,,0.0,0.0,NO_TARGET,
+4.943,,,,,,,0.0,0.0,NO_TARGET,
+4.994,,,,,,,0.0,0.0,NO_TARGET,
+5.041,,,,,,,0.0,0.0,NO_TARGET,
