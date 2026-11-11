@@ -1,0 +1,22 @@
+{
+ "pose": "calib/camera_pose_self_1111_2.json",
+ "note": "obstacle = obstacle-class components, freespace = first non-ground row of each column; lane = |left| < 0.6 m, forward <= 3.5 m; a prediction in an empty-floor set is a false stop",
+ "obstacle": {
+  "empty_floor_1111_a": {
+   "frames": 24,
+   "frames_with_a_lane_prediction": 0,
+   "nearest_forward_m_median": null,
+   "nearest_forward_m_min": null,
+   "nearest_forward_m_max": null
+  }
+ },
+ "freespace": {
+  "empty_floor_1111_a": {
+   "frames": 24,
+   "frames_with_a_lane_prediction": 24,
+   "nearest_forward_m_median": 0.199,
+   "nearest_forward_m_min": 0.191,
+   "nearest_forward_m_max": 0.214
+  }
+ }
+}
