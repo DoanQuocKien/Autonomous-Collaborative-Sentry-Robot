@@ -32,6 +32,7 @@ Per object, near range: sandals 0.40 m, laptop sleeve 1.0 m, plastic cup 0.51 m,
 `empty_1` ('nothing placed'): the free-space output has a segment in all 57 frames, but the frame shows a real chair at the left edge about 1.2 m away, so this set is NOT an empty-floor control and no false-stop rate is claimed from it (the configured detector: 0 of 57 frames).
 
 ## 3. An independent check on a different day: the metal-frame chair of 2026-11-09 (36 frames, pose `1109_4`)
+Data: `results/chair_1109_check.json`, produced by `scripts/chair_1109_check.py` (added in the post-merge audit of 2026-11-11: the numbers below were first only printed in the session and are now reproducible).
 - **Obstacle class:** the chair's skid is found at the 1.2 m mark in **12 of 12** frames (contact 1.26 m forward, range 1.26-1.31 m; the true distance from the lens is unknown to about 0.2 m because the tape was taken from the robot front), in only 4 of 12 frames at 1.8 m (and at a wrong 2.49 m), and in 0 of 12 at 2.4 m.
 - **Free-space output: fails on glare.** It reports a boundary 0.2-0.3 m in front of the robot in 24 of 24 frames at the 1.2 m and 2.4 m marks, where the chair is more than 1.4 m away: a specular highlight of the ceiling lights on the tile is labelled background and reads as a wall (`scripts/overlay1109.py`; the overlay showed a purple patch inside the floor). A stop built on it would stop in front of nothing.
 
