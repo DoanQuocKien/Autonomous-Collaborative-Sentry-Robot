@@ -1,0 +1,40 @@
+{
+ "label": "scan_1",
+ "end_reason": "error: ConnectionResetError: [WinError 10054] An existing connection was forcibly closed by the remote host",
+ "pulses": 7,
+ "pulses_measured": 5,
+ "total_heading_deg": 176.6,
+ "turn_per_pulse_rad": 0.431,
+ "turn_per_pulse_sd_rad": 0.113,
+ "turn_per_pulse_deg": 24.7,
+ "spin_s": 0.2,
+ "spin_w": 0.45,
+ "boards": {
+  "0": {
+   "x_m": 3.88,
+   "y_m": 0.93,
+   "stops": 4,
+   "spread_m": 0.08
+  },
+  "1": {
+   "x_m": 0.35,
+   "y_m": 1.55,
+   "stops": 4,
+   "spread_m": 0.01
+  },
+  "2": {
+   "x_m": 0.49,
+   "y_m": -0.56,
+   "stops": 1,
+   "spread_m": 0.0
+  }
+ },
+ "door_bearing_deg": 24.2,
+ "door_sightings": 11,
+ "camera_pose_file": "calib/camera_pose_self_1111_1.json",
+ "battery_v_start": 12.188,
+ "battery_v_end": null,
+ "date": "2026-11-11 09:37",
+ "dry_run": false,
+ "note": "positions from the boards' pose in the video and the heading summed from the measured pulse angles; boards seen only at the start stop have no heading error; 150 mm boards are noisy beyond 2-3 m"
+}
