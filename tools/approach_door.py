@@ -23,6 +23,14 @@ import numpy as np
 from tools.scan_boards import ESTOP_LATCH, MIN_BATTERY_V, SPIN_W
 
 
+MAX_VIDEO_AGE_S = 0.5                                     # a frame older than this is not used, and no command is sent on older video (same limit as the scan guard in PR #107)
+
+
+def video_is_fresh(last_rx, now, max_age=MAX_VIDEO_AGE_S):
+    """True when the last received frame is at most max_age seconds old (both times from time.perf_counter())."""
+    return last_rx is not None and 0 <= now - last_rx <= max_age
+
+
 def polygon_area(quad):
     """Shoelace area of the matched door outline [(x, y), ...] (pixels^2)."""
     a = 0.0
@@ -108,6 +116,7 @@ def main():
     rx.start()
     sender = None
     rows, summary = [], {}
+    video = {"last_rx": None}
 
     def r1_held():
         for attempt in (0, 1):
@@ -126,6 +135,9 @@ def main():
             f = rx.read(timeout=0.5)
             if f is None:
                 continue
+            if not video_is_fresh(f.t_rx, time.perf_counter()):             # stale frame (laggy link): not used
+                continue
+            video["last_rx"] = f.t_rx
             got += 1
             ahead += [d.distance_m for d in tr.detect_markers(f.frame_bgr) if abs(d.bearing_rad) < math.radians(30)]
             r = entrance(f.frame_bgr, 0.0)
@@ -134,12 +146,15 @@ def main():
                 ar.append(polygon_area(list(r.quad)))
                 n += 1
         if got == 0:
-            raise SystemExit("STOP: no video frame for 6 s")
+            raise SystemExit("STOP: no fresh video frame for 6 s")
         return (float(np.median(b)) if b else None, float(np.median(ar)) if ar else None, n, min(ahead) if ahead else None)
 
     def command(v, w, seconds):
         t_end = time.time() + seconds
         while time.time() < t_end:
+            if not video_is_fresh(video["last_rx"], time.perf_counter()):
+                sender.send(0.0, 0.0)
+                raise SystemExit("STOP: the robot video went stale (%.1f s) before a command: no command sent" % MAX_VIDEO_AGE_S)
             sender.send(v, w)
             time.sleep(1 / 30.0)
         sender.send(0.0, 0.0)

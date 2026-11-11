@@ -1,6 +1,6 @@
 import pytest
 
-from tools.approach_door import next_action, polygon_area, range_from_area
+from tools.approach_door import next_action, polygon_area, range_from_area, video_is_fresh
 
 
 def test_area_scale_and_polygon():
@@ -20,3 +20,8 @@ def test_wider_window_and_aim_offset():
     assert next_action(7.0, 3.0, 2.0, 8) == "drive" and next_action(9.0, 3.0, 2.0, 8) == "turn_left"      # a 4 deg window made every 14 deg pulse overshoot
     assert next_action(10.0, 3.0, 2.0, 8, aim_offset_deg=2.75) == "drive"                                  # +2.75 deg centre: the door is expected to drift right during the burst
     assert next_action(-6.0, 3.0, 2.0, 8, aim_offset_deg=2.75) == "turn_right"
+
+
+def test_video_freshness():
+    assert video_is_fresh(10.0, 10.4) and not video_is_fresh(10.0, 10.6)
+    assert not video_is_fresh(None, 10.0) and not video_is_fresh(11.0, 10.0)        # no frame yet, or a clock that went backwards
