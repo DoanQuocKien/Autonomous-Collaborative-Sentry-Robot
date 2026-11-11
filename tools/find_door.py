@@ -40,6 +40,13 @@ def dominant_bearing(doors, window_deg=10.0):
     return round(((med + 180) % 360) - 180, 1), n, len(a), (other[0][0] if other else 0)
 
 
+def baseline_turn_deg(door_deg, heading_deg, side):
+    """Signed turn (left positive, degrees, shortest way) that points the robot ACROSS the line of sight to the door: facing the door, `side` is the direction of the baseline
+    ('left' -> heading = door bearing + 90, 'right' -> - 90). door_deg and heading_deg are in the first scan's start frame (the heading is where the robot stands after the scan)."""
+    target = door_deg + (90.0 if side == "left" else -90.0)
+    return (target - heading_deg + 180.0) % 360.0 - 180.0
+
+
 def summarise(boards, doors):
     """-> scan_boards-style summary dict (medians per board in the scan's start frame, door bearing = the dominant cluster of sightings, raw sightings kept)."""
     bearing, n, total, second = dominant_bearing(doors)
@@ -56,8 +63,8 @@ def main():
     ap.add_argument("--ip", default="auto")
     ap.add_argument("--user", default="jetbot")
     ap.add_argument("--password", default=os.environ.get("JETBOT_PASSWORD"))
-    ap.add_argument("--turn-deg", type=float, default=90.0, help="turn before the baseline drive")
-    ap.add_argument("--side", choices=("right", "left"), default="right", help="which way to turn (and so drive the baseline)")
+    ap.add_argument("--side", choices=("right", "left"), default="right", help="baseline direction ACROSS the line of sight, as seen when facing the door: the robot turns to it (shortest way) and drives")
+    ap.add_argument("--turn-deg", type=float, default=None, help="override: turn by this many degrees (side decides left or right) instead of computing the turn from the door bearing")
     ap.add_argument("--baseline-s", type=float, default=5.5, help="forward drive time (about 0.22 m/s at v 0.55 on 2026-11-11: 5.5 s = 1.2 m)")
     ap.add_argument("--drive-v", type=float, default=0.55)
     ap.add_argument("--stop-range", type=float, default=0.8, help="stop driving when a board within 30 deg of straight ahead is closer than this (m)")
@@ -71,7 +78,7 @@ def main():
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--out", default="data/find_door")
     a = ap.parse_args()
-    if not (0 < a.spin_s <= 0.5 and 0 < a.hold <= 5 and 0 <= a.turn_deg <= 180 and 0 < a.baseline_s <= 10 and 0.3 <= a.drive_v <= 0.8 and 1.5 <= a.stand_off <= 3.0):
+    if not (0 < a.spin_s <= 0.5 and 0 < a.hold <= 5 and (a.turn_deg is None or 0 <= a.turn_deg <= 180) and 0 < a.baseline_s <= 10 and 0.3 <= a.drive_v <= 0.8 and 1.5 <= a.stand_off <= 3.0):
         raise SystemExit("ABORT: argument out of its safe range")
 
     from sentry.config import load
@@ -159,7 +166,7 @@ def main():
                 break
             command(0.0, SPIN_W, a.spin_s)
             time.sleep(a.hold)
-        return boards, doors, pulses
+        return boards, doors, pulses, heading
 
     def turn_side(deg, sign):
         """Turn by `deg` degrees, left (sign +1) or right (-1), in spin pulses; the angle of each pulse is measured from the boards."""
@@ -172,7 +179,7 @@ def main():
             seen = sample()[0]
             turned += pulse(sign * SPIN_W, prev, seen, pulses)
             prev = seen
-            print("turn %s: %.0f deg so far" % (a.side, math.degrees(abs(turned))), flush=True)
+            print("turn %s: %.0f deg so far" % ("left" if sign > 0 else "right", math.degrees(abs(turned))), flush=True)
 
     def drive():
         """Forward for baseline_s: the command is streamed at 30 Hz by its own thread (a check loop with an SSH call per round took ~1.7 s, so inline commands gave 0.3 s of motion per 1.7 s);
@@ -221,7 +228,7 @@ def main():
                     raise SystemExit("ABORT: R1 not held in time")
                 time.sleep(0.2)
             sender = UDPSender(a.ip, port, 30)
-        b1, d1, p1 = spin_scan("scan 1")
+        b1, d1, p1, h1 = spin_scan("scan 1")
         s1 = summarise(b1, d1)
         result["scan1"] = s1
         if a.dry_run:
@@ -229,10 +236,16 @@ def main():
             return
         if s1["door_bearing_deg"] is None:
             raise SystemExit("STOP: the door was not seen in scan 1 (door_sightings 0): nothing to triangulate")
-        turn_side(a.turn_deg, 1 if a.side == "left" else -1)
+        if a.turn_deg is None:
+            t = baseline_turn_deg(s1["door_bearing_deg"], math.degrees(h1), a.side)
+            print("door bearing %.1f deg, robot heading %.1f deg: turning %s by %.0f deg to drive across the line of sight (baseline to the %s)" % (s1["door_bearing_deg"], math.degrees(h1), "left" if t > 0 else "right", abs(t), a.side), flush=True)
+            result["turn_deg_signed"] = round(t, 1)
+            turn_side(abs(t), 1 if t > 0 else -1)
+        else:
+            turn_side(a.turn_deg, 1 if a.side == "left" else -1)
         drive()
         time.sleep(1.5)
-        b2, d2, p2 = spin_scan("scan 2")
+        b2, d2, p2, _ = spin_scan("scan 2")
         s2 = summarise(b2, d2)
         result["scan2"] = s2
         if s2["door_bearing_deg"] is None:

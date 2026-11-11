@@ -15,3 +15,9 @@ def test_wraps_around_180_and_handles_none():
     b, n, _, _ = dominant_bearing(d)
     assert n == 4 and abs(abs(b) - 180) < 2
     assert dominant_bearing([]) == (None, 0, 0, 0)
+
+
+def test_baseline_turn_is_across_the_line_of_sight_the_short_way():
+    from tools.find_door import baseline_turn_deg
+    assert abs(baseline_turn_deg(0.0, 0.0, "left") - 90) < 1e-9 and abs(baseline_turn_deg(0.0, 0.0, "right") + 90) < 1e-9
+    assert abs(baseline_turn_deg(113.5, 373.7, "left") - (-170.2)) < 1e-6          # heading 373.7 = 13.7 deg; target 203.5 deg: the short way is 170.2 deg to the RIGHT
