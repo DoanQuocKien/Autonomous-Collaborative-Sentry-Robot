@@ -1,0 +1,59 @@
+{
+ "note": "Does a bigger recogniser help on the small door faces of 2026-11-11? Same 793 walker-face frames (the boxes tools.d2_segment found with buffalo_s), embeddings recomputed with each InsightFace pack",
+ "buffalo_s x1": {
+  "frames_embedded": 793,
+  "frames_missed": 0,
+  "frame": {
+   "auc": 0.71,
+   "n_genuine": 1440,
+   "n_impostor": 793
+  },
+  "entry": {
+   "auc": 0.735,
+   "n_genuine": 80,
+   "n_impostor": 43
+  }
+ },
+ "buffalo_l x1": {
+  "frames_embedded": 792,
+  "frames_missed": 1,
+  "frame": {
+   "auc": 0.787,
+   "n_genuine": 1438,
+   "n_impostor": 792
+  },
+  "entry": {
+   "auc": 0.843,
+   "n_genuine": 78,
+   "n_impostor": 42
+  }
+ },
+ "buffalo_s x2": {
+  "frames_embedded": 793,
+  "frames_missed": 0,
+  "frame": {
+   "auc": 0.702,
+   "n_genuine": 1440,
+   "n_impostor": 793
+  },
+  "entry": {
+   "auc": 0.728,
+   "n_genuine": 80,
+   "n_impostor": 43
+  }
+ },
+ "buffalo_l x2": {
+  "frames_embedded": 792,
+  "frames_missed": 1,
+  "frame": {
+   "auc": 0.781,
+   "n_genuine": 1438,
+   "n_impostor": 792
+  },
+  "entry": {
+   "auc": 0.838,
+   "n_genuine": 78,
+   "n_impostor": 42
+  }
+ }
+}
