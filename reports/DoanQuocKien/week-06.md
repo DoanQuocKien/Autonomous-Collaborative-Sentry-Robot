@@ -16,7 +16,7 @@ Start: the ORG dataset (7.1 GB Google Drive zip; `gdown` stalled twice, browser 
 
 ## Planned for tonight (robot available) - done for A, B moves to tomorrow
 - **Experiment A:** a metric monocular depth model on the tile marks 1.2, 1.8, 2.4 m (pass: every tile within +/- 0.15 m).
-- **Experiment B:** find and test a model that works on the glossy floor (YOLOv8s, YOLO-World, SegFormer floor analyzer, combinations; chair, table and empty-floor frames; pass: distance in >= 10/12 frames within +/- 0.15 m up to 1.5 m and no false stops). Plan: Week 6 section.
+- **Experiment B:** find and test a model that works on the glossy floor (YOLOv8s, YOLO-World, SegFormer floor analyzer, combinations; chair, table and empty-floor frames; pass: distance in >= 10/12 frames within +/- 0.15 m up to 1.5 m and no false stops). Plan: Week 6 section. **DONE 2026-11-11, not ready to replace the configured detector:** ground IoU 0.953 on unseen ORG buildings; on the D1 glossy tile objects within 1.2 m found 10 of 14 against 0 of 14 for the configured detector, nothing beyond about 1.4 m, glare false positives in the free-space output; details in `reports/DoanQuocKien/week-06/experiment_B/README.md` (branch `DoanQuocKien/w06-experiment-b`).
 
 ## Open / next (full list: plan, Week 6 section 'Carried over')
 - The table retest (robot 1.2, 1.8, 2.4 m from it), `self_pose` after moving the robot; T2 deployment 5 of 5, Part C, the handshake retest and Phase 2 live (need the ESP32-CAM and the real session); classroom-floor `motion_check`; R1-release stop trial; F7, F17, F21; reviews of #99, #100, #102; the supervisor message about the camera.
