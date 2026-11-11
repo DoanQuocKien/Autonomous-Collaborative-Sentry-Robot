@@ -20,6 +20,7 @@ from pathlib import Path
 
 import numpy as np
 
+from tools.approach_door import MAX_VIDEO_AGE_S, video_is_fresh
 from tools.locate_door import locate
 from tools.scan_boards import ESTOP_LATCH, MIN_BATTERY_V, PRIOR_PULSE_RAD, SPIN_W, camera_to_robot, pulse_angle, to_start_frame, wrap
 
@@ -172,8 +173,9 @@ def main():
         per, door, n, t0 = {}, [], 0, time.time()
         while n < a.samples and time.time() - t0 < 6.0:
             f = rx.read(timeout=0.5)
-            if f is None:
+            if f is None or not video_is_fresh(f.t_rx, time.perf_counter()):      # no frame, or a stale one (laggy link): not used
                 continue
+            video["last_rx"] = f.t_rx
             n += 1
             for d in tr.detect_markers(f.frame_bgr):
                 fwd, left = camera_to_robot(d.tvec, pitch)
@@ -181,11 +183,16 @@ def main():
             r = entrance(f.frame_bgr, 0.0)
             if r.in_view and r.bearing_rad is not None:
                 door.append((r.bearing_rad, r.inliers))
+        if n < a.samples:
+            raise SystemExit("STOP: incomplete fresh video sample (%d/%d frames newer than %.1f s): nothing is commanded on old video" % (n, a.samples, MAX_VIDEO_AGE_S))
         return {m: tuple(float(np.median([v[i] for v in vs])) for i in range(4)) + (len(vs),) for m, vs in per.items()}, door
 
     def command(v, w, seconds):
         t_end = time.time() + seconds
         while time.time() < t_end:
+            if not video_is_fresh(video["last_rx"], time.perf_counter()):
+                sender.send(0.0, 0.0)
+                raise SystemExit("STOP: the robot video went stale before a command (limit %.1f s): no command sent" % MAX_VIDEO_AGE_S)
             sender.send(v, w)
             time.sleep(1 / 30.0)
         sender.send(0.0, 0.0)
@@ -237,9 +244,10 @@ def main():
                     print("drive: R1 released", flush=True)
                     break
                 f = rx.read(timeout=0.5)
-                if f is None:                                              # rx.read waited 0.5 s without a frame
-                    print("drive: no frame, stopping", flush=True)
+                if f is None or not video_is_fresh(f.t_rx, time.perf_counter()):      # no frame for 0.5 s, or a stale one (checked once per round, about 1.7 s: the robot-side e-stop covers R1)
+                    print("drive: no fresh frame, stopping", flush=True)
                     break
+                video["last_rx"] = f.t_rx
                 ahead = [d.distance_m for d in tr.detect_markers(f.frame_bgr) if abs(d.bearing_rad) < math.radians(30)]
                 if ahead and min(ahead) < a.stop_range:
                     print("drive: a board %.2f m ahead, stopping" % min(ahead), flush=True)
@@ -252,6 +260,7 @@ def main():
         print("drive: %.1f s of forward command" % (time.time() - t0), flush=True)
 
     result, run_dir, observations = {}, None, dict(turn_pulses=[])
+    video = {"last_rx": None}
     try:
         if not a.dry_run:
             print("ARM the e-stop (hold Start 1.5 s) and HOLD R1 within %.0f s and keep holding it for the whole run (about 2 minutes); keep 0.3 m clear around the robot." % a.wait, flush=True)
