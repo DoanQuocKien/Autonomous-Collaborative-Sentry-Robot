@@ -216,9 +216,104 @@ def f19():
     plt.close(fig)
 
 
+PM = R / "week-06" / "classroom_1111_pm" / "data"
+OUT6 = R / "week-06" / "figures"
+
+
+def f22():
+    """Open-loop forward drive: heading change per metre vs commanded v (every logged speed run with a marker in view, 2026-10-15..11-11). Source: week-06/classroom_1111_pm/data/veer_per_run.csv."""
+    rows = list(csv.DictReader(open(PM / "veer_per_run.csv")))
+    fig, ax = plt.subplots(figsize=(7, 4.2))
+    style = {"classroom v sweep": (BLUE, "o"), "head_* runs": (GREEN, "s"), "low battery 10.97 V": ("#c08a00", "^"), "today 2026-11-11": (RED, "D")}
+    for grp, (c, m) in style.items():
+        pts = [(float(r["cmd_v"]), float(r["deg_per_m"])) for r in rows if r["group"] == grp]
+        if pts:
+            ax.scatter(*zip(*pts), color=c, marker=m, s=45, label=grp, zorder=3)
+    ax.axhline(0, color=GREY, lw=0.8)
+    ax.axhline(-10.7, color=GREY, ls="--", lw=1)
+    ax.text(0.99, -10.7, "motion.json calibration (2026-10-11): -0.19 rad/m", transform=ax.get_yaxis_transform(), ha="right", va="bottom", fontsize=7, color=GREY)
+    ax.set_xlabel("commanded v (speed cap 0.3 m/s at v = 1)")
+    ax.set_ylabel("heading change per metre (deg/m, left +)")
+    ax.set_title("F22 Open-loop drive veers unpredictably: the same command gives -16 to +59 deg/m", fontsize=9)
+    ax.legend(fontsize=7)
+    fig.tight_layout()
+    fig.savefig(OUT6 / "F22_drive_veer.png")
+    plt.close(fig)
+
+
+def f23():
+    """Autonomous approach run ap_1: range estimate (outline area scaled from the tape at the first sighting) and door bearing vs step; tape afterwards 1.67 m. Source: classroom_1111_pm/data/approach_ap_1_log.csv."""
+    rows = [r for r in csv.DictReader(open(PM / "approach_ap_1_log.csv")) if r["range_m"] != ""]
+    st = [int(r["step"]) for r in rows]
+    fig, ax = plt.subplots(2, 1, figsize=(7.5, 5.2), sharex=True)
+    ax[0].plot(st, [float(r["range_m"]) for r in rows], color=BLUE, marker=".", lw=1)
+    ax[0].axhspan(1.5, 3.0, color=GREEN, alpha=0.1, label="legal sweet-spot window 1.5-3.0 m")
+    ax[0].axhline(2.0, color=GREY, ls="--", lw=0.8, label="stand-off 2.0 m")
+    ax[0].scatter([st[-1]], [1.67], color=RED, marker="*", s=120, zorder=4, label="tape after the run: 1.67 m")
+    ax[0].set_ylabel("range estimate (m)")
+    ax[0].legend(fontsize=7)
+    ax[1].plot(st, [float(r["bearing_deg"]) for r in rows], color=RED, marker=".", lw=1)
+    ax[1].axhspan(-4, 4, color=GREY, alpha=0.2, label="+/- 4 deg window used (hunting)")
+    ax[1].axhspan(-8, 8, color=GREEN, alpha=0.1, label="+/- 8 deg window proposed")
+    for r in rows:
+        if r["action"] == "drive":
+            ax[1].axvline(int(r["step"]), color=BLUE, alpha=0.25, lw=2)
+    ax[1].set_ylabel("door bearing (deg, left +)")
+    ax[1].set_xlabel("step (blue bars = drive bursts)")
+    ax[1].legend(fontsize=7)
+    fig.suptitle("F23 Autonomous door approach (ap_1): pulse, re-measure, drive\n51 steps, 10 bursts, arrived at 1.67 m by tape (estimate 1.97 m)", fontsize=8.5)
+    fig.tight_layout()
+    fig.savefig(OUT6 / "F23_door_approach.png")
+    plt.close(fig)
+
+
+def f24():
+    """Person ranging, three people at the tape marks 1.2 / 1.8 / 2.4 m (tape from the robot front; the lens sits about 0.2-0.26 m behind: expected = tape + 0.23). Source: person_ranges_1111.json."""
+    sets = json.load(open(PM / "person_ranges_1111.json"))["sets"]
+    fig, ax = plt.subplots(figsize=(7.5, 4.6))
+    ser = [("foot row, 0 px", lambda d: d["foot_row"]["0.0"]["median"], "#999999", "o"), ("foot row, 3.5 px", lambda d: d["foot_row"]["3.5"]["median"], BLUE, "s"),
+           ("foot row, 5 px", lambda d: d["foot_row"]["5.0"]["median"], "#7fa6d8", "^"), ("trunk, prior 0.50 m", lambda d: d["trunk"]["median"], RED, "D")]
+    for k, (name, fn, c, m) in enumerate(ser):
+        xs, ys = [], []
+        for tag, d in sets.items():
+            xs.append(d["tape_m"] + (k - 1.5) * 0.06)
+            ys.append(fn(d))
+        ax.scatter(xs, ys, color=c, marker=m, s=34, label=name, zorder=3)
+    xx = [1.1, 2.5]
+    ax.plot(xx, [x + 0.23 for x in xx], color=GREEN, lw=1.2, label="expected: tape + 0.23 m (lens offset, unmeasured +/- 0.03)")
+    ax.fill_between(xx, [x + 0.03 for x in xx], [x + 0.43 for x in xx], color=GREEN, alpha=0.08)
+    ax.set_xlabel("tape distance, robot front to feet (m); three people per mark")
+    ax.set_ylabel("median forward range from the lens (m)")
+    ax.set_title("F24 Foot-row range depends on the box-bottom offset; trunk range needs none (12 frames per point)", fontsize=8.5)
+    ax.legend(fontsize=7, loc="upper left")
+    fig.tight_layout()
+    fig.savefig(OUT6 / "F24_person_ranges.png")
+    plt.close(fig)
+
+
+def f25():
+    """D2 face width at the door ESP32: the cafe pilot (2026-10-28) vs the classroom clips (2026-11-11, low tilted placement), 45 px = the pipeline's walker threshold. Source: d2_face_widths_*.csv."""
+    new = [float(r["width_px"]) for r in csv.DictReader(open(PM / "d2_face_widths_1111.csv"))]
+    old = [float(r["width_px"]) for r in csv.DictReader(open(PM / "d2_face_widths_pilot_1028.csv"))]
+    fig, ax = plt.subplots(figsize=(7.5, 4))
+    bins = range(20, 66, 2)
+    ax.hist(old, bins=bins, color=GREEN, alpha=0.6, label="cafe pilot 2026-10-28 (%d frames, median %.0f px)" % (len(old), sorted(old)[len(old) // 2]))
+    ax.hist(new, bins=bins, color=RED, alpha=0.6, label="classroom 2026-11-11 (%d frames, median %.0f px)" % (len(new), sorted(new)[len(new) // 2]))
+    ax.axvline(45, color="k", ls="--", lw=1)
+    ax.text(45.5, ax.get_ylim()[1] * 0.92, "45 px walker threshold", fontsize=7)
+    ax.set_xlabel("walker face width in the ESP32 frame (px, 640x480)")
+    ax.set_ylabel("frames")
+    ax.set_title("F25 Faces at the classroom door placement are 22-53 px: below the pilot's 45-60 px", fontsize=9)
+    ax.legend(fontsize=7)
+    fig.tight_layout()
+    fig.savefig(OUT6 / "F25_d2_face_width.png")
+    plt.close(fig)
+
+
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
-    for fn in (f1, f2, f4, f5, f6, f19, f20, f21):
+    OUT6.mkdir(parents=True, exist_ok=True)
+    for fn in (f1, f2, f4, f5, f6, f19, f20, f21, f22, f23, f24, f25):
         fn()
         print("made", fn.__name__)
 
