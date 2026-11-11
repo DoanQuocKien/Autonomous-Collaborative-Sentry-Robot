@@ -78,7 +78,7 @@ def main():
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--out", default="data/find_door")
     a = ap.parse_args()
-    if not (0 < a.spin_s <= 0.5 and 0 < a.hold <= 5 and (a.turn_deg is None or 0 <= a.turn_deg <= 180) and 0 < a.baseline_s <= 10 and 0.3 <= a.drive_v <= 0.8 and 1.5 <= a.stand_off <= 3.0):
+    if not (0 < a.spin_s <= 0.5 and 0 < a.hold <= 5 and (a.turn_deg is None or 0 <= a.turn_deg <= 180) and 0 < a.baseline_s <= 10 and 0.3 <= a.drive_v <= 1.0 and 1.5 <= a.stand_off <= 3.0):
         raise SystemExit("ABORT: argument out of its safe range")
 
     from sentry.config import load
