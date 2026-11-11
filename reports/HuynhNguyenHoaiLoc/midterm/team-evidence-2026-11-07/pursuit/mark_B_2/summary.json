@@ -1,0 +1,20 @@
+{
+  "frames": 45,
+  "frames_with_distance": 45,
+  "pursue_frames": 45,
+  "fraction_distance_within_band": 1.0,
+  "fraction_centred_within_10pct": 0.0,
+  "hold_events": [],
+  "plan_thresholds": "distance 1.2 +/- 0.2 m and centre within +/- 10 % of the frame width for 80 % of the time (plan 4.3 'Pursuit PD'); these are first-trial numbers, not an acceptance",
+  "label": "mark_B",
+  "dry_run": true,
+  "replay": null,
+  "end_reason": "time limit",
+  "camera_pose_file": "calib/camera_pose_self_1106_1.json",
+  "pitch_down_deg": -4.68,
+  "battery_v_start": 12.16,
+  "battery_v_end": 12.172,
+  "seconds": 11.3,
+  "date": "2026-11-07 00:08",
+  "obstacle_avoidance": false
+}
