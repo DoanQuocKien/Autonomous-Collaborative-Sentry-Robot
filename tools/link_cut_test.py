@@ -5,7 +5,7 @@ which needs a rotating view, so the wheels are on the floor. Conditions: in plac
 --wheels-on-ground-ack (decided by DQK for the 2026-11-08 trials). For each trial: hold R1; the laptop sends the spin command for --spin-s,
 then STOPS SENDING (no stop packet: the app 'closed'); the robot's own 0.3 s watchdog must stop it. The stop is seen in the VIDEO (consecutive-frame difference), so the result is an UPPER BOUND on the
 motor stop latency: it includes the video delay (a bound of < 0.16 s was measured on 2026-10-30 only, NOT re-measured later) and the frame period (about 0.05 s). Not a mechanical braking measurement.
-A trial counts only if it is VALID (validate_trial): enough rest, spin and post-cut frames, clear motion before the cut, R1 still held at the cut and a confirmed last send; the cutoff is the time of the
+A trial counts only if it is VALID (validate_trial): enough rest, spin and post-cut frames, clear motion before the cut, R1 held at the cut AND at the end check, and a confirmed last send; the cutoff is the time of the
 last send that UDPSender reported as sent (rate-limited sends do not count), taken atomically with stopping the sender thread.
 
   python -m tools.link_cut_test --label home_1 --trials 5          # robot on, e-stop armed (hold Start 1.5 s), hold R1 when it says so
@@ -48,9 +48,10 @@ def threshold(rest, spin):
     return rest + 0.25 * (spin - rest)
 
 
-def validate_trial(rest_n, spin_n, post_n, rest, spin, r1_ok_at_cut, last_ok):
+def validate_trial(rest_n, spin_n, post_n, rest, spin, r1_ok_at_cut, last_ok, r1_ok_after):
     """-> (valid, reason). A trial yields a stop time only when the rest, spin and post-cut samples are sufficient, the picture clearly moved before the cut, R1 was held at the cut
-    (otherwise the stop may be the R1 release, not the watchdog) and at least one packet was confirmed sent."""
+    and at the end check (otherwise the stop may be the R1 release, not the watchdog), and at least one packet was confirmed sent.
+    Two polls still do not prove continuous R1 history; this tool reports a video proxy, not watchdog certification."""
     if last_ok is None:
         return False, "no packet was confirmed sent"
     if rest_n < MIN_REST_FRAMES:
@@ -63,6 +64,8 @@ def validate_trial(rest_n, spin_n, post_n, rest, spin, r1_ok_at_cut, last_ok):
         return False, "too few frames after the cut (%d)" % post_n
     if not r1_ok_at_cut:
         return False, "R1 was not held at the cut: the stop may be the R1 release"
+    if not r1_ok_after:
+        return False, "R1 was released before the end check: watchdog-only cause is unconfirmed"
     return True, ""
 
 
@@ -168,7 +171,7 @@ def main():
                 r1_after = r1_held()
                 series = motion_series(frames)
                 thr = threshold(rest, spin)
-                ok, reason = validate_trial(len(rest_frames), n_spin, len(post), rest, spin, r1_at_cut, t_cut)
+                ok, reason = validate_trial(len(rest_frames), n_spin, len(post), rest, spin, r1_at_cut, t_cut, r1_after)
                 if state["err"] is not None:
                     ok, reason = False, "sender thread error: %r" % (state["err"],)
                 t_still = stop_time(series, t_cut, thr) if ok else None

@@ -19,14 +19,16 @@ def test_stop_time_is_the_first_moment_the_picture_stays_still_after_the_cut():
 
 
 def test_a_trial_is_valid_only_with_samples_clear_motion_r1_held_and_a_confirmed_send():
-    assert validate_trial(40, 40, 30, 0.9, 12.0, True, 100.0) == (True, "")
-    assert not validate_trial(40, 40, 30, 0.9, 12.0, True, None)[0]            # no confirmed send
-    assert not validate_trial(5, 40, 30, 0.9, 12.0, True, 100.0)[0]            # too few rest frames
-    assert not validate_trial(40, 5, 30, 0.9, 12.0, True, 100.0)[0]            # too few spin frames
-    assert not validate_trial(40, 40, 3, 0.9, 12.0, True, 100.0)[0]            # too few frames after the cut
-    assert not validate_trial(40, 40, 30, 0.9, 1.5, True, 100.0)[0]            # the picture hardly moved before the cut: a "stop" would prove nothing
-    ok, why = validate_trial(40, 40, 30, 0.9, 12.0, False, 100.0)
+    assert validate_trial(40, 40, 30, 0.9, 12.0, True, 100.0, True) == (True, "")
+    assert not validate_trial(40, 40, 30, 0.9, 12.0, True, None, True)[0]            # no confirmed send
+    assert not validate_trial(5, 40, 30, 0.9, 12.0, True, 100.0, True)[0]            # too few rest frames
+    assert not validate_trial(40, 5, 30, 0.9, 12.0, True, 100.0, True)[0]            # too few spin frames
+    assert not validate_trial(40, 40, 3, 0.9, 12.0, True, 100.0, True)[0]            # too few frames after the cut
+    assert not validate_trial(40, 40, 30, 0.9, 1.5, True, 100.0, True)[0]            # the picture hardly moved before the cut: a "stop" would prove nothing
+    ok, why = validate_trial(40, 40, 30, 0.9, 12.0, False, 100.0, True)
     assert not ok and "R1" in why                                              # R1 released at the cut: the stop may be the release (HNHL, trial 4)
+    ok, why = validate_trial(40, 40, 30, 0.9, 12.0, True, 100.0, False)
+    assert not ok and "unconfirmed" in why
 
 
 # ---- the real main path with fakes: no robot, no network ----
@@ -85,6 +87,8 @@ def run_main(monkeypatch, tmp_path, ssh_fail=False, r1_after_cut=True, trials=2,
         if ssh_fail and state["r1"] >= 4:
             raise OSError("ssh dropped")
         state["r1"] += 1
+        if not r1_after_cut and FakeSender.instances and time.time() - FakeSender.last_send > 0.3:
+            return "no"
         return "yes"
 
     monkeypatch.setattr("winsound.Beep", lambda *a: None)
@@ -145,6 +149,16 @@ def test_an_ssh_failure_at_the_r1_check_still_cleans_up(monkeypatch, tmp_path):
     _, summary = saved(tmp_path)
     assert summary["end_reason"].startswith("error: OSError")
     assert FakeSender.instances and all(s.closed and s.stopped for s in FakeSender.instances)
+
+
+def test_r1_release_before_end_check_is_not_a_valid_watchdog_trial(monkeypatch, tmp_path):
+    FakeRx.fail_at = None
+    run_main(monkeypatch, tmp_path, r1_after_cut=False, trials=1)
+    _, summary = saved(tmp_path)
+    assert summary['trials'] == 1 and summary['valid_trials'] == 0
+    assert summary['upper_bound_s'] == []
+    assert 'unconfirmed' in summary['invalid_trials'][0][1]
+    assert all(s.closed and s.stopped for s in FakeSender.instances)
 
 
 def test_run_directories_are_never_overwritten(monkeypatch, tmp_path):
