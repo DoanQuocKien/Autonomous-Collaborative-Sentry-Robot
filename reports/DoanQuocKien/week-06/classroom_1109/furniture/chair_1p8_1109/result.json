@@ -1,0 +1,81 @@
+{
+ "label": "chair_1p8_1109",
+ "tape_m": 1.8,
+ "camera_pose": "calib/camera_pose_self_1109_4.json",
+ "floor": "glossy",
+ "frames": 12,
+ "frames_with_detection": 4,
+ "frames_with_distance": 0,
+ "median_distance_m": null,
+ "error_m": null,
+ "rows": [
+  [
+   {
+    "cls": 56,
+    "conf": 0.31,
+    "xyxy": [
+     236,
+     136,
+     334,
+     273
+    ],
+    "distance_m": null,
+    "forward_m": null,
+    "rejection": "reflection_unresolved"
+   }
+  ],
+  [],
+  [],
+  [],
+  [],
+  [
+   {
+    "cls": 56,
+    "conf": 0.38,
+    "xyxy": [
+     236,
+     143,
+     334,
+     277
+    ],
+    "distance_m": null,
+    "forward_m": null,
+    "rejection": "reflection_unresolved"
+   }
+  ],
+  [],
+  [
+   {
+    "cls": 56,
+    "conf": 0.31,
+    "xyxy": [
+     239,
+     142,
+     334,
+     273
+    ],
+    "distance_m": null,
+    "forward_m": null,
+    "rejection": "reflection_unresolved"
+   }
+  ],
+  [],
+  [],
+  [],
+  [
+   {
+    "cls": 56,
+    "conf": 0.3,
+    "xyxy": [
+     238,
+     141,
+     334,
+     275
+    ],
+    "distance_m": null,
+    "forward_m": null,
+    "rejection": "reflection_unresolved"
+   }
+  ]
+ ]
+}
