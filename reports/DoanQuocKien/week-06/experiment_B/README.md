@@ -6,6 +6,8 @@
 **Model.** SegFormer-B0 (`data/models/segformer-b0-ade`, ADE20K pre-trained) with a 3-class head. 15 epochs, batch 6, 512 x 512 crops of 960 x 540 images (70 % centred on an obstacle), AdamW 6e-5 one-cycle, class weights 1 / 1 / 8, fp16, seed 0; 997 s, peak 2.43 GB, loss 0.67 -> 0.0236 (`results/train_log.json`). Weights `segformer_org.pt` sha256 `a703e4290a83e688a3619e96a613aad07ae09159fdbeb83a954581ae335267e9` (local, 15 MB, not committed). Libraries: torch 2.9.1+cu128, transformers 4.57.1, ultralytics 8.4.172.
 **Code.** `tools/org_seg.py` (cache, train, eval) and `tools/org_seg_judge.py` (the ruler below), branch `DoanQuocKien/w06-experiment-b`; `scripts/` here holds the diagnostic scripts.
 
+**Review guards (HNHL, 2026-11-11):** subsequent training must use a fresh `--out` directory if a checkpoint/log already exists; evaluation/judging must use a fresh `--tag`. Existing results/weights above are not overwritten or rerun by this change. Zero contact samples give null errors, undefined denominators give null metrics (mIoU lists its defined classes), and an empty test split is rejected. `empty_1` components are not a validated false-stop rate; a true empty-floor control is still required. These software guards do not validate or adopt the model.
+
 ## 1. Unseen ORG scenes (`results/eval_org_ft.json`, 1,709 images, 960 x 540)
 | | |
 |---|---|

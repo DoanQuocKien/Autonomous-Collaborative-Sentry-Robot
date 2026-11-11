@@ -30,6 +30,27 @@ STD = np.array([0.229, 0.224, 0.225], dtype=np.float32) * 255
 CLASSES = ("background", "ground", "obstacle")
 
 
+def require_new_outputs(*paths):
+    for path in paths:
+        if Path(path).exists():
+            raise FileExistsError("output exists; choose a new --out or --tag: %s" % path)
+
+
+def ratio_or_none(numerator, denominator, digits=4):
+    return round(float(numerator) / float(denominator), digits) if denominator else None
+
+
+def contact_error_stats(errors):
+    if not errors:
+        return dict(median_abs=None, p90_abs=None, median_signed=None, n=0)
+    values = np.asarray(errors, dtype=float)
+    if not np.isfinite(values).all():
+        raise ValueError("contact errors must be finite")
+    return dict(median_abs=round(float(np.median(np.abs(values))), 2),
+        p90_abs=round(float(np.percentile(np.abs(values), 90)), 2),
+        median_signed=round(float(np.median(values)), 2), n=len(values))
+
+
 def _cache_one(args):
     split, img_path = args
     img_path = Path(img_path)
@@ -130,6 +151,8 @@ def predict(model, img_bgr, device="cuda"):
 
 
 def train(a):
+    run_dir = Path(a.out)
+    require_new_outputs(run_dir / "segformer_org.pt", run_dir / "train_log.json")
     import torch
     torch.manual_seed(0)
     np.random.seed(0)
@@ -143,7 +166,7 @@ def train(a):
     sched = torch.optim.lr_scheduler.OneCycleLR(opt, max_lr=a.lr, total_steps=steps, pct_start=0.1)
     scaler = torch.amp.GradScaler("cuda")
     weight = torch.tensor([1.0, 1.0, a.obstacle_weight]).cuda()
-    OUT.mkdir(parents=True, exist_ok=True)
+    run_dir.mkdir(parents=True, exist_ok=True)
     log, t0, it = [], time.time(), 0
     for ep in range(a.epochs):
         tot = 0.0
@@ -162,9 +185,9 @@ def train(a):
             it += 1
         log.append(dict(epoch=ep + 1, loss=round(tot / len(dl), 4), seconds=round(time.time() - t0)))
         print("epoch %2d/%d  loss %.4f  (%.0f s, peak GPU memory %.2f GB)" % (ep + 1, a.epochs, tot / len(dl), time.time() - t0, torch.cuda.max_memory_allocated() / 1e9), flush=True)
-        torch.save(model.state_dict(), OUT / "segformer_org.pt")
+        torch.save(model.state_dict(), run_dir / "segformer_org.pt")
     import transformers
-    (OUT / "train_log.json").write_text(json.dumps(dict(args=vars(a), log=log, torch=torch.__version__, transformers=transformers.__version__, train_images=len(recs), seed=0, base="data/models/segformer-b0-ade", date=time.strftime("%Y-%m-%d %H:%M")), indent=1))
+    (run_dir / "train_log.json").write_text(json.dumps(dict(args=vars(a), log=log, torch=torch.__version__, transformers=transformers.__version__, train_images=len(recs), seed=0, base="data/models/segformer-b0-ade", date=time.strftime("%Y-%m-%d %H:%M")), indent=1))
 
 
 def components(mask, min_area):
@@ -174,8 +197,14 @@ def components(mask, min_area):
 
 def evaluate(a):
     import torch
-    model = build_model(a.weights or str(OUT / "segformer_org.pt")).cuda().eval()
+    if a.every < 1 or a.min_area < 1 or not 0 < a.min_cover <= 1:
+        raise ValueError("every/min-area must be positive and min-cover in (0, 1]")
+    out = OUT / ("eval_%s.json" % a.tag)
+    require_new_outputs(out)
     recs = load_index("test")[::a.every]
+    if not recs:
+        raise ValueError("no test images; no metrics can be reported")
+    model = build_model(a.weights or str(OUT / "segformer_org.pt")).cuda().eval()
     conf = np.zeros((3, 3), dtype=np.int64)
     n_obj = hit_obj = n_fp = 0
     contact_err, per_scene = [], {}
@@ -211,16 +240,16 @@ def evaluate(a):
         sc["fp"] += fp
         if (k + 1) % 200 == 0:
             print("  %d/%d images" % (k + 1, len(recs)), flush=True)
-    iou = [conf[c, c] / float(conf[c].sum() + conf[:, c].sum() - conf[c, c]) for c in range(3)]
-    ce = np.array(contact_err) if contact_err else np.array([0.0])
-    res = dict(images=len(recs), iou={CLASSES[c]: round(iou[c], 4) for c in range(3)}, miou=round(float(np.mean(iou)), 4),
-               obstacle_pixel_precision=round(conf[2, 2] / float(conf[:, 2].sum()), 4), obstacle_pixel_recall=round(conf[2, 2] / float(conf[2].sum()), 4),
-               ground_pixels_called_obstacle_fraction=round(conf[1, 2] / float(conf[1].sum()), 6),
-               objects=n_obj, objects_found=hit_obj, object_recall=round(hit_obj / float(max(1, n_obj)), 4), false_components=n_fp, false_components_per_image=round(n_fp / float(len(recs)), 3),
-               contact_row_error_px_at_960x540=dict(median_abs=round(float(np.median(np.abs(ce))), 2), p90_abs=round(float(np.percentile(np.abs(ce), 90)), 2), median_signed=round(float(np.median(ce)), 2), n=len(contact_err)),
+    iou = [ratio_or_none(conf[c, c], conf[c].sum() + conf[:, c].sum() - conf[c, c], 12) for c in range(3)]
+    defined_iou = [v for v in iou if v is not None]
+    res = dict(images=len(recs), iou={c:round(v,4) if v is not None else None for c,v in zip(CLASSES,iou)}, miou=round(float(np.mean(defined_iou)), 4) if defined_iou else None,
+               miou_defined_classes=[c for c,v in zip(CLASSES,iou) if v is not None],
+               obstacle_pixel_precision=ratio_or_none(conf[2, 2], conf[:, 2].sum()), obstacle_pixel_recall=ratio_or_none(conf[2, 2], conf[2].sum()),
+               ground_pixels_called_obstacle_fraction=ratio_or_none(conf[1, 2], conf[1].sum(), 6),
+               objects=n_obj, objects_found=hit_obj, object_recall=ratio_or_none(hit_obj, n_obj), false_components=n_fp, false_components_per_image=round(n_fp / float(len(recs)), 3),
+               contact_row_error_px_at_960x540=contact_error_stats(contact_err),
                per_scene=per_scene, min_area=a.min_area, min_cover=a.min_cover, weights=a.weights or str(OUT / "segformer_org.pt"), test_scenes=sorted(per_scene))
-    out = OUT / ("eval_%s.json" % a.tag)
-    out.write_text(json.dumps(res, indent=1))
+    out.write_text(json.dumps(res, indent=1, allow_nan=False))
     print(json.dumps({k: v for k, v in res.items() if k != "per_scene"}, indent=1))
     print("saved", out)
 
@@ -234,6 +263,7 @@ def main():
     t.add_argument("--batch", type=int, default=6)
     t.add_argument("--lr", type=float, default=6e-5)
     t.add_argument("--obstacle-weight", type=float, default=8.0)
+    t.add_argument("--out", default=str(OUT), help="new training output directory; refuses existing checkpoint/log")
     e = sub.add_parser("eval")
     e.add_argument("--weights", default=None)
     e.add_argument("--every", type=int, default=1, help="use every n-th test image")

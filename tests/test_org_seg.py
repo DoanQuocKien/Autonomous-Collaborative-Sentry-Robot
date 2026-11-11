@@ -1,6 +1,7 @@
 import numpy as np
+import pytest
 
-from tools.org_seg import components, to_tensor
+from tools.org_seg import components, to_tensor, contact_error_stats, ratio_or_none, require_new_outputs
 from tools.org_seg_judge import judge_set
 
 
@@ -26,3 +27,24 @@ def test_the_judge_matches_components_within_the_gates_one_to_one_and_counts_the
     assert fp == [1, 0, 0]
     near, _ = judge_set([0], [dict(id=1, label="a", tape=1.0, lateral=0.0)], lambda f: [(1.2, 0.0), (1.1, 0.0)])
     assert near[1] == [0.10000000000000009]                                               # the nearer component is the match, the other stays false
+
+
+def test_missing_contact_error_is_unknown_and_serializes_without_fake_zero():
+    import json
+    result = contact_error_stats([])
+    assert result == dict(median_abs=None, p90_abs=None, median_signed=None, n=0)
+    assert 'null' in json.dumps(result, allow_nan=False)
+    assert contact_error_stats([-2, 2])['median_abs'] == 2
+
+
+def test_undefined_precision_is_not_perfect_or_nan():
+    assert ratio_or_none(0, 0) is None
+    assert ratio_or_none(0, 5) == 0
+
+
+def test_existing_experiment_outputs_are_preserved(tmp_path):
+    checkpoint = tmp_path/'segformer_org.pt'
+    checkpoint.write_bytes(b'original baseline')
+    with pytest.raises(FileExistsError):
+        require_new_outputs(checkpoint, tmp_path/'train_log.json')
+    assert checkpoint.read_bytes() == b'original baseline'

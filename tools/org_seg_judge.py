@@ -1,12 +1,12 @@
 """Re-judge an obstacle model on SAVED classroom data with tape distances (experiment B): the D1 glossy-tile sets of 2026-10-15 (`data/D1_obstacles_1015`, 24 objects at tape distances 0.32-1.98 m and lateral
-offsets from the spot under the lens, camera pose `calib/camera_pose_classroom_1015.json`) and `empty_1` (nothing on the floor: false components).
+offsets from the spot under the lens, camera pose `calib/camera_pose_classroom_1015.json`) and `empty_1` (contains a real chair; not a verified empty-floor control).
 
   python -m tools.org_seg_judge --model seg --weights data/org_seg/segformer_org.pt --tag org_ft
   python -m tools.org_seg_judge --model configured --tag configured          # the configured YOLOv8n + glossy-floor logic of sentry.perception.obstacle, same ruler
 
 Segmentation models: the frame is rectified, the predicted obstacle mask is split into connected components, and each component's floor contact (its lowest row, at the median column of its bottom rows)
 is turned into a forward/left position on the floor with the camera pose. A tape object is FOUND in a frame when some component lies within the gates (|forward - tape| < 0.5 m, |left - lateral| < 0.4 m) of its tape
-position; its distance error is forward - tape. Components matching no tape object are false components. Nothing is tuned on these sets: the model never saw them.
+position; its distance error is forward - tape. Nonmatching components are unmatched predictions, not proven false positives without exhaustive labels. Nothing is tuned on these sets: the model never saw them.
 The result JSON has per-object numbers and the exact settings; the frames stay local (data/).
 """
 import argparse
@@ -114,6 +114,11 @@ def main():
     ap.add_argument("--scale", type=float, default=1.5, help="seg: upscale the rectified frame before the model (ORG objects are larger in pixels than ours)")
     ap.add_argument("--every", type=int, default=2, help="use every n-th frame of each set")
     a = ap.parse_args()
+    from tools.org_seg import require_new_outputs
+    out = ROOT / "data" / "org_seg" / ("judge_%s.json" % a.tag)
+    require_new_outputs(out)
+    if a.every < 1 or a.min_area < 1 or not math.isfinite(a.scale) or a.scale <= 0:
+        raise ValueError("every/min-area and finite scale must be positive")
     from sentry.perception.camera import CameraGeometry
     geom = CameraGeometry.from_files(ROOT / "calib" / "camera.json", ROOT / "calib" / "camera_pose_classroom_1015.json")
     sets = load_objects()
@@ -150,7 +155,7 @@ def main():
     empty = sorted((D1 / "empty_1" / "jetbot").glob("*.jpg"))[::a.every]
     counts = [len(comp_fn(cv2.imread(str(p)))) for p in empty]
     results["empty_1"] = dict(frames=len(empty), frames_with_a_component=int(sum(1 for c in counts if c > 0)), components_per_frame=round(float(np.mean(counts)), 3))
-    print("empty_1   frames %3d  with a false component: %d (%.1f %%)" % (len(empty), results["empty_1"]["frames_with_a_component"], 100.0 * results["empty_1"]["frames_with_a_component"] / max(1, len(empty))))
+    print("empty_1 (not an empty-floor control): frames %3d with a component: %d (%.1f %%)" % (len(empty), results["empty_1"]["frames_with_a_component"], 100.0 * results["empty_1"]["frames_with_a_component"] / max(1, len(empty))))
     f50 = [r for r in rows if r[2] >= 0.5]
     err = [abs(r[3]) for r in f50 if r[3] is not None]
     chairs = [r for r in rows if r[1]["label"] == "chair"]
@@ -158,7 +163,6 @@ def main():
                    median_abs_error_m_of_found=round(float(np.median(err)), 3) if err else None, within_0p15=sum(1 for e in err if e <= 0.15), within_0p30=sum(1 for e in err if e <= 0.30),
                    chairs=len(chairs), chairs_found_in_half_the_frames=sum(1 for r in chairs if r[2] >= 0.5), gates=dict(forward_m=GATE_FWD, left_m=GATE_LEFT), min_area=a.min_area, scale=a.scale, every=a.every,
                    date=time.strftime("%Y-%m-%d %H:%M"))
-    out = ROOT / "data" / "org_seg" / ("judge_%s.json" % a.tag)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(dict(summary=summary, sets=results), indent=1))
     print(json.dumps(summary, indent=1))
