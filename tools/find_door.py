@@ -4,7 +4,9 @@
 
 The door detector gives a BEARING only. The robot spins a full circle (boards = ArUco, door via the entrance detector), turns by --turn-deg, drives about --baseline-s seconds
 (open loop: it veers, which does not matter because the boards give the pose), spins a second circle, and the two door bearings are intersected in the first scan's frame. The boards seen in both
-circles give where it stands; at least 2 are needed. Output data/find_door/<label>_<n>/result.json (door in the first frame and in the final frame, range spread, sweet spot) and the two scan summaries.
+circles give where it stands; at least 2 are needed. Output data/find_door/<label>_<n>/result.json (door in the first frame and in the final frame, range spread, sweet spot and the two scan summaries; "located" = the on-line
+running-sum estimate, "located_joint" = tools.door_pose with a 5-95 % range interval) and observations.json (every stop's raw board and door observations, every pulse: replay it with
+python -m tools.door_pose <that file>).
 SAFETY: R1 + armed e-stop (hold Start 1.5 s); the robot only turns in place and drives forward at --drive-v; the drive stops when a board straight ahead is closer than --stop-range, R1 is released, the
 time is up or a frame is missing for 0.5 s. Keep 0.3 m clear around it and 1.5 m ahead in the turned direction. --dry-run: one stop, no commands.
 Needs the boards (ArUco) around the robot, the same ones as tools.scan_boards."""
@@ -53,6 +55,55 @@ def summarise(boards, doors):
     return dict(boards={str(m): dict(x_m=float(np.median([p[0] for p in v])), y_m=float(np.median([p[1] for p in v])), stops=len(v)) for m, v in boards.items()},
                 door_bearing_deg=bearing, door_sightings=total, door_cluster_sightings=n, door_second_cluster_sightings=second,
                 door_sightings_raw=[[round(math.degrees(d[0]), 1), int(d[1])] for d in doors])
+
+
+def unreliable_text(res):
+    """What is wrong when the on-line range is not reliable (res: tools.locate_door.locate output): the fitted geometry, not a guess about the drive."""
+    why = []
+    if res["baseline_m"] < 0.5:
+        why.append("the fitted baseline between the two scan spots is %.2f m (< 0.5 m)" % res["baseline_m"])
+    if res["ray_angle_deg"] < 8.0:
+        why.append("the two door rays differ by only %.1f deg (< 8 deg)" % res["ray_angle_deg"])
+    return ("WARNING: the range is NOT reliable: %s. The rays are nearly parallel, so 1-2 deg of bearing or heading error moves the range a lot. Both numbers come from the board fit "
+            "(rms %.2f m on boards %s): a short drive, a drive along the line of sight or heading error in a scan all give this; see located_joint and observations.json."
+            % (" and ".join(why), res["board_fit_rms_m"], ",".join(res["boards_used"])))
+
+
+def measured_pulse(w, prev, seen, pulses):
+    """Angle of the pulse between two stops (rad, the sign of w): from the boards seen at both, else the median of the earlier measured pulses of that sign, else the calibrated prior.
+    Appends (angle, boards used) to pulses."""
+    ang, nb = pulse_angle({m: x[:2] for m, x in prev.items()}, {m: x[:2] for m, x in seen.items()})
+    if ang is None:
+        good = [p[0] for p in pulses if p[1] > 0 and np.sign(p[0]) == np.sign(w)]
+        ang = float(np.median(good)) if good else math.copysign(PRIOR_PULSE_RAD, w)
+        nb = 0
+    pulses.append((ang, nb))
+    return ang
+
+
+def new_scan():
+    return dict(boards={}, doors=[], pulses=[], heading=0.0, prev=None, record=dict(stops=[], pulses=[]))
+
+
+def add_stop(scan, seen, door, w=SPIN_W, spin_s=None):
+    """Fold one stop into a scan (pure: no hardware). seen: {marker: (bearing rad, range m, fwd m, left m, frames)}, door: [(bearing rad, inliers)] of this stop's frames.
+    Updates the running-sum heading and the start-frame board positions (the on-line estimate) and scan['record'], everything tools.door_pose needs to re-estimate off-line:
+    per stop the raw board and door observations (angles in degrees) with the running-sum heading, per pulse the command and the measured angle (boards = 0: not measured, filled in).
+    -> the heading (rad) at this stop."""
+    k = len(scan["record"]["stops"])
+    if scan["prev"] is not None:
+        ang = measured_pulse(w, scan["prev"], seen, scan["pulses"])
+        scan["heading"] += ang
+        scan["record"]["pulses"].append(dict(cmd_w=w, cmd_s=spin_s, measured_deg=round(math.degrees(ang), 2), boards=scan["pulses"][-1][1]))
+    h = scan["heading"]
+    for m, v in seen.items():
+        scan["boards"].setdefault(m, []).append(to_start_frame(v[2], v[3], h) + (v[1],))
+    scan["doors"].extend((h + b, inl) for b, inl in door)
+    scan["record"]["stops"].append(dict(stop=k, heading_deg=round(math.degrees(h), 2),
+                                        boards=[[int(m), round(math.degrees(v[0]), 2), round(v[1], 3), round(v[2], 3), round(v[3], 3), int(v[4])] for m, v in sorted(seen.items())],
+                                        door=[[round(math.degrees(b), 2), int(inl)] for b, inl in door]))
+    scan["prev"] = seen
+    return h
 
 
 def main():
@@ -139,34 +190,20 @@ def main():
             time.sleep(1 / 30.0)
         sender.send(0.0, 0.0)
 
-    def pulse(w, prev, seen, pulses):
-        ang, nb = pulse_angle({m: x[:2] for m, x in prev.items()}, {m: x[:2] for m, x in seen.items()})
-        if ang is None:
-            good = [p[0] for p in pulses if p[1] > 0 and np.sign(p[0]) == np.sign(w)]
-            ang = float(np.median(good)) if good else math.copysign(PRIOR_PULSE_RAD, w)
-            nb = 0
-        pulses.append((ang, nb))
-        return ang
-
     def spin_scan(tag):
-        """Full left circle from the current heading. -> (boards in this scan's start frame, doors [(heading + bearing, inliers)], pulses)."""
-        boards, doors, pulses, heading, prev = {}, [], [], 0.0, None
+        """Full left circle from the current heading. -> the scan (see new_scan / add_stop): boards in this scan's start frame, doors [(heading + bearing, inliers)], pulses, heading, record."""
+        scan = new_scan()
         for k in range(a.max_pulses + 1):
             if not a.dry_run and not r1_held():
                 raise SystemExit("STOP: R1 released during %s" % tag)
             seen, door = sample()
-            if prev is not None:
-                heading += pulse(SPIN_W, prev, seen, pulses)
-            for m, v in seen.items():
-                boards.setdefault(m, []).append(to_start_frame(v[2], v[3], heading) + (v[1],))
-            doors.extend((heading + b, inl) for b, inl in door)
+            heading = add_stop(scan, seen, door, SPIN_W, a.spin_s)
             print("%s stop %2d heading %6.1f deg | boards %s | door %s" % (tag, k, math.degrees(heading), {m: round(v[1], 2) for m, v in sorted(seen.items())}, "in view" if door else "-"), flush=True)
-            prev = seen
             if a.dry_run or math.degrees(heading) >= 355 or k == a.max_pulses:
                 break
             command(0.0, SPIN_W, a.spin_s)
             time.sleep(a.hold)
-        return boards, doors, pulses, heading
+        return scan
 
     def turn_side(deg, sign):
         """Turn by `deg` degrees, left (sign +1) or right (-1), in spin pulses; the angle of each pulse is measured from the boards."""
@@ -177,7 +214,8 @@ def main():
             command(0.0, sign * SPIN_W, a.spin_s)
             time.sleep(a.hold)
             seen = sample()[0]
-            turned += pulse(sign * SPIN_W, prev, seen, pulses)
+            turned += measured_pulse(sign * SPIN_W, prev, seen, pulses)
+            observations["turn_pulses"].append(dict(cmd_w=sign * SPIN_W, cmd_s=a.spin_s, measured_deg=round(math.degrees(pulses[-1][0]), 2), boards=pulses[-1][1]))
             prev = seen
             print("turn %s: %.0f deg so far" % ("left" if sign > 0 else "right", math.degrees(abs(turned))), flush=True)
 
@@ -210,9 +248,10 @@ def main():
             stop.set()
             th.join()
             sender.send(0.0, 0.0)
+        observations["drive"] = dict(cmd_v=a.drive_v, seconds=round(time.time() - t0, 2))
         print("drive: %.1f s of forward command" % (time.time() - t0), flush=True)
 
-    result, run_dir = {}, None
+    result, run_dir, observations = {}, None, dict(turn_pulses=[])
     try:
         if not a.dry_run:
             print("ARM the e-stop (hold Start 1.5 s) and HOLD R1 within %.0f s and keep holding it for the whole run (about 2 minutes); keep 0.3 m clear around the robot." % a.wait, flush=True)
@@ -228,8 +267,9 @@ def main():
                     raise SystemExit("ABORT: R1 not held in time")
                 time.sleep(0.2)
             sender = UDPSender(a.ip, port, 30)
-        b1, d1, p1, h1 = spin_scan("scan 1")
-        s1 = summarise(b1, d1)
+        sc1 = spin_scan("scan 1")
+        observations["scan1"] = sc1["record"]
+        s1, h1 = summarise(sc1["boards"], sc1["doors"]), sc1["heading"]
         result["scan1"] = s1
         if a.dry_run:
             print(json.dumps(s1, indent=1))
@@ -245,16 +285,24 @@ def main():
             turn_side(a.turn_deg, 1 if a.side == "left" else -1)
         drive()
         time.sleep(1.5)
-        b2, d2, p2, _ = spin_scan("scan 2")
-        s2 = summarise(b2, d2)
+        sc2 = spin_scan("scan 2")
+        observations["scan2"] = sc2["record"]
+        s2 = summarise(sc2["boards"], sc2["doors"])
         result["scan2"] = s2
         if s2["door_bearing_deg"] is None:
             raise SystemExit("STOP: the door was not seen in scan 2")
+        try:                                                              # tools.door_pose: least-squares headings, weighted pose fit, range interval. Not yet validated against a taped run.
+            from tools.door_pose import locate_joint, scan_from_record
+            result["located_joint"] = locate_joint(scan_from_record(sc1["record"]), scan_from_record(sc2["record"]), stand_off_m=a.stand_off)
+            print("joint estimate (tools.door_pose):", json.dumps(result["located_joint"], indent=1), flush=True)
+        except ValueError as e:
+            result["located_joint"] = dict(range_reliable=False, reasons=[str(e)])
+            print("joint estimate (tools.door_pose): none (%s)" % e, flush=True)
         res = locate(s1, s2, stand_off_m=a.stand_off)
         res["range_reliable"] = bool(res["baseline_m"] >= 0.5 and res["ray_angle_deg"] >= 8.0)
         if not res["range_reliable"]:
-            print("WARNING: baseline %.2f m / ray angle %.1f deg: too small, the range is NOT reliable (the drive probably did not happen)" % (res["baseline_m"], res["ray_angle_deg"]), flush=True)
-        res["turn_per_pulse_deg"] = [round(math.degrees(float(np.median([p[0] for p in ps if p[1] > 0]))), 1) if any(p[1] > 0 for p in ps) else None for ps in (p1, p2)]
+            print(unreliable_text(res), flush=True)
+        res["turn_per_pulse_deg"] = [round(math.degrees(float(np.median([p[0] for p in ps if p[1] > 0]))), 1) if any(p[1] > 0 for p in ps) else None for ps in (sc1["pulses"], sc2["pulses"])]
         result["located"] = res
         print(json.dumps(res, indent=1))
     finally:
@@ -278,6 +326,7 @@ def main():
                     break
                 except FileExistsError:
                     n += 1
+            (run_dir / "observations.json").write_text(json.dumps(observations, separators=(",", ":"), allow_nan=False))      # raw per-stop data: replay with python -m tools.door_pose
             (run_dir / "result.json").write_text(json.dumps(dict(result, camera_pose_file=a.camera_pose, battery_v_start=volts0, date=time.strftime("%Y-%m-%d %H:%M")), indent=1, allow_nan=False))
             print("saved", run_dir)
 

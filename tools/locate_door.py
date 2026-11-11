@@ -5,7 +5,8 @@
 Each scan is expressed in its OWN start frame (robot at the origin facing +x, y left). The boards (ArUco, fixed in the room) seen in both scans give the rigid transform from the second
 frame to the first (least squares over the common boards, at least two), hence where the robot stood the second time. The door bearing of each scan is a ray; the two rays meet at the door.
 Prints the door in the FIRST scan's frame, the baseline, the angle between the rays, the board-fit residual and a range spread from +/- --bearing-sd-deg on each bearing: a short baseline or a
-small ray angle means a poor range (the output says so). Bearing noise, not the board fit, dominates: the spread is the honest uncertainty. Stdlib + math only."""
+small ray angle means a poor range (the output says so). The spread is TOO OPTIMISTIC: it ignores the heading error of each scan and the board fit (2026-11-11, fd_4 and fd_6: the range
+from the final spot was 72 % and 45 % too long by tape). tools.door_pose re-estimates the headings and gives a 5-95 % interval from find_door's observations.json. Stdlib + math only."""
 import argparse
 import json
 import math
