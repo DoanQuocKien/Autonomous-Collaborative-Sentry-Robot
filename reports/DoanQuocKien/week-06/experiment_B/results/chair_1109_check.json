@@ -1,0 +1,49 @@
+{
+ "note": "tape from the robot front; the lens sits about 0.2-0.26 m behind it; obstacle = obstacle-class components (the chair skid), freespace = first non-ground row of each column; lane = |left| < 0.6 m, forward <= 3.5 m",
+ "obstacle": {
+  "1.2": {
+   "frames": 12,
+   "frames_with_a_lane_prediction": 12,
+   "nearest_forward_m_median": 1.256,
+   "nearest_forward_m_min": 1.255,
+   "nearest_forward_m_max": 1.309
+  },
+  "1.8": {
+   "frames": 12,
+   "frames_with_a_lane_prediction": 4,
+   "nearest_forward_m_median": 2.492,
+   "nearest_forward_m_min": 2.486,
+   "nearest_forward_m_max": 2.495
+  },
+  "2.4": {
+   "frames": 12,
+   "frames_with_a_lane_prediction": 0,
+   "nearest_forward_m_median": null,
+   "nearest_forward_m_min": null,
+   "nearest_forward_m_max": null
+  }
+ },
+ "freespace": {
+  "1.2": {
+   "frames": 12,
+   "frames_with_a_lane_prediction": 12,
+   "nearest_forward_m_median": 0.292,
+   "nearest_forward_m_min": 0.225,
+   "nearest_forward_m_max": 0.343
+  },
+  "1.8": {
+   "frames": 12,
+   "frames_with_a_lane_prediction": 0,
+   "nearest_forward_m_median": null,
+   "nearest_forward_m_min": null,
+   "nearest_forward_m_max": null
+  },
+  "2.4": {
+   "frames": 12,
+   "frames_with_a_lane_prediction": 12,
+   "nearest_forward_m_median": 0.232,
+   "nearest_forward_m_min": 0.181,
+   "nearest_forward_m_max": 0.259
+  }
+ }
+}
