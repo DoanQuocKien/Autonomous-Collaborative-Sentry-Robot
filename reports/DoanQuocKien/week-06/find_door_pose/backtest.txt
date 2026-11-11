@@ -1,0 +1,15 @@
+1. loop closure, real scans
+ t2_1111_scan_1: 13 pulses, 9 with a shared board | last heading by closure 358.3 | running sum 356.6 (-1.7) | solve_scan 358.3 +/- 0.9 (-0.0), mean pulse 27.4, bearing residual rms 0.20 deg | solve_scan without the closure 356.2 +/- 8.0 (-2.1)
+   pulses (deg): [29.8, 28.9, 27.3, 26.5, 25.8, 27.7, 27.7, 27.7, 27.7, 30.3, 27.0, 26.5, 25.4]
+ t2_1111_scan2_1: 14 pulses, 8 with a shared board | last heading by closure 366.6 | running sum 358.4 (-8.2) | solve_scan 366.7 +/- 1.0 (+0.1), mean pulse 26.1, bearing residual rms 0.78 deg | solve_scan without the closure 348.3 +/- 11.0 (-18.3)
+   pulses (deg): [27.5, 26.0, 26.5, 25.5, 27.5, 27.5, 25.6, 23.4, 25.6, 27.5, 27.5, 27.5, 26.8, 22.4]
+2. find_door runs from their saved summaries (headings NOT re-estimated)
+ fd_4: tape 1.8 m | saved tool output 3.10 m, spread of the range from the first spot [3.09, 6.38], range_reliable True, board fit rms 0.10 m
+   assumed direction sd 3 deg: range 3.24 m, 5-95 % interval [1.79, 7.17] -> tape inside, ray angle 10.4 deg, fit chi2 0.7 on 1 dof, valid 100 %, range_reliable False ['range interval 1.79-7.17 m is wider than 60 % of the range']
+   assumed direction sd 5 deg: range 3.35 m, 5-95 % interval [1.55, 15.38] -> tape inside, ray angle 10.6 deg, fit chi2 0.3 on 1 dof, valid 98 %, range_reliable False ['range interval 1.55-15.38 m is wider than 60 % of the range']
+ fd_5: tape None m | saved tool output 1.45 m, spread of the range from the first spot [0.04, 14.23], range_reliable False, board fit rms 0.29 m
+   assumed direction sd 3 deg: refused (the two door rays do not meet in front of both spots (rays nearly parallel or a wrong bearing))
+   assumed direction sd 5 deg: refused (the two door rays do not meet in front of both spots (rays nearly parallel or a wrong bearing))
+ fd_6: tape 3.42 m | saved tool output 4.96 m, spread of the range from the first spot [3.5, 6.69], range_reliable True, board fit rms 0.32 m
+   assumed direction sd 3 deg: range 4.84 m, 5-95 % interval [2.22, 21.92] -> tape inside, ray angle 13.6 deg, fit chi2 7.1 on 1 dof, valid 92 %, range_reliable False ['range interval 2.22-21.92 m is wider than 60 % of the range']
+   assumed direction sd 5 deg: range 4.90 m, 5-95 % interval [2.51, 25.04] -> tape inside, ray angle 14.9 deg, fit chi2 3.3 on 1 dof, valid 93 %, range_reliable False ['range interval 2.51-25.04 m is wider than 60 % of the range']
