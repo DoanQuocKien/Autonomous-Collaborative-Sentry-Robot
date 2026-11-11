@@ -1,0 +1,56 @@
+{
+  "source_head": "e13dca7e0b4d0a996b3a7685e0de5529fb515707",
+  "branch": "DoanQuocKien/w06-experiment-b",
+  "merged": false,
+  "files": [
+    {
+      "archive": "README.md",
+      "source_commit": "e13dca7e0b4d0a996b3a7685e0de5529fb515707",
+      "source_path": "reports/DoanQuocKien/week-06/experiment_B/README.md",
+      "source_url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/blob/e13dca7e0b4d0a996b3a7685e0de5529fb515707/reports/DoanQuocKien/week-06/experiment_B/README.md",
+      "sha256": "3cd7c5b61c1a9dac012e62b72090ee5bf2afd309eb2888156316a17bc726c8d3",
+      "transformation": "CRLF to LF only; owner-reported experiment, not approved code"
+    },
+    {
+      "archive": "results/train_log.json",
+      "source_commit": "e13dca7e0b4d0a996b3a7685e0de5529fb515707",
+      "source_path": "reports/DoanQuocKien/week-06/experiment_B/results/train_log.json",
+      "source_url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/blob/e13dca7e0b4d0a996b3a7685e0de5529fb515707/reports/DoanQuocKien/week-06/experiment_B/results/train_log.json",
+      "sha256": "a577ecde18a9e59253c811ae5c5be18083367a049ea97ba855478deb19a6e770",
+      "transformation": "CRLF to LF only; owner-reported experiment, not approved code"
+    },
+    {
+      "archive": "results/eval_org_ft.json",
+      "source_commit": "e13dca7e0b4d0a996b3a7685e0de5529fb515707",
+      "source_path": "reports/DoanQuocKien/week-06/experiment_B/results/eval_org_ft.json",
+      "source_url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/blob/e13dca7e0b4d0a996b3a7685e0de5529fb515707/reports/DoanQuocKien/week-06/experiment_B/results/eval_org_ft.json",
+      "sha256": "d2c359c30ec6cf5bd0e7fc0192f3933e731caf2a7437517658e989d7aebf4484",
+      "transformation": "CRLF to LF only; owner-reported experiment, not approved code"
+    },
+    {
+      "archive": "results/judge_configured.json",
+      "source_commit": "e13dca7e0b4d0a996b3a7685e0de5529fb515707",
+      "source_path": "reports/DoanQuocKien/week-06/experiment_B/results/judge_configured.json",
+      "source_url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/blob/e13dca7e0b4d0a996b3a7685e0de5529fb515707/reports/DoanQuocKien/week-06/experiment_B/results/judge_configured.json",
+      "sha256": "bb4ba3c85d4e8da5024e16705f50300ae8c0ee48cf611784453dd5334ff17e9d",
+      "transformation": "CRLF to LF only; owner-reported experiment, not approved code"
+    },
+    {
+      "archive": "results/judge_org_ft.json",
+      "source_commit": "e13dca7e0b4d0a996b3a7685e0de5529fb515707",
+      "source_path": "reports/DoanQuocKien/week-06/experiment_B/results/judge_org_ft.json",
+      "source_url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/blob/e13dca7e0b4d0a996b3a7685e0de5529fb515707/reports/DoanQuocKien/week-06/experiment_B/results/judge_org_ft.json",
+      "sha256": "f907d96eedcab18f05214e454b2003c446f817afd22f69b128ee0aaba03b9c39",
+      "transformation": "CRLF to LF only; owner-reported experiment, not approved code"
+    },
+    {
+      "archive": "results/judge_org_ft_freespace.json",
+      "source_commit": "e13dca7e0b4d0a996b3a7685e0de5529fb515707",
+      "source_path": "reports/DoanQuocKien/week-06/experiment_B/results/judge_org_ft_freespace.json",
+      "source_url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/blob/e13dca7e0b4d0a996b3a7685e0de5529fb515707/reports/DoanQuocKien/week-06/experiment_B/results/judge_org_ft_freespace.json",
+      "sha256": "6fbc6887be159a10d3d853120fc0ee6c7c67d2a4103b209c280675a724b7d3f6",
+      "transformation": "CRLF to LF only; owner-reported experiment, not approved code"
+    }
+  ],
+  "status_scope": "historical archive imported before PR103 review/merge; current status in update-2026-11-11.json"
+}

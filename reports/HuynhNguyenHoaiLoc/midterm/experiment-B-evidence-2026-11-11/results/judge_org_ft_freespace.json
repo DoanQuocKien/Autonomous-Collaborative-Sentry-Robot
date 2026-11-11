@@ -1,0 +1,235 @@
+{
+ "summary": {
+  "model": "seg",
+  "output": "freespace",
+  "max_range": 2.5,
+  "weights": null,
+  "objects": 24,
+  "found_in_half_the_frames": 6,
+  "found_fraction_overall": 0.273,
+  "median_abs_error_m_of_found": 0.091,
+  "within_0p15": 4,
+  "within_0p30": 6,
+  "chairs": 10,
+  "chairs_found_in_half_the_frames": 3,
+  "gates": {
+   "forward_m": 0.5,
+   "left_m": 0.4
+  },
+  "min_area": 60,
+  "scale": 1.5,
+  "every": 2,
+  "date": "2026-11-11 11:16"
+ },
+ "sets": {
+  "set2": {
+   "frames": 43,
+   "false_components_per_frame": 0.0,
+   "objects": {
+    "6": {
+     "label": "sandals",
+     "tape_m": 0.4,
+     "lateral_m": 0.0,
+     "found_fraction": 1.0,
+     "median_error_m": -0.036
+    },
+    "7": {
+     "label": "bag",
+     "tape_m": 0.7,
+     "lateral_m": -0.05,
+     "found_fraction": 0.0,
+     "median_error_m": null
+    },
+    "8": {
+     "label": "laptop sleeve",
+     "tape_m": 1.0,
+     "lateral_m": 0.39,
+     "found_fraction": 0.0,
+     "median_error_m": null
+    },
+    "9": {
+     "label": "chair",
+     "tape_m": 1.4,
+     "lateral_m": -0.21,
+     "found_fraction": 0.0,
+     "median_error_m": null
+    },
+    "10": {
+     "label": "laptop charger",
+     "tape_m": 1.8,
+     "lateral_m": 0.22,
+     "found_fraction": 0.0,
+     "median_error_m": null
+    }
+   }
+  },
+  "set3": {
+   "frames": 45,
+   "false_components_per_frame": 1.044,
+   "objects": {
+    "11": {
+     "label": "plastic cup",
+     "tape_m": 0.51,
+     "lateral_m": 0.29,
+     "found_fraction": 1.0,
+     "median_error_m": -0.019
+    },
+    "12": {
+     "label": "mouse",
+     "tape_m": 0.85,
+     "lateral_m": -0.01,
+     "found_fraction": 0.267,
+     "median_error_m": -0.062
+    },
+    "13": {
+     "label": "laptop stand",
+     "tape_m": 1.01,
+     "lateral_m": 0.22,
+     "found_fraction": 0.0,
+     "median_error_m": null
+    },
+    "14": {
+     "label": "power strip",
+     "tape_m": 1.57,
+     "lateral_m": 0.1,
+     "found_fraction": 0.0,
+     "median_error_m": null
+    },
+    "15": {
+     "label": "phone",
+     "tape_m": 1.8,
+     "lateral_m": -0.1,
+     "found_fraction": 0.0,
+     "median_error_m": null
+    }
+   }
+  },
+  "set4": {
+   "frames": 42,
+   "false_components_per_frame": 1.0,
+   "objects": {
+    "16": {
+     "label": "bottle",
+     "tape_m": 0.47,
+     "lateral_m": 0.09,
+     "found_fraction": 1.0,
+     "median_error_m": -0.014
+    },
+    "17": {
+     "label": "keychains",
+     "tape_m": 0.54,
+     "lateral_m": -0.1,
+     "found_fraction": 0.0,
+     "median_error_m": null
+    },
+    "18": {
+     "label": "book",
+     "tape_m": 0.95,
+     "lateral_m": -0.2,
+     "found_fraction": 0.0,
+     "median_error_m": null
+    },
+    "19": {
+     "label": "jacket",
+     "tape_m": 1.39,
+     "lateral_m": 0.0,
+     "found_fraction": 0.0,
+     "median_error_m": null
+    },
+    "20": {
+     "label": "laptop",
+     "tape_m": 1.98,
+     "lateral_m": -0.07,
+     "found_fraction": 0.0,
+     "median_error_m": null
+    }
+   }
+  },
+  "chairs_a": {
+   "frames": 45,
+   "false_components_per_frame": 0.0,
+   "objects": {
+    "21": {
+     "label": "chair",
+     "tape_m": 0.32,
+     "lateral_m": -0.39,
+     "found_fraction": 1.0,
+     "median_error_m": 0.159
+    },
+    "22": {
+     "label": "chair",
+     "tape_m": 1.01,
+     "lateral_m": 0.05,
+     "found_fraction": 0.156,
+     "median_error_m": -0.128
+    },
+    "23": {
+     "label": "chair",
+     "tape_m": 1.77,
+     "lateral_m": -0.12,
+     "found_fraction": 0.0,
+     "median_error_m": null
+    }
+   }
+  },
+  "chairs_b": {
+   "frames": 42,
+   "false_components_per_frame": 0.0,
+   "objects": {
+    "24": {
+     "label": "chair",
+     "tape_m": 0.7,
+     "lateral_m": -0.41,
+     "found_fraction": 1.0,
+     "median_error_m": -0.145
+    },
+    "25": {
+     "label": "chair",
+     "tape_m": 1.43,
+     "lateral_m": 0.25,
+     "found_fraction": 0.119,
+     "median_error_m": -0.188
+    },
+    "26": {
+     "label": "chair",
+     "tape_m": 1.9,
+     "lateral_m": -0.12,
+     "found_fraction": 0.0,
+     "median_error_m": null
+    }
+   }
+  },
+  "chairs_c": {
+   "frames": 41,
+   "false_components_per_frame": 0.0,
+   "objects": {
+    "27": {
+     "label": "chair",
+     "tape_m": 1.06,
+     "lateral_m": 0.16,
+     "found_fraction": 0.805,
+     "median_error_m": -0.178
+    },
+    "28": {
+     "label": "chair",
+     "tape_m": 1.19,
+     "lateral_m": -0.17,
+     "found_fraction": 0.195,
+     "median_error_m": -0.308
+    },
+    "29": {
+     "label": "chair",
+     "tape_m": 1.8,
+     "lateral_m": 0.0,
+     "found_fraction": 0.0,
+     "median_error_m": null
+    }
+   }
+  },
+  "empty_1": {
+   "frames": 57,
+   "frames_with_a_component": 57,
+   "components_per_frame": 2.018
+  }
+ }
+}

@@ -1,5 +1,7 @@
 # Hồ sơ giữa kỳ HNHL
 
+**Mới nhất11/11:** [sau merge99/102/103, nguồn tile3/provenance và kết quả Experiment B](update-2026-11-11.md). Ba PR DQK đã review/sửa và merge; nhánh HNHL tích hợp main. Tile3 đã có nguồn; trunk score khác vì script bỏ9 warm-up samples, không phải mâu thuẫn số liệu. ORG tooling/evidence đã merge qua103 nhưng model chưa thay detector, chưa T1/T2. PR101 vẫn chờ sửa và PR100 chờ DQK. Các dòng dưới là snapshots lịch sử.
+
 **Mới nhất10/11:** [thử lớp09/11 và các phương án ranging DQK đã làm](update-2026-11-10.md). Thêm0/36 distance ghế, [F10 availability supplement](figures/F10_availability_1109.png), kết quả depth/zoom/floor-anchor thất bại, trunk0,50/0,49m và giới hạn khác protocol. Không gộp chair front-tape với person lens-forward hoặc F10 cũ. Source giới hạn một người/ghế; chưa D3/D5 độc lập hay T2. PR99 đã sửa config/main tests/pose cap nhưng còn overwrite log; PR102 cleanup motor chưa sửa. #101 không đổi; #100 chờ DQK. Những dòng09/11 dưới đây là snapshot lịch sử theo từng head.
 
 **Sau bản sửa KR cùng ngày09/11:** [follow-up PR101 head969a5e0](followup-pr101-2026-11-09.md). KR đã sửa các ví dụ stale/handoff/projector hữu hạn và các image links; bản draft đã sửa phần lớn số liệu HNHL. Review58 tests vẫn phát hiện observation API không được consume, state/controller lệch sau gap, NaN projector thành full-forward và distance T1 PASS chưa đúng. Đã review lại, chưa merge; không có dữ liệu thí nghiệm mới. Những findings cũ đã sửa không còn là lý do chặn bản mới.
@@ -20,7 +22,7 @@ Snapshot **01/11/2026**, dựa trên code/evidence hiện có. Hồ sơ này là
 
 ## Tài liệu để ghép báo cáo
 
-- [Chương 5 hiện hành, Markdown10/11](chapter-05-current.md): hợp nhất kết quả HNHL, pilot và giới hạn mới do DQK cung cấp; dùng cùng các bảng/bổ sung mới nhất cho editor.
+- [Chương5 hiện hành, Markdown11/11](chapter-05-current.md): hợp nhất kết quả HNHL, source mới và giới hạn; editor đọc cùng bảng11/11 về Experiment B và missing gates.
 - [Chương 5 dạng Word](HNHL-Chuong-5.docx): bản ngắn, có F9/F10/F13 và nguồn E01–E12, chỉnh sửa được.
 - [Chương 5 dạng Markdown](chapter-05.md): cùng nội dung, dễ review trong Git.
 - [Các dòng kết quả cho Chương 7](chapter-07-rows.md): có trạng thái và giới hạn nghiệm thu.
@@ -64,6 +66,7 @@ Không tự xác nhận timesheet, số liệu đối tác hay tag nộp bài. H
 .venv/Scripts/python.exe -m tools.build_midterm_hnhl_nov09
 .venv/Scripts/python.exe -m tools.build_midterm_hnhl_pr101_followup
 .venv/Scripts/python.exe -m tools.build_midterm_hnhl_nov10
+.venv/Scripts/python.exe -m tools.build_midterm_hnhl_nov11
 .venv/Scripts/python.exe -m tools.check_midterm_hnhl --out reports/HuynhNguyenHoaiLoc/midterm/update-verification.json
 # Dùng document-authoring runtime có python-docx, không dùng Python robot:
 <document-python> tools/export_midterm_hnhl_doc.py

@@ -1,5 +1,9 @@
 # F18 — native PyTorch FP32/FP16, đo sớm ngày 05/11/2026
 
+**Cập nhật11/11:** [99/102/103 đã merge và bổ sung nguồn/B](../midterm/update-2026-11-11.md); [705 passed trước103](tests_merged_2026-11-11.log). Chạy `tools.build_midterm_hnhl_nov11` cuối chuỗi builders rồi checker. Archive B giữ source trước merge, không dùng lại `--import-source`; B tooling đã vào main, chưa đổi configured detector. F18 vẫn là phép đo05/11.
+
+Kiểm tra cuối sau103: [711 passed,2 data skips,4 GPU deselected/51,06s](tests_final_2026-11-11.log). Dùng `$env:YOLO_CONFIG_DIR = Join-Path (Get-Location) 'data/ultralytics'` và `$env:YOLO_AUTOINSTALL = 'false'` trước pytest để settings nằm trong workspace; log lỗi quyền AppData trước khi đặt config được giữ để truy vết.
+
 **Cập nhật10/11:** [bằng chứng lớp học/ranging DQK và review99/102 mới](../midterm/update-2026-11-10.md), [21 evidence/source tests](tests_evidence_2026-11-10.log). Chạy `tools.build_midterm_hnhl_nov10` sau follow-up09/11 và trước checker; archive đã có thì không dùng `--import-source`. F18 giữ số đo05/11; không có GPU benchmark mới.
 
 **Follow-up PR101 ngày09/11:** [bản sửa KR và review lại](../midterm/followup-pr101-2026-11-09.md),58 targeted CPU tests. Chạy `tools.build_midterm_hnhl_pr101_followup` sau builder09/11 và trước checker để giữ trạng thái mới. Chưa có dữ liệu GPU/accuracy/robot mới.

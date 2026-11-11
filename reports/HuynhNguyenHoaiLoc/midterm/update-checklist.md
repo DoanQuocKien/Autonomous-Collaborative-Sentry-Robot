@@ -1,5 +1,7 @@
 # Checklist tiếp tục hoàn thiện giữa kỳ HNHL
 
+**Hiện hành11/11:** [99/102/103 đã merge; nguồn mới và Experiment B](update-2026-11-11.md). Không yêu cầu DQK làm lại cleanup/coverage/provenance đã có. HNHL đã tích hợp tooling và bổ sung tile3, full-window trunk score, ORG/D1 comparison. B tooling đã approve, còn model adoption cần PR riêng với model/data/config hashes, real empty-floor/table controls, glare/longer-range và own-view held-out evaluation. D3/gallery/D5 độc lập/F11/F7 raw/combined4050/T2 vẫn pending; #101 chưa sửa, #100 chờ DQK.
+
 **Hiện hành10/11:** [DQK đã thử lớp, depth và body cues](update-2026-11-10.md); đưa thất bại/coverage vào báo cáo, không làm lại các comparisons này chỉ để đổi ngày. DQK đang làm B/reflection/contact; cần scripts/config/weights hashes, chair+table+empty-floor controls và held-out raw samples để HNHL đánh giá. Chưa có candidate đủ thay detector mặc định. Trunk chọn trên cùng một người/ba sets, cần người khác và mốc1,2/1,8/2,4m. D3/gallery/F11/raw latency/combined4050 vẫn pending; official session/ESP32/T2 chưa được thay bằng buổi DQK một mình09/11.
 
 **Sau bản sửa KR09/11:** [PR101 follow-up](followup-pr101-2026-11-09.md) ghi các lỗi cũ đã sửa và các lỗi còn tái hiện. Phần báo cáo HNHL đã được KR sửa đáng kể; còn cần bỏ distance T1 PASS, sửa destination của appearance vector, đưa F18/caveats vào bản ghép. Chưa có D3/gallery/D5 độc lập/map/latency/combined4050 mới; không chuyển các mục này sang PASS.

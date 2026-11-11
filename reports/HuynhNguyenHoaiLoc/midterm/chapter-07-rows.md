@@ -1,5 +1,7 @@
 # Kết quả HNHL để ghép Chương 7
 
+**Bổ sung11/11:** #99/#102/#103 đã merge sau review và sửa guard/cleanup; code tests không đồng nghĩa T2. Tile3 có21 HOLD rows trong2 đoạn ngắn;80 rows stopped PURSUE trước đó không phải HOLD. Bảng trunk cần ghi full-series/full-window (bỏ9 warm-up samples) riêng. Experiment B tooling đã merge: D1 configured/ORG-obstacle/ORG-free-space tìm1/24,8/24,6/24 objects; error0,041m chỉ trên8 found, không all-object PASS hoặc model adoption. [Nguồn, controls thiếu và bảng so sánh](update-2026-11-11.md).
+
 **Bổ sung10/11:** retest ghế lớp09/11 cho4/36 frame detection và0/36 distance (giữ error=null). Đây là kết quả failure/coverage mới, không thay8/9 IDs F10 cũ hoặc gộp hai tape origins. Depth/zoom/floor-anchor chưa transfer; trunk một người có per-set bias,0,49m và0,50m là protocol khác. [Bảng nguồn/so sánh](update-2026-11-10.md), [F10 availability](figures/F10_availability_1109.png). Không có T1/T2 PASS mới; không đổi default detector.
 
 **Đối chiếu bản sửa KR969a5e0 ngày09/11:** Chương7 của draft vẫn ghi distance “ĐẠT T1”; phải đổi sang kết quả bộ nhỏ/partial pending vì p90=20,91%, chỉ8/9 IDs và chưa≥20. Các sửa scope/links khác đã có, không yêu cầu làm lại. [Theo dõi review mới](followup-pr101-2026-11-09.md); chưa có experimental acceptance mới.

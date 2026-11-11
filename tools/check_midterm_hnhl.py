@@ -159,6 +159,22 @@ def check():
         assert all(c['median_error_m'] is None for c in nov10['chairs'])
         assert not nov10['tile3_source_available']
         assert nov10['temporal_trunk_prior_m'] != nov10['fusion_trunk_prior_m']
+    nov11_sources = 0
+    nov11_path = OUT/'update-2026-11-11.json'
+    if nov11_path.exists():
+        from tools.build_midterm_hnhl_nov11 import collect_nov11
+        nov11 = read_json(nov11_path)
+        assert nov11 == collect_nov11(), '11/11 post-merge evidence drift'
+        for source in nov11['evidence'].values():
+            assert hashlib.sha256(source_bytes(source)).hexdigest() == source['sha256'], '11/11 source drift'
+            nov11_sources += 1
+        assert set(nov11['merged_prs']) == {'99','102','103'}
+        assert all(p['merged'] for p in nov11['merged_prs'].values())
+        assert not any(nov11['acceptance'].values())
+        assert nov11['tile3']['hold_rows'] == 21
+        assert nov11['tile3']['all_band_rows_stopped_pursue']
+        assert nov11['experiment_B']['code_merged'] and not nov11['experiment_B']['model_adopted']
+        assert not nov11['experiment_B']['true_empty_floor_control_available']
     word = OUT/'HNHL-Chuong-5.docx'
     verification = read_json(OUT/'verification.json')
     word_sha = hashlib.sha256(word.read_bytes()).hexdigest()
@@ -194,7 +210,10 @@ def check():
             target = path.parent/unquote(url.split('#')[0])
             assert target.exists(), f'broken link: {path}: {url}'
             count += 1
-    return dict(checked_snapshot_date='2026-11-10' if nov10_path.exists() else ('2026-11-09' if nov09_path.exists() else ('2026-11-07' if team_path.exists() else ('2026-11-06' if recovery_path.exists() else ('2026-11-05' if latest_path.exists() else '2026-11-03')))), evidence_sources_checked=len(update['evidence']),
+    snapshot_date = next(date for path,date in ((nov11_path,'2026-11-11'),(nov10_path,'2026-11-10'),
+        (nov09_path,'2026-11-09'),(team_path,'2026-11-07'),(recovery_path,'2026-11-06'),
+        (latest_path,'2026-11-05'),(OUT/'update-2026-11-03.json','2026-11-03')) if path.exists())
+    return dict(checked_snapshot_date=snapshot_date, evidence_sources_checked=len(update['evidence']),
                 postmerge_sources_checked=followup_sources,
                 latest_sources_checked=latest_sources,
                 recovery_sources_checked=recovery_sources,
@@ -202,6 +221,7 @@ def check():
                 nov09_sources_checked=nov09_sources,
                 kr_followup_sources_checked=kr_followup_sources,
                 nov10_sources_checked=nov10_sources,
+                nov11_sources_checked=nov11_sources,
                 source_hashes_match=True, both_saved_snapshots_match=True,
                 missing_acceptance_preserved=True, local_links_checked=count,
                 original_word_sha256=word_sha, original_word_visual_review_preserved=True,
