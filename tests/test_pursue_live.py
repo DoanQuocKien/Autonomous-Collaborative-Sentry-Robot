@@ -189,8 +189,10 @@ def test_centring_is_reported_in_full_width_units_and_by_time_with_coverage():
     assert "NOT EVALUATED" in s["acceptance"]
     t = new()
     t.update(0.0, [(1, box_at(1.2))])
-    t.update(10.0, [(1, box_at(1.2))])                                   # a 10 s gap earns at most TIME_CAP_S, not 10 s
-    assert t.summary()["run_time_s"] <= 0.31
+    t.update(10.0, [(1, box_at(1.2))])                                   # a 10 s gap earns at most TIME_CAP_S of credit, and the rest is reported as unobserved
+    sm = t.summary()
+    assert abs(sm["run_span_s"] - 10.05) < 0.01 and sm["observed_time_s"] <= 0.31 and abs(sm["unobserved_time_s"] - 9.75) < 0.01
+    assert sm["coverage_tracked_fraction"] < 0.05 and sm["time_fraction_distance_in_band_of_run"] < 0.05     # the denominator is the FULL elapsed time, not 0.3 s
 
 
 def test_inside_the_standoff_band_the_runner_stands_still_and_the_hold_can_trigger():
@@ -211,3 +213,39 @@ def test_inside_the_standoff_band_the_runner_stands_still_and_the_hold_can_trigg
     for k in range(8):
         v, w = r.update(k * 0.1, [(1, box_at(0.7))])                    # far inside the near limit: it still reverses
     assert v < 0
+
+
+def test_save_run_never_overwrites_numbering_holes_or_concurrent_claims(tmp_path):
+    import threading
+    from tools.pursue_live import save_run
+    (tmp_path / "x_1").mkdir()
+    (tmp_path / "x_3").mkdir()
+    (tmp_path / "x_3" / "summary.json").write_text("OLD EVIDENCE")
+    d = save_run(str(tmp_path), "x", [], {"a": 1}, [])
+    assert d.name == "x_4" and (tmp_path / "x_3" / "summary.json").read_text() == "OLD EVIDENCE"      # one past the highest number, the old run is untouched
+    got = []
+
+    def claim(i):
+        got.append(save_run(str(tmp_path), "y", [], {"i": i}, []))
+    ts = [threading.Thread(target=claim, args=(i,)) for i in range(8)]
+    for th in ts:
+        th.start()
+    for th in ts:
+        th.join()
+    assert len(set(g.name for g in got)) == 8                                                         # eight concurrent runs, eight distinct directories
+
+
+def test_the_session_parameters_are_validated_before_anything_live_starts():
+    import types
+    import pytest
+    from tools.pursue_live import validate_session_params
+    ok = types.SimpleNamespace(lock_range=3.5, lost_end_s=5.0, seconds=60.0, wait=60.0, min_battery=11.4)
+    validate_session_params(ok, 3.5, 0.50, 0.8, 1.2)                                                  # the defaults pass
+    for field, bad in (("lock_range", float("nan")), ("lock_range", 1.3), ("lost_end_s", float("inf")), ("lost_end_s", 0.0), ("seconds", -1.0), ("wait", 0.0), ("min_battery", 5.0), ("min_battery", float("nan"))):
+        a = types.SimpleNamespace(**vars(ok))
+        setattr(a, field, bad)
+        with pytest.raises(SystemExit):
+            validate_session_params(a, 3.5, 0.50, 0.8, 1.2)
+    for off, tm, tc in ((float("nan"), 0.5, 0.8), (-1.0, 0.5, 0.8), (50.0, 0.5, 0.8), (3.5, float("inf"), 0.8), (3.5, 0.1, 0.8), (3.5, 0.5, 0.2), (3.5, 0.5, float("nan"))):
+        with pytest.raises(SystemExit):
+            validate_session_params(ok, off, tm, tc, 1.2)

@@ -42,6 +42,7 @@ FRESH_S = 0.25                                # command freshness on the wire (s
 DIST_MEDIAN_N = 5                             # frames in the median that decides the standoff dead band (the foot-row range jitters by 0.2 m when the robot starts or stops)
 TRUNK_WINDOW = 10                             # causal median over the last frames of the trunk-based range (0.5 s at 20 fps)
 TRUNK_IOU = 0.4                               # pose person matched to a tracked box by IoU
+LAST_FRAME_S = 0.05                           # the last row stands for one frame period
 TIME_CAP_S = 0.25                             # an interval between two processed frames counts at most this much in the time-based fractions
 CENTRE_TOL_WIDTH = 0.10                       # plan: bbox centre within +/- 10 % of the FULL frame width
 MAX_PROCESS_S = 0.5                           # longer than this for one frame: stop instead of driving on it
@@ -67,9 +68,16 @@ def command_to_send(cmd, now):
 def save_run(out, label, rows, summary, saved):
     """Write log.csv, summary.json and (optionally) the frames into a NEW run directory <out>/<label>_<n>; -> the directory."""
     out_dir = Path(out)
-    n = 1 + len(list(out_dir.glob(label + "_*"))) if out_dir.exists() else 1
-    run_dir = out_dir / ("%s_%d" % (label, n))
-    run_dir.mkdir(parents=True, exist_ok=True)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    taken = [int(p.name[len(label) + 1:]) for p in out_dir.glob(label + "_*") if p.name[len(label) + 1:].isdigit()]
+    n = 1 + max(taken, default=0)                                              # one past the HIGHEST existing number (a hole such as x_1, x_3 must not reuse 3)
+    while True:
+        run_dir = out_dir / ("%s_%d" % (label, n))
+        try:
+            run_dir.mkdir(exist_ok=False)                                      # atomic claim: two runs can never write into the same directory
+            break
+        except FileExistsError:
+            n += 1
     with open(run_dir / "log.csv", "w", newline="") as fh:
         wr = csv.DictWriter(fh, fieldnames=COLS)
         wr.writeheader()
@@ -80,6 +88,21 @@ def save_run(out, label, rows, summary, saved):
         for t_, jpg in saved:
             (run_dir / "frames" / ("%.3f.jpg" % t_)).write_bytes(jpg)
     return run_dir
+
+
+def validate_session_params(a, feet_row_offset_px, trunk_m, trunk_conf, target_m):
+    """Refuse a bad session parameter (NaN, infinity, a physically impossible value) BEFORE any live resource starts (HNHL review of PR #99)."""
+    def need(name, v, lo, hi):
+        if isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v) or not lo <= v <= hi:
+            raise SystemExit("ABORT: %s = %r is not a finite value in [%g, %g]" % (name, v, lo, hi))
+    need("--feet-row-offset-px", feet_row_offset_px, 0.0, 15.0)
+    need("--lock-range", a.lock_range, target_m + 0.3, 8.0)             # the lock range must exceed the standoff
+    need("--lost-end-s", a.lost_end_s, 0.5, 60.0)
+    need("--seconds", a.seconds, 0.1, 3600.0)
+    need("--wait", a.wait, 1.0, 600.0)
+    need("--min-battery", a.min_battery, 10.5, 13.0)                      # 10.5 V is the project's stop limit
+    need("[pursuit] trunk_length_m", trunk_m, 0.30, 0.80)
+    need("[pursuit] trunk_conf_min", trunk_conf, 0.5, 1.0)
 
 
 def foot_point(ground_point, undistort_points, xyxy, size, feet_row_offset_px=0.0):
@@ -227,7 +250,9 @@ class Pursuit(object):
         pursue = [r for r, _ in ranged if r["mode"] != "HOLD"]
         near_f = [r for r in pursue if abs(r["dist_m"] - target) <= pursuit_band]
         centred_f = [r for r, _ in tracked if abs(r["yaw_err"]) / 2.0 <= CENTRE_TOL_WIDTH]
-        run_s = sum(wts)
+        observed_s = sum(wts)                                                   # time the processed frames stand for (gaps capped at TIME_CAP_S)
+        span_s = (rows[-1]["t"] - rows[0]["t"] + LAST_FRAME_S) if rows else 0.0   # the real elapsed time of the run
+        run_s = max(span_s, observed_s)
         tracked_s = sum(w for _, w in tracked)
         ranged_s = sum(w for _, w in ranged)
         in_band_s = sum(w for r, w in ranged if abs(r["dist_m"] - target) <= pursuit_band)
@@ -236,13 +261,14 @@ class Pursuit(object):
         def frac(a, b):
             return round(a / b, 3) if b > 0 else None
         return {"frames": len(rows), "frames_with_distance": len(ranged), "pursue_frames": len(pursue),
-                "run_time_s": round(run_s, 2), "tracked_time_s": round(tracked_s, 2), "coverage_tracked_fraction": frac(tracked_s, run_s),
+                "run_span_s": round(run_s, 2), "observed_time_s": round(observed_s, 2), "unobserved_time_s": round(max(0.0, run_s - observed_s), 2),
+                "tracked_time_s": round(tracked_s, 2), "coverage_tracked_fraction": frac(tracked_s, run_s),
                 "time_fraction_distance_in_band_of_tracked": frac(in_band_s, ranged_s), "time_fraction_distance_in_band_of_run": frac(in_band_s, run_s),
                 "time_fraction_centred_of_tracked": frac(centred_s, tracked_s), "time_fraction_centred_of_run": frac(centred_s, run_s),
                 "diag_frame_fraction_distance_in_band": frac(len(near_f), len(pursue)), "diag_frame_fraction_centred": frac(len(centred_f), len(tracked)),
                 "centre_unit": "|bbox centre - image centre| / full frame width <= %.2f (yaw_err in the log is relative to HALF the width: divided by 2 here)" % CENTRE_TOL_WIDTH,
                 "hold_events": self.hold_events, "reacquires": sum(1 for r in rows if r["event"] == "REACQUIRE"), "target_id": self.target_id,
-                "acceptance": "NOT EVALUATED: first supervised trials; the time fractions are diagnostics (no-target time counts in the 'of_run' versions), not the plan's 80 % acceptance",
+                "acceptance": "NOT EVALUATED: first supervised trials; the 'of_run' fractions use the FULL elapsed span (no-target and unobserved time count against them), the 'of_tracked' fractions use observed tracked time only; diagnostics, not the plan's 80 % acceptance",
                 "plan_thresholds": "distance 1.2 +/- 0.2 m and bbox centre within +/- 10 % of the frame width for 80 % of the time (plan 4.3 'Pursuit PD')"}
 
 
@@ -323,9 +349,10 @@ def main():
     model = WheelModel.from_session(a.motion_session) if a.motion_session else WheelModel()
     pursuit = Pursuit(ctl, model, ground_point, geom.undistort_points, geom.size, a.lock_range, lost_end_s=a.lost_end_s, feet_row_offset_px=a.feet_row_offset_px if a.feet_row_offset_px is not None else float(load()["pursuit"].get("feet_row_offset_px", 0.0)),
                       integrate=not a.dry_run)
-    perceive = make_perception()
     trunk_m = float(load()["pursuit"].get("trunk_length_m", 0.50))
     trunk_conf = float(load()["pursuit"].get("trunk_conf_min", 0.8))
+    validate_session_params(a, a.feet_row_offset_px if a.feet_row_offset_px is not None else float(load()["pursuit"].get("feet_row_offset_px", 0.0)), trunk_m, trunk_conf, pcfg.target_distance_m)
+    perceive = make_perception()
     pose_fn = None
     if a.range_source == "trunk":
         pose_fn = make_pose(a.pose_weights, load())
@@ -359,7 +386,7 @@ def main():
         summary = dict(pursuit.summary(), label=a.label, dry_run=a.dry_run, replay=a.replay, end_reason=end["reason"], camera_pose_file=a.camera_pose, pitch_down_deg=round(math.degrees(geom.pitch), 2),
                        feet_row_offset_px=pursuit.feet_row_offset_px, range_source=a.range_source, trunk_length_m=trunk_m, trunk_conf_min=trunk_conf, trunk_frames=sum(1 for r in pursuit.rows if r.get("range_src") == "trunk"), config=effective_config, battery_v_start=volts0, battery_v_end=volts1, seconds=round(time.time() - t_wall, 1), date=time.strftime("%Y-%m-%d %H:%M"), obstacle_avoidance=False)
         run_dir = save_run(a.out, a.label, pursuit.rows, summary, saved)
-        print("ENDED: %s | %s" % (end["reason"], json.dumps({k: summary[k] for k in ("frames", "run_time_s", "coverage_tracked_fraction", "time_fraction_distance_in_band_of_run", "time_fraction_centred_of_run", "hold_events")})), flush=True)
+        print("ENDED: %s | %s" % (end["reason"], json.dumps({k: summary[k] for k in ("frames", "run_span_s", "unobserved_time_s", "coverage_tracked_fraction", "time_fraction_distance_in_band_of_run", "time_fraction_centred_of_run", "hold_events")})), flush=True)
         print("saved", run_dir, flush=True)
 
     if a.replay is not None:

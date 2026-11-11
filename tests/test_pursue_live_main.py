@@ -152,3 +152,17 @@ def test_a_failed_end_battery_read_is_written_as_null_and_nothing_is_lost(monkey
     rows, summary = saved(tmp_path)
     assert rows and summary["battery_v_end"] is None and summary["battery_v_start"] == 12.0
     assert FakeSender.instances[0].stopped
+
+
+@pytest.mark.parametrize("extra", [["--feet-row-offset-px", "nan"], ["--lost-end-s", "inf"], ["--min-battery", "-3"]])
+def test_a_bad_session_parameter_aborts_before_any_live_resource_and_writes_nothing(monkeypatch, tmp_path, extra):
+    FakeSender.instances = []
+    built = {"rx": 0, "ssh": 0}
+    monkeypatch.setattr("sentry.net.zmq_rx.ZMQReceiver", lambda ip=None: built.__setitem__("rx", built["rx"] + 1))
+    monkeypatch.setattr("tools.jetbot_ssh.connect", lambda *a, **k: built.__setitem__("ssh", built["ssh"] + 1))
+    monkeypatch.setattr("sentry.net.udp_tx.UDPSender", FakeSender)
+    monkeypatch.setattr(sys, "argv", ["pursue_live", "--label", "t", "--camera-pose", "x.json", "--out", str(tmp_path)] + extra)
+    monkeypatch.setattr("sentry.perception.camera.CameraGeometry.from_files", FakeGeom.from_files)
+    with pytest.raises(SystemExit):
+        pl.main()
+    assert built == {"rx": 0, "ssh": 0} and FakeSender.instances == [] and list(tmp_path.iterdir()) == []

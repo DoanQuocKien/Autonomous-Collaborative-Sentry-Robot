@@ -237,6 +237,7 @@ center_tolerance_norm = 0.10
 # Person box bottom sits below the real floor contact (tools/pursue_live.py): 4.6 px at 1.2 m, 2.5 px at 1.8 m, 6.1 px at 2.4 m (bare feet, 2026-11-07, one floor, one person); 3.5 px was the compromise for <= 1.8 m (pass it per session: --feet-row-offset-px 3.5). Default 0 = uncalibrated. Not a general constant: re-measure with the tape marks.
 feet_row_offset_px = 0.0
 # Range from the shoulder-to-hip trunk length (tools/pursue_live.py --range-source trunk): population mean for adults, NOT a per-person constant; a lead validated on one person only.
+# Two priors were used in the notes and are reported SEPARATELY: 0.50 m (round 7, this default) and 0.49 m (round 8, Drillis and Contini: 0.288 x 1.70 m, set before that run); the sensitivity is about 0.04 m of range per 0.01 m at 1.8 m. Neither is validated beyond one person.
 trunk_length_m = 0.50
 trunk_conf_min = 0.8
 
