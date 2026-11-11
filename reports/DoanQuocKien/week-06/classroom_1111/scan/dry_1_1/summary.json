@@ -1,0 +1,34 @@
+{
+ "label": "dry_1",
+ "end_reason": "dry run",
+ "pulses": 0,
+ "pulses_measured": 0,
+ "total_heading_deg": 0.0,
+ "turn_per_pulse_rad": null,
+ "turn_per_pulse_sd_rad": null,
+ "turn_per_pulse_deg": null,
+ "spin_s": 0.2,
+ "spin_w": 0.45,
+ "boards": {
+  "0": {
+   "x_m": 3.7,
+   "y_m": 0.84,
+   "stops": 1,
+   "spread_m": 0.0
+  },
+  "2": {
+   "x_m": 0.49,
+   "y_m": -0.56,
+   "stops": 1,
+   "spread_m": 0.0
+  }
+ },
+ "door_bearing_deg": 24.7,
+ "door_sightings": 5,
+ "camera_pose_file": "calib/camera_pose_self_1111_1.json",
+ "battery_v_start": 12.212,
+ "battery_v_end": 12.208,
+ "date": "2026-11-11 09:34",
+ "dry_run": true,
+ "note": "positions from the boards' pose in the video and the heading summed from the measured pulse angles; boards seen only at the start stop have no heading error; 150 mm boards are noisy beyond 2-3 m"
+}
