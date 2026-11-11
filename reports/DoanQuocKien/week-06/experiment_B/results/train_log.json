@@ -1,0 +1,92 @@
+{
+ "args": {
+  "cmd": "train",
+  "epochs": 15,
+  "batch": 6,
+  "lr": 6e-05,
+  "obstacle_weight": 8.0
+ },
+ "log": [
+  {
+   "epoch": 1,
+   "loss": 0.6711,
+   "seconds": 67
+  },
+  {
+   "epoch": 2,
+   "loss": 0.146,
+   "seconds": 120
+  },
+  {
+   "epoch": 3,
+   "loss": 0.0741,
+   "seconds": 172
+  },
+  {
+   "epoch": 4,
+   "loss": 0.0513,
+   "seconds": 226
+  },
+  {
+   "epoch": 5,
+   "loss": 0.0416,
+   "seconds": 279
+  },
+  {
+   "epoch": 6,
+   "loss": 0.0358,
+   "seconds": 333
+  },
+  {
+   "epoch": 7,
+   "loss": 0.0342,
+   "seconds": 393
+  },
+  {
+   "epoch": 8,
+   "loss": 0.0296,
+   "seconds": 469
+  },
+  {
+   "epoch": 9,
+   "loss": 0.0272,
+   "seconds": 544
+  },
+  {
+   "epoch": 10,
+   "loss": 0.0261,
+   "seconds": 620
+  },
+  {
+   "epoch": 11,
+   "loss": 0.0252,
+   "seconds": 696
+  },
+  {
+   "epoch": 12,
+   "loss": 0.025,
+   "seconds": 772
+  },
+  {
+   "epoch": 13,
+   "loss": 0.0244,
+   "seconds": 848
+  },
+  {
+   "epoch": 14,
+   "loss": 0.0241,
+   "seconds": 922
+  },
+  {
+   "epoch": 15,
+   "loss": 0.0236,
+   "seconds": 997
+  }
+ ],
+ "torch": "2.9.1+cu128",
+ "transformers": "4.57.1",
+ "train_images": 1711,
+ "seed": 0,
+ "base": "data/models/segformer-b0-ade",
+ "date": "2026-11-11 11:09"
+}
