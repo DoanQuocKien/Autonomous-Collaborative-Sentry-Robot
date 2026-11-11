@@ -28,6 +28,20 @@ Observed weakness: about 35 of the 51 steps were turn pulses hunting around the 
 - **Table** (`table_pedestal_big_1p2`, 24 frames, tape 1.2 m from the front): inconclusive (the frame shows a table leg and six chairs behind). Configured detector: a "chair" in 24 of 24, with a distance in 1 (3.07 m, wrong); obstacle class: a lane prediction in 9 of 24 (1.24-1.83 m); free space 0 of 24. To be redone with a traditional table.
 - Not done: ESP32 handshake re-placement test (dropped: two passes already, see `classroom_1111`), counted T2 runs (the ESP32 was shut down and the door approach was not solved earlier). The sweet spot is now reached by the robot; the handshake and the reverse to standby are the next steps.
 
+## Person frames, three people (experiment A validation; `data/person_ranges_1111.json`, `scripts/person_ranges.py`)
+A = DQK, B = HNHL, C = KR; 9 sets x 12 frames at the tape marks 1.2 / 1.8 / 2.4 m (measured from the robot FRONT; the lens sits about 0.2-0.26 m behind it, unmeasured, so the lens-referenced truth is about the tape + 0.2 m), pose `calib/camera_pose_self_1111_3.json` (pitch -4.11 deg, spread 0.05), glossy tile. Label corrections: set A at 1.8 m was first recorded under 1.2 (DQK said so at once; relabelled, noted in its result file). Frames (local, not committed): every set has one person with feet and torso visible; heads are cut off at 1.2 m for B (top touching the frame edge) and C (face above the frame); a bystander is visible at the far right near the table in A at 1.8 m and B at 1.2 m (in the background, outside the lane). Median forward range per set (m), 12 of 12 frames had a person:
+
+| tape (front) | person | foot row, offset 0 px | foot row, 3.5 px | foot row, 5 px | trunk, prior 0.50 m |
+|---|---|---|---|---|---|
+| 1.2 | A / B / C | 1.13 / 1.17 / 1.15 | 1.29 / 1.35 / 1.33 | 1.38 / 1.44 / 1.42 | 1.41 / 1.35 / 1.31 |
+| 1.8 | A / B / C | 1.72 / 1.66 / 1.65 | 2.14 / 2.04 / 2.03 | 2.39 / 2.27 / 2.26 | 2.19 / 1.89 / 1.90 |
+| 2.4 | A / B / C | 2.13 / 2.03 / 2.13 | 2.80 / 2.63 / 2.81 | 3.24 / 3.02 / 3.26 | 2.57 / 2.54 / 2.41 |
+
+Expected with the lens 0.2-0.26 m behind the front: about 1.4-1.46 / 2.0-2.06 / 2.6-2.66.
+- **The foot-row range depends mostly on the box-bottom offset, not on the person:** the detector's box bottom sits 3-7 px below the feet, one pixel is about 0.19 m at 2.4 m (d^2 * 0.0033 / 0.100), so 0 px reads 0.25-0.55 m short and 5 px reads up to 0.6 m long at 2.4 m. With the 3.5 px used in the pursuit sessions it is within about 0.1-0.2 m of the expected value at all three marks, for all three people. The offset itself is a per-session constant that nobody measures for a new person: an uncertainty of +/- 1.5 px is +/- 0.3 m at 2.4 m.
+- **The trunk range** (shoulder-to-hip 0.50 m, no offset to tune) is within about -0.1 / +0.2 m of the expected value (1.8 m: A +0.2 above the expected; 2.4 m: -0.2..-0.05), the spread between the three people at the same mark is 0.05-0.30 m. One run per set, three bodies, a tape reference with an unmeasured offset: a lead, consistent with the 2026-11-09 sets (bias -0.02..+0.16 m), not an accepted method.
+- Frame noise within a set is small (the 12 frames were taken within seconds); this validates the earlier single-person result on two more bodies, not the range limit itself.
+
 ## Needs the three members (do first while all are available)
 1. Person frames at 1.2, 1.8 and 2.4 m from several different people (experiment A validation; needs more than one person; frames stay local).
 2. A full T2 run with a second person walking in: the queue and the lock, with HNHL and KR watching the laptop (the ESP32 handshake at the sweet spot, then the walk-through).
