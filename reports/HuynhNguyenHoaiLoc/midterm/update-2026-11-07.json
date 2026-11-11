@@ -1,0 +1,455 @@
+{
+  "snapshot_date": "2026-11-07",
+  "evidence": {
+    "T00": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-07/README.md",
+      "sha256": "2f44358e7bab88d6dc1ef01d5810648f7aaeae73208f1768b9a4583503270758"
+    },
+    "T01": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-07/floor_marks_1107_b_foot_pixels.json",
+      "sha256": "cee6891b3e153ce43fb6ecfc4e6d93ce6dcd955e41d91d9c36c03865f6fd9e9e"
+    },
+    "T02": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-07/pose/camera_pose_self_1106_1.json",
+      "sha256": "e992f267fb49e76f75bcc9a38c42fcf0a9a2b66e4431e6e57bacdfb819dd3a78"
+    },
+    "T03": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-07/pose/camera_pose_self_1107_1.json",
+      "sha256": "489d9b71a235d9bba71cee47b48fc42abe6ae6c8e6bd97e79f0313a4c290da86"
+    },
+    "T04": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-07/pose/camera_pose_self_1107_2.json",
+      "sha256": "1abec208ff98d6af607e7f021755893824f94b8672b0bd6403a40ba43e246aa2"
+    },
+    "T05": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-07/pursuit/mark_A_1/log.csv",
+      "sha256": "0f69880704c8d98a604b6f0350952d51792125b521d8082b0cd2a2acfe99d558"
+    },
+    "T06": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-07/pursuit/mark_A_1/summary.json",
+      "sha256": "ec8651a38b4c7839f76fe224dfeac81d73aa62243c134fcc31744f4920a5fc3f"
+    },
+    "T07": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-07/pursuit/mark_B_2/log.csv",
+      "sha256": "01842a55d4366b8f858848fecc5ee8960b1494eba0cb0b2890a0e4846705e3f5"
+    },
+    "T08": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-07/pursuit/mark_B_2/summary.json",
+      "sha256": "33fcfd1228d14ccaf886f9b84a586ad3bd3bb88de84e2b7a73e9e396728487b7"
+    },
+    "T09": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-07/pursuit/mark_C_1/log.csv",
+      "sha256": "9741ea7cb0065217c06173d976c00d48850d8db16c204517d47e68a66d7b2119"
+    },
+    "T10": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-07/pursuit/mark_C_1/summary.json",
+      "sha256": "30000a67138a14be2cc4d5b0fe7398a8b02e16216a2a34622971e4a606583b67"
+    },
+    "T11": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-07/pursuit/home_1_3/log.csv",
+      "sha256": "2b59b6d95ca36fa811162ba045621d195d6cdfca0f740253d43218776e0eac37"
+    },
+    "T12": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-07/pursuit/home_1_3/summary.json",
+      "sha256": "4e3da66da82860a52a89777c9886cc21a82d8653765eacdf8f22a7d88871985d"
+    },
+    "T13": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-07/pursuit/home_3_1/log.csv",
+      "sha256": "523b11ff2d4ea913684ffffb35274ab5a235fd6463a382dc419a6fc956c4f6b7"
+    },
+    "T14": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-07/pursuit/home_3_1/summary.json",
+      "sha256": "e6b9215abebb0c66c3321708ec4ac9fc65502be039b7c751db9ad1a2262e32d5"
+    },
+    "T15": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-07/pursuit/home_4_1/log.csv",
+      "sha256": "324ff8cab7e763efaa880e9db6e0551b8896546f55fdd9354320f76603363c58"
+    },
+    "T16": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-07/pursuit/home_4_1/summary.json",
+      "sha256": "5924787c0d3efa22fcbcbb84ba561396fe621fe98bb3d96bff098873923b08a1"
+    },
+    "T-provenance": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-07/provenance.json",
+      "sha256": "0b333cd3314902e0de4cf52b8d1ad9ddae90bae56cb0a697752f8509bdf188a5"
+    },
+    "T-github": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/github-2026-11-07.json",
+      "sha256": "abfe9fc0259ed78841a7df86b6f87ab61f7eaef5689ea45cfd25f2cfcb22331b"
+    },
+    "T-review": {
+      "path": "reports/HuynhNguyenHoaiLoc/reviews/PR-99-2026-11-07.md",
+      "sha256": "249ad0a2ca9ccbacce2e13404601407130c7400e160a6626e20239bdd82a3711"
+    },
+    "T-tests": {
+      "path": "reports/HuynhNguyenHoaiLoc/reviews/PR-99-2026-11-07-tests.log",
+      "sha256": "74d2167eacf8b1bf2a3a43567803c7f6741e79dbe79a83bafd0fe6d238d0a5f0"
+    },
+    "T-KR-sim": {
+      "path": "reports/kouun-rokku/week-05/sim_pursuit_hold.json",
+      "sha256": "82443d92f3c62447ed5f5e59c56b7e16fc46f83c401ddf49c5129835790dc12d",
+      "git_commit": "4c041b647529153debd4679f5669905206c3aea6"
+    },
+    "T-KR-hold": {
+      "path": "reports/kouun-rokku/week-05/hold_detector_metrics.json",
+      "sha256": "2279625e22e8ad4d0f1ae2b3b4b7e7e071fb4237cca11fb24536e2f275fcec1a",
+      "git_commit": "4c041b647529153debd4679f5669905206c3aea6"
+    },
+    "T-entrance": {
+      "path": "reports/DoanQuocKien/week-02/d1/entrance_bench_2026-10-12.md",
+      "sha256": "8c02498029ec93269709c65671fcb8848aeabc810219fca3def5c4d77f8fe89f",
+      "git_commit": "4c041b647529153debd4679f5669905206c3aea6"
+    },
+    "T-4050": {
+      "path": "reports/DoanQuocKien/week-01/gpu/gpu_baseline_rtx4050.json",
+      "sha256": "d59ae21d6d188a048e20209e2a88ce64e19f64f83be8240b766f4dc1c0667b22",
+      "git_commit": "4c041b647529153debd4679f5669905206c3aea6"
+    }
+  },
+  "source_commit": "bb9f34115760edc40d16de4cece6edfdb40e1524",
+  "source_owner": "DQK",
+  "source_pr": 99,
+  "source_pr_merged": false,
+  "source_review_state": "CHANGES_REQUESTED",
+  "camera_poses": [
+    {
+      "file": "camera_pose_self_1106_1.json",
+      "tag": "self_1106",
+      "H_cam_m": 0.1,
+      "H_tape_m": 0.1,
+      "pitch_down_deg": -4.68,
+      "camera_roll_deg": 1.03,
+      "passed": true,
+      "pitch_spread_deg": 0.207,
+      "marker_frames": 44,
+      "method": "self-calibration from one ArUco marker on a vertical surface (tools/self_pose.py): H fixed at the mechanical 0.100 m, pitch = median of the marker position estimates"
+    },
+    {
+      "file": "camera_pose_self_1107_1.json",
+      "tag": "self_1107",
+      "H_cam_m": 0.1,
+      "H_tape_m": 0.1,
+      "pitch_down_deg": -4.49,
+      "camera_roll_deg": -2.08,
+      "passed": true,
+      "pitch_spread_deg": 0.059,
+      "marker_frames": 40,
+      "method": "self-calibration from one ArUco marker on a vertical surface (tools/self_pose.py): H fixed at the mechanical 0.100 m, pitch = median of the marker position estimates"
+    },
+    {
+      "file": "camera_pose_self_1107_2.json",
+      "tag": "self_1107",
+      "H_cam_m": 0.1,
+      "H_tape_m": 0.1,
+      "pitch_down_deg": -4.55,
+      "camera_roll_deg": 0.29,
+      "passed": true,
+      "pitch_spread_deg": 0.055,
+      "marker_frames": 42,
+      "method": "self-calibration from one ArUco marker on a vertical surface (tools/self_pose.py): H fixed at the mechanical 0.100 m, pitch = median of the marker position estimates"
+    }
+  ],
+  "floor_diagnostic": [
+    {
+      "tape_forward_m": 1.2,
+      "source_reported_forward_m": 1.02,
+      "relative_error_pct": 14.999999999999995,
+      "samples": 159,
+      "median_foot_row_px": 293.9211304109201,
+      "sd_foot_row_px": 0.4053373091796825
+    },
+    {
+      "tape_forward_m": 1.8,
+      "source_reported_forward_m": 1.57,
+      "relative_error_pct": 12.777777777777777,
+      "samples": 155,
+      "median_foot_row_px": 283.1051899965903,
+      "sd_foot_row_px": 0.33455560288163483
+    },
+    {
+      "tape_forward_m": 2.4,
+      "source_reported_forward_m": 1.63,
+      "relative_error_pct": 32.083333333333336,
+      "samples": 159,
+      "median_foot_row_px": 282.44816228904085,
+      "sd_foot_row_px": 0.29520365092355005
+    }
+  ],
+  "runs": {
+    "mark_A_1": {
+      "stats": {
+        "rows": 46,
+        "processed_span_s": 10.008,
+        "median_forward_m": 1.1255,
+        "max_processed_gap_s": 7.829000000000001,
+        "processed_gaps_over_300ms": 1,
+        "events": [],
+        "acceptance": false,
+        "timestamps_scope": "processed-loop relative wall clock, not camera capture time"
+      },
+      "source_summary": {
+        "frames": 46,
+        "frames_with_distance": 46,
+        "pursue_frames": 46,
+        "fraction_distance_within_band": 1.0,
+        "fraction_centred_within_10pct": 0.0,
+        "hold_events": [],
+        "plan_thresholds": "distance 1.2 +/- 0.2 m and centre within +/- 10 % of the frame width for 80 % of the time (plan 4.3 'Pursuit PD'); these are first-trial numbers, not an acceptance",
+        "label": "mark_A",
+        "dry_run": true,
+        "replay": null,
+        "end_reason": "time limit",
+        "camera_pose_file": "calib/camera_pose_self_1106_1.json",
+        "pitch_down_deg": -4.68,
+        "battery_v_start": 12.204,
+        "battery_v_end": 12.176,
+        "seconds": 11.3,
+        "date": "2026-11-07 00:06",
+        "obstacle_avoidance": false
+      },
+      "withdrawn_distance_fraction": false,
+      "not_a_pursuit_test": false
+    },
+    "mark_B_2": {
+      "stats": {
+        "rows": 45,
+        "processed_span_s": 9.947000000000001,
+        "median_forward_m": 1.095,
+        "max_processed_gap_s": 7.81,
+        "processed_gaps_over_300ms": 1,
+        "events": [],
+        "acceptance": false,
+        "timestamps_scope": "processed-loop relative wall clock, not camera capture time"
+      },
+      "source_summary": {
+        "frames": 45,
+        "frames_with_distance": 45,
+        "pursue_frames": 45,
+        "fraction_distance_within_band": 1.0,
+        "fraction_centred_within_10pct": 0.0,
+        "hold_events": [],
+        "plan_thresholds": "distance 1.2 +/- 0.2 m and centre within +/- 10 % of the frame width for 80 % of the time (plan 4.3 'Pursuit PD'); these are first-trial numbers, not an acceptance",
+        "label": "mark_B",
+        "dry_run": true,
+        "replay": null,
+        "end_reason": "time limit",
+        "camera_pose_file": "calib/camera_pose_self_1106_1.json",
+        "pitch_down_deg": -4.68,
+        "battery_v_start": 12.16,
+        "battery_v_end": 12.172,
+        "seconds": 11.3,
+        "date": "2026-11-07 00:08",
+        "obstacle_avoidance": false
+      },
+      "withdrawn_distance_fraction": false,
+      "not_a_pursuit_test": false
+    },
+    "mark_C_1": {
+      "stats": {
+        "rows": 48,
+        "processed_span_s": 9.994,
+        "median_forward_m": 1.4915,
+        "max_processed_gap_s": 7.741,
+        "processed_gaps_over_300ms": 1,
+        "events": [],
+        "acceptance": false,
+        "timestamps_scope": "processed-loop relative wall clock, not camera capture time"
+      },
+      "source_summary": {
+        "frames": 48,
+        "frames_with_distance": 48,
+        "pursue_frames": 48,
+        "fraction_distance_within_band": 0.0,
+        "fraction_centred_within_10pct": 0.0,
+        "hold_events": [],
+        "plan_thresholds": "distance 1.2 +/- 0.2 m and centre within +/- 10 % of the frame width for 80 % of the time (plan 4.3 'Pursuit PD'); these are first-trial numbers, not an acceptance",
+        "label": "mark_C",
+        "dry_run": true,
+        "replay": null,
+        "end_reason": "time limit",
+        "camera_pose_file": "calib/camera_pose_self_1106_1.json",
+        "pitch_down_deg": -4.68,
+        "battery_v_start": 12.18,
+        "battery_v_end": 12.184,
+        "seconds": 11.3,
+        "date": "2026-11-07 00:09",
+        "obstacle_avoidance": false
+      },
+      "withdrawn_distance_fraction": false,
+      "not_a_pursuit_test": false
+    },
+    "home_1_3": {
+      "stats": {
+        "rows": 334,
+        "processed_span_s": 16.651,
+        "median_forward_m": 1.1815,
+        "max_processed_gap_s": 0.09200000000000008,
+        "processed_gaps_over_300ms": 0,
+        "events": [
+          {
+            "t": 3.592,
+            "event": "TARGET_STATIONARY"
+          }
+        ],
+        "acceptance": false,
+        "timestamps_scope": "processed-loop relative wall clock, not camera capture time"
+      },
+      "source_summary": {
+        "frames": 334,
+        "frames_with_distance": 334,
+        "pursue_frames": 72,
+        "fraction_distance_within_band": 0.722,
+        "fraction_centred_within_10pct": 0.985,
+        "hold_events": [
+          [
+            3.59,
+            "TARGET_STATIONARY"
+          ]
+        ],
+        "plan_thresholds": "distance 1.2 +/- 0.2 m and centre within +/- 10 % of the frame width for 80 % of the time (plan 4.3 'Pursuit PD'); these are first-trial numbers, not an acceptance",
+        "label": "home_1",
+        "dry_run": false,
+        "replay": null,
+        "end_reason": "R1 released (e-stop latch present)",
+        "camera_pose_file": "calib/camera_pose_self_1107_1.json",
+        "pitch_down_deg": -4.49,
+        "battery_v_start": 12.052,
+        "battery_v_end": 12.044,
+        "seconds": 17.9,
+        "date": "2026-11-07 00:18",
+        "obstacle_avoidance": false
+      },
+      "withdrawn_distance_fraction": true,
+      "not_a_pursuit_test": false
+    },
+    "home_3_1": {
+      "stats": {
+        "rows": 531,
+        "processed_span_s": 30.231,
+        "median_forward_m": 1.299,
+        "max_processed_gap_s": 1.0030000000000001,
+        "processed_gaps_over_300ms": 6,
+        "events": [
+          {
+            "t": 4.674,
+            "event": "TARGET_STATIONARY"
+          },
+          {
+            "t": 16.372,
+            "event": "TARGET_LOST"
+          },
+          {
+            "t": 26.53,
+            "event": "TARGET_STATIONARY"
+          }
+        ],
+        "acceptance": false,
+        "timestamps_scope": "processed-loop relative wall clock, not camera capture time"
+      },
+      "source_summary": {
+        "frames": 531,
+        "frames_with_distance": 531,
+        "pursue_frames": 260,
+        "fraction_distance_within_band": 0.942,
+        "fraction_centred_within_10pct": 0.979,
+        "hold_events": [
+          [
+            4.67,
+            "TARGET_STATIONARY"
+          ],
+          [
+            16.37,
+            "TARGET_LOST"
+          ],
+          [
+            26.53,
+            "TARGET_STATIONARY"
+          ]
+        ],
+        "plan_thresholds": "distance 1.2 +/- 0.2 m and centre within +/- 10 % of the frame width for 80 % of the time (plan 4.3 'Pursuit PD'); these are first-trial numbers, not an acceptance",
+        "label": "home_3",
+        "dry_run": false,
+        "replay": null,
+        "end_reason": "R1 released (e-stop latch present)",
+        "camera_pose_file": "calib/camera_pose_self_1107_2.json",
+        "pitch_down_deg": -4.55,
+        "battery_v_start": 11.908,
+        "battery_v_end": 11.892,
+        "seconds": 31.5,
+        "date": "2026-11-07 00:34",
+        "obstacle_avoidance": false
+      },
+      "withdrawn_distance_fraction": false,
+      "not_a_pursuit_test": true
+    },
+    "home_4_1": {
+      "stats": {
+        "rows": 362,
+        "processed_span_s": 18.746,
+        "median_forward_m": 1.364,
+        "max_processed_gap_s": 0.2989999999999995,
+        "processed_gaps_over_300ms": 0,
+        "events": [
+          {
+            "t": 7.449,
+            "event": "TARGET_STATIONARY"
+          }
+        ],
+        "acceptance": false,
+        "timestamps_scope": "processed-loop relative wall clock, not camera capture time"
+      },
+      "source_summary": {
+        "frames": 362,
+        "frames_with_distance": 362,
+        "pursue_frames": 142,
+        "fraction_distance_within_band": 0.493,
+        "fraction_centred_within_10pct": 0.978,
+        "hold_events": [
+          [
+            7.45,
+            "TARGET_STATIONARY"
+          ]
+        ],
+        "plan_thresholds": "distance 1.2 +/- 0.2 m and centre within +/- 10 % of the frame width for 80 % of the time (plan 4.3 'Pursuit PD'); these are first-trial numbers, not an acceptance",
+        "label": "home_4",
+        "dry_run": false,
+        "replay": null,
+        "end_reason": "R1 released (e-stop latch present)",
+        "camera_pose_file": "calib/camera_pose_self_1107_2.json",
+        "pitch_down_deg": -4.55,
+        "battery_v_start": 11.624,
+        "battery_v_end": 11.64,
+        "seconds": 20.0,
+        "date": "2026-11-07 00:55",
+        "obstacle_avoidance": false
+      },
+      "withdrawn_distance_fraction": false,
+      "not_a_pursuit_test": false
+    }
+  },
+  "hold_tape": {
+    "run": "home_4_1",
+    "operator_reported_m": 1.25,
+    "source_reported_estimate_m": 1.37,
+    "source": "archived DQK README, endpoint only; not timestamp-aligned truth",
+    "repeats": 1
+  },
+  "limitations": [
+    "one home room/person; not classroom, reviewed D3 or independent D5",
+    "processed timestamps cannot provide video one-way latency or ID-switch truth",
+    "source bbox/centering/in-band metrics affected by open PR99 findings; no acceptance claim",
+    "3.5 px feet offset fitted on this session; not universal or furniture calibration",
+    "pixel coordinate domain not documented; no new camera-pose fit from those pixels"
+  ],
+  "acceptance": {
+    "tracking_d3": false,
+    "reid": false,
+    "independent_d5": false,
+    "map_vantage": false,
+    "video_latency_cdf": false,
+    "rtx4050_combined": false,
+    "pursuit_hold": false
+  },
+  "inference_rerun": false,
+  "motor_commands_sent": 0
+}

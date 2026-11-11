@@ -1,0 +1,67 @@
+{
+  "checked_date": "2026-11-09",
+  "timezone": "Asia/Bangkok",
+  "main_sha": "4c041b647529153debd4679f5669905206c3aea6",
+  "pull_requests": [
+    {
+      "number": 99,
+      "url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/pull/99",
+      "state": "open",
+      "merged": false,
+      "head_sha": "969c06d3fda2f14a03e607b11c81ddaa78bc676a",
+      "updated_at": "2026-11-08T10:43:27Z"
+    },
+    {
+      "number": 100,
+      "url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/pull/100",
+      "state": "open",
+      "merged": false,
+      "head_sha": "0ee35543136cb12391108d7830802847eb0e8a95",
+      "updated_at": "2026-11-07T06:51:28Z"
+    },
+    {
+      "number": 101,
+      "url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/pull/101",
+      "state": "open",
+      "merged": false,
+      "head_sha": "4d733af9a8447e8159314430c3450d4f63b1799c",
+      "updated_at": "2026-11-08T10:39:15Z"
+    },
+    {
+      "number": 102,
+      "url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/pull/102",
+      "state": "open",
+      "merged": false,
+      "head_sha": "3f9cd936d4e7adcf8de923ed219615ce2f1d567e",
+      "updated_at": "2026-11-08T10:57:22Z"
+    }
+  ],
+  "reviews": [
+    {
+      "number": 99,
+      "head_sha": "969c06d3fda2f14a03e607b11c81ddaa78bc676a",
+      "state": "CHANGES_REQUESTED",
+      "url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/pull/99#pullrequestreview-5820899653",
+      "tests_passed": 31,
+      "seconds": 12.23
+    },
+    {
+      "number": 101,
+      "head_sha": "4d733af9a8447e8159314430c3450d4f63b1799c",
+      "state": "CHANGES_REQUESTED",
+      "url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/pull/101#pullrequestreview-5820900144",
+      "tests_passed": 53,
+      "seconds": 12.17
+    },
+    {
+      "number": 102,
+      "head_sha": "3f9cd936d4e7adcf8de923ed219615ce2f1d567e",
+      "state": "CHANGES_REQUESTED",
+      "url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/pull/102#pullrequestreview-5820900544",
+      "tests_passed": 1,
+      "seconds": 11.26
+    }
+  ],
+  "pr100_independent_approval": false,
+  "snapshot_scope": "before this session's PR100 update; source heads are not merged"
+}

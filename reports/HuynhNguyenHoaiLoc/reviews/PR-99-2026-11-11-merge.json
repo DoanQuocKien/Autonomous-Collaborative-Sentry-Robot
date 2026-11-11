@@ -1,0 +1,13 @@
+{
+  "number": 99,
+  "head_sha": "6ce77830555f03db97c0cb1468dbb50e94163d58",
+  "action": "merge",
+  "result": {
+    "sha": "43ddc2117c91588d78a4090295024c3209bdfbdf",
+    "merged": true,
+    "message": "Pull Request successfully merged"
+  },
+  "merged": true,
+  "merge_commit_sha": "43ddc2117c91588d78a4090295024c3209bdfbdf",
+  "merged_at": "2026-11-11T04:20:35Z"
+}

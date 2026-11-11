@@ -1,0 +1,38 @@
+{
+  "checked_date": "2026-11-06",
+  "timezone": "Asia/Bangkok",
+  "main_sha": "4c041b647529153debd4679f5669905206c3aea6",
+  "camera_repair_source_commit": "87db1bafdaa88c01b815648040d2b90e173126ad",
+  "pull_requests": [
+    {
+      "number": 99,
+      "url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/pull/99",
+      "state": "open",
+      "merged": false,
+      "head_sha": "87a4a4ad6020fe974306781d5f735c82e9d67652",
+      "requested_reviewers": null,
+      "updated_at": "2026-11-05T07:21:05Z"
+    },
+    {
+      "number": 100,
+      "url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/pull/100",
+      "state": "open",
+      "merged": false,
+      "head_sha": "1985e646d23d6f6d5a59a4824fc3d95f0cabccda",
+      "requested_reviewers": [
+        {
+          "login": "DoanQuocKien",
+          "name": "DoanQuocKien",
+          "email": null,
+          "avatar_url": "https://avatars.githubusercontent.com/u/182458474?v=4",
+          "id": 182458474
+        }
+      ],
+      "updated_at": "2026-11-05T07:42:03Z"
+    }
+  ],
+  "review_summary": {
+    "pr99": "unchanged head; previous REQUEST_CHANGES remains; no duplicate review/tests",
+    "pr100": "HNHL-authored; no independent approval; requested DQK"
+  }
+}
