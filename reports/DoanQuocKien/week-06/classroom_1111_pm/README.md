@@ -57,6 +57,15 @@ Result with `tools.d2_segment` and `tools.evaluate_d2_pilot` (buffalo_s, GPU, no
 - **Training on our three identities would not be a valid fix:** the whitelist is arbitrary registered occupants, three identities overfit, and the same people are the test. A legitimate training route is a low-resolution recipe on a large public set (resolution augmentation, quality-adaptive margin such as AdaFace) and a lot of compute on an RTX 4050 6 GB for an expected gain of a few points, against a 2.5x pixel gain from the sensor.
 - **The cheaper lever is pixels:** the door ESP32 runs `esp32/sentry_cam` at `FRAMESIZE_VGA` (640x480); an OV2640 does hardware JPEG up to UXGA (1600x1200), i.e. up to 2.5x the face width at the same place (22-40 px to 55-100 px, above the pilot's 45 px floor). Cost: frame rate over the 2.4 GHz link (20 MHz clock gave 1.1 fps, 10 MHz gives 9-10 fps at VGA; larger frames are bandwidth-bound), a reflash or the web-UI control (port 80 did not answer tonight). Measured camera-to-door distance 2.11 m (inside 1.5-3.0 m): the face width of 30 px at 2.11 m means a lens of about 77 degrees; a closer or less tilted placement and a narrower lens add pixels too.
 
+### Dorm test plan (decided 2026-11-11: no redo tonight, the others are at home)
+Question: do faces reach 55 px or more at the door ESP32, and does verification then separate the members? Steps (about 30 minutes, one person with the board):
+1. **Measure the geometry first:** the ESP32-to-face distance where the walker's face passes (tape), the camera height and tilt, and write them down (tonight's 2.11 m was the ESP32 to the door, not to the face).
+2. **Raise the resolution:** reflash `esp32/sentry_cam` with `FRAMESIZE_SXGA` (1280x1024), `jpeg_quality` 12, `XCLK_HZ` 10 MHz, or set it from the web UI if port 80 answers; record the frame rate from `tools.record_d2` (VGA was 9.1-9.9 fps). If SXGA is under 2 fps try `FRAMESIZE_XGA`.
+3. **Record** one 100 s clip per person, same protocol as tonight (`python -m tools.record_d2 <NAME> --continuous --seconds 100 --session dorm_<date> --ip <esp32>`), others out of view.
+4. **Measure the widths:** `python -m tools.d2_segment dorm_<date> --min-face 24`, then read the face width per clip. Pass: walker faces 55 px or more in at least 30 % of the frames; then `tools.evaluate_d2_pilot` and `scripts/d2_entry_level.py` (change the session folder at the top) for TAR at FAR and AUC.
+5. **Compare with tonight** (VGA, 22-53 px, AUC 0.71 frame / 0.735 entry, TAR 0.40 at FAR 0.066 at 0.45). With three members the result is still a pilot, not T1.
+Not needed for this test: the robot, the tower.
+
 ## Needs the three members (do first while all are available)
 1. Person frames at 1.2, 1.8 and 2.4 m from several different people (experiment A validation; needs more than one person; frames stay local).
 2. A full T2 run with a second person walking in: the queue and the lock, with HNHL and KR watching the laptop (the ESP32 handshake at the sweet spot, then the walk-through).
