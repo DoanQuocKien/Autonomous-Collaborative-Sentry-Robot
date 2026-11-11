@@ -38,8 +38,10 @@ def range_from_area(area, area0, range0):
     return range0 * math.sqrt(area0 / area)
 
 
-def next_action(bearing_deg, range_m, stand_off_m, tol_deg):
-    """-> 'done' | 'turn_left' | 'turn_right' | 'drive'. Bearing positive = door to the LEFT."""
+def next_action(bearing_deg, range_m, stand_off_m, tol_deg, aim_offset_deg=0.0):
+    """-> 'done' | 'turn_left' | 'turn_right' | 'drive'. Bearing positive = door to the LEFT. aim_offset_deg: the bearing treated as "centred" (feed-forward for a known veer: the robot veered
+    left about 5.5 deg per 0.6 s burst on 2026-11-11, which moves the door to the right, so +2.75 centres the door after the burst)."""
+    bearing_deg -= aim_offset_deg
     if range_m <= stand_off_m:
         return "done"
     if bearing_deg > tol_deg:
@@ -56,7 +58,8 @@ def main():
     ap.add_argument("--entrance", required=True)
     ap.add_argument("--door-range-m", type=float, required=True, help="tape distance from the robot to the door NOW (calibrates the area scale)")
     ap.add_argument("--stand-off", type=float, default=2.0)
-    ap.add_argument("--center-tol-deg", type=float, default=4.0)
+    ap.add_argument("--center-tol-deg", type=float, default=8.0, help="drive when the door bearing is within +/- this of the aim (the shortest turn pulse turns about 14 deg: a window under about 7 makes the robot hunt, see classroom_1111_pm)")
+    ap.add_argument("--aim-offset-deg", type=float, default=0.0, help="bearing treated as centred (feed-forward for a known left veer: +2.75 on the classroom tile, 2026-11-11)")
     ap.add_argument("--drive-v", type=float, default=0.85)
     ap.add_argument("--burst-s", type=float, default=0.6)
     ap.add_argument("--spin-s", type=float, default=0.2, help="turn pulse for a bearing error over 12 deg")
@@ -77,7 +80,7 @@ def main():
     ap.add_argument("--dry-run", action="store_true", help="measure only, no commands")
     ap.add_argument("--out", default="data/approach")
     a = ap.parse_args()
-    if not (1.5 <= a.stand_off <= 3.0 and a.door_range_m > a.stand_off - 0.5 and 0.3 <= a.drive_v <= 1.0 and 0.1 <= a.burst_s <= 1.0 and 0.05 <= a.small_spin_s <= a.spin_s <= 0.5 and 1 <= a.center_tol_deg <= 15):
+    if not (1.5 <= a.stand_off <= 3.0 and a.door_range_m > a.stand_off - 0.5 and 0.3 <= a.drive_v <= 1.0 and 0.1 <= a.burst_s <= 1.0 and 0.05 <= a.small_spin_s <= a.spin_s <= 0.5 and 1 <= a.center_tol_deg <= 15 and abs(a.aim_offset_deg) <= 8):
         raise SystemExit("ABORT: argument out of its safe range")
 
     from sentry.config import load
@@ -184,7 +187,7 @@ def main():
                 area0 = area
                 print("first sighting: area %.0f px2 taken as %.2f m" % (area0, a.door_range_m), flush=True)
             rng = range_from_area(area, area0, a.door_range_m)
-            act = next_action(bearing, rng, a.stand_off, a.center_tol_deg)
+            act = next_action(bearing, rng, a.stand_off, a.center_tol_deg, a.aim_offset_deg)
             if act == "drive" and ahead is not None and ahead < a.stop_range:
                 act, end = "done", "board ahead %.2f m" % ahead
             rows.append(dict(step=step, action=act, bearing_deg=round(bearing, 1), range_m=round(rng, 2), frames=n, area_px2=round(area), board_ahead_m=None if ahead is None else round(ahead, 2)))
@@ -202,7 +205,7 @@ def main():
                     break
                 command(a.drive_v, 0.0, a.burst_s)
             else:
-                command(0.0, SPIN_W if act == "turn_left" else -SPIN_W, a.spin_s if abs(bearing) > 12 else a.small_spin_s)
+                command(0.0, SPIN_W if act == "turn_left" else -SPIN_W, a.spin_s if abs(bearing - a.aim_offset_deg) > 16 else a.small_spin_s)
         summary = dict(end_reason=end, steps=len(rows), bursts=bursts, last_range_est_m=rows[-1].get("range_m") if rows else None, door_range_m_input=a.door_range_m, stand_off_m=a.stand_off)
     finally:
         try:

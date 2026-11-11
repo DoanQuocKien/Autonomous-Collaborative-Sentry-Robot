@@ -68,7 +68,11 @@ def auc_protocol(emb):
                 for q in qs:
                     sc = {k: float(q @ t) for k, t in tmpl.items()}
                     (imp if m == stranger else gen).append(max(sc.values()) if m == stranger else sc[m])
-        res[level] = dict(auc=round(float(np.mean([g > i for g in gen for i in imp])), 3) if gen and imp else None, n_genuine=len(gen), n_impostor=len(imp))
+        def tar_at(far):                                  # TAR at the lowest threshold whose empirical FAR is <= far (impostor scores = best score of the stranger's queries)
+            thr = np.quantile(imp, 1 - far)
+            return round(float(np.mean(np.array(gen) > thr)), 3)
+        res[level] = dict(auc=round(float(np.mean([g > i for g in gen for i in imp])), 3) if gen and imp else None, n_genuine=len(gen), n_impostor=len(imp),
+                          tar_at_far_5pct=tar_at(0.05) if imp else None, tar_at_far_1pct=tar_at(0.01) if imp else None, impostor_p99=round(float(np.quantile(imp, 0.99)), 3) if imp else None)
     return res
 
 
