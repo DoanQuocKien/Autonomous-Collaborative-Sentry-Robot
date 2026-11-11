@@ -48,6 +48,34 @@ def seg_components(model_pred, geom, frame, min_area):
     return out
 
 
+def free_space_segments(pred, geom, max_range=2.5, min_cols=6):
+    """Free-space boundary: from the bottom of each column go up while the model says GROUND; the first non-ground row is the contact of whatever stands there (a chair, a bag, a wall; a mirror image
+    of it is ground and does not count). Runs of at least min_cols neighbouring columns whose boundary lies within max_range form one segment, represented by the point nearest to the robot.
+    -> [(forward_m, left_m)]. Needs no obstacle class: this is the reflection-robust output of the ground mask."""
+    h, w = pred.shape
+    ground = pred == 1
+    pts = []
+    for u in range(0, w, 2):
+        col = ground[:, u]
+        if not col[h - 1]:
+            pts.append(None)
+            continue
+        v = h - 1
+        while v > 0 and col[v - 1]:
+            v -= 1
+        gp = geom.ground_point(float(u), float(v)) if v > 4 else None
+        pts.append((gp.forward_m, gp.left_m) if gp is not None and gp.forward_m <= max_range else None)
+    segs, run = [], []
+    for p in pts + [None]:
+        if p is not None:
+            run.append(p)
+        else:
+            if len(run) >= min_cols:
+                segs.append(min(run, key=lambda q: q[0]))
+            run = []
+    return segs
+
+
 def configured_components(det, frame, floor):
     res = det(frame, time.time(), mode="explore", floor_type=floor)
     return [(o.ground.forward_m, o.ground.left_m) for o in res.obstacles if o.ground is not None]
@@ -78,6 +106,8 @@ def judge_set(frames, objects, comp_fn):
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--model", choices=("seg", "configured"), required=True)
+    ap.add_argument("--output", choices=("obstacle", "freespace"), default="obstacle", help="seg: the obstacle class (small objects) or the free-space boundary of the ground mask (any object, reflection-robust)")
+    ap.add_argument("--max-range", type=float, default=2.5, help="freespace: boundary points farther than this are not obstacles for the stop")
     ap.add_argument("--weights", default=None)
     ap.add_argument("--tag", required=True)
     ap.add_argument("--min-area", type=int, default=60, help="smallest obstacle component, pixels at the model input (rectified 640x480)")
@@ -96,7 +126,10 @@ def main():
             big = cv2.resize(rect, None, fx=a.scale, fy=a.scale, interpolation=cv2.INTER_LINEAR) if a.scale != 1.0 else rect
             p = predict(model, big)
             return cv2.resize(p, (rect.shape[1], rect.shape[0]), interpolation=cv2.INTER_NEAREST) if a.scale != 1.0 else p
-        comp_fn = lambda f: seg_components(mp, geom, f, a.min_area)
+        if a.output == "freespace":
+            comp_fn = lambda f: free_space_segments(mp(geom.undistort(f)), geom, a.max_range)
+        else:
+            comp_fn = lambda f: seg_components(mp, geom, f, a.min_area)
     else:
         from sentry.perception.obstacle import ObstacleDetector
         det = ObstacleDetector.from_config(camera_pose_path=str(ROOT / "calib" / "camera_pose_classroom_1015.json"), floor_type="glossy")
@@ -121,7 +154,7 @@ def main():
     f50 = [r for r in rows if r[2] >= 0.5]
     err = [abs(r[3]) for r in f50 if r[3] is not None]
     chairs = [r for r in rows if r[1]["label"] == "chair"]
-    summary = dict(model=a.model, weights=a.weights, objects=len(rows), found_in_half_the_frames=len(f50), found_fraction_overall=round(float(np.mean([r[2] for r in rows])), 3),
+    summary = dict(model=a.model, output=a.output, max_range=a.max_range, weights=a.weights, objects=len(rows), found_in_half_the_frames=len(f50), found_fraction_overall=round(float(np.mean([r[2] for r in rows])), 3),
                    median_abs_error_m_of_found=round(float(np.median(err)), 3) if err else None, within_0p15=sum(1 for e in err if e <= 0.15), within_0p30=sum(1 for e in err if e <= 0.30),
                    chairs=len(chairs), chairs_found_in_half_the_frames=sum(1 for r in chairs if r[2] >= 0.5), gates=dict(forward_m=GATE_FWD, left_m=GATE_LEFT), min_area=a.min_area, scale=a.scale, every=a.every,
                    date=time.strftime("%Y-%m-%d %H:%M"))
