@@ -14,6 +14,7 @@ import argparse
 import json
 import math
 import os
+import subprocess
 import threading
 import time
 from pathlib import Path
@@ -117,6 +118,7 @@ def main():
     ap.add_argument("--password", default=os.environ.get("JETBOT_PASSWORD"))
     ap.add_argument("--side", choices=("right", "left"), default="right", help="baseline direction ACROSS the line of sight, as seen when facing the door: the robot turns to it (shortest way) and drives")
     ap.add_argument("--turn-deg", type=float, default=None, help="override: turn by this many degrees (side decides left or right) instead of computing the turn from the door bearing")
+    ap.add_argument("--preview-s", type=float, default=4.0, help="after scan 1 the plan (turn and drive) is spoken and the robot waits this long with the motors off: release R1 to abort (0 = no pause)")
     ap.add_argument("--baseline-s", type=float, default=5.5, help="forward drive time (about 0.22 m/s at v 0.55 on 2026-11-11: 5.5 s = 1.2 m)")
     ap.add_argument("--drive-v", type=float, default=0.55)
     ap.add_argument("--stop-range", type=float, default=0.8, help="stop driving when a board within 30 deg of straight ahead is closer than this (m)")
@@ -133,7 +135,7 @@ def main():
     a = ap.parse_args()
     if not a.dry_run and not a.path_clear:
         raise SystemExit("ABORT: the robot spins and DRIVES about 1.2 m: add --path-clear to confirm that the floor is clear (0.3 m around the robot and at least 2 m in every direction it may drive; the only obstacle check is a board straight ahead, a chair is not seen)")
-    if not (0 < a.spin_s <= 0.5 and 0 < a.hold <= 5 and (a.turn_deg is None or 0 <= a.turn_deg <= 180) and 0 < a.baseline_s <= 10 and 0.3 <= a.drive_v <= 1.0 and 1.5 <= a.stand_off <= 3.0):
+    if not (0 < a.spin_s <= 0.5 and 0 < a.hold <= 5 and (a.turn_deg is None or 0 <= a.turn_deg <= 180) and 0 < a.baseline_s <= 10 and 0 <= a.preview_s <= 15 and 0.3 <= a.drive_v <= 1.0 and 1.5 <= a.stand_off <= 3.0):
         raise SystemExit("ABORT: argument out of its safe range")
 
     from sentry.config import load
@@ -170,6 +172,24 @@ def main():
                 if attempt == 1:
                     raise
                 link["ssh"] = jetbot_ssh.connect(a.ip, a.user, password)
+
+    def preview(turn_signed_deg):
+        """Say what the robot is about to do and wait a.preview_s with the motors off; releasing R1 in that time aborts the run (the operator cannot see the plan otherwise: the direction is computed from the door bearing after scan 1)."""
+        metres = a.baseline_s * 0.21                                  # about 0.21 m/s at v 0.85 on the classroom tile (2026-11-12, one run: 0.75 m in 3.5 s)
+        text = "Turning %s %d degrees, then driving about %.1f metres. Release R1 now to stop." % ("left" if turn_signed_deg > 0 else "right", round(abs(turn_signed_deg)), metres)
+        print("PLAN: " + text, flush=True)
+        if a.preview_s <= 0:
+            return
+        try:
+            subprocess.Popen(["powershell", "-NoProfile", "-Command", "Add-Type -AssemblyName System.Speech; (New-Object System.Speech.Synthesis.SpeechSynthesizer).Speak('%s')" % text],
+                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except Exception:
+            winsound.Beep(900, 600)                                    # no speech: a long beep announces the pause
+        t_end = time.time() + a.preview_s
+        while time.time() < t_end:
+            if not r1_held():
+                raise SystemExit("STOP: R1 released during the preview: nothing moved after scan 1")
+            time.sleep(0.3)
 
     def sample():
         """-> ({marker: (bearing, range, fwd, left, n)}, [(door bearing, inliers)]) medians over a few frames."""
@@ -293,8 +313,10 @@ def main():
             t = baseline_turn_deg(s1["door_bearing_deg"], math.degrees(h1), a.side)
             print("door bearing %.1f deg, robot heading %.1f deg: turning %s by %.0f deg to drive across the line of sight (baseline to the %s)" % (s1["door_bearing_deg"], math.degrees(h1), "left" if t > 0 else "right", abs(t), a.side), flush=True)
             result["turn_deg_signed"] = round(t, 1)
+            preview(t)
             turn_side(abs(t), 1 if t > 0 else -1)
         else:
+            preview(a.turn_deg if a.side == "left" else -a.turn_deg)
             turn_side(a.turn_deg, 1 if a.side == "left" else -1)
         drive()
         time.sleep(1.5)
