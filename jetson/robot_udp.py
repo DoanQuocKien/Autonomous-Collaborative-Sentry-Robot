@@ -5,7 +5,7 @@ Logic is unit-tested on the laptop (tests/test_controller.py); motors and the e-
 the robot (docs/JetBot Notes.md). `aplay` is NOT yet tested on the real robot.
 Try it without touching hardware:   python3 jetson/robot_udp.py --dry-run
 
-Safety: motors stop if no valid command arrives for --watchdog seconds, on exit, on any exception, and whenever
+Safety: motors stop if no valid command arrives for --watchdog seconds, on exit, on SIGTERM (a handler turns it into an exit so the finally runs), on any exception, and whenever
 jetson/estop.py is not running, not armed, or R1 is released. --max-speed caps every wheel value; a wheel value below
 min_pwm after the cap is sent as 0 (common.mixing.deadzone). Out-of-range settings refuse to start.
 """
@@ -13,6 +13,7 @@ import argparse
 import json
 import os
 import select
+import signal
 import socket
 import subprocess
 import sys
@@ -189,6 +190,10 @@ def main():
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.bind(("0.0.0.0", args.port))
+
+    def _terminate(signum, frame):
+        raise SystemExit(0)                      # audit 2026-11-12: the default SIGTERM action kills Python WITHOUT running the finally below, and the motor driver keeps its last PWM
+    signal.signal(signal.SIGTERM, _terminate)    # systemd stops this service with `pkill -f jetson/robot_udp.py` (SIGTERM) on every stop and restart
     try:
         apply(("motors", (0.0, 0.0)))
         was = None
@@ -213,7 +218,12 @@ def main():
             if action:
                 apply(action)
     finally:
-        apply(("motors", (0.0, 0.0)))
+        for attempt in (1, 2):                   # a single I2C error must not leave the last PWM on the wheels
+            try:
+                apply(("motors", (0.0, 0.0)))
+                break
+            except Exception as e:               # noqa: BLE001
+                print("%s stop attempt %d failed: %r" % (stamp(), attempt, e), flush=True)
 
 
 if __name__ == "__main__":
