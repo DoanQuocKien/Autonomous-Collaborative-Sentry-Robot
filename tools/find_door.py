@@ -65,6 +65,12 @@ def max_baseline_s(clear_radius_m):
     return max(0.0, (clear_radius_m - CLEAR_MARGIN_M) / DRIVE_SPEED_M_S)
 
 
+def door_vs_drive_deg(door_deg, heading_deg, turn_signed_deg):
+    """Angle (degrees, -180..180) between the direction to the door and the direction the robot will drive, both in scan 1's start frame (left positive). Near 0 or +/-180 the drive is along the line of
+    sight (a useless baseline: the two door rays are nearly parallel); +/-90 is ideal."""
+    return (door_deg - (heading_deg + turn_signed_deg) + 180.0) % 360.0 - 180.0
+
+
 def summarise(boards, doors):
     """-> scan_boards-style summary dict (medians per board in the scan's start frame, door bearing = the dominant cluster of sightings, raw sightings kept)."""
     bearing, n, total, second = dominant_bearing(doors)
@@ -342,7 +348,12 @@ def main():
             preview(t)
             turn_side(abs(t), 1 if t > 0 else -1)
         else:
-            preview(a.turn_deg if a.side == "left" else -a.turn_deg)
+            turn_signed = a.turn_deg if a.side == "left" else -a.turn_deg
+            ang = door_vs_drive_deg(s1["door_bearing_deg"], math.degrees(h1), turn_signed)
+            print("door %.1f deg from the drive direction (needs 45-135 deg either side: sideways to the line of sight)" % ang, flush=True)
+            if not 45.0 <= abs(ang) <= 135.0:
+                raise SystemExit("STOP before moving: the door is %.0f deg from the drive direction; a drive along the line of sight gives parallel rays. Turn the robot so the door is about 90 deg to one side (or use --side without --turn-deg)." % ang)
+            preview(turn_signed)
             turn_side(a.turn_deg, 1 if a.side == "left" else -1)
         drive()
         time.sleep(1.5)
