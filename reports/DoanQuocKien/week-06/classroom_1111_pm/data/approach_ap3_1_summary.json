@@ -1,0 +1,11 @@
+{
+ "end_reason": "stand-off reached",
+ "steps": 6,
+ "bursts": 4,
+ "last_range_est_m": 1.83,
+ "door_range_m_input": 2.63,
+ "stand_off_m": 2.0,
+ "camera_pose_file": "calib/camera_pose_self_1112_1.json",
+ "battery_v_start": 12.12,
+ "date": "2026-11-12 09:40"
+}

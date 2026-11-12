@@ -41,7 +41,7 @@ def polygon_area(quad):
 
 def range_from_area(area, area0, range0, exponent=2.0):
     """Range at which the outline has `area`, given `area0` at `range0` (area ~ range^-exponent; 2 for an ideal flat target). On 2026-11-11/12 the door outline grew more slowly than 1/range^2
-    (exponent about 1.55-1.7 from two taped runs, probably because the matched outline is cut by the frame edges as the door fills the view): fitted on those two runs, not yet validated."""
+    (exponent about 1.55-1.7 from two taped runs, probably because the matched outline is cut by the frame edges as the door fills the view): fitted on those two runs, then confirmed on a third (0.00 m error); one door, one floor."""
     if area <= 0 or area0 <= 0 or exponent <= 0:
         raise ValueError("areas and the exponent must be positive")
     return range0 * (area0 / area) ** (1.0 / exponent)
@@ -67,7 +67,7 @@ def main():
     ap.add_argument("--entrance", required=True)
     ap.add_argument("--door-range-m", type=float, required=True, help="tape distance from the robot to the door NOW (calibrates the area scale)")
     ap.add_argument("--stand-off", type=float, default=2.0)
-    ap.add_argument("--area-exponent", type=float, default=2.0, help="outline area ~ range^-exponent (2 = ideal; about 1.6 fitted on two taped runs, to be validated)")
+    ap.add_argument("--area-exponent", type=float, default=1.6, help="outline area ~ range^-exponent (2 = ideal flat target). 1.6: fitted on two taped runs (1.55-1.7) and confirmed on a third from another start (error 0.00 m): this door, this floor, starts 2.6-3.4 m")
     ap.add_argument("--center-tol-deg", type=float, default=8.0, help="drive when the door bearing is within +/- this of the aim (the shortest turn pulse turns about 14 deg: a window under about 7 makes the robot hunt, see classroom_1111_pm)")
     ap.add_argument("--aim-offset-deg", type=float, default=0.0, help="bearing treated as centred (feed-forward for a known left veer: +2.75 on the classroom tile, 2026-11-11)")
     ap.add_argument("--drive-v", type=float, default=0.85)
