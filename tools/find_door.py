@@ -188,11 +188,12 @@ def main():
         return {m: tuple(float(np.median([v[i] for v in vs])) for i in range(4)) + (len(vs),) for m, vs in per.items()}, door
 
     def command(v, w, seconds):
+        f = rx.read(timeout=MAX_VIDEO_AGE_S)                         # liveness: a frame must arrive now (the age of an older frame would include our own processing time)
+        if f is None or not video_is_fresh(f.t_rx, time.perf_counter()):
+            raise SystemExit("STOP: no fresh robot video within %.1f s before a command: no command sent" % MAX_VIDEO_AGE_S)
+        video["last_rx"] = f.t_rx
         t_end = time.time() + seconds
         while time.time() < t_end:
-            if not video_is_fresh(video["last_rx"], time.perf_counter()):
-                sender.send(0.0, 0.0)
-                raise SystemExit("STOP: the robot video went stale before a command (limit %.1f s): no command sent" % MAX_VIDEO_AGE_S)
             sender.send(v, w)
             time.sleep(1 / 30.0)
         sender.send(0.0, 0.0)

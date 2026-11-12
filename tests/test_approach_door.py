@@ -25,3 +25,10 @@ def test_wider_window_and_aim_offset():
 def test_video_freshness():
     assert video_is_fresh(10.0, 10.4) and not video_is_fresh(10.0, 10.6)
     assert not video_is_fresh(None, 10.0) and not video_is_fresh(11.0, 10.0)        # no frame yet, or a clock that went backwards
+
+
+def test_area_exponent():
+    assert range_from_area(4.0, 1.0, 3.0, exponent=2.0) == pytest.approx(1.5)
+    assert range_from_area(2.808, 1.0, 3.13, exponent=1.6) == pytest.approx(1.64, abs=0.01)      # the 2026-11-12 run: tape 1.62 m
+    with pytest.raises(ValueError):
+        range_from_area(1.0, 1.0, 3.0, exponent=0)

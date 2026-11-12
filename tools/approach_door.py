@@ -39,11 +39,12 @@ def polygon_area(quad):
     return abs(a) / 2.0
 
 
-def range_from_area(area, area0, range0):
-    """Range at which the outline has `area`, given `area0` at `range0` (area ~ 1/range^2)."""
-    if area <= 0 or area0 <= 0:
-        raise ValueError("areas must be positive")
-    return range0 * math.sqrt(area0 / area)
+def range_from_area(area, area0, range0, exponent=2.0):
+    """Range at which the outline has `area`, given `area0` at `range0` (area ~ range^-exponent; 2 for an ideal flat target). On 2026-11-11/12 the door outline grew more slowly than 1/range^2
+    (exponent about 1.55-1.7 from two taped runs, probably because the matched outline is cut by the frame edges as the door fills the view): fitted on those two runs, not yet validated."""
+    if area <= 0 or area0 <= 0 or exponent <= 0:
+        raise ValueError("areas and the exponent must be positive")
+    return range0 * (area0 / area) ** (1.0 / exponent)
 
 
 def next_action(bearing_deg, range_m, stand_off_m, tol_deg, aim_offset_deg=0.0):
@@ -66,6 +67,7 @@ def main():
     ap.add_argument("--entrance", required=True)
     ap.add_argument("--door-range-m", type=float, required=True, help="tape distance from the robot to the door NOW (calibrates the area scale)")
     ap.add_argument("--stand-off", type=float, default=2.0)
+    ap.add_argument("--area-exponent", type=float, default=2.0, help="outline area ~ range^-exponent (2 = ideal; about 1.6 fitted on two taped runs, to be validated)")
     ap.add_argument("--center-tol-deg", type=float, default=8.0, help="drive when the door bearing is within +/- this of the aim (the shortest turn pulse turns about 14 deg: a window under about 7 makes the robot hunt, see classroom_1111_pm)")
     ap.add_argument("--aim-offset-deg", type=float, default=0.0, help="bearing treated as centred (feed-forward for a known left veer: +2.75 on the classroom tile, 2026-11-11)")
     ap.add_argument("--drive-v", type=float, default=0.85)
@@ -88,7 +90,7 @@ def main():
     ap.add_argument("--dry-run", action="store_true", help="measure only, no commands")
     ap.add_argument("--out", default="data/approach")
     a = ap.parse_args()
-    if not (1.5 <= a.stand_off <= 3.0 and a.door_range_m > a.stand_off - 0.5 and 0.3 <= a.drive_v <= 1.0 and 0.1 <= a.burst_s <= 1.0 and 0.05 <= a.small_spin_s <= a.spin_s <= 0.5 and 1 <= a.center_tol_deg <= 15 and abs(a.aim_offset_deg) <= 8):
+    if not (1.5 <= a.stand_off <= 3.0 and a.door_range_m > a.stand_off - 0.5 and 1.0 <= a.area_exponent <= 2.5 and 0.3 <= a.drive_v <= 1.0 and 0.1 <= a.burst_s <= 1.0 and 0.05 <= a.small_spin_s <= a.spin_s <= 0.5 and 1 <= a.center_tol_deg <= 15 and abs(a.aim_offset_deg) <= 8):
         raise SystemExit("ABORT: argument out of its safe range")
 
     from sentry.config import load
@@ -150,11 +152,12 @@ def main():
         return (float(np.median(b)) if b else None, float(np.median(ar)) if ar else None, n, min(ahead) if ahead else None)
 
     def command(v, w, seconds):
+        f = rx.read(timeout=MAX_VIDEO_AGE_S)                         # liveness: a frame must arrive now (the age of an older frame would include our own processing time)
+        if f is None or not video_is_fresh(f.t_rx, time.perf_counter()):
+            raise SystemExit("STOP: no fresh robot video within %.1f s before a command: no command sent" % MAX_VIDEO_AGE_S)
+        video["last_rx"] = f.t_rx
         t_end = time.time() + seconds
         while time.time() < t_end:
-            if not video_is_fresh(video["last_rx"], time.perf_counter()):
-                sender.send(0.0, 0.0)
-                raise SystemExit("STOP: the robot video went stale (%.1f s) before a command: no command sent" % MAX_VIDEO_AGE_S)
             sender.send(v, w)
             time.sleep(1 / 30.0)
         sender.send(0.0, 0.0)
@@ -201,7 +204,7 @@ def main():
             if area0 is None:
                 area0 = area
                 print("first sighting: area %.0f px2 taken as %.2f m" % (area0, a.door_range_m), flush=True)
-            rng = range_from_area(area, area0, a.door_range_m)
+            rng = range_from_area(area, area0, a.door_range_m, a.area_exponent)
             act = next_action(bearing, rng, a.stand_off, a.center_tol_deg, a.aim_offset_deg)
             if act == "drive" and ahead is not None and ahead < a.stop_range:
                 act, end = "done", "board ahead %.2f m" % ahead
