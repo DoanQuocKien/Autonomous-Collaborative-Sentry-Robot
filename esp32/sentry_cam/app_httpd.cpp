@@ -23,6 +23,42 @@
 #include "lwip/sockets.h"  // TCP_NODELAY for the stream socket
 #include "camera_index.h"
 #include "board_config.h"
+#include "esp_heap_caps.h"
+#include "esp_wifi.h"
+
+// Stream diagnostics, read by GET /stats on port 80 (counters only; max_* are reset at each poll)
+static volatile uint32_t st_frames, st_nullfb, st_sendfail, st_streams, st_maxget_ms, st_maxsend_ms;
+static volatile uint64_t st_bytes, st_get_us, st_send_us;
+
+// Larger TCP send buffer for the stream socket at run time (the core's lwIP is precompiled with TCP_SND_BUF 5760 = 4 MSS).
+#include "lwip/tcpip.h"
+#include "lwip/tcp.h"
+#include "lwip/api.h"
+#include "freertos/semphr.h"
+extern "C" void *lwip_socket_dbg_get_socket(int fd);  // lwIP 2.1: returns struct lwip_sock*, whose first member is struct netconn *conn (sockets_priv.h lacks extern "C")
+typedef struct {
+  int fd;
+  int bytes;
+  SemaphoreHandle_t done;
+} sndbuf_req_t;
+static volatile int st_sndbuf;  // what the last stream got
+static void sndbuf_cb(void *arg) {  // runs in the lwIP thread (no core locking in this build), so nothing else touches the pcb meanwhile
+  sndbuf_req_t *r = (sndbuf_req_t *)arg;
+  void *ls = lwip_socket_dbg_get_socket(r->fd);
+  struct netconn *c = ls ? *(struct netconn **)ls : NULL;
+  if (c && c->pcb.tcp && r->bytes > TCP_SND_BUF) {
+    c->pcb.tcp->snd_buf += r->bytes - TCP_SND_BUF;  // ponytail: TCP_SND_QUEUELEN (16 pbufs, compiled in) still caps the queue; beyond it tcp_write returns ERR_MEM and the netconn waits for ACKs
+    c->pcb.tcp->ssthresh = r->bytes;
+    st_sndbuf = r->bytes;
+  }
+  xSemaphoreGive(r->done);
+}
+static void stream_set_sndbuf(int fd, int bytes) {
+  sndbuf_req_t r = {fd, bytes, xSemaphoreCreateBinary()};
+  if (!r.done) return;
+  if (tcpip_callback(sndbuf_cb, &r) == ERR_OK) xSemaphoreTake(r.done, portMAX_DELAY);
+  vSemaphoreDelete(r.done);
+}
 
 #if defined(ARDUINO_ARCH_ESP32) && defined(CONFIG_ARDUHAL_ESP_LOG)
 #include "esp32-hal-log.h"
@@ -232,6 +268,18 @@ static esp_err_t stream_handler(httpd_req_t *req) {
   }
 
   httpd_resp_set_hdr(req, "X-Framerate", "60");
+  st_streams++;
+#ifndef STREAM_SNDBUF
+#define STREAM_SNDBUF 0  // bytes; 0 = stock 5760. /stream?sndbuf=23040 overrides per connection
+#endif
+  int sndbuf = STREAM_SNDBUF;
+  {
+    char q[40], v[8];
+    if (httpd_req_get_url_query_str(req, q, sizeof(q)) == ESP_OK && httpd_query_key_value(q, "sndbuf", v, sizeof(v)) == ESP_OK) sndbuf = atoi(v);
+  }
+  if (sndbuf > 4 * TCP_SND_BUF) sndbuf = 4 * TCP_SND_BUF;
+  st_sndbuf = 0;
+  if (sndbuf > 0) stream_set_sndbuf(httpd_req_to_sockfd(req), sndbuf);
 
   // 2026-10-26: each frame went out as three small chunks (boundary, part header, JPEG), each split into more small sends by the HTTP server, with
   // Nagle on: bursts and 0.3-0.8 s gaps (about 9 fps of a camera that does 25). Turn Nagle off and send boundary + part header as one chunk.
@@ -250,7 +298,10 @@ static esp_err_t stream_handler(httpd_req_t *req) {
 #endif
 
   while (true) {
+    int64_t t0 = esp_timer_get_time();
     fb = esp_camera_fb_get();
+    int64_t t1 = esp_timer_get_time();
+    if (!fb) st_nullfb++;
     if (!fb) {
       log_e("Camera capture failed");
       res = ESP_FAIL;
@@ -287,8 +338,16 @@ static esp_err_t stream_handler(httpd_req_t *req) {
       _jpg_buf = NULL;
     }
     if (res != ESP_OK) {
+      st_sendfail++;
       log_e("Send frame failed");
       break;
+    }
+    {
+      int64_t t2 = esp_timer_get_time();
+      uint32_t g = (t1 - t0) / 1000, sm = (t2 - t1) / 1000;
+      st_frames++; st_bytes += _jpg_buf_len; st_get_us += t1 - t0; st_send_us += t2 - t1;
+      if (g > st_maxget_ms) st_maxget_ms = g;
+      if (sm > st_maxsend_ms) st_maxsend_ms = sm;
     }
     int64_t fr_end = esp_timer_get_time();
 
@@ -659,6 +718,25 @@ static esp_err_t win_handler(httpd_req_t *req) {
   return httpd_resp_send(req, NULL, 0);
 }
 
+static esp_err_t stats_handler(httpd_req_t *req) {
+  char b[512];
+  wifi_ap_record_t ap = {};
+  esp_wifi_sta_get_ap_info(&ap);
+  int n = snprintf(
+    b, sizeof(b),
+    "{\"fw\":\"%s\",\"up_ms\":%llu,\"reset\":%d,\"frames\":%u,\"bytes\":%llu,\"get_us\":%llu,\"send_us\":%llu,\"max_get_ms\":%u,\"max_send_ms\":%u,"
+    "\"nullfb\":%u,\"sendfail\":%u,\"streams\":%u,\"heap\":%u,\"heap_min\":%u,\"heap_big\":%u,\"psram\":%u,\"rssi\":%d,\"temp_c\":%.1f,\"sndbuf\":%d}",
+    SENTRY_FW_VERSION, (unsigned long long)(esp_timer_get_time() / 1000), (int)esp_reset_reason(), (unsigned)st_frames, (unsigned long long)st_bytes,
+    (unsigned long long)st_get_us, (unsigned long long)st_send_us, (unsigned)st_maxget_ms, (unsigned)st_maxsend_ms, (unsigned)st_nullfb,
+    (unsigned)st_sendfail, (unsigned)st_streams, (unsigned)heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
+    (unsigned)heap_caps_get_minimum_free_size(MALLOC_CAP_INTERNAL), (unsigned)heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL),
+    (unsigned)heap_caps_get_free_size(MALLOC_CAP_SPIRAM), ap.rssi, temperatureRead(), (int)st_sndbuf
+  );
+  st_maxget_ms = st_maxsend_ms = 0;  // maxima are per poll interval
+  httpd_resp_set_type(req, "application/json");
+  return httpd_resp_send(req, b, n);
+}
+
 static esp_err_t index_handler(httpd_req_t *req) {
   httpd_resp_set_type(req, "text/html");
   httpd_resp_set_hdr(req, "Content-Encoding", "gzip");
@@ -824,6 +902,19 @@ void startCameraServer() {
 #endif
   };
 
+  httpd_uri_t stats_uri = {
+    .uri = "/stats",
+    .method = HTTP_GET,
+    .handler = stats_handler,
+    .user_ctx = NULL
+#ifdef CONFIG_HTTPD_WS_SUPPORT
+    ,
+    .is_websocket = true,
+    .handle_ws_control_frames = false,
+    .supported_subprotocol = NULL
+#endif
+  };
+
   ra_filter_init(&ra_filter, 20);
 
   log_i("Starting web server on port: '%u'", config.server_port);
@@ -833,6 +924,7 @@ void startCameraServer() {
     httpd_register_uri_handler(camera_httpd, &status_uri);
     httpd_register_uri_handler(camera_httpd, &capture_uri);
     httpd_register_uri_handler(camera_httpd, &bmp_uri);
+    httpd_register_uri_handler(camera_httpd, &stats_uri);
 
 #ifdef SENTRY_DEBUG_ENDPOINTS  // raw sensor registers, clock and PLL: anyone on the hotspot could reprogram the camera; build with -DSENTRY_DEBUG_ENDPOINTS to debug
     httpd_register_uri_handler(camera_httpd, &xclk_uri);

@@ -26,10 +26,21 @@ void setupLedFlash();
 #define XCLK_HZ 10000000  // camera clock. 20 MHz gave 1.1 fps over Wi-Fi (ESP32 ping 136 ms avg, 837 max), 10 MHz 9.4 fps (58 ms): the clock interferes with the radio (2026-10-26, one board, one AP, 15 s runs: 16 MHz 5.9, 12 MHz 6.6, 8 MHz 7.0 fps)
 #endif
 
+#ifndef STREAM_CROP
+#define STREAM_CROP 1  // 1 = native 640x480 window of the sensor (zoom 2.5x, face ~77 px at 2.1 m); 0 = full-field VGA (face ~31 px)
+#endif
+#ifndef CROP_X
+#define CROP_X 480  // window offset in full-array pixels (0..960, 0..720); centre = 480, 360. Aim where the faces pass: VGA coordinates x 2.5 - 320/240
+#endif
+#ifndef CROP_Y
+#define CROP_Y 360
+#endif
+
 void setup() {
   Serial.begin(115200);
   Serial.setDebugOutput(true);
   Serial.println();
+  Serial.printf("sentry_cam fw=%s reset=%d\n", SENTRY_FW_VERSION, (int)esp_reset_reason());
 
   camera_config_t config = {};  // was uninitialised stack memory
   config.ledc_channel = LEDC_CHANNEL_0;
@@ -72,15 +83,23 @@ void setup() {
   // camera init
   // 2026-10-26: on this board init failed with 0x105 (camera not detected) on some boots, mostly the first one after a flash. Power-cycle the sensor
   // first (PWDN high 200 ms) and retry; with this 13 of 13 boots found it (esp32/experiments/ov2640_rate). Cause not proven.
+  // 2026-11-12: after a self-restart (reset reason SW) init and the PID read succeeded but no frame ever came (fb_get NULL, /capture 500) until an RST
+  // pulse: so a try only counts when it delivers a frame, and each try power-cycles the sensor.
+  esp_err_t err = ESP_FAIL;
+  for (int k = 0; k < 5 && err != ESP_OK; k++) {
+    if (k) {
+      Serial.printf("Camera try %d failed (0x%x), retrying\n", k, err);
+      esp_camera_deinit();
+      delay(500);
+    }
 #if defined(PWDN_GPIO_NUM) && PWDN_GPIO_NUM >= 0
-  pinMode(PWDN_GPIO_NUM, OUTPUT); digitalWrite(PWDN_GPIO_NUM, HIGH); delay(200); digitalWrite(PWDN_GPIO_NUM, LOW); delay(100);
+    pinMode(PWDN_GPIO_NUM, OUTPUT); digitalWrite(PWDN_GPIO_NUM, HIGH); delay(200); digitalWrite(PWDN_GPIO_NUM, LOW); delay(100);
 #endif
-  esp_err_t err = esp_camera_init(&config);
-  for (int k = 0; k < 4 && err != ESP_OK; k++) {
-    Serial.printf("Camera init try %d failed (0x%x), retrying\n", k + 1, err);
-    esp_camera_deinit();
-    delay(500);
     err = esp_camera_init(&config);
+    if (err == ESP_OK) {
+      camera_fb_t *fb = esp_camera_fb_get();
+      if (fb) esp_camera_fb_return(fb); else err = ESP_ERR_TIMEOUT;
+    }
   }
   if (err != ESP_OK) {
     // Was `return`: setup() ended before Wi-Fi started, so a camera that was not detected on a cold boot left the board silent (no Wi-Fi, no server, nothing to
@@ -102,6 +121,16 @@ void setup() {
     Serial.printf("WARNING: sensor PID 0x%04x is not an OV2640 (0x26): hardware JPEG may be missing. A GC2145 (0x2145) needs esp32/tile_stream\n", s->id.PID);
   }
   s->set_framesize(s, config.frame_size);  // the web UI starts at VGA; the stock sketch dropped to QVGA here
+#if STREAM_CROP
+  if (s->id.PID == OV2640_PID) {
+    // Native 640x480 window from the 1600x1200 array (2.5x the pixels per face of full-field VGA, about 31 deg wide). The full-array readout runs at
+    // half the rate of the binned VGA one, so turn on the sensor's clock doubler (CLKRC bit 7) instead of raising XCLK: the XCLK pin at 20 MHz stalls
+    // the Wi-Fi for seconds (2026-11-12: 0.45 fps, sends of 2-7 s). Measured on the desk: 6.2 fps without the doubler, 10.3 with it.
+    s->set_res_raw(s, 0, 0, 0, 0, CROP_X, CROP_Y, 640, 480, 640, 480, false, false);
+    s->set_reg(s, 0x111, 0x80, 0x80);
+    Serial.printf("Crop 640x480 at (%d,%d) of 1600x1200, CLKRC doubler on\n", CROP_X, CROP_Y);
+  }
+#endif
 
 #if defined(CAMERA_MODEL_M5STACK_WIDE) || defined(CAMERA_MODEL_M5STACK_ESP32CAM)
   s->set_vflip(s, 1);
