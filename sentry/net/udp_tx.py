@@ -38,6 +38,7 @@ class UDPSender:
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self._socket.setblocking(False)
         self._last_attempt = None
+        self._last_was_zero = False
         self._closed = False
         self.seq = 0
         self.sent = 0
@@ -59,9 +60,13 @@ class UDPSender:
             raise RuntimeError("sender is closed")
         v, w = _command(v), _command(w)
         now = self._clock()
-        if self._last_attempt is not None and now - self._last_attempt < self.period_s:
+        stop = v == 0.0 and w == 0.0
+        # audit 2026-11-12: a stop must never be dropped by the 30 Hz limiter (send(0, 0) 20 ms after a command returned False and nothing was sent; 12 call sites stop this way).
+        # Only a repeated zero inside one period is skipped: it adds nothing.
+        if self._last_attempt is not None and now - self._last_attempt < self.period_s and not (stop and not self._last_was_zero):
             return False
         self._last_attempt = now
+        self._last_was_zero = stop
         return self._send(v, w)
 
     def stop(self):
@@ -69,6 +74,7 @@ class UDPSender:
         if self._closed:
             raise RuntimeError("sender is closed")
         self._last_attempt = self._clock()
+        self._last_was_zero = True
         return self._send(0.0, 0.0)
 
     def play(self, clip):

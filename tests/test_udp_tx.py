@@ -97,3 +97,18 @@ def test_play_sends_validated_audio_packet_and_shares_seq(sender):
         with pytest.raises(ValueError):
             tx.play(bad)
 
+
+
+def test_a_stop_is_never_dropped_by_the_rate_limiter(sender):
+    """Audit 2026-11-12: send(0, 0) 20 ms after a command used to return False and send nothing; 12 call sites stop that way."""
+    tx, sock, now = sender
+    assert tx.send(0.5, 0.0)
+    now[0] = 0.02                                   # inside the 33 ms period
+    assert tx.send(0.0, 0.0), "the stop must go out"
+    assert [p[0].get("v") for p in sock.packets] == [0.5, 0.0]
+    now[0] = 0.03                                   # a repeated zero inside one period adds nothing and is skipped
+    assert not tx.send(0.0, 0.0)
+    now[0] = 0.04
+    assert not tx.send(0.4, 0.0)                    # a motor command is still rate limited after a stop
+    now[0] = 0.07
+    assert tx.send(0.4, 0.0)
