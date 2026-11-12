@@ -25,6 +25,6 @@ def test_baseline_turn_is_across_the_line_of_sight_the_short_way():
 
 def test_clear_radius_rules():
     from tools.find_door import max_baseline_s, required_clear_radius_m
-    assert abs(required_clear_radius_m(5.5) - 1.755) < 1e-9 and abs(required_clear_radius_m(3.5) - 1.335) < 1e-9
-    assert abs(max_baseline_s(1.2) - (0.6 / 0.21)) < 1e-9 and max_baseline_s(0.5) == 0.0
+    assert abs(required_clear_radius_m(5.5) - (5.5 * 0.35 + 0.6)) < 1e-9 and required_clear_radius_m(5.5) > 2.5     # 1.9 m were driven in 5.6 s on 2026-11-12
+    assert abs(max_baseline_s(1.2) - (0.6 / 0.35)) < 1e-9 and max_baseline_s(0.5) == 0.0
     assert abs(required_clear_radius_m(max_baseline_s(2.0)) - 2.0) < 1e-9

@@ -51,7 +51,7 @@ def baseline_turn_deg(door_deg, heading_deg, side):
     return (target - heading_deg + 180.0) % 360.0 - 180.0
 
 
-DRIVE_SPEED_M_S = 0.21                                  # measured 2026-11-12 at v 0.85 on the classroom tile (0.75 m in 3.5 s, one run)
+DRIVE_SPEED_M_S = 0.35                                  # worst case seen at v 0.85 on the classroom tile: 0.34 m/s on 2026-11-12 (1.9 m in 5.6 s, battery 11.64 V); 0.21 m/s in an earlier run (0.75 m in 3.5 s): the speed varies with battery and floor
 CLEAR_MARGIN_M = 0.6                                    # veer arc (up to 25 deg/m), the robot's own size and the stopping distance
 
 
@@ -198,7 +198,7 @@ def main():
 
     def preview(turn_signed_deg):
         """Say what the robot is about to do and wait a.preview_s with the motors off; releasing R1 in that time aborts the run (the operator cannot see the plan otherwise: the direction is computed from the door bearing after scan 1)."""
-        metres = a.baseline_s * 0.21                                  # about 0.21 m/s at v 0.85 on the classroom tile (2026-11-12, one run: 0.75 m in 3.5 s)
+        metres = a.baseline_s * DRIVE_SPEED_M_S                      # the worst case speed seen (the real drive can be 40 % shorter)
         if abs(turn_signed_deg) < 1:
             text = "Driving straight ahead about %.1f metres. Release R1 now to stop." % metres
         else:
