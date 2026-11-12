@@ -7,6 +7,7 @@ import argparse
 import json
 import re
 import sys
+import threading
 import time
 
 import paramiko
@@ -80,7 +81,7 @@ try:
             time.sleep(1 / 30.0)
             if not beeped and time.time() - t0 >= a.release_after:
                 beeped = True
-                winsound.Beep(1600, 300)                                # release R1 (or press another button) now; the stream goes on for 4 more seconds (commands must be ignored)
+                threading.Thread(target=winsound.Beep, args=(1600, 300), daemon=True).start()      # NOT blocking: a 300 ms gap in the stream trips the robot's 300 ms watchdog (audit 2026-11-12); release R1 (or press another button) now; the stream goes on for 4 more seconds (commands must be ignored)
         sender.send(0.0, 0.0)
         time.sleep(1.0)
         e_lines, r_lines = new_lines("/home/jetbot/sentry/estop.log", o_e), new_lines("/home/jetbot/sentry/robot_udp.log", o_r)
