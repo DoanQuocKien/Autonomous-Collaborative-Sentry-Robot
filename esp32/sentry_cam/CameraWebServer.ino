@@ -109,6 +109,12 @@ void setup() {
     ESP.restart();
   }
 
+#ifndef XCLK_DRIVE
+#define XCLK_DRIVE 0  // GPIO0 (camera clock) drive strength 0..3, stock 2; weaker = slower edges = fewer harmonics near 2.4 GHz.
+                      // 2026-11-12, XCLK pin at 20 MHz as a stress test, 60 s each: drive 2 -> 1.0 fps (sends stalled 1.8-6 s), drive 0 -> 12.4 fps, sends <= 96 ms
+#endif
+  gpio_set_drive_capability((gpio_num_t)XCLK_GPIO_NUM, (gpio_drive_cap_t)XCLK_DRIVE);
+
   sensor_t *s = esp_camera_sensor_get();
   Serial.printf("SENSOR PID=0x%04x VER=0x%02x MIDH=0x%02x MIDL=0x%02x addr=0x%02x\n", s->id.PID, s->id.VER, s->id.MIDH, s->id.MIDL, s->slv_addr);
   // initial sensors are flipped vertically and colors are a bit saturated

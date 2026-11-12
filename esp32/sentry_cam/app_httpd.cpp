@@ -24,6 +24,7 @@
 #include "camera_index.h"
 #include "board_config.h"
 #include "esp_heap_caps.h"
+#include "driver/gpio.h"
 #include "esp_wifi.h"
 
 // Stream diagnostics, read by GET /stats on port 80 (counters only; max_* are reset at each poll)
@@ -472,7 +473,9 @@ static esp_err_t cmd_handler(httpd_req_t *req) {
     }
   }
 #endif
-  else {
+  else if (!strcmp(variable, "xclk_drive")) {
+    res = gpio_set_drive_capability((gpio_num_t)XCLK_GPIO_NUM, (gpio_drive_cap_t)val);  // 0 = weakest (slow edges, fewer GHz harmonics) .. 3; default 2
+  } else {
     log_i("Unknown command: %s", variable);
     res = -1;
   }
@@ -719,18 +722,20 @@ static esp_err_t win_handler(httpd_req_t *req) {
 }
 
 static esp_err_t stats_handler(httpd_req_t *req) {
-  char b[512];
+  char b[600];
   wifi_ap_record_t ap = {};
   esp_wifi_sta_get_ap_info(&ap);
+  gpio_drive_cap_t drive = GPIO_DRIVE_CAP_DEFAULT;
+  gpio_get_drive_capability((gpio_num_t)XCLK_GPIO_NUM, &drive);
   int n = snprintf(
     b, sizeof(b),
     "{\"fw\":\"%s\",\"up_ms\":%llu,\"reset\":%d,\"frames\":%u,\"bytes\":%llu,\"get_us\":%llu,\"send_us\":%llu,\"max_get_ms\":%u,\"max_send_ms\":%u,"
-    "\"nullfb\":%u,\"sendfail\":%u,\"streams\":%u,\"heap\":%u,\"heap_min\":%u,\"heap_big\":%u,\"psram\":%u,\"rssi\":%d,\"temp_c\":%.1f,\"sndbuf\":%d}",
+    "\"nullfb\":%u,\"sendfail\":%u,\"streams\":%u,\"heap\":%u,\"heap_min\":%u,\"heap_big\":%u,\"psram\":%u,\"rssi\":%d,\"temp_c\":%.1f,\"sndbuf\":%d,\"xclk_drive\":%d,\"clkrc\":%d}",
     SENTRY_FW_VERSION, (unsigned long long)(esp_timer_get_time() / 1000), (int)esp_reset_reason(), (unsigned)st_frames, (unsigned long long)st_bytes,
     (unsigned long long)st_get_us, (unsigned long long)st_send_us, (unsigned)st_maxget_ms, (unsigned)st_maxsend_ms, (unsigned)st_nullfb,
     (unsigned)st_sendfail, (unsigned)st_streams, (unsigned)heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
     (unsigned)heap_caps_get_minimum_free_size(MALLOC_CAP_INTERNAL), (unsigned)heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL),
-    (unsigned)heap_caps_get_free_size(MALLOC_CAP_SPIRAM), ap.rssi, temperatureRead(), (int)st_sndbuf
+    (unsigned)heap_caps_get_free_size(MALLOC_CAP_SPIRAM), ap.rssi, temperatureRead(), (int)st_sndbuf, (int)drive, esp_camera_sensor_get()->get_reg(esp_camera_sensor_get(), 0x111, 0xff)
   );
   st_maxget_ms = st_maxsend_ms = 0;  // maxima are per poll interval
   httpd_resp_set_type(req, "application/json");
