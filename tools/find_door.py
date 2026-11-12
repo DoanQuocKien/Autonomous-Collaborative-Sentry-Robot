@@ -127,9 +127,12 @@ def main():
     ap.add_argument("--samples", type=int, default=6)
     ap.add_argument("--wait", type=float, default=90.0)
     ap.add_argument("--min-battery", type=float, default=MIN_BATTERY_V)
+    ap.add_argument("--path-clear", action="store_true", help="the operator confirms the floor is clear (required for a live run: the obstacle check only sees boards straight ahead)")
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--out", default="data/find_door")
     a = ap.parse_args()
+    if not a.dry_run and not a.path_clear:
+        raise SystemExit("ABORT: the robot spins and DRIVES about 1.2 m: add --path-clear to confirm that the floor is clear (0.3 m around the robot and at least 2 m in every direction it may drive; the only obstacle check is a board straight ahead, a chair is not seen)")
     if not (0 < a.spin_s <= 0.5 and 0 < a.hold <= 5 and (a.turn_deg is None or 0 <= a.turn_deg <= 180) and 0 < a.baseline_s <= 10 and 0.3 <= a.drive_v <= 1.0 and 1.5 <= a.stand_off <= 3.0):
         raise SystemExit("ABORT: argument out of its safe range")
 

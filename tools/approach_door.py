@@ -87,9 +87,12 @@ def main():
     ap.add_argument("--password", default=os.environ.get("JETBOT_PASSWORD"))
     ap.add_argument("--wait", type=float, default=90.0)
     ap.add_argument("--min-battery", type=float, default=MIN_BATTERY_V)
+    ap.add_argument("--path-clear", action="store_true", help="the operator confirms the floor is clear (required for a live run: the obstacle check only sees boards straight ahead)")
     ap.add_argument("--dry-run", action="store_true", help="measure only, no commands")
     ap.add_argument("--out", default="data/approach")
     a = ap.parse_args()
+    if not a.dry_run and not a.path_clear:
+        raise SystemExit("ABORT: the robot drives toward the door: add --path-clear to confirm that the whole way to the door is clear and 0.3 m around the robot (the only obstacle check is a board straight ahead, a chair is not seen)")
     if not (1.5 <= a.stand_off <= 3.0 and a.door_range_m > a.stand_off - 0.5 and 1.0 <= a.area_exponent <= 2.5 and 0.3 <= a.drive_v <= 1.0 and 0.1 <= a.burst_s <= 1.0 and 0.05 <= a.small_spin_s <= a.spin_s <= 0.5 and 1 <= a.center_tol_deg <= 15 and abs(a.aim_offset_deg) <= 8):
         raise SystemExit("ABORT: argument out of its safe range")
 
