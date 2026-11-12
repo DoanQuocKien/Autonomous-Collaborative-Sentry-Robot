@@ -333,10 +333,45 @@ def f7():
     plt.close(fig)
 
 
+def f8():
+    """ESP32-CAM door stream, 2026-11-12 (desk, USB power). Left: delivered fps per second: the original firmware on a fresh boot (VGA), the camera clock pin at 20 MHz with the default drive strength (sends stall: the
+    0.2 fps signature), the same clock with drive strength 0, and the final 'opt4' build over 10 minutes (640x480 sensor crop, clock doubler); dots = the original firmware's readings during the evening (fps fell 8.8 to 0.2 at identical settings).
+    Right: an empty-door frame at VGA full field from the tower placement. Source: week-06/esp32_stream_1112/data (per-second counts from the laptop, meas.py)."""
+    import cv2
+    base = R / "week-06" / "esp32_stream_1112" / "data"
+
+    def load(name):
+        rows = list(csv.DictReader(open(base / (name + ".csv"))))
+        return [float(r["sec"]) for r in rows], [float(r["fps"]) for r in rows]
+
+    def smooth(v, k=5):
+        return [sum(v[max(0, i - k + 1):i + 1]) / len(v[max(0, i - k + 1):i + 1]) for i in range(len(v))]
+    fig, ax = plt.subplots(1, 2, figsize=(11, 4.2), gridspec_kw={"width_ratios": [1.5, 1]})
+    for name, label, c in (("base_fresh", "original firmware, fresh boot (VGA, clock 10 MHz)", GREY), ("r2d", "clock pin 20 MHz, drive 2: sends stall", RED),
+                           ("r3b_d0", "clock pin 20 MHz, drive strength 0", GREEN), ("r3c", "opt4: 640x480 sensor crop + doubler, 10 min", BLUE)):
+        x, y = load(name)
+        ax[0].plot(x, smooth(y), color=c, lw=1.3, label=label)
+    rd = list(csv.DictReader(open(base / "original_firmware_readings.csv")))
+    ax[0].text(0.99, 0.62, "original firmware, same settings (VGA, q25, clock 10 MHz),\nreadings over about 90 min:  " + ", ".join(r["fps"] for r in rd) + " fps", transform=ax[0].transAxes, ha="right", va="top", fontsize=7, color="#8a6200",
+               bbox=dict(boxstyle="round", fc="#fff6dd", ec="#c08a00", lw=0.6))
+    ax[0].set_xlabel("time (s)")
+    ax[0].set_ylabel("delivered frames per second (5 s mean)")
+    ax[0].set_ylim(0, 15)
+    ax[0].legend(fontsize=6.5, loc="lower right")
+    ax[0].set_title("F8 ESP32-CAM stream rate, desk measurements", fontsize=9)
+    img = cv2.cvtColor(cv2.imread(str(base / "door_view_vga_empty.jpg")), cv2.COLOR_BGR2RGB)
+    ax[1].imshow(img)
+    ax[1].axis("off")
+    ax[1].set_title("sample frame, empty door, VGA full field\n(faces 22-40 px wide here; opt4 crop: about 77 px at 2.1 m)", fontsize=8)
+    fig.tight_layout()
+    fig.savefig(OUT6 / "F8_esp32_stream.png")
+    plt.close(fig)
+
+
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     OUT6.mkdir(parents=True, exist_ok=True)
-    for fn in (f1, f2, f4, f5, f6, f19, f20, f21, f7, f22, f23, f24, f25):
+    for fn in (f1, f2, f4, f5, f6, f19, f20, f21, f7, f8, f22, f23, f24, f25):
         fn()
         print("made", fn.__name__)
 
