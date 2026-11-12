@@ -51,6 +51,20 @@ def baseline_turn_deg(door_deg, heading_deg, side):
     return (target - heading_deg + 180.0) % 360.0 - 180.0
 
 
+DRIVE_SPEED_M_S = 0.21                                  # measured 2026-11-12 at v 0.85 on the classroom tile (0.75 m in 3.5 s, one run)
+CLEAR_MARGIN_M = 0.6                                    # veer arc (up to 25 deg/m), the robot's own size and the stopping distance
+
+
+def required_clear_radius_m(baseline_s):
+    """Clear floor the operator must have around the robot in EVERY direction for a drive of baseline_s seconds (the direction is chosen by the robot after scan 1)."""
+    return baseline_s * DRIVE_SPEED_M_S + CLEAR_MARGIN_M
+
+
+def max_baseline_s(clear_radius_m):
+    """Longest drive time that fits in a measured clear radius (0 when even a standing start does not fit)."""
+    return max(0.0, (clear_radius_m - CLEAR_MARGIN_M) / DRIVE_SPEED_M_S)
+
+
 def summarise(boards, doors):
     """-> scan_boards-style summary dict (medians per board in the scan's start frame, door bearing = the dominant cluster of sightings, raw sightings kept)."""
     bearing, n, total, second = dominant_bearing(doors)
@@ -129,12 +143,15 @@ def main():
     ap.add_argument("--samples", type=int, default=6)
     ap.add_argument("--wait", type=float, default=90.0)
     ap.add_argument("--min-battery", type=float, default=MIN_BATTERY_V)
-    ap.add_argument("--path-clear", action="store_true", help="the operator confirms the floor is clear (required for a live run: the obstacle check only sees boards straight ahead)")
+    ap.add_argument("--clear-radius-m", type=float, default=None, help="MEASURED clear floor around the robot in every direction (m), required for a live run: the drive needs baseline_s x 0.21 + 0.6 m (the obstacle check only sees boards straight ahead)")
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--out", default="data/find_door")
     a = ap.parse_args()
-    if not a.dry_run and not a.path_clear:
-        raise SystemExit("ABORT: the robot spins and DRIVES about 1.2 m: add --path-clear to confirm that the floor is clear (0.3 m around the robot and at least 2 m in every direction it may drive; the only obstacle check is a board straight ahead, a chair is not seen)")
+    if not a.dry_run:
+        if a.clear_radius_m is None:
+            raise SystemExit("ABORT: give the MEASURED clear radius around the robot with --clear-radius-m (the drive of %.1f s needs %.1f m in every direction)" % (a.baseline_s, required_clear_radius_m(a.baseline_s)))
+        if a.clear_radius_m < required_clear_radius_m(a.baseline_s):
+            raise SystemExit("ABORT: %.1f m of clear floor is not enough for a %.1f s drive (needs %.1f m): use --baseline-s %.1f or less, or find more room" % (a.clear_radius_m, a.baseline_s, required_clear_radius_m(a.baseline_s), max_baseline_s(a.clear_radius_m)))
     if not (0 < a.spin_s <= 0.5 and 0 < a.hold <= 5 and (a.turn_deg is None or 0 <= a.turn_deg <= 180) and 0 < a.baseline_s <= 10 and 0 <= a.preview_s <= 15 and 0.3 <= a.drive_v <= 1.0 and 1.5 <= a.stand_off <= 3.0):
         raise SystemExit("ABORT: argument out of its safe range")
 
@@ -181,7 +198,7 @@ def main():
         if a.preview_s <= 0:
             return
         try:
-            subprocess.Popen(["powershell", "-NoProfile", "-Command", "Add-Type -AssemblyName System.Speech; (New-Object System.Speech.Synthesis.SpeechSynthesizer).Speak('%s')" % text],
+            subprocess.Popen(["powershell", "-NoProfile", "-Command", "Add-Type -AssemblyName System.Speech; $v = New-Object System.Speech.Synthesis.SpeechSynthesizer; $v.Rate = -3; $v.Speak('%s')" % text],
                              stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         except Exception:
             winsound.Beep(900, 600)                                    # no speech: a long beep announces the pause
