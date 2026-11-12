@@ -32,6 +32,6 @@ def test_clear_radius_rules():
 
 def test_door_vs_drive_angle():
     from tools.find_door import door_vs_drive_deg
-    assert abs(door_vs_drive_deg(11.1, 361.0, 0.0) - 11.1) < 1e-6              # fd11: the door was nearly straight ahead: refused
+    assert abs(door_vs_drive_deg(11.1, 361.0, 0.0) - 10.1) < 1e-6              # fd11: the door was nearly straight ahead (heading 361 deg = 1 deg): 10 deg, refused
     assert abs(door_vs_drive_deg(-90.0, 360.0, 0.0) + 90.0) < 1e-6             # door 90 deg to the right of the drive: ideal
     assert abs(door_vs_drive_deg(175.0, 0.0, 0.0) - 175.0) < 1e-6 and abs(door_vs_drive_deg(-175.0, 0.0, 0.0) + 175.0) < 1e-6
