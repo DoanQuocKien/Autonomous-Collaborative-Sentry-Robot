@@ -104,6 +104,17 @@ Five trials with a steady v = 0.6 stream (legal: 0.18 motor value) at 30 Hz; the
 - **Operator observation:** the wheels never kept turning after a release (all 16 releases); the mechanical stop time itself was not measured.
 - **NOT measured:** the gamepad's own radio/USB latency (the joystick event timestamp is not logged), the wheels' mechanical stop (no encoders), the other-button hard stop, the link-cut stop. So this is the software path from the event to the motor cut: milliseconds, far inside the 350 ms link-cut limit that is still not demonstrated by a mechanical measurement.
 
+### First live validation of the new door estimator (2026-11-12, run `fd7`, 3 boards; data `week-06/find_door_pose/data/fd7_result.json` and `fd7_observations.json`, the raw per-stop observations)
+`find_door --side left --drive-v 0.85 --baseline-s 3.5` with `tools/door_pose.py` (least squares with loop closure, Monte Carlo interval). Pose `calib/camera_pose_self_1112_2.json` (pitch -9.17 deg), 3 boards in both scans, fit chi-square 0.48 with 3 degrees of freedom, the robot turned 104.8 deg left and drove; **the baseline was only about 0.75 m (ray angle 9-11 deg)**, shorter than the planned 1.2 m. Door detections: scan 1 24 of 34 sightings in the dominant cluster (17.8 deg), scan 2 30 of 32 (-73.6 deg).
+Tape from the robot's final spot (operator: **3.25 m, about 90 deg to the RIGHT of the camera**; first reported as left, corrected after the detector's direct sightings and both estimates said right):
+
+| Estimator | Range | Range error | Bearing | Bearing error | Comment |
+|---|---|---|---|---|---|
+| old (median bearings, rigid fit on 2-3 boards) | 4.21 m | +0.96 m (+30 %) | -74 deg | 16 deg | no interval |
+| **new (`door_pose`)** | **3.60 m** | **+0.35 m (+11 %)** | **-84 deg** | **6 deg** | 5-95 % interval 2.76-4.86 m contains the tape |
+
+On the same data the new estimator's range error is about a third of the old one's, and its interval contains the truth. Limits: one run, one door, a short baseline (ray angle about 10 deg), the bearing tape is approximate ("about 90 deg"), the interval is wide (2.1 m) because of the short baseline, and the old `fd_4`/`fd_6` errors (+72 %, +45 %) were from other runs. Next: repeat with a baseline of 1.2 m or more (a longer drive or a wider turn) and a measured bearing.
+
 ## Needs the three members (do first while all are available)
 1. Person frames at 1.2, 1.8 and 2.4 m from several different people (experiment A validation; needs more than one person; frames stay local).
 2. A full T2 run with a second person walking in: the queue and the lock, with HNHL and KR watching the laptop (the ESP32 handshake at the sweet spot, then the walk-through).
