@@ -19,6 +19,7 @@ ap.add_argument("--ip", required=True)
 ap.add_argument("--trials", type=int, default=5)
 ap.add_argument("--v", type=float, default=0.6)
 ap.add_argument("--release-after", type=float, default=4.0, help="beep (release R1) this many seconds after the stream starts")
+ap.add_argument("--press-other", action="store_true", help="hard-stop test: keep R1 held and press ANY OTHER gamepad button at the beep (the e-stop must stop and disarm) instead of releasing R1")
 ap.add_argument("--out", required=True)
 a = ap.parse_args()
 if not 0.4 <= a.v <= 0.8 or not 1 <= a.trials <= 10:
@@ -57,7 +58,7 @@ results = []
 sender = UDPSender(a.ip, load()["net"]["control_port"], 30)
 try:
     for k in range(1, a.trials + 1):
-        print("trial %d: ARM if needed (hold Start 1.5 s), then HOLD R1; release R1 at the beep" % k, flush=True)
+        print("trial %d: ARM if needed (hold Start 1.5 s), then HOLD R1; %s at the beep" % (k, "keep R1 held and press ANY OTHER button (a different one each trial)" if a.press_other else "release R1"), flush=True)
         winsound.Beep(1000, 300)
         t_end = time.time() + 90
         since = None
@@ -79,7 +80,7 @@ try:
             time.sleep(1 / 30.0)
             if not beeped and time.time() - t0 >= a.release_after:
                 beeped = True
-                winsound.Beep(1600, 300)                                # release R1 now; the stream goes on for 4 more seconds (commands must be ignored)
+                winsound.Beep(1600, 300)                                # release R1 (or press another button) now; the stream goes on for 4 more seconds (commands must be ignored)
         sender.send(0.0, 0.0)
         time.sleep(1.0)
         e_lines, r_lines = new_lines("/home/jetbot/sentry/estop.log", o_e), new_lines("/home/jetbot/sentry/robot_udp.log", o_r)
