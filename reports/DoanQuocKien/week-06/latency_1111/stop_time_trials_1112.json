@@ -1,0 +1,143 @@
+[
+ {
+  "trial": 1,
+  "estop": [],
+  "robot_udp": [
+   "02:45:29.117 motors +0.18 +0.18",
+   "02:45:32.795 packets accepted=396 foreign=0 malformed=0 received=396 stale=0",
+   "02:45:33.413 motors +0.00 +0.00",
+   "02:45:33.459 motors +0.18 +0.18",
+   "02:45:37.155 motors +0.00 +0.00"
+  ]
+ },
+ {
+  "trial": 2,
+  "estop": [],
+  "robot_udp": [
+   "02:45:39.303 motors +0.18 +0.18",
+   "02:45:42.801 packets accepted=618 foreign=0 malformed=0 received=618 stale=0",
+   "02:45:43.571 motors +0.00 +0.00",
+   "02:45:43.597 motors +0.18 +0.18",
+   "02:45:47.323 motors +0.00 +0.00"
+  ]
+ },
+ {
+  "trial": 3,
+  "estop": [
+   "18:45:55.958 STOPPED (R1 released); motors CUT in 7 ms",
+   "18:45:56.621 GO (R1 held and armed); robot may move",
+   "18:45:57.429 STOPPED (R1 released); motors CUT in 5 ms",
+   "18:45:57.714 GO (R1 held and armed); robot may move",
+   "18:45:58.271 STOPPED (R1 released); motors CUT in 8 ms"
+  ],
+  "robot_udp": [
+   "02:45:49.474 motors +0.18 +0.18",
+   "02:45:52.812 packets accepted=840 foreign=0 malformed=0 received=840 stale=0",
+   "02:45:53.779 motors +0.00 +0.00",
+   "02:45:53.807 motors +0.18 +0.18",
+   "02:45:55.965 e-stop ENGAGED: refusing motor commands",
+   "02:45:56.004 motors +0.00 +0.00",
+   "02:45:56.632 e-stop released: motor commands accepted",
+   "02:45:56.666 motors +0.18 +0.18",
+   "02:45:57.448 e-stop ENGAGED: refusing motor commands",
+   "02:45:57.480 motors +0.00 +0.00",
+   "02:45:57.724 e-stop released: motor commands accepted",
+   "02:45:58.290 e-stop ENGAGED: refusing motor commands"
+  ]
+ },
+ {
+  "trial": 4,
+  "estop": [
+   "18:46:02.967 STOPPED (R1 released); motors CUT in 7 ms",
+   "18:46:03.218 GO (R1 held and armed); robot may move",
+   "18:46:03.702 STOPPED (R1 released); motors CUT in 5 ms",
+   "18:46:03.866 GO (R1 held and armed); robot may move",
+   "18:46:05.095 STOPPED (R1 released); motors CUT in 7 ms",
+   "18:46:05.274 GO (R1 held and armed); robot may move",
+   "18:46:05.540 STOPPED (R1 released); motors CUT in 11 ms",
+   "18:46:05.683 GO (R1 held and armed); robot may move",
+   "18:46:05.841 STOPPED (R1 released); motors CUT in 7 ms",
+   "18:46:05.989 GO (R1 held and armed); robot may move",
+   "18:46:06.127 STOPPED (R1 released); motors CUT in 7 ms",
+   "18:46:06.275 GO (R1 held and armed); robot may move",
+   "18:46:07.290 STOPPED (R1 released); motors CUT in 8 ms",
+   "18:46:07.428 GO (R1 held and armed); robot may move",
+   "18:46:07.656 STOPPED (R1 released); motors CUT in 7 ms",
+   "18:46:07.780 GO (R1 held and armed); robot may move",
+   "18:46:07.995 STOPPED (R1 released); motors CUT in 10 ms",
+   "18:46:08.135 GO (R1 held and armed); robot may move",
+   "18:46:09.078 STOPPED (R1 released); motors CUT in 5 ms",
+   "18:46:09.235 GO (R1 held and armed); robot may move",
+   "18:46:10.563 STOPPED (R1 released); motors CUT in 9 ms"
+  ],
+  "robot_udp": [
+   "02:46:01.907 motors +0.18 +0.18",
+   "02:46:02.815 packets accepted=996 foreign=0 malformed=0 received=996 stale=0",
+   "02:46:02.973 e-stop ENGAGED: refusing motor commands",
+   "02:46:03.008 motors +0.00 +0.00",
+   "02:46:03.231 e-stop released: motor commands accepted",
+   "02:46:03.261 motors +0.18 +0.18",
+   "02:46:03.704 e-stop ENGAGED: refusing motor commands",
+   "02:46:03.742 motors +0.00 +0.00",
+   "02:46:03.876 e-stop released: motor commands accepted",
+   "02:46:03.932 motors +0.18 +0.18",
+   "02:46:05.101 e-stop ENGAGED: refusing motor commands",
+   "02:46:05.140 motors +0.00 +0.00",
+   "02:46:05.277 e-stop released: motor commands accepted",
+   "02:46:05.326 motors +0.18 +0.18",
+   "02:46:05.543 e-stop ENGAGED: refusing motor commands",
+   "02:46:05.646 motors +0.00 +0.00",
+   "02:46:05.704 e-stop released: motor commands accepted",
+   "02:46:05.732 motors +0.18 +0.18",
+   "02:46:05.854 e-stop ENGAGED: refusing motor commands",
+   "02:46:05.892 motors +0.00 +0.00",
+   "02:46:05.994 e-stop released: motor commands accepted",
+   "02:46:06.137 e-stop ENGAGED: refusing motor commands",
+   "02:46:06.286 e-stop released: motor commands accepted",
+   "02:46:06.323 motors +0.18 +0.18",
+   "02:46:07.291 e-stop ENGAGED: refusing motor commands",
+   "02:46:07.328 motors +0.00 +0.00",
+   "02:46:07.430 e-stop released: motor commands accepted",
+   "02:46:07.456 motors +0.18 +0.18",
+   "02:46:07.664 e-stop ENGAGED: refusing motor commands",
+   "02:46:07.702 motors +0.00 +0.00",
+   "02:46:07.800 e-stop released: motor commands accepted",
+   "02:46:07.827 motors +0.18 +0.18",
+   "02:46:07.999 e-stop ENGAGED: refusing motor commands",
+   "02:46:08.021 motors +0.00 +0.00",
+   "02:46:08.144 e-stop released: motor commands accepted",
+   "02:46:08.203 motors +0.18 +0.18",
+   "02:46:09.094 e-stop ENGAGED: refusing motor commands",
+   "02:46:09.132 motors +0.00 +0.00",
+   "02:46:09.248 e-stop released: motor commands accepted",
+   "02:46:09.279 motors +0.18 +0.18",
+   "02:46:09.957 motors +0.00 +0.00",
+   "02:46:10.572 e-stop ENGAGED: refusing motor commands"
+  ]
+ },
+ {
+  "trial": 5,
+  "estop": [
+   "18:46:13.483 GO (R1 held and armed); robot may move",
+   "18:46:18.210 STOPPED (R1 released); motors CUT in 7 ms",
+   "18:46:19.251 GO (R1 held and armed); robot may move",
+   "18:46:20.044 STOPPED (R1 released); motors CUT in 8 ms",
+   "18:46:20.774 GO (R1 held and armed); robot may move"
+  ],
+  "robot_udp": [
+   "02:46:13.490 e-stop released: motor commands accepted",
+   "02:46:13.522 motors +0.18 +0.18",
+   "02:46:17.651 motors +0.00 +0.00",
+   "02:46:17.682 motors +0.18 +0.18",
+   "02:46:18.228 e-stop ENGAGED: refusing motor commands",
+   "02:46:18.265 motors +0.00 +0.00",
+   "02:46:19.254 e-stop released: motor commands accepted",
+   "02:46:19.288 motors +0.18 +0.18",
+   "02:46:20.048 e-stop ENGAGED: refusing motor commands",
+   "02:46:20.075 motors +0.00 +0.00",
+   "02:46:20.789 e-stop released: motor commands accepted",
+   "02:46:20.819 motors +0.18 +0.18",
+   "02:46:21.404 motors +0.00 +0.00"
+  ]
+ }
+]
