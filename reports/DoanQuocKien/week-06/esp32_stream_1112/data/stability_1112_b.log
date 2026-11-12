@@ -1,0 +1,16 @@
+dim (480, 640) frames 1501 mean 12.50 fps p5 12 | KB/s 108 | frame 8.4 KB | first-third 12.50 last-third 12.47
+  min 0: 12.52 fps 105 KB/s
+  min 1: 12.48 fps 111 KB/s
+  stats0 {"fw": "opt4", "up_ms": 1047499, "reset": 3, "frames": 9741, "bytes": 92294610, "get_us": 624524489, "send_us": 65782113, "max_get_ms": 0, "max_send_ms": 5, "nullfb": 0, "sendfail": 32, "streams": 33, "heap": 159292, "heap_min": 119028, "heap_big": 110580, "psram": 4069211, "rssi": -46, "temp_c": 60.0, "sndbuf": 23040, "xclk_drive": 0, "clkrc": 128, "t": 0.25207042694091797}
+     10s fps 12.5 KB/s  103 get   64 send    6 ms max 69/45 null 0 fail 32 str 33 heap 172076 min 119028 big 110580 psram 4069211 rssi -49 T 60
+     20s fps 12.5 KB/s  101 get   65 send    6 ms max 66/8 null 0 fail 32 str 33 heap 172088 min 119028 big 110580 psram 4069211 rssi -52 T 60
+     31s fps 12.5 KB/s  109 get   65 send    6 ms max 66/9 null 0 fail 32 str 33 heap 173672 min 119028 big 110580 psram 4069211 rssi -53 T 59
+     41s fps 12.5 KB/s  103 get   65 send    6 ms max 66/8 null 0 fail 32 str 33 heap 173664 min 119028 big 110580 psram 4069211 rssi -52 T 60
+     51s fps 12.6 KB/s  100 get   65 send    6 ms max 66/8 null 0 fail 32 str 33 heap 154380 min 119028 big 106484 psram 4069211 rssi -55 T 61
+     61s fps 12.5 KB/s  101 get   65 send    6 ms max 67/7 null 0 fail 32 str 33 heap 172084 min 119028 big 110580 psram 4069211 rssi -51 T 61
+     71s fps 12.5 KB/s  108 get   64 send    7 ms max 66/10 null 0 fail 32 str 33 heap 170500 min 119028 big 110580 psram 4069211 rssi -59 T 61
+     81s fps 12.5 KB/s  110 get   65 send    6 ms max 66/8 null 0 fail 32 str 33 heap 171192 min 119028 big 110580 psram 4069211 rssi -59 T 61
+     91s fps 12.6 KB/s  112 get   65 send    6 ms max 66/9 null 0 fail 32 str 33 heap 150916 min 119028 big 102388 psram 4069211 rssi -55 T 62
+    101s fps 12.5 KB/s  111 get   65 send    7 ms max 66/9 null 0 fail 32 str 33 heap 173664 min 119028 big 110580 psram 4069211 rssi -56 T 62
+    111s fps 12.5 KB/s  112 get   65 send    7 ms max 66/9 null 0 fail 32 str 33 heap 172084 min 119028 big 110580 psram 4069211 rssi -52 T 62
+  inter-frame ms: median 81 p95 141 max 262
