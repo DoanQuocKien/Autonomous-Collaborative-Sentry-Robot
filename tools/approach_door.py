@@ -20,9 +20,11 @@ from pathlib import Path
 
 import numpy as np
 
+from tools.drive_model import drive_distance_m
 from tools.scan_boards import ESTOP_LATCH, MIN_BATTERY_V, SPIN_W
 
 
+DISTANCE_BOUND_MARGIN_M = 1.0                             # runaway guard only: the worst-case speed model overestimates what the real runs drove (ap_1: 1.75 m in 10 bursts = 0.175 m per burst against 0.21 modelled)
 MAX_VIDEO_AGE_S = 0.5                                     # a frame older than this is not used, and no command is sent on older video (same limit as the scan guard in PR #107)
 
 
@@ -223,6 +225,9 @@ def main():
                 bursts += 1
                 if bursts > a.max_bursts:
                     end = "max bursts"
+                    break
+                if drive_distance_m(a.drive_v, a.burst_s) * bursts >= a.door_range_m - a.stand_off + DISTANCE_BOUND_MARGIN_M:      # audit 2026-11-12: the range estimate alone can stay above the stand-off (outline cut by the frame edge) and the robot would keep driving
+                    end = "distance bound: driven about %.1f m at the worst-case speed" % (drive_distance_m(a.drive_v, a.burst_s) * bursts)
                     break
                 command(a.drive_v, 0.0, a.burst_s)
             else:

@@ -22,6 +22,7 @@ from pathlib import Path
 import numpy as np
 
 from tools.approach_door import MAX_VIDEO_AGE_S, video_is_fresh
+from tools.drive_model import CLEAR_MARGIN_M, drive_distance_m, drive_speed_m_s
 from tools.locate_door import locate
 from tools.scan_boards import ESTOP_LATCH, MIN_BATTERY_V, PRIOR_PULSE_RAD, SPIN_W, camera_to_robot, pulse_angle, to_start_frame, wrap
 
@@ -51,18 +52,14 @@ def baseline_turn_deg(door_deg, heading_deg, side):
     return (target - heading_deg + 180.0) % 360.0 - 180.0
 
 
-DRIVE_SPEED_M_S = 0.35                                  # worst case seen at v 0.85 on the classroom tile: 0.34 m/s on 2026-11-12 (1.9 m in 5.6 s, battery 11.64 V); 0.21 m/s in an earlier run (0.75 m in 3.5 s): the speed varies with battery and floor
-CLEAR_MARGIN_M = 0.6                                    # veer arc (up to 25 deg/m), the robot's own size and the stopping distance
+def required_clear_radius_m(baseline_s, drive_v=0.85):
+    """Clear floor the operator must have around the robot in EVERY direction for a drive of baseline_s seconds at the command drive_v (the direction is chosen by the robot after scan 1)."""
+    return drive_distance_m(drive_v, baseline_s) + CLEAR_MARGIN_M
 
 
-def required_clear_radius_m(baseline_s):
-    """Clear floor the operator must have around the robot in EVERY direction for a drive of baseline_s seconds (the direction is chosen by the robot after scan 1)."""
-    return baseline_s * DRIVE_SPEED_M_S + CLEAR_MARGIN_M
-
-
-def max_baseline_s(clear_radius_m):
+def max_baseline_s(clear_radius_m, drive_v=0.85):
     """Longest drive time that fits in a measured clear radius (0 when even a standing start does not fit)."""
-    return max(0.0, (clear_radius_m - CLEAR_MARGIN_M) / DRIVE_SPEED_M_S)
+    return max(0.0, (clear_radius_m - CLEAR_MARGIN_M) / drive_speed_m_s(drive_v))
 
 
 def door_vs_drive_deg(door_deg, heading_deg, turn_signed_deg):
@@ -149,21 +146,21 @@ def main():
     ap.add_argument("--samples", type=int, default=6)
     ap.add_argument("--wait", type=float, default=90.0)
     ap.add_argument("--min-battery", type=float, default=MIN_BATTERY_V)
-    ap.add_argument("--clear-ahead-m", type=float, default=None, help="with --turn-deg (the drive direction is known to you): MEASURED clear floor along that direction (m); needs baseline_s x 0.21 + 0.6 m. --clear-radius-m is then only the spin clearance (at least 0.5 m)")
-    ap.add_argument("--clear-radius-m", type=float, default=None, help="MEASURED clear floor around the robot in every direction (m), required for a live run: the drive needs baseline_s x 0.21 + 0.6 m (the obstacle check only sees boards straight ahead)")
+    ap.add_argument("--clear-ahead-m", type=float, default=None, help="with --turn-deg (the drive direction is known to you): MEASURED clear floor along that direction (m); needs the drive distance at the worst-case speed + 0.6 m (see tools/drive_model.py). --clear-radius-m is then only the spin clearance (at least 0.5 m)")
+    ap.add_argument("--clear-radius-m", type=float, default=None, help="MEASURED clear floor around the robot in every direction (m), required for a live run: the drive needs the drive distance at the worst-case speed + 0.6 m (see tools/drive_model.py) (the obstacle check only sees boards straight ahead)")
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--out", default="data/find_door")
     a = ap.parse_args()
     if not a.dry_run:
         if a.turn_deg is not None:                         # the drive direction is chosen by the operator: the room it needs is AHEAD along that direction, the spin needs 0.5 m around
             if a.clear_ahead_m is None or a.clear_radius_m is None:
-                raise SystemExit("ABORT: with --turn-deg give both --clear-radius-m (MEASURED clear floor around the robot for the spin, at least 0.5 m) and --clear-ahead-m (MEASURED clear floor along the drive direction, needs %.1f m for %.1f s)" % (required_clear_radius_m(a.baseline_s), a.baseline_s))
-            if a.clear_radius_m < 0.5 or a.clear_ahead_m < required_clear_radius_m(a.baseline_s):
-                raise SystemExit("ABORT: spin clearance %.1f m (needs 0.5 m) and clear ahead %.1f m (a %.1f s drive needs %.1f m; the longest that fits is %.1f s)" % (a.clear_radius_m, a.clear_ahead_m, a.baseline_s, required_clear_radius_m(a.baseline_s), math.floor(max_baseline_s(a.clear_ahead_m) * 10) / 10))
+                raise SystemExit("ABORT: with --turn-deg give both --clear-radius-m (MEASURED clear floor around the robot for the spin, at least 0.5 m) and --clear-ahead-m (MEASURED clear floor along the drive direction, needs %.1f m for %.1f s)" % (required_clear_radius_m(a.baseline_s, a.drive_v), a.baseline_s))
+            if a.clear_radius_m < 0.5 or a.clear_ahead_m < required_clear_radius_m(a.baseline_s, a.drive_v):
+                raise SystemExit("ABORT: spin clearance %.1f m (needs 0.5 m) and clear ahead %.1f m (a %.1f s drive needs %.1f m; the longest that fits is %.1f s)" % (a.clear_radius_m, a.clear_ahead_m, a.baseline_s, required_clear_radius_m(a.baseline_s, a.drive_v), math.floor(max_baseline_s(a.clear_ahead_m, a.drive_v) * 10) / 10))
         elif a.clear_radius_m is None:
-            raise SystemExit("ABORT: give the MEASURED clear radius around the robot with --clear-radius-m (the drive of %.1f s needs %.1f m in every direction)" % (a.baseline_s, required_clear_radius_m(a.baseline_s)))
-        elif a.clear_radius_m < required_clear_radius_m(a.baseline_s):
-            raise SystemExit("ABORT: %.1f m of clear floor is not enough for a %.1f s drive (needs %.1f m): use --baseline-s %.1f or less, or find more room" % (a.clear_radius_m, a.baseline_s, required_clear_radius_m(a.baseline_s), math.floor(max_baseline_s(a.clear_radius_m) * 10) / 10))
+            raise SystemExit("ABORT: give the MEASURED clear radius around the robot with --clear-radius-m (the drive of %.1f s needs %.1f m in every direction)" % (a.baseline_s, required_clear_radius_m(a.baseline_s, a.drive_v)))
+        elif a.clear_radius_m < required_clear_radius_m(a.baseline_s, a.drive_v):
+            raise SystemExit("ABORT: %.1f m of clear floor is not enough for a %.1f s drive (needs %.1f m): use --baseline-s %.1f or less, or find more room" % (a.clear_radius_m, a.baseline_s, required_clear_radius_m(a.baseline_s, a.drive_v), math.floor(max_baseline_s(a.clear_radius_m, a.drive_v) * 10) / 10))
     if not (0 < a.spin_s <= 0.5 and 0 < a.hold <= 5 and (a.turn_deg is None or 0 <= a.turn_deg <= 180) and 0 < a.baseline_s <= 10 and 0 <= a.preview_s <= 15 and 0.3 <= a.drive_v <= 1.0 and 1.5 <= a.stand_off <= 3.0):
         raise SystemExit("ABORT: argument out of its safe range")
 
@@ -204,7 +201,7 @@ def main():
 
     def preview(turn_signed_deg):
         """Say what the robot is about to do and wait a.preview_s with the motors off; releasing R1 in that time aborts the run (the operator cannot see the plan otherwise: the direction is computed from the door bearing after scan 1)."""
-        metres = a.baseline_s * DRIVE_SPEED_M_S                      # the worst case speed seen (the real drive can be 40 % shorter)
+        metres = drive_distance_m(a.drive_v, a.baseline_s)                      # the worst case speed seen (the real drive can be 40 % shorter)
         if abs(turn_signed_deg) < 1:
             text = "Driving straight ahead about %.1f metres. Release R1 now to stop." % metres
         else:
@@ -272,8 +269,10 @@ def main():
         """Turn by `deg` degrees, left (sign +1) or right (-1), in spin pulses; the angle of each pulse is measured from the boards."""
         turned, prev, pulses = 0.0, sample()[0], []
         for _ in range(8):
-            if abs(turned) >= math.radians(deg) - 0.5 * PRIOR_PULSE_RAD or not r1_held():
+            if abs(turned) >= math.radians(deg) - 0.5 * PRIOR_PULSE_RAD:
                 break
+            if not r1_held():                                 # audit 2026-11-12: this used to leave the loop silently and the drive then started in the wrong direction
+                raise SystemExit("STOP: R1 released during the turn (%.0f of %.0f deg done): nothing is driven" % (math.degrees(abs(turned)), deg))
             command(0.0, sign * SPIN_W, a.spin_s)
             time.sleep(a.hold)
             seen = sample()[0]
@@ -281,6 +280,8 @@ def main():
             observations["turn_pulses"].append(dict(cmd_w=sign * SPIN_W, cmd_s=a.spin_s, measured_deg=round(math.degrees(pulses[-1][0]), 2), boards=pulses[-1][1]))
             prev = seen
             print("turn %s: %.0f deg so far" % ("left" if sign > 0 else "right", math.degrees(abs(turned))), flush=True)
+        if abs(turned) < math.radians(deg) - 1.5 * PRIOR_PULSE_RAD:           # 8 pulses were not enough (small pulses): do not drive in a direction the operator did not preview
+            raise SystemExit("STOP: the turn ended %.0f deg short of the %.0f deg planned: nothing is driven" % (deg - math.degrees(abs(turned)), deg))
 
     def drive():
         """Forward for baseline_s: the command is streamed at 30 Hz by its own thread (a check loop with an SSH call per round took ~1.7 s, so inline commands gave 0.3 s of motion per 1.7 s);

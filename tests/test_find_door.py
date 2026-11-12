@@ -35,3 +35,12 @@ def test_door_vs_drive_angle():
     assert abs(door_vs_drive_deg(11.1, 361.0, 0.0) - 10.1) < 1e-6              # fd11: the door was nearly straight ahead (heading 361 deg = 1 deg): 10 deg, refused
     assert abs(door_vs_drive_deg(-90.0, 360.0, 0.0) + 90.0) < 1e-6             # door 90 deg to the right of the drive: ideal
     assert abs(door_vs_drive_deg(175.0, 0.0, 0.0) - 175.0) < 1e-6 and abs(door_vs_drive_deg(-175.0, 0.0, 0.0) + 175.0) < 1e-6
+
+
+def test_clear_radius_scales_with_the_drive_command():
+    from tools.drive_model import drive_distance_m, drive_speed_m_s
+    from tools.find_door import max_baseline_s, required_clear_radius_m
+    assert abs(drive_speed_m_s(0.85) - 0.35) < 1e-9 and abs(drive_speed_m_s(1.0) - 0.435) < 1e-9 and drive_speed_m_s(0.5) < drive_speed_m_s(0.85)
+    assert required_clear_radius_m(10.0, 1.0) > required_clear_radius_m(10.0, 0.85)          # the audit case: a 10 s drive at v 1.0 needs more than at 0.85
+    assert abs(required_clear_radius_m(10.0, 1.0) - (4.35 + 0.6)) < 1e-9
+    assert abs(required_clear_radius_m(max_baseline_s(2.0, 1.0), 1.0) - 2.0) < 1e-9 and drive_distance_m(0.85, 5.5) > 1.9

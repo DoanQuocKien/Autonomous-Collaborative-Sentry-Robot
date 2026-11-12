@@ -20,7 +20,7 @@ weights/
 *.pth
 
 # ESP32 Wi-Fi credentials
-esp32/sentry_cam/secrets.h
+esp32/**/secrets.h
 
 # PlatformIO build output and editor files
 esp32/sentry_cam/.pio/
