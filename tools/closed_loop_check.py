@@ -2,8 +2,8 @@
 
   python -m tools.closed_loop_check --label cl_1 --marker 0 --repeats 2 --turn-deg 45 --drive-m 0.4 --min-m 1.1
 
-Per repeat: turn LEFT by --turn-deg and RIGHT back, each stopped by the board's bearing (sentry/nav/bearing_servo.TurnController: commands are only a stop or a spin
-above the dead zone), then drive --drive-m toward the board with the PI of tools.follow_marker whose integral STARTS at the Kalman trim estimate
+Per repeat: turn LEFT by --turn-deg and RIGHT back in short pulses with a rest and a bearing measurement after each (the camera is blind while the robot spins: motion
+blur; sentry/nav/bearing_servo.TurnController learns the degrees per second of pulse; commands are only a stop or a spin above the dead zone), then drive --drive-m toward the board with the PI of tools.follow_marker whose integral STARTS at the Kalman trim estimate
 (TrimEstimator: predict before the drive, update with the settled integral after it). Logs the turn errors, the bearing error of every drive and its Gaussian
 differential entropy (nats; lower = straighter). Board setup: upright, facing the robot, 1.8-2.0 m ahead, floor clear; --min-m stops the sequence before the wall.
 Needs the e-stop armed and R1 held (as follow_marker); never use --no-estop. Output: data/closed_loop/<label>/{log.csv,summary.json}."""
@@ -17,9 +17,25 @@ import time
 from pathlib import Path
 
 from sentry.nav.bearing_servo import TrimEstimator, TurnController, heading_entropy_nats
-from tools.follow_marker import ESTOP_LATCH, PIController, _vision, veer_deg_per_m
+from tools.follow_marker import ESTOP_LATCH, PIController, veer_deg_per_m
 
 TICK_S = 1.0 / 30.0
+
+
+def _vision(stop, state, marker_id, ip):
+    """Like follow_marker._vision, but the receiver gets the robot's resolved address (a second automatic scan inside the thread can miss the robot)."""
+    from sentry.nav.localization import LocalizationTracker
+    from sentry.net.zmq_rx import ZMQReceiver
+    tr = LocalizationTracker(camera_calib="calib/camera.json")
+    with ZMQReceiver(ip=ip) as rx:
+        while not stop.is_set():
+            f = rx.read(timeout=1.0)
+            if f is None:
+                continue
+            for d in tr.detect_markers(f.frame_bgr):
+                if d.marker_id == marker_id:
+                    state.update(t=time.perf_counter(), bearing=d.bearing_rad, dist=d.distance_m)
+                    break
 
 
 def main():
@@ -36,7 +52,7 @@ def main():
     ap.add_argument("--trim0", type=float, default=0.0)
     ap.add_argument("--trim-std0", type=float, default=0.03)
     ap.add_argument("--q-std", type=float, default=0.01, help="how much the trim may change between drives (normalised w)")
-    ap.add_argument("--rate-deg-s", type=float, default=120.0, help="spin rate at w=0.45 (about 125 deg/s measured in the classroom)")
+    ap.add_argument("--rate-deg-s", type=float, default=140.0, help="first guess of the turn gain, deg per second of pulse (125 in the classroom, 147 at the dorm); learned from every pulse")
     ap.add_argument("--lost-s", type=float, default=1.2)
     ap.add_argument("--max-s", type=float, default=90.0)
     ap.add_argument("--min-battery", type=float, default=11.3)
@@ -64,7 +80,7 @@ def main():
     if volts < a.min_battery:
         raise SystemExit("battery below %.1f V: charge first" % a.min_battery)
     state, stop = {}, threading.Event()
-    threading.Thread(target=_vision, args=(stop, state, a.marker), daemon=True).start()
+    threading.Thread(target=_vision, args=(stop, state, a.marker, ip), daemon=True).start()
     t_wait = time.perf_counter() + 10
     while not state and time.perf_counter() < t_wait:
         time.sleep(0.1)
@@ -99,7 +115,7 @@ def main():
         t0 = time.perf_counter()
         while True:
             now = time.perf_counter()
-            if now - t_start > a.max_s or now - t0 > 6.0:
+            if now - t_start > a.max_s or now - t0 > 12.0:
                 return ctl, "turn timeout"
             b, d, fresh = obs()
             w, done = ctl.step(now, b if fresh else None)

@@ -59,61 +59,63 @@ class TrimEstimator(object):
 
 
 class TurnController(object):
-    """Turn in place by `target_deg` (left +) watching a static board. step(t, bearing_deg) -> (w, done). bearing_deg is None when the board is not seen."""
-    SPIN, SETTLE, PULSE, DONE = "SPIN", "SETTLE", "PULSE", "DONE"
+    """Turn in place by `target_deg` (left +) in pulses, measuring the bearing of a static board only AT REST (the camera is blind while the robot spins: motion blur,
+    measured 2026-11-13: sharpness 200 -> 8-33 and no detection from 0.15 s after the start until 0.2 s after the stop).
 
-    def __init__(self, target_deg, w_spin=0.45, tol_deg=5.0, rate_deg_s=120.0, latency_s=0.25, settle_s=0.4, min_pulse_s=0.12, max_pulses=3, lost_s=1.0, max_target_deg=70.0):
+    step(t, bearing_deg) -> (w, done); bearing_deg is None when there is no new observation. Each pulse is a spin at +/-w_spin (above the dead zone) of a length chosen from
+    the learned gain `rate_deg_s` (degrees per second of pulse, including the start-up lag; updated from every pulse), followed by a rest of `settle_s` before the next
+    observation is accepted. Ends when the error is below the pulse resolution, when a pulse did not help, after `max_pulses`, or when no observation arrives."""
+    PULSE, SETTLE, DONE = "PULSE", "SETTLE", "DONE"
+
+    def __init__(self, target_deg, w_spin=0.45, tol_deg=5.0, rate_deg_s=120.0, settle_s=0.35, min_pulse_s=0.12, max_pulse_s=0.30, aim=0.8, learn=0.5, max_pulses=6, lost_s=2.0, max_target_deg=70.0):
         if not 0.0 < abs(target_deg) <= max_target_deg:
             raise ValueError("target must be within (0, %.0f] deg: the board must stay in view" % max_target_deg)
         self.target, self.w_spin, self.tol, self.rate = float(target_deg), float(w_spin), float(tol_deg), float(rate_deg_s)
-        self.latency, self.settle_s, self.min_pulse_s, self.max_pulses, self.lost_s = float(latency_s), float(settle_s), float(min_pulse_s), int(max_pulses), float(lost_s)
-        self.state, self.b0, self.t_state, self.pulses, self.pulse_s = self.SPIN, None, None, 0, 0.0
-        self.progress, self.error, self.reason, self._last_seen, self._err_before = 0.0, self.target, None, None, self.target
+        self.settle_s, self.min_pulse_s, self.max_pulse_s, self.aim, self.learn = float(settle_s), float(min_pulse_s), float(max_pulse_s), float(aim), float(learn)
+        self.max_pulses, self.lost_s = int(max_pulses), float(lost_s)
+        self.b0, self.progress, self.error, self.reason = None, 0.0, self.target, None
+        self.state, self.t_state, self.pulses, self.pulse_s, self._dir = self.SETTLE, None, 0, 0.0, 1.0
+        self._prog_before, self._err_before, self._worse = 0.0, self.target, 0
 
     @property
     def resolution_deg(self):
-        """Smallest error worth correcting: a minimum pulse turns rate*min_pulse_s, so a pulse at a smaller error would overshoot by more than it fixes."""
+        """Smallest error worth a correction: a minimum pulse turns rate*min_pulse_s, so a pulse at a smaller error would overshoot by more than it fixes."""
         return max(self.tol, 0.5 * self.rate * self.min_pulse_s)
 
-    def _enter(self, state, t):
-        self.state, self.t_state = state, t
+    def _finish(self, t, reason):
+        self.reason, self.state = reason, self.DONE
+        return 0.0, True
 
     def step(self, t, bearing_deg):
         if self.state == self.DONE:
             return 0.0, True
-        if bearing_deg is not None:
-            if self.b0 is None:
-                self.b0, self._last_seen = bearing_deg, t
-                self.t_state = t
-            self._last_seen = t
-            self.progress = -wrap_deg(bearing_deg - self.b0)       # a left turn lowers the left-positive bearing of a static board
-            self.error = self.target - self.progress
-        if self.b0 is None or t - self._last_seen > self.lost_s:
-            if self.b0 is not None:
-                self.reason = "board lost"
-                self._enter(self.DONE, t)
-            return 0.0, self.state == self.DONE
-        sign = 1.0 if self.error >= 0 else -1.0
-        if self.state == self.SPIN:
-            if self.error * (1.0 if self.target > 0 else -1.0) <= self.rate * self.latency:       # the robot keeps turning for the video latency + command lag + coast (latency_s is the sum)
-                self._enter(self.SETTLE, t)
-                return 0.0, False
-            return (1.0 if self.target > 0 else -1.0) * self.w_spin, False
-        if self.state == self.SETTLE:
-            if t - self.t_state < self.settle_s:
-                return 0.0, False
-            no_gain = self.pulses > 0 and abs(self.error) >= abs(self._err_before) - 1.0      # the last pulse did not help: it is bigger than the error left
-            if abs(self.error) <= self.resolution_deg or self.pulses >= self.max_pulses or no_gain:
-                self.reason = "ok" if abs(self.error) <= self.resolution_deg else "residual %.1f deg after %d pulses" % (self.error, self.pulses)
-                self._enter(self.DONE, t)
-                return 0.0, True
-            self._err_before = self.error
-            self.pulses += 1
-            self.pulse_s = max(self.min_pulse_s, abs(self.error) / self.rate)
-            self._pulse_sign = sign
-            self._enter(self.PULSE, t)
+        if self.t_state is None:
+            self.t_state = t
         if self.state == self.PULSE:
             if t - self.t_state < self.pulse_s:
-                return self._pulse_sign * self.w_spin, False
-            self._enter(self.SETTLE, t)
-        return 0.0, False
+                return self._dir * self.w_spin, False
+            self.state, self.t_state = self.SETTLE, t                       # blind until the blur has cleared
+            return 0.0, False
+        if bearing_deg is None or t - self.t_state < self.settle_s:
+            if t - self.t_state > self.settle_s + self.lost_s:
+                return self._finish(t, "board lost")
+            return 0.0, False
+        if self.b0 is None:
+            self.b0 = bearing_deg
+        self.progress = -wrap_deg(bearing_deg - self.b0)                     # a left turn lowers the left-positive bearing of a static board
+        self.error = self.target - self.progress
+        if self.pulses > 0:                                                  # learn the gain from the pulse just made
+            moved = self.progress - self._prog_before
+            if self.pulse_s > 0 and moved * self._dir > 0:
+                self.rate = (1.0 - self.learn) * self.rate + self.learn * abs(moved) / self.pulse_s
+            self._worse = self._worse + 1 if abs(self.error) >= abs(self._err_before) - 1.0 else 0
+        if abs(self.error) <= self.resolution_deg:
+            return self._finish(t, "ok")
+        if self.pulses >= self.max_pulses or self._worse >= 2:
+            return self._finish(t, "residual %.1f deg after %d pulses" % (self.error, self.pulses))
+        self._prog_before, self._err_before = self.progress, self.error
+        self._dir = 1.0 if self.error > 0 else -1.0
+        self.pulse_s = min(self.max_pulse_s, max(self.min_pulse_s, self.aim * abs(self.error) / self.rate))
+        self.pulses += 1
+        self.state, self.t_state = self.PULSE, t
+        return self._dir * self.w_spin, False
