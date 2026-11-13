@@ -16,6 +16,7 @@ import threading
 import time
 from pathlib import Path
 
+from sentry.nav.bearing_servo import TurnController
 from tools.closed_loop_check import _vision
 from tools.follow_marker import ESTOP_LATCH
 
@@ -50,7 +51,7 @@ def main():
     ap.add_argument("--skip-s", type=float, default=0.5)
     ap.add_argument("--min-m", type=float, default=1.2, help="stop a forward run at this range")
     ap.add_argument("--back-m", type=float, default=0.35, help="a reverse run never goes further than this behind the start range")
-    ap.add_argument("--lost-s", type=float, default=0.8)
+    ap.add_argument("--lost-s", type=float, default=1.2)
     ap.add_argument("--min-battery", type=float, default=11.3)
     ap.add_argument("--wait", type=float, default=60.0)
     ap.add_argument("--ip")
@@ -117,20 +118,51 @@ def main():
                 break
             sender.send(v, 0.0)
             time.sleep(TICK_S)
+        cmd_s = time.perf_counter() - t0
         for _ in range(6):
             sender.send(0.0, 0.0)
             time.sleep(TICK_S)
         speed, sd, n = fit_speed(pts, a.skip_s)
         end = dict(state)
-        return {"name": name, "kind": kind, "v": v, "seconds": round(time.perf_counter() - t0, 2), "start_range_m": round(start_range, 3), "end_range_m": round(end["dist"], 3),
+        return {"name": name, "kind": kind, "v": v, "seconds": round(time.perf_counter() - t0, 2), "command_s": round(cmd_s, 2), "start_range_m": round(start_range, 3), "end_range_m": round(end["dist"], 3),
                 "speed_m_s": None if speed is None else round(abs(speed), 4), "direction_ok": None if speed is None else (speed > 0) == (kind == "fwd"), "fit_resid_sd_m": None if sd is None else round(sd, 4), "n_obs": n,
                 "bearing_change_deg": round(math.degrees(end["bearing"]) - start_bearing, 2)}
 
     def rest(seconds):
+        """Stand still for `seconds`; -> the median range of the fresh observations in the last 0.6 s (None if fewer than 3): the range AT REST, good to a few mm."""
         t0 = time.perf_counter()
+        vals = []
         while time.perf_counter() - t0 < seconds:
             sender.send(0.0, 0.0)
+            s_ = dict(state)
+            if s_["t"] != seen["t"]:
+                seen["t"] = s_["t"]
+                if time.perf_counter() - t0 >= seconds - 0.6:
+                    vals.append(s_["dist"])
             time.sleep(TICK_S)
+        vals.sort()
+        return vals[len(vals) // 2] if len(vals) >= 3 else None
+
+    def aim():
+        """Re-aim at the board with the pulse-and-measure turn when its bearing is beyond 12 deg (the open-loop drives veer 10-30 deg per run); -> True if it turned."""
+        b = math.degrees(dict(state)["bearing"])
+        if abs(b) <= 12.0:
+            return False
+        ctl = TurnController(max(-60.0, min(60.0, b)))
+        t0 = time.perf_counter()
+        while time.perf_counter() - t0 < 12.0:
+            now = time.perf_counter()
+            s_ = dict(state)
+            fresh = s_["t"] != seen["t"]
+            seen["t"] = s_["t"]
+            w, done = ctl.step(now, math.degrees(s_["bearing"]) if fresh else None)
+            sender.send(0.0, w)
+            if done:
+                break
+            time.sleep(TICK_S)
+        if ctl.reason and ctl.reason == "board lost":
+            raise RuntimeError("board lost while aiming")
+        return True
 
     try:
         for _ in range(3):
@@ -151,16 +183,33 @@ def main():
             raise SystemExit("ABORT: R1 not held (and the e-stop armed) within %.0f s" % a.wait)
         print("R1 held: runs start (hold R1 until the two beeps)", flush=True)
         t_start = time.perf_counter()
+        r_rest = rest(1.5)
+        if r_rest is None:
+            raise RuntimeError("no steady range at the start")
         for i, v in enumerate(a.fwd_v, 1):
-            r_ref = dict(state)["dist"]                                   # the range the reverse run returns to
-            rec = run("fwd", v, "fwd_%d_v%.2f" % (i, v))
-            runs.append(rec)
-            print("  %-14s v %+.2f: %.2f -> %.2f m in %.1f s, speed %s m/s (resid sd %s m, n %d), bearing change %+.1f deg" % (rec["name"], v, rec["start_range_m"], rec["end_range_m"], rec["seconds"], rec["speed_m_s"], rec["fit_resid_sd_m"], rec["n_obs"], rec["bearing_change_deg"]), flush=True)
-            rest(1.0)
-            rec = run("rev", a.rev_v, "rev_%d_v%.2f" % (i, a.rev_v))
-            runs.append(rec)
-            print("  %-14s v %+.2f: %.2f -> %.2f m in %.1f s, speed %s m/s (resid sd %s m, n %d), bearing change %+.1f deg" % (rec["name"], a.rev_v, rec["start_range_m"], rec["end_range_m"], rec["seconds"], rec["speed_m_s"], rec["fit_resid_sd_m"], rec["n_obs"], rec["bearing_change_deg"]), flush=True)
-            rest(1.0)
+            r_ref = r_rest                                                # the range the reverse run returns to
+            for kind, vv, nm in (("fwd", v, "fwd_%d_v%.2f" % (i, v)), ("rev", a.rev_v, "rev_%d_v%.2f" % (i, a.rev_v))):
+                if aim():
+                    r_new = rest(1.5)
+                    if r_new is None:
+                        raise RuntimeError("no steady range after aiming")
+                    r_rest = r_new
+                    if kind == "fwd":
+                        r_ref = r_rest
+                rec = run(kind, vv, nm)
+                r_after = rest(1.5)
+                rec["rest_start_m"] = None if r_rest is None else round(r_rest, 4)
+                rec["rest_end_m"] = None if r_after is None else round(r_after, 4)
+                if r_rest is not None and r_after is not None and rec["command_s"] > 0:
+                    moved = (r_rest - r_after) if kind == "fwd" else (r_after - r_rest)        # metres driven (positive = the intended direction)
+                    rec["moved_at_rest_m"] = round(moved, 4)
+                    rec["mean_speed_rest_m_s"] = round(moved / rec["command_s"], 4)
+                runs.append(rec)
+                print("  %-14s v %+.2f: command %.1f s, at rest %s -> %s m, moved %s m, mean speed %s m/s | in-motion fit %s m/s (resid sd %s m, n %d), bearing %+.1f deg" % (
+                    rec["name"], vv, rec["command_s"], rec["rest_start_m"], rec["rest_end_m"], rec.get("moved_at_rest_m"), rec.get("mean_speed_rest_m_s"), rec["speed_m_s"], rec["fit_resid_sd_m"], rec["n_obs"], rec["bearing_change_deg"]), flush=True)
+                if r_after is None:
+                    raise RuntimeError("no steady range after %s" % nm)
+                r_rest = r_after
     except RuntimeError as e:
         why = str(e)
         print("STOPPED:", why)
