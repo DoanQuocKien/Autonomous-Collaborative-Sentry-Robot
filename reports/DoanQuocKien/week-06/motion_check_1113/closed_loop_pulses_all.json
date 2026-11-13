@@ -1,0 +1,434 @@
+[
+{
+"run": "cl_2",
+"seg": "turn_left_1",
+"dir": "left",
+"dur_s": 0.271,
+"moved_deg": -0.0,
+"rate_deg_s": -0.0,
+"k": 0
+},
+{
+"run": "cl_2",
+"seg": "turn_left_1",
+"dir": "left",
+"dur_s": 0.271,
+"moved_deg": 33.71,
+"rate_deg_s": 124.2,
+"k": 1
+},
+{
+"run": "cl_2",
+"seg": "turn_left_1",
+"dir": "left",
+"dur_s": 0.135,
+"moved_deg": 25.77,
+"rate_deg_s": 190.4,
+"k": 2
+},
+{
+"run": "cl_2",
+"seg": "turn_left_1",
+"dir": "right",
+"dur_s": 0.135,
+"moved_deg": 12.77,
+"rate_deg_s": 94.4,
+"k": 3
+},
+{
+"run": "cl_2",
+"seg": "turn_right_1",
+"dir": "right",
+"dur_s": 0.272,
+"moved_deg": 36.74,
+"rate_deg_s": 134.9,
+"k": 0
+},
+{
+"run": "cl_2",
+"seg": "turn_left_2",
+"dir": "left",
+"dur_s": 0.271,
+"moved_deg": 37.94,
+"rate_deg_s": 139.8,
+"k": 0
+},
+{
+"run": "cl_2",
+"seg": "turn_right_2",
+"dir": "right",
+"dur_s": 0.271,
+"moved_deg": 80.23,
+"rate_deg_s": 295.7,
+"k": 0
+},
+{
+"run": "cl_2",
+"seg": "turn_right_2",
+"dir": "left",
+"dur_s": 0.136,
+"moved_deg": 60.2,
+"rate_deg_s": 441.6,
+"k": 1
+},
+{
+"run": "cl_2",
+"seg": "turn_right_2",
+"dir": "right",
+"dur_s": 0.134,
+"moved_deg": 50.22,
+"rate_deg_s": 373.8,
+"k": 2
+},
+{
+"run": "cl_2",
+"seg": "turn_right_2",
+"dir": "left",
+"dur_s": 0.136,
+"moved_deg": 25.49,
+"rate_deg_s": 187.0,
+"k": 3
+},
+{
+"run": "cl_3_noff",
+"seg": "turn_left_1",
+"dir": "left",
+"dur_s": 0.271,
+"moved_deg": 37.25,
+"rate_deg_s": 137.3,
+"k": 0
+},
+{
+"run": "cl_3_noff",
+"seg": "turn_right_1",
+"dir": "right",
+"dur_s": 0.27,
+"moved_deg": 36.09,
+"rate_deg_s": 133.5,
+"k": 0
+},
+{
+"run": "cl_3_noff",
+"seg": "turn_right_1",
+"dir": "right",
+"dur_s": 0.134,
+"moved_deg": 13.85,
+"rate_deg_s": 103.1,
+"k": 1
+},
+{
+"run": "cl_3_noff",
+"seg": "turn_left_2",
+"dir": "left",
+"dur_s": 0.271,
+"moved_deg": 38.17,
+"rate_deg_s": 140.7,
+"k": 0
+},
+{
+"run": "cl_3_noff",
+"seg": "turn_right_2",
+"dir": "right",
+"dur_s": 0.271,
+"moved_deg": 37.11,
+"rate_deg_s": 136.8,
+"k": 0
+},
+{
+"run": "cl_3_noff",
+"seg": "turn_left_3",
+"dir": "left",
+"dur_s": 0.271,
+"moved_deg": 43.96,
+"rate_deg_s": 162.0,
+"k": 0
+},
+{
+"run": "cl_3_noff",
+"seg": "turn_right_3",
+"dir": "right",
+"dur_s": 0.272,
+"moved_deg": 42.87,
+"rate_deg_s": 157.4,
+"k": 0
+},
+{
+"run": "cl_4_ff",
+"seg": "turn_left_1",
+"dir": "left",
+"dur_s": 0.273,
+"moved_deg": 39.49,
+"rate_deg_s": 144.5,
+"k": 0
+},
+{
+"run": "cl_4_ff",
+"seg": "turn_right_1",
+"dir": "right",
+"dur_s": 0.271,
+"moved_deg": 35.84,
+"rate_deg_s": 132.1,
+"k": 0
+},
+{
+"run": "cl_4_ff",
+"seg": "turn_right_1",
+"dir": "right",
+"dur_s": 0.135,
+"moved_deg": 13.8,
+"rate_deg_s": 102.0,
+"k": 1
+},
+{
+"run": "cl_4_ff",
+"seg": "turn_left_2",
+"dir": "left",
+"dur_s": 0.271,
+"moved_deg": 34.44,
+"rate_deg_s": 126.9,
+"k": 0
+},
+{
+"run": "cl_4_ff",
+"seg": "turn_left_2",
+"dir": "left",
+"dur_s": 0.134,
+"moved_deg": 0.05,
+"rate_deg_s": 0.4,
+"k": 1
+},
+{
+"run": "cl_5_ff",
+"seg": "turn_left_1",
+"dir": "left",
+"dur_s": 0.27,
+"moved_deg": 37.09,
+"rate_deg_s": 137.2,
+"k": 0
+},
+{
+"run": "cl_5_ff",
+"seg": "turn_right_1",
+"dir": "right",
+"dur_s": 0.271,
+"moved_deg": 34.36,
+"rate_deg_s": 126.6,
+"k": 0
+},
+{
+"run": "cl_5_ff",
+"seg": "turn_right_1",
+"dir": "right",
+"dur_s": 0.135,
+"moved_deg": 13.29,
+"rate_deg_s": 98.2,
+"k": 1
+},
+{
+"run": "cl_5_ff",
+"seg": "turn_left_2",
+"dir": "left",
+"dur_s": 0.271,
+"moved_deg": 38.64,
+"rate_deg_s": 142.4,
+"k": 0
+},
+{
+"run": "cl_5_ff",
+"seg": "turn_right_2",
+"dir": "right",
+"dur_s": 0.272,
+"moved_deg": 36.9,
+"rate_deg_s": 135.5,
+"k": 0
+},
+{
+"run": "cl_5_ff",
+"seg": "turn_left_3",
+"dir": "left",
+"dur_s": 0.271,
+"moved_deg": 36.43,
+"rate_deg_s": 134.3,
+"k": 0
+},
+{
+"run": "cl_5_ff",
+"seg": "turn_left_3",
+"dir": "left",
+"dur_s": 0.135,
+"moved_deg": 14.13,
+"rate_deg_s": 104.4,
+"k": 1
+},
+{
+"run": "cl_5_ff",
+"seg": "turn_right_3",
+"dir": "right",
+"dur_s": 0.271,
+"moved_deg": 35.65,
+"rate_deg_s": 131.4,
+"k": 0
+},
+{
+"run": "cl_5_ff",
+"seg": "turn_right_3",
+"dir": "right",
+"dur_s": 0.136,
+"moved_deg": 15.2,
+"rate_deg_s": 111.5,
+"k": 1
+},
+{
+"run": "cl_7_align",
+"seg": "turn_left_1",
+"dir": "left",
+"dur_s": 0.271,
+"moved_deg": 36.11,
+"rate_deg_s": 133.1,
+"k": 0
+},
+{
+"run": "cl_7_align",
+"seg": "turn_left_1",
+"dir": "left",
+"dur_s": 0.135,
+"moved_deg": 16.29,
+"rate_deg_s": 120.4,
+"k": 1
+},
+{
+"run": "cl_7_align",
+"seg": "turn_right_1",
+"dir": "right",
+"dur_s": 0.271,
+"moved_deg": 33.61,
+"rate_deg_s": 123.9,
+"k": 0
+},
+{
+"run": "cl_7_align",
+"seg": "turn_right_1",
+"dir": "right",
+"dur_s": 0.136,
+"moved_deg": 13.97,
+"rate_deg_s": 102.5,
+"k": 1
+},
+{
+"run": "cl_8_align_hold",
+"seg": "turn_left_1",
+"dir": "left",
+"dur_s": 0.271,
+"moved_deg": 35.92,
+"rate_deg_s": 132.4,
+"k": 0
+},
+{
+"run": "cl_8_align_hold",
+"seg": "turn_left_1",
+"dir": "left",
+"dur_s": 0.136,
+"moved_deg": 14.85,
+"rate_deg_s": 108.9,
+"k": 1
+},
+{
+"run": "cl_8_align_hold",
+"seg": "turn_right_1",
+"dir": "right",
+"dur_s": 0.272,
+"moved_deg": 31.62,
+"rate_deg_s": 116.1,
+"k": 0
+},
+{
+"run": "cl_8_align_hold",
+"seg": "turn_right_1",
+"dir": "right",
+"dur_s": 0.136,
+"moved_deg": 14.68,
+"rate_deg_s": 107.7,
+"k": 1
+},
+{
+"run": "cl_8_align_hold",
+"seg": "turn_left_2",
+"dir": "left",
+"dur_s": 0.272,
+"moved_deg": 37.61,
+"rate_deg_s": 138.1,
+"k": 0
+},
+{
+"run": "cl_8_align_hold",
+"seg": "turn_right_2",
+"dir": "right",
+"dur_s": 0.271,
+"moved_deg": 34.51,
+"rate_deg_s": 127.2,
+"k": 0
+},
+{
+"run": "cl_8_align_hold",
+"seg": "turn_right_2",
+"dir": "right",
+"dur_s": 0.136,
+"moved_deg": 16.67,
+"rate_deg_s": 122.3,
+"k": 1
+},
+{
+"run": "cl_8_align_hold",
+"seg": "turn_left_3",
+"dir": "left",
+"dur_s": 0.272,
+"moved_deg": 37.91,
+"rate_deg_s": 139.2,
+"k": 0
+},
+{
+"run": "cl_8_align_hold",
+"seg": "turn_right_3",
+"dir": "right",
+"dur_s": 0.273,
+"moved_deg": 35.49,
+"rate_deg_s": 129.8,
+"k": 0
+},
+{
+"run": "cl_8_align_hold",
+"seg": "turn_right_3",
+"dir": "right",
+"dur_s": 0.136,
+"moved_deg": 10.48,
+"rate_deg_s": 76.9,
+"k": 1
+},
+{
+"run": "cl_6_kp045",
+"seg": "turn_left_1",
+"dir": "left",
+"dur_s": 0.271,
+"moved_deg": 37.06,
+"rate_deg_s": 136.6,
+"k": 0
+},
+{
+"run": "cl_6_kp045",
+"seg": "turn_right_1",
+"dir": "right",
+"dur_s": 0.27,
+"moved_deg": 30.96,
+"rate_deg_s": 114.5,
+"k": 0
+},
+{
+"run": "cl_6_kp045",
+"seg": "turn_right_1",
+"dir": "right",
+"dur_s": 0.135,
+"moved_deg": 15.33,
+"rate_deg_s": 113.3,
+"k": 1
+}
+]

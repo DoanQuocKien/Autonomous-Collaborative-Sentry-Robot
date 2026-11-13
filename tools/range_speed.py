@@ -46,7 +46,7 @@ def main():
     ap.add_argument("--marker", type=int, default=0)
     ap.add_argument("--fwd-v", type=float, nargs="+", default=[0.55, 0.55, 0.55, 0.75, 0.75, 0.75], help="one forward run (each followed by a reverse run) per value")
     ap.add_argument("--rev-v", type=float, default=-0.45)
-    ap.add_argument("--fwd-s", type=float, default=1.8)
+    ap.add_argument("--fwd-s", type=float, nargs="+", default=[1.8], help="command time of each forward run (cycled): several different times separate the speed from the start-up loss")
     ap.add_argument("--rev-max-s", type=float, default=4.0)
     ap.add_argument("--skip-s", type=float, default=0.5)
     ap.add_argument("--min-m", type=float, default=1.2, help="stop a forward run at this range")
@@ -95,7 +95,7 @@ def main():
     t_start = None
     why = "done"
 
-    def run(kind, v, name):
+    def run(kind, v, name, fwd_s_now=0.0):
         """-> run record. Drives (v, 0) until the stop rule of its kind."""
         s0 = dict(state)
         start_range, start_bearing = s0["dist"], math.degrees(s0["bearing"])
@@ -112,7 +112,7 @@ def main():
             if now - last_ok > a.lost_s:
                 raise RuntimeError("marker lost during %s" % name)
             elapsed = now - t0
-            if kind == "fwd" and (elapsed >= a.fwd_s or s["dist"] <= a.min_m):
+            if kind == "fwd" and (elapsed >= fwd_s_now or s["dist"] <= a.min_m):
                 break
             if kind == "rev" and (elapsed >= a.rev_max_s or s["dist"] >= r_ref + 0.05 or s["dist"] >= r_ref + a.back_m):
                 break
@@ -196,7 +196,7 @@ def main():
                     r_rest = r_new
                     if kind == "fwd":
                         r_ref = r_rest
-                rec = run(kind, vv, nm)
+                rec = run(kind, vv, nm, a.fwd_s[(i - 1) % len(a.fwd_s)])
                 r_after = rest(1.5)
                 rec["rest_start_m"] = None if r_rest is None else round(r_rest, 4)
                 rec["rest_end_m"] = None if r_after is None else round(r_after, 4)
