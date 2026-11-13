@@ -52,8 +52,10 @@ def main():
     ap.add_argument("--trim0", type=float, default=0.0)
     ap.add_argument("--trim-std0", type=float, default=0.03)
     ap.add_argument("--q-std", type=float, default=0.01, help="how much the trim may change between drives (normalised w)")
+    ap.add_argument("--align", action="store_true", help="before each drive, turn (pulse-and-measure, at rest) so the board is back near bearing 0: the turns leave 12-15 deg that the PI cannot remove fast without blurring the image")
     ap.add_argument("--no-ff", action="store_true", help="control run for an A/B comparison: every drive starts at trim 0 (the estimator still records what it measures)")
     ap.add_argument("--rate-deg-s", type=float, default=140.0, help="first guess of the turn gain, deg per second of pulse (125 in the classroom, 147 at the dorm); learned from every pulse")
+    ap.add_argument("--hold-s", type=float, default=0.2, help="while no fresh observation for longer than this the drive uses only the feed-forward trim (a strong correction must not be held blind: the image blurs while the robot turns)")
     ap.add_argument("--lost-s", type=float, default=1.2)
     ap.add_argument("--max-s", type=float, default=90.0)
     ap.add_argument("--min-battery", type=float, default=11.3)
@@ -154,6 +156,15 @@ def main():
                 if reason in ("board lost", "turn timeout"):
                     raise RuntimeError(reason)
                 rest(1.0, "rest")
+            if a.align:
+                b_now = obs()[0]
+                if abs(b_now) > TurnController(1.0, rate_deg_s=a.rate_deg_s).resolution_deg:
+                    ctl, reason = turn(max(-70.0, min(70.0, b_now)), "align_%d" % r)        # a left turn lowers the left-positive bearing: target = the bearing itself
+                    row["align"] = {"bearing_before_deg": round(b_now, 1), "achieved_deg": round(ctl.progress, 1), "error_deg": round(ctl.error, 1), "pulses": ctl.pulses, "reason": reason}
+                    print("  align_%d: bearing before %+.1f, turned %+.1f, error %+.1f (%s)" % (r, b_now, ctl.progress, ctl.error, reason), flush=True)
+                    if reason in ("board lost", "turn timeout"):
+                        raise RuntimeError(reason)
+                    rest(1.0, "rest")
             est.predict()
             pi = PIController(kp=a.kp, ki=a.ki, w_max=min(0.30, max(0.0, a.v - 0.41)))      # the slower wheel must stay above the dead zone (0.40): |w| <= v - 0.40 - 0.01
             pi.i = 0.0 if a.no_ff else est.trim
@@ -168,8 +179,9 @@ def main():
                     raise RuntimeError("marker lost")
                 if d_start - d >= a.drive_m or d <= a.min_m or now - t_start > a.max_s:
                     break
-                sender.send(a.v, w)
-                log.append((round(now - t_start, 3), "drive_%d" % r, round(b, 2), round(d, 3), round(pi.i, 4), round(w, 4), round(now - state["t"], 3)))
+                w_out = w if now - last_ok <= a.hold_s else pi.i
+                sender.send(a.v, w_out)
+                log.append((round(now - t_start, 3), "drive_%d" % r, round(b, 2), round(d, 3), round(pi.i, 4), round(w_out, 4), round(now - state["t"], 3)))
                 bears.append(b)
                 ints.append(pi.i)
                 time.sleep(TICK_S)
@@ -199,7 +211,7 @@ def main():
     with (out / "log.csv").open("w", newline="") as f:
         csv.writer(f).writerows([("t", "segment", "bearing_deg", "dist_m", "integral_w", "w", "obs_age_s")] + log)
     summary = {"label": a.label, "marker": a.marker, "battery_v": volts, "v": a.v, "turn_deg": a.turn_deg, "drive_m": a.drive_m, "min_m": a.min_m, "kp": a.kp, "ki": a.ki, "trim0": a.trim0,
-               "q_std": a.q_std, "no_ff": a.no_ff, "rate_deg_s": a.rate_deg_s, "ended": why, "start_dist_m": d0, "repeats": results}
+               "q_std": a.q_std, "no_ff": a.no_ff, "align": a.align, "hold_s": a.hold_s, "rate_deg_s": a.rate_deg_s, "ended": why, "start_dist_m": d0, "repeats": results}
     (out / "summary.json").write_text(json.dumps(summary, indent=2))
     print("saved", out)
 
