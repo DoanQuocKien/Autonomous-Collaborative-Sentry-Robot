@@ -15,6 +15,7 @@
 | Tiếp cận cửa tự động | tới vị trí đỗ 1,5–3,0 m trước cửa | 4 lần chạy tới 1,6–1,9 m (thước), 51 / 15 / 6 / 5 bước (sau khi sửa cửa sổ căn tâm), sai khoảng cách ≤ 0,05 m với số mũ 1,6 | một cửa, một ngày |
 | Ước lượng vị trí cửa tự động | — | sai +11 % và +15 % (hình học yếu) | chưa có lần chạy hình học tốt |
 | Cắt động cơ khi thả R1 / nút khác | dừng ngay | trung vị 7 ms (cắt), robot từ chối lệnh sau đó | chưa đo cơ học |
+| Độ trễ và tải trên robot (phần mở rộng) | ≥ 20 fps, p95 ≤ 100 ms, RAM < 3 GB, GPU < 80 °C, pin ≥ 11,1 V (15 phút, có người, luồng ESP32 thật) | 13/11, có người và luồng ESP32 thật: 17,7 và 17,1 fps (60 s), 14,45 fps với p95 153 ms (600 s, người ngồi); RAM 2,13 GB, GPU tối đa 38,5 °C, pin tối thiểu 11,71 V. Không có người (16/10): 20,0 fps, p95 51–101 ms | **không đạt** (fps và p95); RAM, nhiệt độ và pin đạt; chưa chạy đủ 15 phút |
 
 ## 8.2 Kế hoạch tới hết kỳ (mỗi mục có cổng riêng, không làm gấp)
 

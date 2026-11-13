@@ -47,4 +47,4 @@ Trên D5-640, tiến trình riêng, đo đồng bộ: FP32 **123,59 fps**, p95 1
 
 ## 5.x.4 Camera cửa ESP32
 
-Tối ưu luồng ESP32-CAM (bản "opt4": cắt cảm biến, bộ nhân xung, độ mạnh ổ đĩa chân xung 0, bộ đệm gửi 23 KB) được trình bày ở mục 3.4: 11,8 fps trong 10 phút, khuôn mặt khoảng 77 px ở 2,1 m; **chưa kiểm tra tại cửa với người**.
+Tối ưu luồng ESP32-CAM (bản "opt4": cắt cảm biến, bộ nhân xung, độ mạnh ổ đĩa chân xung 0, bộ đệm gửi 23 KB) được trình bày ở mục 3.4: 12,50 fps trung bình trong 600 s (không giây nào dưới 5 fps; lần thử sớm hơn trên bàn thử 11,84 fps), khuôn mặt dự đoán khoảng 77 px ở 2,1 m trên bàn thử và đo được 68–91 px ở 3,0–1,8 m tại cửa ngày 13/11 với một người; **chưa có điểm của người lạ** nên chưa tính được FAR (xem mục 3.4).
