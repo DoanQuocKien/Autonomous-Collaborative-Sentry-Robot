@@ -1,5 +1,5 @@
 {
- "note": "edge_bench stageC with the door pipeline in its own thread on the LIVE ESP32 stream (opt4 on the battery pack, http://<esp>:81/stream, new jetson/mjpeg_latest.py), robot MAXN, 60 s, 1 person ~2 m in front of both cameras, motors never driven, dorm hotspot (ESP32 -58..-66 dBm). 28/10 G1 (cafe, 900 s, old reader): 20.00 fps, 2 skipped. tegrastats = last 60 samples.",
+ "note": "edge_bench stageC with the door pipeline in its own thread on the LIVE ESP32 stream (opt4 on the battery pack, http://<esp>:81/stream, new jetson/mjpeg_latest.py), robot MAXN, 60 s, 1 person ~2 m in front of both cameras, motors never driven, dorm hotspot (ESP32 -58..-66 dBm). 28/10 G1 (cafe, 900 s, old reader): 20.00 fps, 2 skipped. tegrastats = last 60 samples. CORRECTION: esp_reconnects = 1 is NOT a stream drop: jetson/mjpeg_latest.py increments `reconnects` once more when the receiver is stopped at the end of the run (the loop exit is counted); the ESP32 delivered 12.46 / 12.54 fps, equal to its own 12.5 fps, so the stream had no gaps.",
  "bench": {
   "mode": "stageC",
   "seconds": 60.1,
