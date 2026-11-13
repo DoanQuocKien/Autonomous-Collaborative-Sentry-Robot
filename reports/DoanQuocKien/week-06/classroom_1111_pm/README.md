@@ -176,7 +176,21 @@ One person (DQK), distances taped from the lens, buffalo_s, every 2nd frame of a
 - A face was detected in 100 % of the scored frames in every clip. Width follows about 200 px / distance (84 px at 2.4 m, 67 px at 3.0 m in an earlier single-gaze run).
 - **Face size does not explain the scores:** the widest faces (1.8 m) scored lower than the narrowest (3.0 m), so the limit is more likely the enrolment (small cafe faces, other camera, other light) or the low upward viewing angle of the tower; not separated yet. Turning the head away costs 0.04-0.11 in cosine at every distance.
 - The stream ran at 12 fps at 1.8 m and fell to 3-5 fps at 3.0 m (hotspot link, signal -56 to -64 dBm; the bench value was 12.5 fps). One person, one session, one enrolment: a pattern, not a TAR/FAR.
-- Tool for a proper enrolment: `tools/enroll_guided.py` (guided poses on the laptop webcam, five embeddings, no photos stored). The repeat with that enrolment is pending.
+- Tool for a proper enrolment: `tools/enroll_guided.py` (guided poses on the laptop webcam, five embeddings, no photos stored).
+
+**Same six clips with the guided enrolment** (5 poses taken the same day in the classroom on the laptop webcam; best cosine of the 5 per frame; `door_recognition_guided_1113.json`):
+
+| Distance | Gaze | Face width | Detector conf | Cosine median (min-max) | Frames >= 0.45 | fps in clip |
+| :-- | :-- | :-: | :-: | :-: | :-: | :-: |
+| 1.8 m | into the camera | 89 px | 0.71 | 0.666 (0.609-0.703) | 100 % | 6.8 |
+| 1.8 m | away | 84 px | 0.73 | 0.559 (0.506-0.634) | 100 % | 3.1 |
+| 2.4 m | into the camera | 77 px | 0.84 | 0.668 (0.638-0.694) | 100 % | 7.6 |
+| 2.4 m | away | 72 px | 0.83 | 0.480 (0.344-0.573) | 89 % | 4.8 |
+| 3.0 m | into the camera | 68 px | 0.88 | 0.609 (0.538-0.708) | 100 % | 5.6 |
+| 3.0 m | away | 67 px | 0.85 | 0.506 (0.402-0.589) | 80 % | 3.6 |
+
+- Into the camera: 100 % of frames at or above 0.45 at all three distances (medians 0.61-0.67). Away: medians 0.56 (1.8 m), 0.48 (2.4 m), 0.51 (3.0 m), with 89 % and 80 % of frames at or above 0.45 at 2.4 m and 3.0 m. The enrolment, not the face size or the tower angle, was the main cause of the low scores in the first table.
+- Limits: one person, one session, same day and clothes as the enrolment, **no impostor scores** (so no FAR and the 0.45 threshold is not validated for the door camera); the frame rate was 3-8 fps in this run (hotspot link), fewer frames at 1.8 m away (25) than at 2.4 m straight (61).
 
 ## Needs the three members (do first while all are available)
 1. Person frames at 1.2, 1.8 and 2.4 m from several different people (experiment A validation; needs more than one person; frames stay local).
