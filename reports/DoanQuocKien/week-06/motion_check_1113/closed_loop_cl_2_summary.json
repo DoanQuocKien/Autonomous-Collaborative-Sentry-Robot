@@ -1,0 +1,78 @@
+{
+  "label": "cl_2",
+  "marker": 0,
+  "battery_v": 12.088,
+  "v": 0.55,
+  "turn_deg": 45.0,
+  "drive_m": 0.4,
+  "min_m": 1.1,
+  "kp": 0.2,
+  "ki": 0.05,
+  "trim0": 0.0,
+  "q_std": 0.01,
+  "rate_deg_s": 140.0,
+  "ended": "done",
+  "start_dist_m": 2.0859702268426394,
+  "repeats": [
+    {
+      "repeat": 1,
+      "turn_left": {
+        "target_deg": 45.0,
+        "achieved_deg": 46.7,
+        "error_deg": -1.7,
+        "pulses": 4,
+        "reason": "ok"
+      },
+      "turn_right": {
+        "target_deg": -45.0,
+        "achieved_deg": -36.7,
+        "error_deg": -8.3,
+        "pulses": 1,
+        "reason": "ok"
+      },
+      "drive": {
+        "start_m": 2.088,
+        "end_m": 1.686,
+        "seconds": 1.94,
+        "trim_used": 0.0,
+        "trim_measured": -0.011,
+        "trim_after": -0.0109,
+        "trim_std_after": 0.003,
+        "veer_deg_per_m": 21.7,
+        "mean_abs_bearing_deg": 7.58,
+        "max_abs_bearing_deg": 13.28,
+        "entropy_nats": 2.44
+      }
+    },
+    {
+      "repeat": 2,
+      "turn_left": {
+        "target_deg": 45.0,
+        "achieved_deg": 37.9,
+        "error_deg": 7.1,
+        "pulses": 1,
+        "reason": "ok"
+      },
+      "turn_right": {
+        "target_deg": -45.0,
+        "achieved_deg": -44.8,
+        "error_deg": -0.2,
+        "pulses": 4,
+        "reason": "ok"
+      },
+      "drive": {
+        "start_m": 1.655,
+        "end_m": 1.251,
+        "seconds": 2.05,
+        "trim_used": -0.0109,
+        "trim_measured": -0.0077,
+        "trim_after": -0.0079,
+        "trim_std_after": 0.0029,
+        "veer_deg_per_m": 15.2,
+        "mean_abs_bearing_deg": 2.68,
+        "max_abs_bearing_deg": 6.57,
+        "entropy_nats": 2.5
+      }
+    }
+  ]
+}
