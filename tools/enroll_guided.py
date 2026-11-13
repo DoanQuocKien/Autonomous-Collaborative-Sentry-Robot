@@ -93,12 +93,16 @@ def main():
     cap = cv2.VideoCapture(a.camera, cv2.CAP_DSHOW)
     if not cap.isOpened():
         raise SystemExit("cannot open camera %d" % a.camera)
-    vectors, k, since, best = [], 0, None, None
+    vectors, k, since, best, bad_reads = [], 0, None, None, 0
     try:
         while k < len(POSES):
             ok, img = cap.read()
             if not ok:
+                bad_reads += 1
+                if bad_reads > 100:
+                    raise SystemExit("camera %d stopped delivering frames, nothing saved" % a.camera)
                 continue
+            bad_reads = 0
             prompt, rng = POSES[k]
             faces = enc.extract(img)
             msg = "no face"
