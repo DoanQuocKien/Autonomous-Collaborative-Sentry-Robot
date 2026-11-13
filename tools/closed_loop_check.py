@@ -52,6 +52,7 @@ def main():
     ap.add_argument("--trim0", type=float, default=0.0)
     ap.add_argument("--trim-std0", type=float, default=0.03)
     ap.add_argument("--q-std", type=float, default=0.01, help="how much the trim may change between drives (normalised w)")
+    ap.add_argument("--no-ff", action="store_true", help="control run for an A/B comparison: every drive starts at trim 0 (the estimator still records what it measures)")
     ap.add_argument("--rate-deg-s", type=float, default=140.0, help="first guess of the turn gain, deg per second of pulse (125 in the classroom, 147 at the dorm); learned from every pulse")
     ap.add_argument("--lost-s", type=float, default=1.2)
     ap.add_argument("--max-s", type=float, default=90.0)
@@ -155,8 +156,8 @@ def main():
                 rest(1.0, "rest")
             est.predict()
             pi = PIController(kp=a.kp, ki=a.ki)
-            pi.i = est.trim
-            w, d_start, t0, prev, last_ok, ints, bears = est.trim, obs()[1], time.perf_counter(), time.perf_counter(), time.perf_counter(), [], []
+            pi.i = 0.0 if a.no_ff else est.trim
+            w, d_start, t0, prev, last_ok, ints, bears = pi.i, obs()[1], time.perf_counter(), time.perf_counter(), time.perf_counter(), [], []
             while True:
                 now = time.perf_counter()
                 b, d, fresh = obs()
@@ -175,7 +176,7 @@ def main():
             tail = ints[len(ints) // 2:] or ints
             z = sum(tail) / len(tail)
             sd = (sum((x - z) ** 2 for x in tail) / len(tail)) ** 0.5
-            trim_before = est.trim
+            trim_before = 0.0 if a.no_ff else est.trim
             est.update(z, sd)
             row["drive"] = {"start_m": round(d_start, 3), "end_m": round(d, 3), "seconds": round(now - t0, 2), "trim_used": round(trim_before, 4), "trim_measured": round(z, 4), "trim_after": round(est.trim, 4), "trim_std_after": round(est.std, 4),
                             "veer_deg_per_m": round(veer_deg_per_m(z, a.v), 1), "mean_abs_bearing_deg": round(sum(abs(x) for x in bears) / max(len(bears), 1), 2),
@@ -198,7 +199,7 @@ def main():
     with (out / "log.csv").open("w", newline="") as f:
         csv.writer(f).writerows([("t", "segment", "bearing_deg", "dist_m", "integral_w", "w")] + log)
     summary = {"label": a.label, "marker": a.marker, "battery_v": volts, "v": a.v, "turn_deg": a.turn_deg, "drive_m": a.drive_m, "min_m": a.min_m, "kp": a.kp, "ki": a.ki, "trim0": a.trim0,
-               "q_std": a.q_std, "rate_deg_s": a.rate_deg_s, "ended": why, "start_dist_m": d0, "repeats": results}
+               "q_std": a.q_std, "no_ff": a.no_ff, "rate_deg_s": a.rate_deg_s, "ended": why, "start_dist_m": d0, "repeats": results}
     (out / "summary.json").write_text(json.dumps(summary, indent=2))
     print("saved", out)
 
