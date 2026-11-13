@@ -161,6 +161,23 @@ No scene, only the board: powered by two Li-ion 18650 cells (stated: Samsung 20R
 - **`sentry/nav/controllers.py` (MEDIUM, behaviour, verified by a script; not fixed, needs a robot test): the pursuit obstacle deflection is clamped to almost nothing.** In `PursuitController.compute`, branch 5 (translating forward) limits |w| to `v - dead_zone - 0.01` so that the slower wheel stays above the dead zone. With the dead zone 0.12/0.3 = 0.40 and v at least 0.45, that limit is 0.04 to 0.14, so the configured `obstacle_avoid_w` = 0.45 never takes effect while driving: target 2.5 m ahead, obstacle dead ahead at 0.45 m or 0.40 m gives (v, w) = (0.55, -0.14), not a 0.45 deflection. Forward speed is cut only below `obstacle_critical_m` (0.35 m), where the robot stops and spins away. So between 0.5 m and 0.35 m the robot keeps driving at 0.55 with a weak turn, and the real avoidance is the stop at 0.35 m. Before any pursuit run near furniture: either slow down inside the 0.5 m band (cap v at 0.45 and let the wheel mix keep the dead-zone rule) or spin in place at the threshold, and measure the stopping distance with wheels on the floor. A test pins the current behaviour only for the critical case.
 - **Still not audited:** `sentry/perception/`, the rest of `sentry/nav/`, `tools/pursue_live.py` / `deploy_live.py` logic (only cleanup paths), and the evaluation tools' metric definitions.
 
+### ESP32-CAM at the door: face width and recognition by distance (2026-11-13, opt4 on the battery pack, tower 1.8 m from the door; data: `week-06/esp32_stream_1112/data/door_face_widths_1113.json`, `door_recognition_1113.json`)
+One person (DQK), distances taped from the lens, buffalo_s, every 2nd frame of an 8 s clip scored, cosine against the whitelist threshold 0.45. The enrolment in this table is the 8 best frames of the 2026-10-28 cafe clips (faces 22-52 px, another camera), so the scores are a lower bound for a proper enrolment. "Away" = head turned about 45 degrees. No face images are stored in the repo.
+
+| Distance | Gaze | Face width | Detector conf | Cosine median (min-max) | Frames >= 0.45 | fps in clip |
+| :-- | :-- | :-: | :-: | :-: | :-: | :-: |
+| 1.8 m | into the camera | 91 px | 0.75 | 0.419 (0.358-0.468) | 6 % | 12.1 |
+| 1.8 m | away | 86 px | 0.69 | 0.368 (0.328-0.405) | 0 % | 11.8 |
+| 2.4 m | into the camera | 76 px | 0.84 | 0.440 (0.409-0.481) | 34 % | 7.1 |
+| 2.4 m | away | 76 px | 0.85 | 0.403 (0.343-0.455) | 2 % | 11.2 |
+| 3.0 m | into the camera | 68 px | 0.84 | 0.459 (0.428-0.499) | 65 % | 5.0 |
+| 3.0 m | away | 67 px | 0.86 | 0.345 (0.303-0.391) | 0 % | 3.1 |
+
+- A face was detected in 100 % of the scored frames in every clip. Width follows about 200 px / distance (84 px at 2.4 m, 67 px at 3.0 m in an earlier single-gaze run).
+- **Face size does not explain the scores:** the widest faces (1.8 m) scored lower than the narrowest (3.0 m), so the limit is more likely the enrolment (small cafe faces, other camera, other light) or the low upward viewing angle of the tower; not separated yet. Turning the head away costs 0.04-0.11 in cosine at every distance.
+- The stream ran at 12 fps at 1.8 m and fell to 3-5 fps at 3.0 m (hotspot link, signal -56 to -64 dBm; the bench value was 12.5 fps). One person, one session, one enrolment: a pattern, not a TAR/FAR.
+- Tool for a proper enrolment: `tools/enroll_guided.py` (guided poses on the laptop webcam, five embeddings, no photos stored). The repeat with that enrolment is pending.
+
 ## Needs the three members (do first while all are available)
 1. Person frames at 1.2, 1.8 and 2.4 m from several different people (experiment A validation; needs more than one person; frames stay local).
 2. A full T2 run with a second person walking in: the queue and the lock, with HNHL and KR watching the laptop (the ESP32 handshake at the sweet spot, then the walk-through).

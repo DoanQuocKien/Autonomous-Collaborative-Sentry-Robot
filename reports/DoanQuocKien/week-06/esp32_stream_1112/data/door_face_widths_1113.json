@@ -1,0 +1,6 @@
+{"note": "ESP32-CAM opt4 at the door, 2026-11-13, battery pack, buffalo_s detector (face box width, px). Distance = lens to the person. Frames stay local (face images).",
+ "runs": [
+  {"distance_m": 1.8, "measured": "taped", "frames": 1, "width_px": 95, "conf": 0.78, "tilt": "before the last tilt-up, head top at the frame edge", "gaze": "toward camera"},
+  {"distance_m": 2.4, "measured": "taped", "frames": 12, "width_px": 84, "width_range_px": [83, 85], "conf_median": 0.70, "gaze": "looking down at a phone"},
+  {"distance_m": 3.0, "measured": "taped", "frames": 12, "width_px": 67, "width_range_px": [62, 70], "conf_median": 0.86, "gaze": "toward camera"}],
+ "stream": "7.5 fps in all three runs (bench: 12.5), rssi -56 to -64 dBm"}
