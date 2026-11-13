@@ -11,6 +11,7 @@ from pathlib import Path
 import cv2
 
 from sentry.net.zmq_rx import ZMQReceiver
+from tools.record_d2 import beep
 
 
 def main():
@@ -23,7 +24,6 @@ def main():
     ap.add_argument("--ip", default="auto")
     ap.add_argument("--out", default="data/furniture")
     a = ap.parse_args()
-    import winsound
     rx = ZMQReceiver(ip=a.ip).start()
     try:
         if rx.read(timeout=10.0) is None:
@@ -32,7 +32,7 @@ def main():
         for d in a.distances:
             print("next: %.2f m, adjust now" % d, flush=True)
             for _ in range(2):
-                winsound.Beep(1000, 200)
+                beep(1000, 200, True)
                 time.sleep(0.2)
             time.sleep(a.adjust_s)
             folder = Path(a.out) / a.label / ("d%.2f" % d)
@@ -46,7 +46,7 @@ def main():
                 n += 1
                 time.sleep(0.25)
             print("saved %d frames at %.2f m" % (n, d), flush=True)
-        winsound.Beep(500, 1500)
+        beep(500, 1500, True)
     finally:
         rx.close()
 
