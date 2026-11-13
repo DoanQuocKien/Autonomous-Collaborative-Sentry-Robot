@@ -108,7 +108,7 @@ def main():
         while time.perf_counter() - t0 < seconds:
             sender.send(0.0, 0.0)
             b, d, _ = obs()
-            log.append((round(time.perf_counter() - t_start, 3), name, round(b, 2), round(d, 3), 0.0, 0.0))
+            log.append((round(time.perf_counter() - t_start, 3), name, round(b, 2), round(d, 3), 0.0, 0.0, round(time.perf_counter() - state["t"], 3)))
             time.sleep(TICK_S)
 
     def turn(target, name):
@@ -121,7 +121,7 @@ def main():
             b, d, fresh = obs()
             w, done = ctl.step(now, b if fresh else None)
             sender.send(0.0, w)
-            log.append((round(now - t_start, 3), name, round(b, 2), round(d, 3), 0.0, round(w, 3)))
+            log.append((round(now - t_start, 3), name, round(b, 2), round(d, 3), 0.0, round(w, 3), round(now - state["t"], 3)))
             if done:
                 return ctl, ctl.reason
             time.sleep(TICK_S)
@@ -155,7 +155,7 @@ def main():
                     raise RuntimeError(reason)
                 rest(1.0, "rest")
             est.predict()
-            pi = PIController(kp=a.kp, ki=a.ki)
+            pi = PIController(kp=a.kp, ki=a.ki, w_max=min(0.30, max(0.0, a.v - 0.41)))      # the slower wheel must stay above the dead zone (0.40): |w| <= v - 0.40 - 0.01
             pi.i = 0.0 if a.no_ff else est.trim
             w, d_start, t0, prev, last_ok, ints, bears = pi.i, obs()[1], time.perf_counter(), time.perf_counter(), time.perf_counter(), [], []
             while True:
@@ -169,7 +169,7 @@ def main():
                 if d_start - d >= a.drive_m or d <= a.min_m or now - t_start > a.max_s:
                     break
                 sender.send(a.v, w)
-                log.append((round(now - t_start, 3), "drive_%d" % r, round(b, 2), round(d, 3), round(pi.i, 4), round(w, 4)))
+                log.append((round(now - t_start, 3), "drive_%d" % r, round(b, 2), round(d, 3), round(pi.i, 4), round(w, 4), round(now - state["t"], 3)))
                 bears.append(b)
                 ints.append(pi.i)
                 time.sleep(TICK_S)
@@ -197,7 +197,7 @@ def main():
     out = Path("data/closed_loop") / a.label
     out.mkdir(parents=True, exist_ok=True)
     with (out / "log.csv").open("w", newline="") as f:
-        csv.writer(f).writerows([("t", "segment", "bearing_deg", "dist_m", "integral_w", "w")] + log)
+        csv.writer(f).writerows([("t", "segment", "bearing_deg", "dist_m", "integral_w", "w", "obs_age_s")] + log)
     summary = {"label": a.label, "marker": a.marker, "battery_v": volts, "v": a.v, "turn_deg": a.turn_deg, "drive_m": a.drive_m, "min_m": a.min_m, "kp": a.kp, "ki": a.ki, "trim0": a.trim0,
                "q_std": a.q_std, "no_ff": a.no_ff, "rate_deg_s": a.rate_deg_s, "ended": why, "start_dist_m": d0, "repeats": results}
     (out / "summary.json").write_text(json.dumps(summary, indent=2))
