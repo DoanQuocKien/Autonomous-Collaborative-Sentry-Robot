@@ -1,0 +1,132 @@
+{
+  "snapshot_date": "2026-11-06",
+  "timezone": "Asia/Bangkok",
+  "evidence": {
+    "R01": {
+      "path": "docs/Implementation Plan.md",
+      "sha256": "2fe2f144fd247a9ceea1fd918e988060f5d3fad3692c8cc17b35176f4d4576a1",
+      "git_commit": "ae28fd6ddaf0fccfae43683b963de579ecf422e7"
+    },
+    "R02": {
+      "path": "docs/Home Session Checklist 2026-11-04.md",
+      "sha256": "3526df95f52c87d4d9879ccf6b989771280ecf3e8c99ec96f797c3c1a7f3f352",
+      "git_commit": "ae28fd6ddaf0fccfae43683b963de579ecf422e7"
+    },
+    "R03": {
+      "path": "docs/Classroom Tasks Week 6.md",
+      "sha256": "7e4214f83b840379819fa051db3ae3229946f87c273fd3d2adb6db314d6b6484",
+      "git_commit": "ae28fd6ddaf0fccfae43683b963de579ecf422e7"
+    },
+    "R04": {
+      "path": "docs/JetBot Notes.md",
+      "sha256": "2927da326784c85fd7e6abccaa78fee8d895dacc31ce2fe0838afa8a75a788e2",
+      "git_commit": "ae28fd6ddaf0fccfae43683b963de579ecf422e7"
+    },
+    "R05": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/github-2026-11-06.json",
+      "sha256": "abb41cc8145f12f7121406cc4599290a99a2f7430be71570501d1838c242c0b3"
+    },
+    "R06": {
+      "path": "reports/HuynhNguyenHoaiLoc/reviews/PR-scan-2026-11-06.md",
+      "sha256": "eb8bbf272c7967f83b30acb0789fe4a95b4efbd01bba602be775e5a59a256bb6"
+    },
+    "R07": {
+      "path": "tools/prepare_d3_recording.py",
+      "sha256": "15e9317526cf112e8bdd7f80d6ee5887abe634205ce983adc88dc5ce0179fe48"
+    },
+    "R08": {
+      "path": "reports/HuynhNguyenHoaiLoc/week-06/tests_recovery_2026-11-06.log",
+      "sha256": "01a0be8ed83a4dad34880d7bd2099fa6952f86b716fc00a03fbe970fb37984d8"
+    }
+  },
+  "repair_original_commit": "87db1bafdaa88c01b815648040d2b90e173126ad",
+  "repair_integrated_commit": "ae28fd6ddaf0fccfae43683b963de579ecf422e7",
+  "evidence_hash_policy": "SHA256 after CRLF to LF; repair documents at explicit DQK commit",
+  "github": {
+    "checked_date": "2026-11-06",
+    "timezone": "Asia/Bangkok",
+    "main_sha": "4c041b647529153debd4679f5669905206c3aea6",
+    "camera_repair_source_commit": "87db1bafdaa88c01b815648040d2b90e173126ad",
+    "pull_requests": [
+      {
+        "number": 99,
+        "url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/pull/99",
+        "state": "open",
+        "merged": false,
+        "head_sha": "87a4a4ad6020fe974306781d5f735c82e9d67652",
+        "requested_reviewers": null,
+        "updated_at": "2026-11-05T07:21:05Z"
+      },
+      {
+        "number": 100,
+        "url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/pull/100",
+        "state": "open",
+        "merged": false,
+        "head_sha": "1985e646d23d6f6d5a59a4824fc3d95f0cabccda",
+        "requested_reviewers": [
+          {
+            "login": "DoanQuocKien",
+            "name": "DoanQuocKien",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/182458474?v=4",
+            "id": 182458474
+          }
+        ],
+        "updated_at": "2026-11-05T07:42:03Z"
+      }
+    ],
+    "review_summary": {
+      "pr99": "unchanged head; previous REQUEST_CHANGES remains; no duplicate review/tests",
+      "pr100": "HNHL-authored; no independent approval; requested DQK"
+    }
+  },
+  "camera": {
+    "repair_reported_date": "2026-11-05",
+    "reporter": "DQK",
+    "original_socket_resoldered": true,
+    "module_replaced": false,
+    "video_restored_reported": true,
+    "hn_hl_hardware_verified": false,
+    "raw_repair_log_available": false,
+    "pose_remeasurement_verified": false,
+    "height_recheck_verified": false,
+    "reported_check": {
+      "frames": 60,
+      "approximate_seconds": 3.2,
+      "approximate_fps": 18.6,
+      "skipped_frames": 1,
+      "dimensions": [
+        640,
+        480
+      ],
+      "formal_latency_test": false
+    }
+  },
+  "d3_preparation": {
+    "tool": "tools.prepare_d3_recording",
+    "preserves_capture_timestamps": true,
+    "splits_sequence_or_clock_resets": true,
+    "reviewed_labels": false,
+    "real_d3_available": false,
+    "new_recording": false
+  },
+  "validation": {
+    "targeted_cpu_passed": 27,
+    "seconds": 4.81,
+    "scope": "recording adapter, tracking/evaluator and historical source guards",
+    "full_suite_rerun": false,
+    "inference_rerun": false,
+    "hardware_trials": false
+  },
+  "acceptance": {
+    "d3_id_switches_per_minute": null,
+    "target_relock_accuracy": null,
+    "reid_rank1": null,
+    "independent_d5_t1": false,
+    "real_map_vantage": false,
+    "g2_passed": false,
+    "rtx4050_combined_budget": false,
+    "new_t1_or_t2_pass": false
+  },
+  "motor_commands_sent": 0
+}

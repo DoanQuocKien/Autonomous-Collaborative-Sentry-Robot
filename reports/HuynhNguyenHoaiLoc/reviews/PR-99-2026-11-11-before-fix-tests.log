@@ -1,0 +1,40 @@
+......................s................................................. [ 10%]
+........................................................................ [ 21%]
+.....................................ss................................. [ 32%]
+........................................................................ [ 43%]
+........................................................................ [ 54%]
+........................................................................ [ 65%]
+.........................................F.............................. [ 76%]
+........................................................................ [ 87%]
+........................................................................ [ 98%]
+.......                                                                  [100%]
+================================== FAILURES ===================================
+_ test_an_inference_failure_still_stops_the_sender_and_keeps_the_rows_and_the_reason _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001ACBC237A70>
+tmp_path = WindowsPath('C:/Users/Hoai Loc/Desktop/ROBOT/Autonomous-Collaborative-Sentry-Robot/data/review-pr99-1111/data/pytest-pr99-1111/test_an_inference_failure_stil0')
+
+    def test_an_inference_failure_still_stops_the_sender_and_keeps_the_rows_and_the_reason(monkeypatch, tmp_path):
+        with pytest.raises(RuntimeError):
+            run_main(monkeypatch, tmp_path, perceive_fail_at=8)                                  # 3 warm-up calls, then a few frames
+        rows, summary = saved(tmp_path)
+        assert rows and summary["end_reason"].startswith("error: RuntimeError")
+>       assert FakeSender.instances[0].stopped
+E       assert False
+E        +  where False = <test_pursue_live_main.FakeSender object at 0x000001ACBC2FCC80>.stopped
+
+tests\test_pursue_live_main.py:139: AssertionError
+---------------------------- Captured stdout call -----------------------------
+camera pose x.json: pitch 0.00 deg, lens 0.100 m. NO OBSTACLE AVOIDANCE: keep the floor clear, hold R1, release at any problem.
+battery 12.00 V
+warming up the person detector (first frame is slow, done before R1 is needed)...
+start checks passed: battery, video
+ARM the e-stop (hold Start 1.5 s) and HOLD R1 within 5 s. Release R1 at any problem.
+R1 held: pursuing for up to 0 s (q = stop)
+ENDED: error: RuntimeError: injected | {"frames": 4, "run_span_s": 0.11, "unobserved_time_s": 0.0, "coverage_tracked_fraction": 1.0, "time_fraction_distance_in_band_of_run": 0.0, "time_fraction_centred_of_run": 1.0, "hold_events": []}
+saved C:\Users\Hoai Loc\Desktop\ROBOT\Autonomous-Collaborative-Sentry-Robot\data\review-pr99-1111\data\pytest-pr99-1111\test_an_inference_failure_stil0\t_1
+=========================== short test summary info ===========================
+SKIPPED [1] tests\test_calibrate_fisheye.py:45: needs data/D1/checkerboard (not in git)
+SKIPPED [1] tests\test_entrance.py:178: weights/xfeat.pt missing: python -m tools.fetch_models
+SKIPPED [1] tests\test_entrance.py:193: weights/xfeat.pt missing: python -m tools.fetch_models
+1 failed, 651 passed, 3 skipped, 4 deselected in 48.62s

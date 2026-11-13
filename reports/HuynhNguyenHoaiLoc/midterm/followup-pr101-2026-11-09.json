@@ -1,0 +1,131 @@
+{
+  "snapshot_date": "2026-11-09",
+  "source_pr": 101,
+  "source_head": "969a5e0b61a804784344741f868c57fb2ecbd508",
+  "source_pr_merged": false,
+  "main_sha": "4c041b647529153debd4679f5669905206c3aea6",
+  "review_url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/pull/101#pullrequestreview-5822708483",
+  "review_state": "CHANGES_REQUESTED",
+  "evidence": {
+    "K0": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-pr101-2026-11-09-r2/sentry/app/phase3_runner.py.txt",
+      "source_commit": "969a5e0b61a804784344741f868c57fb2ecbd508",
+      "source_path": "sentry/app/phase3_runner.py",
+      "sha256": "013c610f5bc7ddc858bfc7336cc27b694612e228cc55c0e4b9fae6ef8d82d883"
+    },
+    "K1": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-pr101-2026-11-09-r2/tests/test_phase3_runner.py.txt",
+      "source_commit": "969a5e0b61a804784344741f868c57fb2ecbd508",
+      "source_path": "tests/test_phase3_runner.py",
+      "sha256": "25ecebffb44a72b10015c005e227b027b2516712fc9f43f424afb2eb3e75cfc1"
+    },
+    "K2": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-pr101-2026-11-09-r2/reports/midterm_report_draft.md.txt",
+      "source_commit": "969a5e0b61a804784344741f868c57fb2ecbd508",
+      "source_path": "reports/midterm_report_draft.md",
+      "sha256": "b91938f96cad9e4cddfcf06a017c0d5476b0439b833b0cf42880912b85371310"
+    },
+    "K3": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-pr101-2026-11-09-r2/tools/check_midterm_page_budget.py.txt",
+      "source_commit": "969a5e0b61a804784344741f868c57fb2ecbd508",
+      "source_path": "tools/check_midterm_page_budget.py",
+      "sha256": "76aaeec7846299fe639a6f0771f3c8487e6f29cb7c1cf523207244cbee7062f4"
+    },
+    "K4": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-pr101-2026-11-09-r2/reports/kouun-rokku/week-06.md.txt",
+      "source_commit": "969a5e0b61a804784344741f868c57fb2ecbd508",
+      "source_path": "reports/kouun-rokku/week-06.md",
+      "sha256": "d0f6061804bfb8e9d9ae6bf77ed759705550ec552447737cadc25062c89f4afd"
+    },
+    "K5": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-pr101-2026-11-09-r2/reports/kouun-rokku/week-06/phase3_replay_summary.json.txt",
+      "source_commit": "969a5e0b61a804784344741f868c57fb2ecbd508",
+      "source_path": "reports/kouun-rokku/week-06/phase3_replay_summary.json",
+      "sha256": "a0973e76dce01a8d25290041874449599dc107a0723ca78770a290156aabddcc"
+    },
+    "provenance": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-pr101-2026-11-09-r2/provenance.json",
+      "sha256": "745b685150aa959dbe1f59be7eea80edde5bd0ddf53fcbae230cc64aa310d7c4"
+    },
+    "review.md": {
+      "path": "reports/HuynhNguyenHoaiLoc/reviews/PR-101-2026-11-09-r2.md",
+      "sha256": "63c7b14fd9f9c833d9a5740c9e27dbc8be94b5e7f0c0557fd837bb29e227ea0d"
+    },
+    "review.json": {
+      "path": "reports/HuynhNguyenHoaiLoc/reviews/PR-101-2026-11-09-r2.json",
+      "sha256": "4b835e43711112faca1aec60e8771b246adf3350e35105d547d783795b1718e0"
+    },
+    "review-tests.log": {
+      "path": "reports/HuynhNguyenHoaiLoc/reviews/PR-101-2026-11-09-r2-tests.log",
+      "sha256": "b27613bbc1b4894438d21eb6b1662170645c66b9ad0a8ea19227d2165267cfa5"
+    },
+    "review-reproductions.json": {
+      "path": "reports/HuynhNguyenHoaiLoc/reviews/PR-101-2026-11-09-r2-reproductions.json",
+      "sha256": "100d39feea9e4ee7f605c320558870469e0c8c3c7bd3c1889ae6c95a346de6be"
+    }
+  },
+  "validation": {
+    "tests_passed": 58,
+    "seconds": 14.73,
+    "reproductions": {
+      "head": "969a5e0b61a804784344741f868c57fb2ecbd508",
+      "tier": "T0_READ_ONLY_REVIEW",
+      "motor_commands_sent": 0,
+      "external_observation_command": [
+        0.0,
+        0.0
+      ],
+      "hold_before_gap": {
+        "state": "HOLD",
+        "mode": "HOLD"
+      },
+      "first_reacquisition": {
+        "state": "HOLD",
+        "mode": "PURSUE",
+        "command": [
+          0.0,
+          0.0
+        ]
+      },
+      "after_moving_observations": {
+        "state": "HOLD",
+        "mode": "PURSUE"
+      },
+      "nan_projector_command": [
+        1.0,
+        0.0
+      ],
+      "page_audit": {
+        "status": "PASS",
+        "estimated_pages": 13.1,
+        "chapters": 9,
+        "existing_images": 5,
+        "broken_assets": [],
+        "rendered_layout_verified": false
+      }
+    }
+  },
+  "fixed": [
+    "single-sample cached observation false HOLD",
+    "cached position across FIFO identity handoff",
+    "finite command projection example and sweep",
+    "five original image links",
+    "most HNHL result scope corrections"
+  ],
+  "remaining": [
+    "external observation API not consumed",
+    "HOLD/controller divergence after no-tick observation gap",
+    "NaN projector becomes full-forward motion",
+    "distance T1 PASS claim, vector destination, missing F18/pilot caveats"
+  ],
+  "new_experimental_data": false,
+  "acceptance": {
+    "d3": false,
+    "reid": false,
+    "independent_d5": false,
+    "world_map": false,
+    "latency_cdf": false,
+    "rtx4050_combined": false,
+    "pursuit_hold": false
+  }
+}

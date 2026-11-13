@@ -2,7 +2,7 @@
 
   python -m tools.plot_dqk_report_figures            # writes reports/DoanQuocKien/week-05/figures/F*.png
 
-Not here (they need data that does not exist yet): F3 (photo), F7 (raw latency samples), F17 (pursuit run logs). Nothing in the figures is a photo or a face.
+Not here (they need data that does not exist yet): F3 (photo), F7 (raw latency samples). Nothing in the figures is a photo or a face.
 """
 import csv
 import glob
@@ -368,10 +368,40 @@ def f8():
     plt.close(fig)
 
 
+def f17():
+    """Pursuit, classroom runs of 2026-11-09 (first live trials, no acceptance): distance from the foot-row range and bbox-centre error vs time, hold events from summary.json."""
+    base = R / "week-06" / "classroom_1109" / "pursuit"
+    runs = ["tile_1_1", "tile_2_1", "tile_3_1"]
+    fig, ax = plt.subplots(2, 3, figsize=(13, 6), sharex="col")
+    for j, name in enumerate(runs):
+        rows = list(csv.DictReader(open(base / name / "log.csv")))
+        sm = json.load(open(base / name / "summary.json"))
+        t = [float(r["t"]) for r in rows]
+        d, c = ax[0][j], ax[1][j]
+        d.plot(t, [float(r["dist_m"]) if r["dist_m"] else float("nan") for r in rows], color=BLUE, lw=1)
+        d.axhspan(1.0, 1.4, color=GREEN, alpha=0.15, label="1.2 +/- 0.2 m")
+        d.set_ylabel("distance (m, foot-row range)")
+        d.set_title("%s: in band %.0f %%, centred %.0f %% of the run" % (name, 100 * sm["time_fraction_distance_in_band_of_run"], 100 * sm["time_fraction_centred_of_run"]), fontsize=9)
+        c.plot(t, [float(r["yaw_err"]) / 2 if r["yaw_err"] else float("nan") for r in rows], color=RED, lw=1)  # yaw_err is relative to HALF the width
+        c.axhspan(-0.1, 0.1, color=GREEN, alpha=0.15, label="+/- 10 % of the frame width")
+        c.set_ylabel("bbox centre error / frame width")
+        c.set_xlabel("time (s)")
+        for ev in sm["hold_events"]:
+            for a in (d, c):
+                a.axvline(ev[0], color=GREY, ls="--", lw=0.8)
+            d.text(ev[0], d.get_ylim()[1], " " + ev[1].replace("TARGET_", ""), fontsize=6, va="top", rotation=90)
+    ax[0][0].legend(fontsize=7)
+    ax[1][0].legend(fontsize=7)
+    fig.suptitle("F17 Pursuit, classroom 2026-11-09, first supervised trials (NOT the plan's 80 % acceptance). Distances are foot-row ranges, not tape-verified;\nDQK measured the true standoff at about 1.7 m in two runs of that session. Dashed = HOLD entered/left.", fontsize=9)
+    fig.tight_layout()
+    fig.savefig(OUT / "F17_pursuit_classroom.png")
+    plt.close(fig)
+
+
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     OUT6.mkdir(parents=True, exist_ok=True)
-    for fn in (f1, f2, f4, f5, f6, f19, f20, f21, f7, f8, f22, f23, f24, f25):
+    for fn in (f1, f2, f4, f5, f6, f17, f19, f20, f21, f7, f8, f22, f23, f24, f25):
         fn()
         print("made", fn.__name__)
 

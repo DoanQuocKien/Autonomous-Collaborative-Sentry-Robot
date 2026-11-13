@@ -43,14 +43,17 @@
   "sources": {
     "S01": {
       "path": "docs/Home Session Checklist 2026-11-04.md",
+      "git_commit": "45765cf0d4aa087f46af97dd72fb7265d9ef78b5",
       "sha256": "5d5fa02cf4545b099e84332f07b1aefc786f80daf79b496a000247517713a1ca"
     },
     "S02": {
       "path": "docs/Classroom Tasks Week 6.md",
+      "git_commit": "45765cf0d4aa087f46af97dd72fb7265d9ef78b5",
       "sha256": "f6e09e1604e5fe80fb40264b352fa3cad4fe35f5f8c07f83524dcc3a96166157"
     },
     "S03": {
       "path": "docs/Implementation Plan.md",
+      "git_commit": "45765cf0d4aa087f46af97dd72fb7265d9ef78b5",
       "sha256": "e920dc7ee7192ea005e628e9c86c12ca879ba5e8182752b43d94997ab9fecf7b"
     },
     "S04": {

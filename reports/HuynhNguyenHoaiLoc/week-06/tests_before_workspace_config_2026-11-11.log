@@ -1,0 +1,95 @@
+...................F..s................................................. [ 10%]
+........................................................................ [ 20%]
+..............................................s......................... [ 30%]
+........................................................................ [ 40%]
+........................................................................ [ 50%]
+........................................................................ [ 60%]
+........................................................................ [ 70%]
+........................................................................ [ 80%]
+........................................................................ [ 90%]
+...............F.................................................        [100%]
+================================== FAILURES ===================================
+___________ test_parity_between_vendored_and_ultralytics_bytetrack ____________
+
+    def test_parity_between_vendored_and_ultralytics_bytetrack():
+        """Verify >= 95% ID agreement between vendored ByteTrack and Ultralytics ByteTrack.
+
+        Strict verification:
+        - Bipartite Hungarian matching on 1 - IoU with thresh=0.5.
+        - Unmatched/dropped tracks in either tracker are penalized as disagreements.
+        - Tests crossing paths, swaps, and occlusions.
+        """
+>       from ultralytics.trackers.byte_tracker import STrack as USTRack
+
+tests\test_bytetrack_vendored.py:125:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+.venv\Lib\site-packages\ultralytics\__init__.py:14: in <module>
+    from ultralytics.utils import ASSETS, SETTINGS
+.venv\Lib\site-packages\ultralytics\utils\__init__.py:1539: in <module>
+    SETTINGS = SettingsManager()  # initialize settings
+               ^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\ultralytics\utils\__init__.py:1441: in __init__
+    if not self.file.exists() or not self:  # Check if file doesn't exist or is empty
+           ^^^^^^^^^^^^^^^^^^
+data\python\cpython-3.12-windows-x86_64-none\Lib\pathlib.py:860: in exists
+    self.stat(follow_symlinks=follow_symlinks)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = WindowsPath('C:/Users/Hoai Loc/AppData/Roaming/Ultralytics/settings.json')
+follow_symlinks = True
+
+    def stat(self, *, follow_symlinks=True):
+        """
+        Return the result of the stat() system call on this path, like
+        os.stat() does.
+        """
+>       return os.stat(self, follow_symlinks=follow_symlinks)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       PermissionError: [WinError 5] Access is denied: 'C:\\Users\\Hoai Loc\\AppData\\Roaming\\Ultralytics\\settings.json'
+
+data\python\cpython-3.12-windows-x86_64-none\Lib\pathlib.py:840: PermissionError
+---------------------------- Captured stdout call -----------------------------
+ERROR Error reading from C:\Users\Hoai Loc\AppData\Roaming\Ultralytics\settings.json: [WinError 5] Access is denied: 'C:\\Users\\Hoai Loc\\AppData\\Roaming\\Ultralytics\\settings.json'
+_ test_real_bytetrack_uses_low_confidence_matches_and_does_not_emit_lost_predictions _
+
+    def test_real_bytetrack_uses_low_confidence_matches_and_does_not_emit_lost_predictions():
+>       backend = ByteTrackBackend(load()['tracking'])
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_tracker.py:51:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+sentry\perception\tracker.py:96: in __init__
+    from ultralytics.trackers.byte_tracker import BYTETracker
+.venv\Lib\site-packages\ultralytics\__init__.py:14: in <module>
+    from ultralytics.utils import ASSETS, SETTINGS
+.venv\Lib\site-packages\ultralytics\utils\__init__.py:1539: in <module>
+    SETTINGS = SettingsManager()  # initialize settings
+               ^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\ultralytics\utils\__init__.py:1441: in __init__
+    if not self.file.exists() or not self:  # Check if file doesn't exist or is empty
+           ^^^^^^^^^^^^^^^^^^
+data\python\cpython-3.12-windows-x86_64-none\Lib\pathlib.py:860: in exists
+    self.stat(follow_symlinks=follow_symlinks)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = WindowsPath('C:/Users/Hoai Loc/AppData/Roaming/Ultralytics/settings.json')
+follow_symlinks = True
+
+    def stat(self, *, follow_symlinks=True):
+        """
+        Return the result of the stat() system call on this path, like
+        os.stat() does.
+        """
+>       return os.stat(self, follow_symlinks=follow_symlinks)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       PermissionError: [WinError 5] Access is denied: 'C:\\Users\\Hoai Loc\\AppData\\Roaming\\Ultralytics\\settings.json'
+
+data\python\cpython-3.12-windows-x86_64-none\Lib\pathlib.py:840: PermissionError
+---------------------------- Captured stdout call -----------------------------
+ERROR Error reading from C:\Users\Hoai Loc\AppData\Roaming\Ultralytics\settings.json: [WinError 5] Access is denied: 'C:\\Users\\Hoai Loc\\AppData\\Roaming\\Ultralytics\\settings.json'
+------------------------------ Captured log call ------------------------------
+ERROR    ultralytics:__init__.py:1326 Error reading from C:\Users\Hoai Loc\AppData\Roaming\Ultralytics\settings.json: [WinError 5] Access is denied: 'C:\\Users\\Hoai Loc\\AppData\\Roaming\\Ultralytics\\settings.json'
+=========================== short test summary info ===========================
+SKIPPED [1] tests\test_calibrate_fisheye.py:45: needs data/D1/checkerboard (not in git)
+SKIPPED [1] tests\test_entrance.py:199: D1 classroom data not on this machine
+2 failed, 709 passed, 2 skipped, 4 deselected in 52.80s

@@ -13,6 +13,7 @@ import csv
 import json
 import math
 import os
+import sys
 import threading
 import time
 from pathlib import Path
@@ -23,6 +24,15 @@ SPIN_W = 0.45
 PRIOR_PULSE_RAD = 0.438                           # turn per 0.2 s pulse measured on 2026-10-30 and 2026-11-11 (25 deg); only used until a board gives a measurement
 ESTOP_LATCH = "/home/jetbot/sentry/ESTOP"
 MIN_BATTERY_V = 11.4
+
+
+def beep(freq, ms):
+    try:
+        import winsound
+        winsound.Beep(freq, ms)
+    except ImportError:
+        sys.stdout.write("\a")
+        sys.stdout.flush()
 
 
 def wrap(a):
@@ -77,7 +87,6 @@ def main():
     from tools import jetbot_ssh
     from tools.calibrate_motion import _sh
     from tools.jetbot_status import ina219_bus_volts
-    import winsound
 
     pose = json.load(open(a.camera_pose))
     pitch = math.radians(pose["pitch_down_deg"])
@@ -135,8 +144,8 @@ def main():
     try:
         if not a.dry_run:
             print("ARM the e-stop (hold Start 1.5 s) and HOLD R1 within %.0f s; the robot will spin in place, keep 0.3 m clear around it. Release R1 at any problem." % a.wait, flush=True)
-            winsound.Beep(1000, 400)
-            winsound.Beep(1400, 400)
+            beep(1000, 400)
+            beep(1400, 400)
             t_end, since = time.time() + a.wait, None
             while True:
                 held, now = r1_held(), time.time()

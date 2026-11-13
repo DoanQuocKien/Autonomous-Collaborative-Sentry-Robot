@@ -1,0 +1,79 @@
+{
+ "images": 1709,
+ "iou": {
+  "background": 0.9728,
+  "ground": 0.953,
+  "obstacle": 0.4515
+ },
+ "miou": 0.7924,
+ "obstacle_pixel_precision": 0.474,
+ "obstacle_pixel_recall": 0.9046,
+ "ground_pixels_called_obstacle_fraction": 0.013146,
+ "objects": 2207,
+ "objects_found": 1920,
+ "object_recall": 0.87,
+ "false_components": 3190,
+ "false_components_per_image": 1.867,
+ "contact_row_error_px_at_960x540": {
+  "median_abs": 2.0,
+  "p90_abs": 5.5,
+  "median_signed": 0.5,
+  "n": 1920
+ },
+ "per_scene": {
+  "19_TeachingBuilding3_F1Hall": {
+   "objects": 371,
+   "found": 322,
+   "fp": 361,
+   "images": 301
+  },
+  "20_TeachingBuilding3_F6Corridor": {
+   "objects": 402,
+   "found": 374,
+   "fp": 186,
+   "images": 346
+  },
+  "22_ParkBuilding_F1Hall": {
+   "objects": 442,
+   "found": 350,
+   "fp": 1412,
+   "images": 353
+  },
+  "23_ParkBuilding_B1Corridor": {
+   "objects": 502,
+   "found": 435,
+   "fp": 551,
+   "images": 373
+  },
+  "24_ParkBuilding_B1Hall": {
+   "objects": 100,
+   "found": 98,
+   "fp": 224,
+   "images": 76
+  },
+  "26_ResearchBuilding_F1Hall": {
+   "objects": 234,
+   "found": 187,
+   "fp": 167,
+   "images": 139
+  },
+  "28_TeachingBuilding_F1Backdoor": {
+   "objects": 156,
+   "found": 154,
+   "fp": 289,
+   "images": 121
+  }
+ },
+ "min_area": 30,
+ "min_cover": 0.3,
+ "weights": "D:\\CS532\\Autonomous Collaborative Sentry Robot\\data\\org_seg\\segformer_org.pt",
+ "test_scenes": [
+  "19_TeachingBuilding3_F1Hall",
+  "20_TeachingBuilding3_F6Corridor",
+  "22_ParkBuilding_F1Hall",
+  "23_ParkBuilding_B1Corridor",
+  "24_ParkBuilding_B1Hall",
+  "26_ResearchBuilding_F1Hall",
+  "28_TeachingBuilding_F1Backdoor"
+ ]
+}

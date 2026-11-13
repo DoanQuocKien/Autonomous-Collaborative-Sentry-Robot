@@ -1,0 +1,26 @@
+{
+  "frames": 614,
+  "frames_with_distance": 614,
+  "pursue_frames": 68,
+  "fraction_distance_within_band": 0.765,
+  "fraction_centred_within_10pct": 0.992,
+  "hold_events": [
+    [
+      3.4,
+      "TARGET_STATIONARY"
+    ]
+  ],
+  "plan_thresholds": "distance 1.2 +/- 0.2 m and centre within +/- 10 % of the frame width for 80 % of the time (plan 4.3 'Pursuit PD'); these are first-trial numbers, not an acceptance",
+  "label": "home_6",
+  "dry_run": false,
+  "replay": null,
+  "end_reason": "R1 released (e-stop latch present)",
+  "camera_pose_file": "calib/camera_pose_self_1108_2.json",
+  "pitch_down_deg": -4.26,
+  "feet_row_offset_px": 3.5,
+  "battery_v_start": 12.212,
+  "battery_v_end": 12.208,
+  "seconds": 31.6,
+  "date": "2026-11-08 17:21",
+  "obstacle_avoidance": false
+}

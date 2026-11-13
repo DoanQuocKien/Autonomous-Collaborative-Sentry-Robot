@@ -1,0 +1,37 @@
+{
+  "head": "969a5e0b61a804784344741f868c57fb2ecbd508",
+  "tier": "T0_READ_ONLY_REVIEW",
+  "motor_commands_sent": 0,
+  "external_observation_command": [
+    0.0,
+    0.0
+  ],
+  "hold_before_gap": {
+    "state": "HOLD",
+    "mode": "HOLD"
+  },
+  "first_reacquisition": {
+    "state": "HOLD",
+    "mode": "PURSUE",
+    "command": [
+      0.0,
+      0.0
+    ]
+  },
+  "after_moving_observations": {
+    "state": "HOLD",
+    "mode": "PURSUE"
+  },
+  "nan_projector_command": [
+    1.0,
+    0.0
+  ],
+  "page_audit": {
+    "status": "PASS",
+    "estimated_pages": 13.1,
+    "chapters": 9,
+    "existing_images": 5,
+    "broken_assets": [],
+    "rendered_layout_verified": false
+  }
+}
