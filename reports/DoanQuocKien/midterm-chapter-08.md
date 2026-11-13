@@ -31,6 +31,6 @@
 4. **Chưa có lần chạy T2 tính điểm** (ESP32 trên tháp chưa xong ở các buổi gần đây, pin dưới 11,4 V cuối buổi): cần buổi có ESP32 trên tháp, tham chiếu bắt tay đặt đúng vị trí, người thứ hai đi vào.
 5. **Pin và sạc:** 12,4 V đầu buổi, 11,4–11,6 V sau vài lần chạy; sạc giữa các buổi.
 6. **Né vật cản trên sàn gạch bóng:** khoảng cách từ điểm tiếp đất không giải được (phản chiếu), nên robot chỉ quay tránh theo vị trí hộp trong ảnh; chưa có mô hình sẵn nào đạt ±0,15 m (năm bộ phát hiện/phân đoạn và năm mô hình độ sâu đã thử). Hướng đang thử: khoảng cách từ chiều rộng hộp của ghế (độ rộng 139 → 61 px từ 0,9 → 2,4 m), cần thêm nhiều loại ghế và góc nhìn, đánh giá bởi HNHL.
-7. **Dữ liệu cá nhân trong lịch sử git:** gói D2_1028.zip (khuôn mặt của ba thành viên, mã hóa bằng mật khẩu nằm ngay trong kho) phải được gỡ khỏi lịch sử hoặc không nộp cùng báo cáo trước khi kho được chuyển cho người chấm.
+7. **Dữ liệu cá nhân trong lịch sử git:** gói D2_1028.zip chứa khuôn mặt của ba thành viên; mật khẩu nằm ngay trong kho nên gói thực chất không được bảo vệ. **Quyết định của nhóm ngày 13/11, cả ba thành viên đồng ý: giữ gói trong kho**; rủi ro này được chấp nhận và nêu rõ ở đây.
 
 **Nguyên tắc báo cáo:** hạng mục nào chưa chạy ổn đến ngày đóng băng thì ghi là "đang thực hiện" kèm kế hoạch, không vội chạy cho kịp.
