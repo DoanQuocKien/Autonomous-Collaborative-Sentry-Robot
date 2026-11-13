@@ -193,6 +193,13 @@ One person (DQK), distances taped from the lens, buffalo_s, every 2nd frame of a
 - Into the camera: 100 % of frames at or above 0.45 at all three distances (medians 0.61-0.67). Away: medians 0.56 (1.8 m), 0.48 (2.4 m), 0.51 (3.0 m), with 89 % and 80 % of frames at or above 0.45 at 2.4 m and 3.0 m. The enrolment, not the face size or the tower angle, was the main cause of the low scores in the first table.
 - Limits: one person, one session, same day and clothes as the enrolment, **no impostor scores** (so no FAR and the 0.45 threshold is not validated for the door camera); the frame rate was 3-8 fps in this run (hotspot link), fewer frames at 1.8 m away (25) than at 2.4 m straight (61).
 
+### Obstacle range on the glossy floor from the chair's box width (2026-11-13; `data/chair_width_range_1113.json`; tool `tools/record_chair_ranges.py`)
+Started from `explore_live --dry-run` (pose `1113_1`: pitch -9.12 deg): the start check refused, because the chair (class 56, conf 0.95) had **no ground distance (`reflection_unresolved`)**, the known glossy-floor problem (15/10 and Experiment B on 9/11: no off-the-shelf candidate resolves it; no drive was done). Offline idea, not tried before: range from the chair's box size instead of its floor contact (the door-area ranging worked this way).
+- One chair, front-on, six taped distances, 12 frames each (YOLOv8s, nearest chair = lowest floor contact; choosing the largest box picked background chairs, an error caught on the montage): width 139 / 112 / 94 / 77 / 61 px at 0.9 / 1.2 / 1.5 / 1.8 / 2.4 m; at 0.6 m the chair back leaves the picture (width 200 px, height unusable).
+- Fit distance = 160.3 / width - 0.24 on 0.9-2.4 m: leave-one-out error **max 0.05 m** (height: 0.11 m).
+- Other chairs (the 9 tape-measured chairs of 15/10, rows matched by order of floor contact): errors -0.16 to +0.28 m, **7 of 9 within +/-0.16 m**; the two worst are the 0.32 m and 1.90 m ends. Median absolute error 0.07 m.
+- Limits: one chair type, front-on, one day; the chair width is the unknown (a wider or rotated chair reads nearer or farther); not validated as an obstacle method and not wired into any detector. A proposal for HNHL (perception owner): a size-based range as a fallback when the floor contact is unresolved, evaluated on D1 with more chair types and angles.
+
 ## Needs the three members (do first while all are available)
 1. Person frames at 1.2, 1.8 and 2.4 m from several different people (experiment A validation; needs more than one person; frames stay local).
 2. A full T2 run with a second person walking in: the queue and the lock, with HNHL and KR watching the laptop (the ESP32 handshake at the sweet spot, then the walk-through).
