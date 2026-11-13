@@ -15,3 +15,5 @@ For HNHL (perception owner). Proposal and data, not a detector change.
 **Limits:** one chair type and day for the fit; a wider or rotated chair reads nearer or farther; the largest-box rule picks the background chairs (use the lowest floor contact); not wired into any detector; 0.6 m and closer needs the width, not the height.
 
 **Asked of HNHL:** whether this is worth evaluating on D1/D5 with more chair types and angles as a fallback when the contact is unresolved; the decision on the detector is yours.
+
+**Why it matters for `sentry/nav/explore.py`:** its rule for an unresolved obstacle ('near when the box bottom is below 55 % of the image height') cannot separate near from far with this camera: the chair's box bottom was 336 / 322 / 318 / 312 / 309 / 304 px at 0.6 / 0.9 / 1.2 / 1.5 / 1.8 / 2.4 m (264 px is the threshold), so every unresolved chair in view blocks. The box width (above) does separate them; a width threshold of about 112 px (about 1.2 m) would be the data-supported replacement. Not implemented (safety logic, no robot test).
