@@ -122,6 +122,7 @@ class InsightFaceEncoder:
             results.append({
                 "bbox": tuple(float(v) for v in face.bbox),
                 "confidence": float(face.det_score),
+                "kps": None if getattr(face, "kps", None) is None else np.asarray(face.kps, dtype=float),  # 5 points: eyes, nose, mouth corners
                 "embedding": normalize_embedding(face.embedding),
             })
 
