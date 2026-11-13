@@ -1,0 +1,459 @@
+{
+  "snapshot_date": "2026-11-11",
+  "main_sha": "4c596d251d890e24110259466cc39170e5a3f9f5",
+  "evidence": {
+    "B0": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/experiment-B-evidence-2026-11-11/README.md",
+      "sha256": "3cd7c5b61c1a9dac012e62b72090ee5bf2afd309eb2888156316a17bc726c8d3"
+    },
+    "B1": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/experiment-B-evidence-2026-11-11/results/train_log.json",
+      "sha256": "a577ecde18a9e59253c811ae5c5be18083367a049ea97ba855478deb19a6e770"
+    },
+    "B2": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/experiment-B-evidence-2026-11-11/results/eval_org_ft.json",
+      "sha256": "d2c359c30ec6cf5bd0e7fc0192f3933e731caf2a7437517658e989d7aebf4484"
+    },
+    "B3": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/experiment-B-evidence-2026-11-11/results/judge_configured.json",
+      "sha256": "bb4ba3c85d4e8da5024e16705f50300ae8c0ee48cf611784453dd5334ff17e9d"
+    },
+    "B4": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/experiment-B-evidence-2026-11-11/results/judge_org_ft.json",
+      "sha256": "f907d96eedcab18f05214e454b2003c446f817afd22f69b128ee0aaba03b9c39"
+    },
+    "B5": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/experiment-B-evidence-2026-11-11/results/judge_org_ft_freespace.json",
+      "sha256": "6fbc6887be159a10d3d853120fc0ee6c7c67d2a4103b209c280675a724b7d3f6"
+    },
+    "B-provenance": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/experiment-B-evidence-2026-11-11/provenance.json",
+      "sha256": "94589ee0fafe07752cd4cf65a41910251233068edddcb8cba9362da4b01a5942"
+    },
+    "merged-README.md": {
+      "path": "reports/DoanQuocKien/week-06/classroom_1109/README.md",
+      "sha256": "a552180d046598af4b652953b38ff9659635bdd0d2b40085403905524f155d75",
+      "git_commit": "c14db20ab472d58964946c3c643c85dab70f54e1"
+    },
+    "merged-scripts/PROVENANCE.md": {
+      "path": "reports/DoanQuocKien/week-06/classroom_1109/scripts/PROVENANCE.md",
+      "sha256": "7f4f5bea76994fd41a1895d4390d705d9791fd37c3467b5d8725efd4f5d9f2bb",
+      "git_commit": "c14db20ab472d58964946c3c643c85dab70f54e1"
+    },
+    "merged-scripts/anthro_temporal.py": {
+      "path": "reports/DoanQuocKien/week-06/classroom_1109/scripts/anthro_temporal.py",
+      "sha256": "1eb662a335dacce5edd684a3a13aff56178767c10ddefa53ba358b68d7eebd1c",
+      "git_commit": "c14db20ab472d58964946c3c643c85dab70f54e1"
+    },
+    "merged-pursuit/tile_3_1/log.csv": {
+      "path": "reports/DoanQuocKien/week-06/classroom_1109/pursuit/tile_3_1/log.csv",
+      "sha256": "ed5989b5afdad3b13358e0f068697f753890a62243d6d767f7ddeef3f0fb71de",
+      "git_commit": "c14db20ab472d58964946c3c643c85dab70f54e1"
+    },
+    "merged-pursuit/tile_3_1/summary.json": {
+      "path": "reports/DoanQuocKien/week-06/classroom_1109/pursuit/tile_3_1/summary.json",
+      "sha256": "501e4b02a475967c091c212155b8591d4c6b9c919978f83ff2eba0e7fc1f8bfb",
+      "git_commit": "c14db20ab472d58964946c3c643c85dab70f54e1"
+    },
+    "safety-note": {
+      "path": "reports/DoanQuocKien/week-05/home_1107_link_safety/README.md",
+      "sha256": "2546212e9dc05193c0e4d22902de908db6817ab373671bb5a441da26e0c607da",
+      "git_commit": "c14db20ab472d58964946c3c643c85dab70f54e1"
+    },
+    "review99.md": {
+      "path": "reports/HuynhNguyenHoaiLoc/reviews/PR-99-2026-11-11.md",
+      "sha256": "b54e50f70c81b9c1786820e9e558254bb9b2eb622d202da07075b4118be47ffb"
+    },
+    "review99.json": {
+      "path": "reports/HuynhNguyenHoaiLoc/reviews/PR-99-2026-11-11.json",
+      "sha256": "9c2175b4f94b85a9d24fe6d39f1134d942b00b4b1790012016a9dcd71b3cbd35"
+    },
+    "review99-merge.json": {
+      "path": "reports/HuynhNguyenHoaiLoc/reviews/PR-99-2026-11-11-merge.json",
+      "sha256": "8e44692aab7417c31c2c29ab87333e96bdbf09d0371e7e5906c087b0d0e9a1e5"
+    },
+    "review99-tests.log": {
+      "path": "reports/HuynhNguyenHoaiLoc/reviews/PR-99-2026-11-11-tests.log",
+      "sha256": "68e544fc940327995f928597e2e2d7f766c9aa9456edb31285325c98b32c3252"
+    },
+    "review102.md": {
+      "path": "reports/HuynhNguyenHoaiLoc/reviews/PR-102-2026-11-11.md",
+      "sha256": "9ef4f920e1aac5d6b941801f6b8d3e2ad0ac05f468c9c20abf10cd67e069a04d"
+    },
+    "review102.json": {
+      "path": "reports/HuynhNguyenHoaiLoc/reviews/PR-102-2026-11-11.json",
+      "sha256": "f4d8adbdc595faff06135bbc87d1ff454b63f8300c84761f521579649c06056c"
+    },
+    "review102-merge.json": {
+      "path": "reports/HuynhNguyenHoaiLoc/reviews/PR-102-2026-11-11-merge.json",
+      "sha256": "8818798ffae40847096aad27c3f46e0cf6a543cd50e6e9eb14502ceb141afc55"
+    },
+    "review102-tests.log": {
+      "path": "reports/HuynhNguyenHoaiLoc/reviews/PR-102-2026-11-11-tests.log",
+      "sha256": "4e10dbdbb803374b747fa15335e1edd856d3ed2cfc23dba4a3b704ba780a62de"
+    },
+    "review103.md": {
+      "path": "reports/HuynhNguyenHoaiLoc/reviews/PR-103-2026-11-11.md",
+      "sha256": "a69d66c143ede93d003130f34ccfb4b2d255f636e2e157432af2264049cdf503"
+    },
+    "review103.json": {
+      "path": "reports/HuynhNguyenHoaiLoc/reviews/PR-103-2026-11-11.json",
+      "sha256": "20524083f045f1315e60d9568ab2791cc5737ff96290d8aecdcc199ecb1cc95e"
+    },
+    "review103-merge.json": {
+      "path": "reports/HuynhNguyenHoaiLoc/reviews/PR-103-2026-11-11-merge.json",
+      "sha256": "e0521fae24fbd54e9ad755b131620972b2d6faa3d35df3c1ab349b5ef33c04fe"
+    },
+    "review103-tests.log": {
+      "path": "reports/HuynhNguyenHoaiLoc/reviews/PR-103-2026-11-11-tests.log",
+      "sha256": "d3c3d6a34a868b4beebdaa7c68850424aa1d0c680980b2372b7ac843acd5a07c"
+    },
+    "PR103-integrated-tests": {
+      "path": "reports/HuynhNguyenHoaiLoc/reviews/PR-103-2026-11-11-integrated-tests.log",
+      "sha256": "38ca02565a75969c89d662a910e5896fab056c7cb8676b28f6e2336dfc3c389e"
+    },
+    "PR103-final-tools/org_seg.py": {
+      "path": "tools/org_seg.py",
+      "sha256": "b6ca6527cf87794b7e523d45f8992080ded294e125b6ce0640ff86fc2b85fd23",
+      "git_commit": "4c596d251d890e24110259466cc39170e5a3f9f5"
+    },
+    "PR103-final-tools/org_seg_judge.py": {
+      "path": "tools/org_seg_judge.py",
+      "sha256": "42ec93e435073409bb0c8850106368ef66b447b72f7d87ef10c479ecbfa54099",
+      "git_commit": "4c596d251d890e24110259466cc39170e5a3f9f5"
+    },
+    "PR103-final-tests/test_org_seg.py": {
+      "path": "tests/test_org_seg.py",
+      "sha256": "3f5053e745da3bcaf09e183b6432cf2bfab4b5a905eda18e0d5f2e4e85ac602e",
+      "git_commit": "4c596d251d890e24110259466cc39170e5a3f9f5"
+    },
+    "PR103-final-reports/DoanQuocKien/week-06/experiment_B/README.md": {
+      "path": "reports/DoanQuocKien/week-06/experiment_B/README.md",
+      "sha256": "998c073a5a29d6cd483a7efeefea15ebe5c0c50b8e42ce9f75014a9177f5f287",
+      "git_commit": "4c596d251d890e24110259466cc39170e5a3f9f5"
+    },
+    "combined-tests": {
+      "path": "reports/HuynhNguyenHoaiLoc/reviews/combined-2026-11-11-tests.log",
+      "sha256": "b1d64857fca96c719ed55b2c155c3c813f5660da149a7c26d93c96b9fa5bc046"
+    },
+    "hnhl-fulltests": {
+      "path": "reports/HuynhNguyenHoaiLoc/week-06/tests_merged_2026-11-11.log",
+      "sha256": "21ca62efc30bb2d2fda2e7f45c41a48ce3bc206a4b57e31eb96565b7a0af04b4"
+    },
+    "hnhl-final-tests": {
+      "path": "reports/HuynhNguyenHoaiLoc/week-06/tests_final_2026-11-11.log",
+      "sha256": "fd05f30c6791aa9cfaea739889dfbcd313b899dd8ff7e6c1f5c42f01896ad424"
+    },
+    "hnhl-before-workspace-config": {
+      "path": "reports/HuynhNguyenHoaiLoc/week-06/tests_before_workspace_config_2026-11-11.log",
+      "sha256": "4b098769c42bae7d66f034bcbc96f7f8b6929272ab6d83b22c4c0afd2ae444d9"
+    },
+    "initial-failure": {
+      "path": "reports/HuynhNguyenHoaiLoc/reviews/PR-99-2026-11-11-before-fix-tests.log",
+      "sha256": "e292f5128f8802f06933a8b106b6010bd0f451ad426a868a603990b74da35523"
+    },
+    "merged-temporal-json": {
+      "path": "reports/DoanQuocKien/week-06/classroom_1109/experiment_A_anthro_temporal.json",
+      "sha256": "709715d60fc6c52905e358425e3c0ceb561e350016ff0f533d3699640c5bf754",
+      "git_commit": "c14db20ab472d58964946c3c643c85dab70f54e1"
+    }
+  },
+  "merged_prs": {
+    "99": {
+      "number": 99,
+      "head_sha": "6ce77830555f03db97c0cb1468dbb50e94163d58",
+      "action": "merge",
+      "result": {
+        "sha": "43ddc2117c91588d78a4090295024c3209bdfbdf",
+        "merged": true,
+        "message": "Pull Request successfully merged"
+      },
+      "merged": true,
+      "merge_commit_sha": "43ddc2117c91588d78a4090295024c3209bdfbdf",
+      "merged_at": "2026-11-11T04:20:35Z"
+    },
+    "102": {
+      "number": 102,
+      "head_sha": "a62b172b9da6b55defc7d7ee485e78d43016c361",
+      "action": "merge",
+      "result": {
+        "sha": "c14db20ab472d58964946c3c643c85dab70f54e1",
+        "merged": true,
+        "message": "Pull Request successfully merged"
+      },
+      "merged": true,
+      "merge_commit_sha": "c14db20ab472d58964946c3c643c85dab70f54e1",
+      "merged_at": "2026-11-11T04:21:19Z"
+    },
+    "103": {
+      "number": 103,
+      "head_sha": "78a12ca72ef3f716219ed06b8fabacadf52d0f7f",
+      "action": "merge",
+      "result": {
+        "sha": "4c596d251d890e24110259466cc39170e5a3f9f5",
+        "merged": true,
+        "message": "Pull Request successfully merged"
+      },
+      "merged": true,
+      "merge_commit_sha": "4c596d251d890e24110259466cc39170e5a3f9f5",
+      "merged_at": "2026-11-11T04:36:06Z"
+    }
+  },
+  "pr101_status": "CHANGES_REQUESTED at969a5e0; no new head",
+  "pr100_status": "open; DQK independent review pending",
+  "validation": {
+    "cpu_passed": 661,
+    "skipped": 3,
+    "gpu_deselected": 4,
+    "seconds": 51.51,
+    "motor_commands_sent": 0
+  },
+  "hnhl_validation_before103": {
+    "cpu_passed": 705,
+    "skipped": 2,
+    "gpu_deselected": 4,
+    "seconds": 51.48
+  },
+  "hnhl_validation": {
+    "cpu_passed": 711,
+    "skipped": 2,
+    "gpu_deselected": 4,
+    "seconds": 51.06,
+    "skip_reasons": [
+      "checkerboard data missing",
+      "entrance D1 classroom data missing"
+    ],
+    "yolo_config_dir": "data/ultralytics",
+    "yolo_autoinstall": false,
+    "new_gpu_benchmark": false,
+    "robot_commands_sent": 0
+  },
+  "tile3": {
+    "rows": 902,
+    "hold_rows": 21,
+    "hold_episodes": [
+      {
+        "first_t": 7.405,
+        "last_t": 8.012,
+        "rows": 13
+      },
+      {
+        "first_t": 43.805,
+        "last_t": 44.156,
+        "rows": 8
+      }
+    ],
+    "stopped_pursue_rows_3p4_to_7p4": 80,
+    "all_band_rows_stopped_pursue": true,
+    "acceptance": false
+  },
+  "temporal_scopes": {
+    "1.25 m (home_4_1)": {
+      "tape_m": 1.25,
+      "all_smoothed": {
+        "samples": 171,
+        "median_m": 1.4043532549305193,
+        "median_signed_error_m": 0.15435325493051932,
+        "sd_m": 0.015026759640194197,
+        "frame_fraction_within_15cm": 0.32748538011695905
+      },
+      "full_window": {
+        "samples": 162,
+        "median_m": 1.404755520796063,
+        "median_signed_error_m": 0.15475552079606303,
+        "sd_m": 0.01461529040842794,
+        "frame_fraction_within_15cm": 0.29012345679012347
+      },
+      "warmup_samples_excluded": 9
+    },
+    "1.77 m (home_6_1)": {
+      "tape_m": 1.77,
+      "all_smoothed": {
+        "samples": 455,
+        "median_m": 1.7541647259314619,
+        "median_signed_error_m": -0.01583527406853813,
+        "sd_m": 0.020603808987683974,
+        "frame_fraction_within_15cm": 1.0
+      },
+      "full_window": {
+        "samples": 446,
+        "median_m": 1.7541647259314619,
+        "median_signed_error_m": -0.01583527406853813,
+        "sd_m": 0.020721932924239444,
+        "frame_fraction_within_15cm": 1.0
+      },
+      "warmup_samples_excluded": 9
+    },
+    "1.80 m (box_1p8_1)": {
+      "tape_m": 1.8,
+      "all_smoothed": {
+        "samples": 122,
+        "median_m": 1.9593071827522788,
+        "median_signed_error_m": 0.15930718275227873,
+        "sd_m": 0.014405937424192498,
+        "frame_fraction_within_15cm": 0.29508196721311475
+      },
+      "full_window": {
+        "samples": 113,
+        "median_m": 1.9585177911796232,
+        "median_signed_error_m": 0.15851779117962317,
+        "sd_m": 0.013895859025267679,
+        "frame_fraction_within_15cm": 0.3185840707964602
+      },
+      "warmup_samples_excluded": 9
+    }
+  },
+  "experiment_B": {
+    "source_head": "e13dca7e0b4d0a996b3a7685e0de5529fb515707",
+    "code_merged": true,
+    "reviewed_head": "78a12ca72ef3f716219ed06b8fabacadf52d0f7f",
+    "code_merge_sha": "4c596d251d890e24110259466cc39170e5a3f9f5",
+    "model_adopted": false,
+    "org_eval": {
+      "images": 1709,
+      "iou": {
+        "background": 0.9728,
+        "ground": 0.953,
+        "obstacle": 0.4515
+      },
+      "miou": 0.7924,
+      "obstacle_pixel_precision": 0.474,
+      "obstacle_pixel_recall": 0.9046,
+      "ground_pixels_called_obstacle_fraction": 0.013146,
+      "objects": 2207,
+      "objects_found": 1920,
+      "object_recall": 0.87,
+      "false_components": 3190,
+      "false_components_per_image": 1.867,
+      "contact_row_error_px_at_960x540": {
+        "median_abs": 2.0,
+        "p90_abs": 5.5,
+        "median_signed": 0.5,
+        "n": 1920
+      },
+      "per_scene": {
+        "19_TeachingBuilding3_F1Hall": {
+          "objects": 371,
+          "found": 322,
+          "fp": 361,
+          "images": 301
+        },
+        "20_TeachingBuilding3_F6Corridor": {
+          "objects": 402,
+          "found": 374,
+          "fp": 186,
+          "images": 346
+        },
+        "22_ParkBuilding_F1Hall": {
+          "objects": 442,
+          "found": 350,
+          "fp": 1412,
+          "images": 353
+        },
+        "23_ParkBuilding_B1Corridor": {
+          "objects": 502,
+          "found": 435,
+          "fp": 551,
+          "images": 373
+        },
+        "24_ParkBuilding_B1Hall": {
+          "objects": 100,
+          "found": 98,
+          "fp": 224,
+          "images": 76
+        },
+        "26_ResearchBuilding_F1Hall": {
+          "objects": 234,
+          "found": 187,
+          "fp": 167,
+          "images": 139
+        },
+        "28_TeachingBuilding_F1Backdoor": {
+          "objects": 156,
+          "found": 154,
+          "fp": 289,
+          "images": 121
+        }
+      },
+      "min_area": 30,
+      "min_cover": 0.3,
+      "weights": "D:\\CS532\\Autonomous Collaborative Sentry Robot\\data\\org_seg\\segformer_org.pt",
+      "test_scenes": [
+        "19_TeachingBuilding3_F1Hall",
+        "20_TeachingBuilding3_F6Corridor",
+        "22_ParkBuilding_F1Hall",
+        "23_ParkBuilding_B1Corridor",
+        "24_ParkBuilding_B1Hall",
+        "26_ResearchBuilding_F1Hall",
+        "28_TeachingBuilding_F1Backdoor"
+      ]
+    },
+    "d1": {
+      "configured": {
+        "objects": 24,
+        "found": 1,
+        "missed": 23,
+        "median_abs_error_m_of_found": 0.127,
+        "recomputed_from_rounded_rows_m": 0.127,
+        "within_15cm_of_found": 1,
+        "chairs_found": 0,
+        "near_objects": 14,
+        "near_found": 0,
+        "far_found": 1,
+        "source_matching_gates": {
+          "forward_m": 0.5,
+          "left_m": 0.4
+        },
+        "acceptance": false
+      },
+      "obstacle": {
+        "objects": 24,
+        "found": 8,
+        "missed": 16,
+        "median_abs_error_m_of_found": 0.041,
+        "recomputed_from_rounded_rows_m": 0.042,
+        "within_15cm_of_found": 6,
+        "chairs_found": 0,
+        "near_objects": 14,
+        "near_found": 7,
+        "far_found": 1,
+        "source_matching_gates": {
+          "forward_m": 0.5,
+          "left_m": 0.4
+        },
+        "acceptance": false
+      },
+      "freespace": {
+        "objects": 24,
+        "found": 6,
+        "missed": 18,
+        "median_abs_error_m_of_found": 0.091,
+        "recomputed_from_rounded_rows_m": 0.09,
+        "within_15cm_of_found": 4,
+        "chairs_found": 3,
+        "near_objects": 14,
+        "near_found": 6,
+        "far_found": 0,
+        "source_matching_gates": {
+          "forward_m": 0.5,
+          "left_m": 0.4
+        },
+        "acceptance": false
+      }
+    },
+    "posthoc_near_union_found": 10,
+    "posthoc_union_is_frozen_rule": false,
+    "true_empty_floor_control_available": false,
+    "glare_failure": "DQK reports24/24 frames in two chair marks; owner evidence only",
+    "independent_T1": false
+  },
+  "acceptance": {
+    "d3": false,
+    "reid": false,
+    "independent_d5": false,
+    "map_world_truth": false,
+    "raw_latency": false,
+    "combined4050": false,
+    "pursuit_hold": false
+  }
+}

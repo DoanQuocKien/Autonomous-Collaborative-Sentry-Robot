@@ -1,0 +1,173 @@
+{
+  "imported_date": "2026-11-09",
+  "source_prs": {
+    "99": "969c06d3fda2f14a03e607b11c81ddaa78bc676a",
+    "101": "4d733af9a8447e8159314430c3450d4f63b1799c",
+    "102": "3f9cd936d4e7adcf8de923ed219615ce2f1d567e"
+  },
+  "merged": false,
+  "files": [
+    {
+      "archive": "home/README.md",
+      "source_commit": "969c06d3fda2f14a03e607b11c81ddaa78bc676a",
+      "source_path": "reports/DoanQuocKien/week-05/home_1107/README.md",
+      "source_url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/blob/969c06d3fda2f14a03e607b11c81ddaa78bc676a/reports/DoanQuocKien/week-05/home_1107/README.md",
+      "original_sha256": "29ddddcdbd9622afbdd608aa1616958bc2c1dc720c1b53bd468efcfc8b23564e",
+      "archive_sha256": "29ddddcdbd9622afbdd608aa1616958bc2c1dc720c1b53bd468efcfc8b23564e",
+      "transformation": "verbatim numeric/text source"
+    },
+    {
+      "archive": "home/pose/camera_pose_self_1108_1.json",
+      "source_commit": "969c06d3fda2f14a03e607b11c81ddaa78bc676a",
+      "source_path": "reports/DoanQuocKien/week-05/home_1107/pose/camera_pose_self_1108_1.json",
+      "source_url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/blob/969c06d3fda2f14a03e607b11c81ddaa78bc676a/reports/DoanQuocKien/week-05/home_1107/pose/camera_pose_self_1108_1.json",
+      "original_sha256": "95c07b2d68f31f602e4d2ebaf39bafbd10a86be39bc047726116b2bb4a826bad",
+      "archive_sha256": "95c07b2d68f31f602e4d2ebaf39bafbd10a86be39bc047726116b2bb4a826bad",
+      "transformation": "verbatim numeric/text source"
+    },
+    {
+      "archive": "home/pose/camera_pose_self_1108_2.json",
+      "source_commit": "969c06d3fda2f14a03e607b11c81ddaa78bc676a",
+      "source_path": "reports/DoanQuocKien/week-05/home_1107/pose/camera_pose_self_1108_2.json",
+      "source_url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/blob/969c06d3fda2f14a03e607b11c81ddaa78bc676a/reports/DoanQuocKien/week-05/home_1107/pose/camera_pose_self_1108_2.json",
+      "original_sha256": "2b2585ba9a1dd9a635cc6de0d527dfb531b70ddcab65bb1477f3f57faf99b8f2",
+      "archive_sha256": "2b2585ba9a1dd9a635cc6de0d527dfb531b70ddcab65bb1477f3f57faf99b8f2",
+      "transformation": "verbatim numeric/text source"
+    },
+    {
+      "archive": "home/pose/camera_pose_self_1108_3.json",
+      "source_commit": "969c06d3fda2f14a03e607b11c81ddaa78bc676a",
+      "source_path": "reports/DoanQuocKien/week-05/home_1107/pose/camera_pose_self_1108_3.json",
+      "source_url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/blob/969c06d3fda2f14a03e607b11c81ddaa78bc676a/reports/DoanQuocKien/week-05/home_1107/pose/camera_pose_self_1108_3.json",
+      "original_sha256": "450dc5d446f88175b9da855a1ab8c06b5671ad39bd8e6f8a79d0d7ffdab0e6a2",
+      "archive_sha256": "450dc5d446f88175b9da855a1ab8c06b5671ad39bd8e6f8a79d0d7ffdab0e6a2",
+      "transformation": "verbatim numeric/text source"
+    },
+    {
+      "archive": "home/height_marks_1108_box_heights.json",
+      "source_commit": "969c06d3fda2f14a03e607b11c81ddaa78bc676a",
+      "source_path": "reports/DoanQuocKien/week-05/home_1107/height_marks_1108_box_heights.json",
+      "source_url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/blob/969c06d3fda2f14a03e607b11c81ddaa78bc676a/reports/DoanQuocKien/week-05/home_1107/height_marks_1108_box_heights.json",
+      "original_sha256": "65ea1af0477ecf7d0aabf96c547641a62dffab5f0077942fff053f70571e0bd8",
+      "archive_sha256": "65ea1af0477ecf7d0aabf96c547641a62dffab5f0077942fff053f70571e0bd8",
+      "transformation": "verbatim numeric/text source"
+    },
+    {
+      "archive": "home/pursuit/home_5_1/log.csv",
+      "source_commit": "969c06d3fda2f14a03e607b11c81ddaa78bc676a",
+      "source_path": "reports/DoanQuocKien/week-05/home_1107/pursuit/home_5_1/log.csv",
+      "source_url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/blob/969c06d3fda2f14a03e607b11c81ddaa78bc676a/reports/DoanQuocKien/week-05/home_1107/pursuit/home_5_1/log.csv",
+      "original_sha256": "53c052c82a101bb290164fafb26ea907a5e236c85966ffc7af3fd504fd269ada",
+      "archive_sha256": "3c787581fa3940bad42449d8d5436b7724211fd088fe2311eb50391ad2d10f7b",
+      "transformation": "retain numeric/control columns; omit raw track IDs/boxes"
+    },
+    {
+      "archive": "home/pursuit/home_5_1/summary.json",
+      "source_commit": "969c06d3fda2f14a03e607b11c81ddaa78bc676a",
+      "source_path": "reports/DoanQuocKien/week-05/home_1107/pursuit/home_5_1/summary.json",
+      "source_url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/blob/969c06d3fda2f14a03e607b11c81ddaa78bc676a/reports/DoanQuocKien/week-05/home_1107/pursuit/home_5_1/summary.json",
+      "original_sha256": "103e9f40c2b138e7738bcbf8456b23d790c79adaba16835c171af3d93a52a370",
+      "archive_sha256": "41b3724d03b524995981bb0ce0c1369f0d36dfa28c847fa129cf0a6896344646",
+      "transformation": "omit target_id; source fractions remain unaccepted diagnostics"
+    },
+    {
+      "archive": "home/pursuit/home_6_1/log.csv",
+      "source_commit": "969c06d3fda2f14a03e607b11c81ddaa78bc676a",
+      "source_path": "reports/DoanQuocKien/week-05/home_1107/pursuit/home_6_1/log.csv",
+      "source_url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/blob/969c06d3fda2f14a03e607b11c81ddaa78bc676a/reports/DoanQuocKien/week-05/home_1107/pursuit/home_6_1/log.csv",
+      "original_sha256": "551b9d55404aec4db53f7d05c27f73b3e7e73b8396017054a6c5461009a51b5b",
+      "archive_sha256": "d65f17176940d661c1ef981908a9302136ce038f5a917fc0ea8ed8bb5643e0e7",
+      "transformation": "retain numeric/control columns; omit raw track IDs/boxes"
+    },
+    {
+      "archive": "home/pursuit/home_6_1/summary.json",
+      "source_commit": "969c06d3fda2f14a03e607b11c81ddaa78bc676a",
+      "source_path": "reports/DoanQuocKien/week-05/home_1107/pursuit/home_6_1/summary.json",
+      "source_url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/blob/969c06d3fda2f14a03e607b11c81ddaa78bc676a/reports/DoanQuocKien/week-05/home_1107/pursuit/home_6_1/summary.json",
+      "original_sha256": "0dbbf4ce24479f1dd781058c87ff2ce892497d4e113462e2c87023c64fb9458c",
+      "archive_sha256": "f9c116e151fb2f77e984ac2e4d8fa84a219d67a902b10d8bce1100d283d7f731",
+      "transformation": "omit target_id; source fractions remain unaccepted diagnostics"
+    },
+    {
+      "archive": "home/pursuit/static_1p8_0108_1/log.csv",
+      "source_commit": "969c06d3fda2f14a03e607b11c81ddaa78bc676a",
+      "source_path": "reports/DoanQuocKien/week-05/home_1107/pursuit/static_1p8_0108_1/log.csv",
+      "source_url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/blob/969c06d3fda2f14a03e607b11c81ddaa78bc676a/reports/DoanQuocKien/week-05/home_1107/pursuit/static_1p8_0108_1/log.csv",
+      "original_sha256": "b523d2c943bbd9c5653bf3a69d119070e1af84ab941bcb2133a300c7321bb51e",
+      "archive_sha256": "6d824ffb877c5ceb0f10b41cafc6c44ea18eb31ce722cbd31daaa3f6bd589afe",
+      "transformation": "retain numeric/control columns; omit raw track IDs/boxes"
+    },
+    {
+      "archive": "home/pursuit/static_1p8_0108_1/summary.json",
+      "source_commit": "969c06d3fda2f14a03e607b11c81ddaa78bc676a",
+      "source_path": "reports/DoanQuocKien/week-05/home_1107/pursuit/static_1p8_0108_1/summary.json",
+      "source_url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/blob/969c06d3fda2f14a03e607b11c81ddaa78bc676a/reports/DoanQuocKien/week-05/home_1107/pursuit/static_1p8_0108_1/summary.json",
+      "original_sha256": "dd7de6d7b2dc68da3aaf908161ffaa604eea151e07e63814f2b72182d7c78ec5",
+      "archive_sha256": "9548b17f387bf48c3d6f70fe5bbf9278ce78bbdd45d382c1a4b10b0b6f9b439d",
+      "transformation": "omit target_id; source fractions remain unaccepted diagnostics"
+    },
+    {
+      "archive": "link/README.md",
+      "source_commit": "3f9cd936d4e7adcf8de923ed219615ce2f1d567e",
+      "source_path": "reports/DoanQuocKien/week-05/home_1107_link_safety/README.md",
+      "source_url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/blob/3f9cd936d4e7adcf8de923ed219615ce2f1d567e/reports/DoanQuocKien/week-05/home_1107_link_safety/README.md",
+      "original_sha256": "3b2e7957def51356f307b3911fd2ab7410c8d626403d6131b422871838c0ae97",
+      "archive_sha256": "3b2e7957def51356f307b3911fd2ab7410c8d626403d6131b422871838c0ae97",
+      "transformation": "verbatim numeric/text source"
+    },
+    {
+      "archive": "link/summary.json",
+      "source_commit": "3f9cd936d4e7adcf8de923ed219615ce2f1d567e",
+      "source_path": "reports/DoanQuocKien/week-05/home_1107_link_safety/summary.json",
+      "source_url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/blob/3f9cd936d4e7adcf8de923ed219615ce2f1d567e/reports/DoanQuocKien/week-05/home_1107_link_safety/summary.json",
+      "original_sha256": "333eedad9407845f71e36dd85a23b056631c69ee8205acb78a301b53c35d38bb",
+      "archive_sha256": "333eedad9407845f71e36dd85a23b056631c69ee8205acb78a301b53c35d38bb",
+      "transformation": "verbatim numeric/text source"
+    },
+    {
+      "archive": "link/trials.csv",
+      "source_commit": "3f9cd936d4e7adcf8de923ed219615ce2f1d567e",
+      "source_path": "reports/DoanQuocKien/week-05/home_1107_link_safety/trials.csv",
+      "source_url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/blob/3f9cd936d4e7adcf8de923ed219615ce2f1d567e/reports/DoanQuocKien/week-05/home_1107_link_safety/trials.csv",
+      "original_sha256": "08f6318382e121f3926c417301d8769077fb9c8908854322a65a78f35caba944",
+      "archive_sha256": "08f6318382e121f3926c417301d8769077fb9c8908854322a65a78f35caba944",
+      "transformation": "verbatim numeric/text source"
+    },
+    {
+      "archive": "kr/phase3_replay_summary.json",
+      "source_commit": "4d733af9a8447e8159314430c3450d4f63b1799c",
+      "source_path": "reports/kouun-rokku/week-06/phase3_replay_summary.json",
+      "source_url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/blob/4d733af9a8447e8159314430c3450d4f63b1799c/reports/kouun-rokku/week-06/phase3_replay_summary.json",
+      "original_sha256": "75a9c080da728f382b05b2edb7c1c68a943393b5792a92d1f58446fdb7d3ce1e",
+      "archive_sha256": "75a9c080da728f382b05b2edb7c1c68a943393b5792a92d1f58446fdb7d3ce1e",
+      "transformation": "verbatim numeric/text source"
+    },
+    {
+      "archive": "kr/chapter5_source.md",
+      "source_commit": "4d733af9a8447e8159314430c3450d4f63b1799c",
+      "source_path": "reports/midterm_report_draft.md",
+      "source_url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/blob/4d733af9a8447e8159314430c3450d4f63b1799c/reports/midterm_report_draft.md",
+      "original_sha256": "39cb0ec36568c16021f3b899cbaef174833942a73e2d46d96e3558d3c8f2bd4e",
+      "archive_sha256": "cc6410edd2e63ae91d0740f673d63b0ca60f7fa90be22c1dd32001a523942f5e",
+      "transformation": "Chapter 5 excerpt only; trim trailing boundary blank lines; source assertions/links not endorsed"
+    },
+    {
+      "archive": "plan/carryover_source.md",
+      "source_commit": "3f9cd936d4e7adcf8de923ed219615ce2f1d567e",
+      "source_path": "docs/Implementation Plan.md",
+      "source_url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/blob/3f9cd936d4e7adcf8de923ed219615ce2f1d567e/docs/Implementation%20Plan.md",
+      "original_sha256": "b27215a812fae3f7a837a7808f698720a5bd61d0e3ac0371f3e13d85adfc5231",
+      "archive_sha256": "1f93a6647732ba2ddb859891f21da93b77fc73fd4770ff59fe72b61c258ed93d",
+      "transformation": "Week 6 and D5 scope excerpts; unmerged proposals retained as source"
+    },
+    {
+      "archive": "plan/classroom_source.md",
+      "source_commit": "3f9cd936d4e7adcf8de923ed219615ce2f1d567e",
+      "source_path": "docs/Classroom Tasks Week 6.md",
+      "source_url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/blob/3f9cd936d4e7adcf8de923ed219615ce2f1d567e/docs/Classroom%20Tasks%20Week%206.md",
+      "original_sha256": "47b6150a32b3d5217e500de919925aaecdb6b2a92446b6a05022cb44c356d898",
+      "archive_sha256": "25a0be9de295acebe64c9ff898f08c5c0cd407839503717e72120725e0ce660b",
+      "transformation": "top scheduling/banner excerpt only"
+    }
+  ]
+}

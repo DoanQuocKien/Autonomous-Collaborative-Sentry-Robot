@@ -6,7 +6,11 @@ import types
 import numpy as np
 import pytest
 
-from tools.scan_boards import camera_to_robot, pulse_angle, to_start_frame
+from tools.scan_boards import beep, camera_to_robot, pulse_angle, to_start_frame
+
+
+def test_beep_runs_without_raising():
+    beep(1000, 10)
 
 
 def test_the_pulse_angle_is_the_fall_of_a_fixed_boards_bearing_median_over_boards():

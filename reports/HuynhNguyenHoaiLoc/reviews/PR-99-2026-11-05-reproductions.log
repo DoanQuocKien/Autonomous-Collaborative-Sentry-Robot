@@ -1,0 +1,7 @@
+48 px / 640 = 7.5% width: {"frames": 1, "frames_with_distance": 1, "pursue_frames": 1, "fraction_distance_within_band": 1.0, "fraction_centred_within_10pct": 0.0, "hold_events": [], "target_id": 1, "plan_thresholds": "distance 1.2 +/- 0.2 m and centre within +/- 10 % of the frame width for 80 % of the time (plan 4.3 'Pursuit PD'); these are first-trial numbers, not an acceptance"}
+Fresh command for 0.24 s: estimated dx 0.041656 expected dx 0.049987199999999996
+camera pose fake: pitch 0.00 deg, lens 0.100 m. NO OBSTACLE AVOIDANCE: keep the floor clear, hold R1, release at any problem.
+battery 12.00 V
+start checks passed: battery, video
+Reproduced: injected end-of-run SSH battery failure
+Output directory exists: False ; config factory calls: 0
