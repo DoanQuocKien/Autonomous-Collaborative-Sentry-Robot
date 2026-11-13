@@ -176,7 +176,7 @@ One person (DQK), distances taped from the lens, buffalo_s, every 2nd frame of a
 | 3.0 m | into the camera | 68 px | 0.84 | 0.459 (0.428-0.499) | 65 % | 5.0 |
 | 3.0 m | away | 67 px | 0.86 | 0.345 (0.303-0.391) | 0 % | 3.1 |
 
-- A face was detected in 100 % of the scored frames in every clip. Width follows about 200 px / distance (84 px at 2.4 m, 67 px at 3.0 m in an earlier single-gaze run).
+- A face was detected in 100 % of the scored frames in every clip. Width times distance (looking into the camera, six-clip runs) is 160-164 px*m at 1.8 m, 182-185 at 2.4 m and 204 at 3.0 m (an earlier single-gaze run: 84 px at 2.4 m = 202), so the width is not simply proportional to 1/distance: it falls more slowly than 1/d (cause not investigated; framing near the edge of the picture, tilt or lens distortion are candidates).
 - **Face size does not explain the scores:** the widest faces (1.8 m) scored lower than the narrowest (3.0 m), so the limit is more likely the enrolment (small cafe faces, other camera, other light) or the low upward viewing angle of the tower; not separated yet. Turning the head away costs 0.04-0.11 in cosine at every distance.
 - The stream ran at 12 fps at 1.8 m and fell to 3-5 fps at 3.0 m (hotspot link, signal -56 to -64 dBm; the bench value was 12.5 fps). One person, one session, one enrolment: a pattern, not a TAR/FAR.
 - Tool for a proper enrolment: `tools/enroll_guided.py` (guided poses on the laptop webcam, five embeddings, no photos stored).
@@ -200,7 +200,7 @@ Started from `explore_live --dry-run` (pose `1113_1`: pitch -9.12 deg): the star
 - One chair, front-on, six taped distances, 12 frames each (YOLOv8s, nearest chair = lowest floor contact; choosing the largest box picked background chairs, an error caught on the montage): width 139 / 112 / 94 / 77 / 61 px at 0.9 / 1.2 / 1.5 / 1.8 / 2.4 m; at 0.6 m the chair back leaves the picture (width 200 px, height unusable).
 - Fit distance = 160.3 / width - 0.24 on 0.9-2.4 m: leave-one-out error **max 0.05 m** (height: 0.11 m).
 - Other chairs (the 9 tape-measured chairs of 15/10, rows matched by order of floor contact): errors -0.16 to +0.28 m, **7 of 9 within +/-0.16 m**; the two worst are the 0.32 m and 1.90 m ends. Median absolute error 0.12 m.
-- Limits: one chair type, front-on, one day; the chair width is the unknown (a wider or rotated chair reads nearer or farther); not validated as an obstacle method and not wired into any detector. A proposal for HNHL (perception owner): a size-based range as a fallback when the floor contact is unresolved, evaluated on D1 with more chair types and angles.
+- Limits: one chair type, front-on, one day; the chair width is the unknown (a wider or rotated chair reads nearer or farther); not validated as an obstacle method and not wired into any detector. (The `README.txt` inside the blurred frames zip quotes the widths measured on the blurred frames, 138 px at 0.9 m and 204 px at 0.6 m, against 139 and 200 px on the unblurred originals used for the fit.) A proposal for HNHL (perception owner): a size-based range as a fallback when the floor contact is unresolved, evaluated on D1 with more chair types and angles.
 
 ## Needs the three members (do first while all are available)
 1. Person frames at 1.2, 1.8 and 2.4 m from several different people (experiment A validation; needs more than one person; frames stay local).
