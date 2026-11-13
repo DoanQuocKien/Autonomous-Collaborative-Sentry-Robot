@@ -174,22 +174,33 @@ def f20():
 
 
 def f21():
-    items = [("detector + pose, nobody in view (60 s)", "bench_stageB"), ("+ door pipeline on a still image (60 s)", "bench_stageC"), ("sustained 600 s", "bench_C_sustained")]
-    fig, a = plt.subplots(figsize=(10, 4), dpi=150)
+    """On-robot bench, capture-to-result latency. Light bars: 2026-10-16 (nobody in view, door pipeline on a still image). Dark bars: 2026-11-13 (a person in view, MAXN; the stageC runs read the live ESP32 stream).
+    The plan row 'Edge latency and load' wants >= 20 fps and p95 <= 100 ms (dashed line)."""
+    old = R / "week-02" / "edge_deploy"
+    new = R / "week-06" / "edge_bench_1113"
+    nl = chr(10)
+    items = [("16/10 detector+pose," + nl + "nobody (60 s)", old / "bench_stageB.json", False), ("16/10 + door on a" + nl + "still image (60 s)", old / "bench_stageC.json", False),
+             ("16/10 sustained" + nl + "(600 s)", old / "bench_C_sustained.json", False),
+             ("13/11 detector+pose," + nl + "person (60 s)", new / "stageB_person_1113.json", True), ("13/11 + live ESP32" + nl + "(60 s, run 1)", new / "stageC60_live_esp32_1113.json", True),
+             ("13/11 + live ESP32" + nl + "(60 s, phone closer)", new / "stageC60b_live_esp32_phone_closer_1113.json", True), ("13/11 + live ESP32" + nl + "(600 s, seated)", new / "stageC600_live_esp32_seated_1113.json", True)]
+    fig, a = plt.subplots(figsize=(13, 4.6), dpi=150)
     labels = []
-    for i, (label, f) in enumerate(items):
-        d = json.load(open(R / "week-02" / "edge_deploy" / (f + ".json")))
+    for i, (label, f, dark) in enumerate(items):
+        d = json.load(open(f))
+        d = d.get("bench", d) | {"stage_ms": d["stage_ms"]}
         e = d["stage_ms"]["e2e"]
-        a.bar(i - 0.2, e["mean"], 0.4, color=BLUE, label="mean" if i == 0 else None)
-        a.bar(i + 0.2, e["p95"], 0.4, color=RED, label="p95" if i == 0 else None)
-        a.text(i - 0.2, e["mean"] + 1.5, "%.0f" % e["mean"], ha="center", fontsize=8)
-        a.text(i + 0.2, e["p95"] + 1.5, "%.0f" % e["p95"], ha="center", fontsize=8)
-        labels.append("%s\n%.1f fps" % (label, d["fps"]))
+        a.bar(i - 0.2, e["mean"], 0.4, color=BLUE, alpha=1.0 if dark else 0.4, label="mean" if i == 0 else None)
+        a.bar(i + 0.2, e["p95"], 0.4, color=RED, alpha=1.0 if dark else 0.4, label="p95" if i == 0 else None)
+        a.text(i - 0.2, e["mean"] + 2, "%.0f" % e["mean"], ha="center", fontsize=8)
+        a.text(i + 0.2, e["p95"] + 2, "%.0f" % e["p95"], ha="center", fontsize=8)
+        labels.append("%s%s%.1f fps" % (label, nl, d["fps"]))
+    a.axhline(100, color=GREY, ls="--", lw=1)
+    a.text(-0.45, 102, "plan: p95 <= 100 ms and >= 20 fps", ha="left", fontsize=7, color=GREY)
     a.set_xticks(range(len(items)))
-    a.set_xticklabels(labels, fontsize=8)
+    a.set_xticklabels(labels, fontsize=7)
     a.set_ylabel("capture-to-result latency on the robot (ms)")
-    a.legend(fontsize=8)
-    a.set_title("F21 On-robot live bench (2026-10-16, nobody in view); the person-in-view runs are in week-03/edge_deploy")
+    a.legend(fontsize=8, loc="upper left")
+    a.set_title("F21 On-robot live bench. Light: 2026-10-16, nobody in view. Dark: 2026-11-13, a person in view (MAXN; the live runs read the ESP32 stream)." + nl + "The 13/11 live runs do not meet the plan row (fps and p95); one person, one session each.", fontsize=9)
     fig.tight_layout()
     fig.savefig(OUT / "F21_robot_bench.png")
     plt.close(fig)

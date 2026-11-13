@@ -1,6 +1,6 @@
 # Mục 5.x — Tối ưu hóa và triển khai trên thiết bị (Jetson Nano)
 
-**Bản thảo DQK (2026-11-12), khoảng 0,7 trang trong Chương 5.** Nguồn: `docs/Edge Deployment.md` (đo ngày 16/10, `reports/DoanQuocKien/week-02/edge_deploy/`), số liệu laptop của HNHL (PR #100, `reports/HuynhNguyenHoaiLoc/week-06/`). Hình: F20 (engine trên robot), F21 (bench trên robot), F18 (FP32 so với FP16, HNHL).
+**Bản thảo DQK (2026-11-13), khoảng 0,7 trang trong Chương 5.** Nguồn: `docs/Edge Deployment.md` (đo ngày 16/10, `reports/DoanQuocKien/week-02/edge_deploy/`), số liệu laptop của HNHL (PR #100, `reports/HuynhNguyenHoaiLoc/week-06/`). Hình: F20 (engine trên robot), F21 (bench trên robot), F18 (FP32 so với FP16, HNHL).
 
 ---
 
@@ -37,7 +37,9 @@ DINOv2 (0,4–2,8 khung/giây) **ở lại laptop**; phần còn lại đủ nha
 
 Tách đường ống cửa sang luồng riêng giữ vòng truy bám ở 20 fps và hạ p95 từ 101 xuống 70–72 ms. Thử 10 phút trên pin: RAM 2,14 GB (không tăng), GPU 60 % trung bình, GPU 39 °C, bo mạch 5,76 W trung bình (7,0 W đỉnh); điện áp pin giảm 0,2 V sau 10 phút khi động cơ tắt (không suy ra được thời gian chạy). Khóa xung GPU (`jetson_clocks`) chỉ lợi khoảng 1 ms nên không dùng.
 
-**Giới hạn:** không có ai trong khung hình (chi phí phụ thuộc người bị đánh giá thấp), đường ống cửa chạy trên ảnh tĩnh chứ chưa phải khung ESP32, không có động cơ và e-stop trong vòng lặp. Chưa có phép đo có người, có luồng cửa và pin cho F20/F21 mới.
+**Giới hạn của các phép đo 16/10:** không có ai trong khung hình (chi phí phụ thuộc người bị đánh giá thấp), đường ống cửa chạy trên ảnh tĩnh chứ chưa phải khung ESP32, không có động cơ và e-stop trong vòng lặp.
+
+**Đo lại ngày 13/11 với người trong khung hình (chế độ MAXN, Hình F21):** `stageB` (60 s) đạt 19,75 fps, tính toán 46,4 ms (p95 75,2), từ chụp đến kết quả 61,1 ms (p95 89,2); so với 16/10 (không có người: 37,9 / 51,1 ms), có người trong khung hình thêm khoảng 23 ms. Với **đường ống cửa trong luồng riêng trên luồng ESP32 thật** (bản opt4, 12,5 fps) kết quả là 17,7 và 17,1 fps, p95 118,5 và 123,9 ms ở hai lần 60 s, và **14,45 fps, p95 153,0 ms ở lần 600 s** (người ngồi cách robot 2 m); RAM phẳng 2,13 GB, nhiệt độ GPU tối đa 38,5 °C, xung nhịp GPU/CPU không bị hạ, pin 11,96 → 11,72 V trong 11 phút. **Hàng “Edge latency and load” của kế hoạch (≥ 20 fps, p95 ≤ 100 ms) không đạt** khi có người và luồng ESP32 thật; lần chạy 28/10 ở quán cà phê (20,00 fps) chưa tái lập được và nguyên nhân chưa xác định. Hạn chế: một người, một buổi cho mỗi lần đo, lần dài nhất 600 s ngắn hơn 15 phút của kế hoạch, người đứng ở các lần 60 s nhưng ngồi ở lần 600 s, chưa có động cơ và e-stop trong vòng lặp.
 
 ## 5.x.3 So sánh FP32 và FP16 trên laptop (HNHL; RTX 5060, nhãn riêng khỏi RTX 4050)
 
