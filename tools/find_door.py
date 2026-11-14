@@ -24,7 +24,7 @@ import numpy as np
 from tools.approach_door import MAX_VIDEO_AGE_S, video_is_fresh
 from tools.drive_model import CLEAR_MARGIN_M, drive_distance_m, drive_speed_m_s
 from tools.locate_door import locate
-from tools.scan_boards import ESTOP_LATCH, MIN_BATTERY_V, PRIOR_PULSE_RAD, PRIOR_PULSE_S, SPIN_W, check_args, camera_to_robot, pulse_angle, to_start_frame, wrap
+from tools.scan_boards import ESTOP_LATCH, MIN_BATTERY_V, PRIOR_PULSE_RAD, CALIBRATED_SPIN_S, SPIN_W, check_args, camera_to_robot, pulse_angle, to_start_frame, wrap
 
 
 def dominant_bearing(doors, window_deg=10.0):
@@ -141,7 +141,7 @@ def main():
     ap.add_argument("--stop-range", type=float, default=0.8, help="stop driving when a board within 30 deg of straight ahead is closer than this (m)")
     ap.add_argument("--stand-off", type=float, default=2.0, help="sweet spot: this far from the door (m), inside the 1.5-3.0 m window")
     ap.add_argument("--max-pulses", type=int, default=18)
-    ap.add_argument("--spin-s", type=float, default=PRIOR_PULSE_S, help="fixed at %.1f s: a pulse without a board in common falls back on the turn calibrated for that length" % PRIOR_PULSE_S)
+    ap.add_argument("--spin-s", type=float, default=CALIBRATED_SPIN_S, help="fixed at %.1f s: a pulse without a board in common falls back on the turn calibrated for that length" % CALIBRATED_SPIN_S)
     ap.add_argument("--hold", type=float, default=1.0)
     ap.add_argument("--samples", type=int, default=6)
     ap.add_argument("--wait", type=float, default=90.0)
@@ -151,7 +151,7 @@ def main():
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--out", default="data/find_door")
     a = ap.parse_args()
-    check_args(a, dict(spin_s=(PRIOR_PULSE_S, PRIOR_PULSE_S), hold=(0.05, 5.0), turn_deg=(0.0, 180.0), baseline_s=(0.1, 10.0), preview_s=(0.0, 15.0),
+    check_args(a, dict(spin_s=(CALIBRATED_SPIN_S, CALIBRATED_SPIN_S), hold=(0.05, 5.0), turn_deg=(0.0, 180.0), baseline_s=(0.1, 10.0), preview_s=(0.0, 15.0),
                        drive_v=(0.3, 1.0), stand_off=(1.5, 3.0), stop_range=(0.3, 1.5), max_pulses=(1, 40), samples=(1, 30), wait=(1.0, 600.0),
                        min_battery=(10.5, 13.0), clear_ahead_m=(0.0, 20.0), clear_radius_m=(0.0, 20.0)))
     if not a.dry_run:

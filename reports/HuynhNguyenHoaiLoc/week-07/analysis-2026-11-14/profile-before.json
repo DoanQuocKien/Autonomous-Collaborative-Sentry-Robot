@@ -1,0 +1,107 @@
+{
+  "schema_version": 1,
+  "run_name": "before",
+  "requested_hz": 5.0,
+  "recorded_summary": {
+    "status": "completed",
+    "processed_frames": 70,
+    "skipped_schedule_frames": 138,
+    "source": {
+      "duration_s": 20.025989399990067,
+      "consumed_frames": 208,
+      "decoded_frames": 240,
+      "reconnects": 0
+    },
+    "evidence_counts": {
+      "person_observations": 140,
+      "detected_faces": 140,
+      "associated_faces": 70,
+      "accepted_face_samples": 0
+    },
+    "decisions": {
+      "authorized": 0,
+      "queued": 0,
+      "unresolved": 2,
+      "interrupted": 2
+    },
+    "t1_passed": false,
+    "motor_commands_sent": 0
+  },
+  "decisions": {
+    "interrupted": 2,
+    "unresolved": 2
+  },
+  "logged_segments": 4,
+  "incomplete_segments": [
+    {
+      "segment": 0,
+      "decision": "interrupted",
+      "reason": "stream_discontinuity",
+      "end_trigger": null,
+      "retained_face_samples": 0,
+      "total_accepted_face_samples": null,
+      "confirmation_resets": null,
+      "rejection_counts": null,
+      "duration_s": 2.751159799983725,
+      "stream_samples_in_time_window": 0,
+      "historical_rejection_details_available": false
+    },
+    {
+      "segment": 1,
+      "decision": "interrupted",
+      "reason": "stream_discontinuity",
+      "end_trigger": null,
+      "retained_face_samples": 0,
+      "total_accepted_face_samples": null,
+      "confirmation_resets": null,
+      "rejection_counts": null,
+      "duration_s": 2.751159799983725,
+      "stream_samples_in_time_window": 0,
+      "historical_rejection_details_available": false
+    },
+    {
+      "segment": 2,
+      "decision": "unresolved",
+      "reason": "insufficient_face_evidence",
+      "end_trigger": null,
+      "retained_face_samples": 0,
+      "total_accepted_face_samples": null,
+      "confirmation_resets": null,
+      "rejection_counts": null,
+      "duration_s": 15.00443840000662,
+      "stream_samples_in_time_window": 0,
+      "historical_rejection_details_available": false
+    },
+    {
+      "segment": 3,
+      "decision": "unresolved",
+      "reason": "insufficient_face_evidence",
+      "end_trigger": null,
+      "retained_face_samples": 0,
+      "total_accepted_face_samples": null,
+      "confirmation_resets": null,
+      "rejection_counts": null,
+      "duration_s": 15.00443840000662,
+      "stream_samples_in_time_window": 0,
+      "historical_rejection_details_available": false
+    }
+  ],
+  "cadence": {
+    "processed_samples": 0,
+    "intervals_s": null,
+    "effective_hz": null,
+    "after_first_interval_hz": null,
+    "large_processed_gaps": []
+  },
+  "frame_diagnostics_available": false,
+  "stage_wall_ms": {},
+  "frame_sample_rejections": {},
+  "frame_association_rejections": {},
+  "source_sha256": {
+    "session.json": "01d818a9b3b3fbe31c62d97258c60481936a9682c6d166cc1dc3e7f128970028",
+    "summary.json": "a61c153b18ea745d72523539eff3df9adb64b014c663f6b4ac62bbe15a3b9e9c",
+    "entries.jsonl": "879932baacc4f021002933c05d53249ced08b532d658ac778ef1f8d2f04eb72e"
+  },
+  "t1_passed": false,
+  "interpretation": "Processed-frame gaps alone do not identify network or inference causes. Historical missing diagnostics remain unknown. Automatic segments require physical-attempt labels."
+}

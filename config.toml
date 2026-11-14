@@ -266,3 +266,25 @@ w_max = 0.8
 center_tolerance_norm = 0.10
 max_recenter_time_s = 1.5
 
+
+[door_live]                     # HNHL issue #114, provisional until door-camera T1
+inference_hz = 5.0
+start_frames = 3
+end_frames = 3
+top_k = 3
+minimum_votes = 2
+min_face_width = 40.0
+min_face_confidence = 0.6
+min_sharpness = 25.0
+frontal_yaw = 0.15
+face_overlap = 0.8
+max_gap_s = 1.0
+max_entry_s = 15.0
+max_people = 16
+crop_scope = "visible_body"      # measure body visibility before cross-camera re-ID acceptance
+
+[door_enrol]
+min_face_width = 80.0
+hold_s = 0.8
+turn_min = 0.20
+turn_max = 0.45

@@ -1,6 +1,6 @@
-"""Phase 2 Monitoring & Access Control Replay Pipeline (Spec §4.4, §4.6, Implementation Plan §5).
+"""Phase 2 entry decisions and queue hand-off (Spec §4.4, §4.6, plan §5).
 
-Owner: kouun-rokku (KR).
+Owner: kouun-rokku (KR); live stream adapter: HNHL (issue #114).
 Connects the Phase 2 monitoring pipeline end to end on replayed ESP32-CAM doorway data (D2):
   1. Ingests timestamped entrance frames / crops from the ESP32-CAM stream.
   2. Runs Face Verification against the enrolled whitelist (InsightFace / FaceVerifier, cosine threshold 0.45).
@@ -91,6 +91,7 @@ class Phase2EventResult:
     sector_drift: float = 0.0
     state_machine_transition: Optional[TransitionResult] = None
     command_emitted: Optional[Command] = None
+    decision_timestamp: Optional[float] = None
 
 
 @dataclass
@@ -140,6 +141,12 @@ class Phase2Pipeline:
         face_embedding: Optional[np.ndarray] = None,
         person_crop_bgr: Optional[np.ndarray] = None,
         timestamp: Optional[float] = None,
+        *,
+        face_embeddings=None,
+        minimum_face_votes=1,
+        decision_timestamp=None,
+        decision_clock=None,
+        entry_metadata=None,
     ) -> Phase2EventResult:
         """Process one entrance sequence.
 
@@ -149,15 +156,37 @@ class Phase2Pipeline:
             face_embedding: 512D face embedding from InsightFace (or None)
             person_crop_bgr: full body crop BGR image for OSNet appearance extraction
             timestamp: time of first detection crossing doorway threshold
+            face_embeddings: optional top-K samples for a same-identity majority
+            minimum_face_votes: strict majority required for multi-frame verification
+            decision_timestamp: enqueue/event time; defaults to entry time for legacy callers
+            decision_clock: optional clock sampled after inference, just before enqueue
+            entry_metadata: provenance fields; model identity fields are protected
         """
         t0 = float(observations[0][0]) if observations else float(time.time() if timestamp is None else timestamp)
+        def event_time():
+            value = (decision_clock() if decision_clock is not None else
+                     t0 if decision_timestamp is None else decision_timestamp)
+            value = float(value)
+            if not np.isfinite([t0, value]).all() or value < t0:
+                raise ValueError("finite decision timestamp at or after entry start required")
+            if value < self.state_machine.t:
+                raise ValueError("decision timestamp precedes the state machine")
+            return value
+
+        decided_at = event_time()
 
         # 1. Face verification
         authorized_id = None
         best_score = -1.0
         authorized = False
 
-        if face_embedding is not None:
+        if face_embeddings is not None:
+            if face_embedding is not None:
+                raise ValueError("provide either one embedding or multiple face embeddings")
+            samples = list(face_embeddings)
+            authorized_id, best_score, authorized = self.face_verifier.verify_many(samples, minimum_face_votes)
+            face_embedding = samples[0]
+        elif face_embedding is not None:
             authorized_id, best_score, authorized = self.face_verifier.verify(face_embedding)
             best_score = float(best_score) if best_score is not None else -1.0
 
@@ -184,6 +213,7 @@ class Phase2Pipeline:
                 similarity_score=best_score,
                 sector=sector_name,
                 sector_drift=drift,
+                decision_timestamp=event_time(),
             )
 
         # 3. Unauthorized -> Intruder detected!
@@ -213,12 +243,14 @@ class Phase2Pipeline:
             try:
                 import cv2
                 snap_file = self.snapshot_dir / f"{entry_id}_snapshot.jpg"
-                cv2.imwrite(str(snap_file), person_crop_bgr)
+                if not cv2.imwrite(str(snap_file), person_crop_bgr):
+                    raise OSError("snapshot write failed")
                 snapshot_path = str(snap_file)
             except Exception as e:
                 logger.warning("Failed saving intruder snapshot: %s", e)
 
         # 6. Create IntruderRecord and push to FIFO queue
+        decided_at = event_time()
         record = IntruderRecord(
             id=entry_id,
             face_embedding=face_embedding,
@@ -226,25 +258,29 @@ class Phase2Pipeline:
             sector=sector_name,
             snapshot_path=snapshot_path,
             timestamp=t0,
-            enqueued_at=t0,
+            enqueued_at=decided_at,
             metadata={
+                **(entry_metadata or {}),
                 "similarity_score": best_score,
                 "sector_drift": drift,
                 "appearance_model_id": getattr(self.appearance_extractor, "model_id", "unidentified-extractor"),
                 "appearance_simulated": isinstance(self.appearance_extractor, MockAppearanceExtractor),
             },
         )
-        self.target_queue.push(record, t=t0)
+        self.target_queue.push(record, t=decided_at)
+        # TargetQueue treats zero as an omitted historical timestamp. Replay
+        # entries can genuinely start at zero while enqueue happens later.
+        record.timestamp = t0
 
         # 7. Notify StateMachine
         sm_transition = self.state_machine.handle_event(
             "INTRUDER_QUEUED",
             data=record.to_dict(),
-            t=t0,
+            t=decided_at,
         )
 
-        # The state machine decides who is served next; the record queue follows it (also after exits and drops)
-        self.target_queue.sync_with(self.state_machine, t=t0)
+        # The state machine decides who is served next; the record queue follows it (also after exits and drops), on the decision clock
+        self.target_queue.sync_with(self.state_machine, t=decided_at)
 
         return Phase2EventResult(
             entry_id=entry_id,
@@ -257,6 +293,7 @@ class Phase2Pipeline:
             sector_drift=drift,
             state_machine_transition=sm_transition,
             command_emitted=sm_transition.command,
+            decision_timestamp=decided_at,
         )
 
     def replay_dataset(

@@ -1,0 +1,126 @@
+{
+  "status": "PASS",
+  "file": "reports/midterm_report_draft.md",
+  "total_word_count": 6162,
+  "total_estimated_pages": 13.7,
+  "page_budget_range": [
+    10.0,
+    15.0
+  ],
+  "budget_estimate_met": true,
+  "structure_complete": true,
+  "missing_chapters": [],
+  "assets_verified": true,
+  "broken_assets": [],
+  "verified_assets_count": 6,
+  "chapter_count": 9,
+  "figures_referenced": [
+    "F1",
+    "F10",
+    "F12",
+    "F13",
+    "F15",
+    "F18",
+    "F9"
+  ],
+  "figures_count": 7,
+  "chapter_breakdown": [
+    {
+      "chapter": "Chương 1: Giới thiệu và bài toán",
+      "owner": "KR",
+      "target_pages": 1.0,
+      "words": 693,
+      "estimated_pages": 1.54,
+      "figures_count": 0,
+      "figures": []
+    },
+    {
+      "chapter": "Chương 2: Các công trình liên quan và cơ sở lý thuyết",
+      "owner": "KR",
+      "target_pages": 1.5,
+      "words": 713,
+      "estimated_pages": 1.58,
+      "figures_count": 0,
+      "figures": []
+    },
+    {
+      "chapter": "Chương 3: Kiến trúc hệ thống và thiết kế an toàn",
+      "owner": "DQK",
+      "target_pages": 2.0,
+      "words": 520,
+      "estimated_pages": 1.16,
+      "figures_count": 1,
+      "figures": [
+        "F1"
+      ]
+    },
+    {
+      "chapter": "Chương 4: Nền tảng robot và quy trình hiệu chuẩn",
+      "owner": "DQK (+KR)",
+      "target_pages": 1.5,
+      "words": 509,
+      "estimated_pages": 1.13,
+      "figures_count": 1,
+      "figures": [
+        "F15"
+      ]
+    },
+    {
+      "chapter": "Chương 5: Nhận thức thị giác, tối ưu hóa và triển khai thiết bị nhúng",
+      "owner": "HNHL (+KR, DQK)",
+      "target_pages": 3.5,
+      "words": 1307,
+      "estimated_pages": 2.9,
+      "figures_count": 5,
+      "figures": [
+        "F10",
+        "F12",
+        "F13",
+        "F18",
+        "F9"
+      ]
+    },
+    {
+      "chapter": "Chương 6: Hành vi và điều khiển hệ thống",
+      "owner": "KR (+DQK)",
+      "target_pages": 1.5,
+      "words": 628,
+      "estimated_pages": 1.4,
+      "figures_count": 0,
+      "figures": []
+    },
+    {
+      "chapter": "Chương 7: Kiểm thử thực nghiệm và kết quả hiện thời",
+      "owner": "KR (+HNHL, DQK)",
+      "target_pages": 1.5,
+      "words": 673,
+      "estimated_pages": 1.5,
+      "figures_count": 1,
+      "figures": [
+        "F12"
+      ]
+    },
+    {
+      "chapter": "Chương 8: Kế hoạch và kết quả kỳ vọng giai đoạn hai",
+      "owner": "DQK",
+      "target_pages": 1.0,
+      "words": 383,
+      "estimated_pages": 0.85,
+      "figures_count": 0,
+      "figures": []
+    },
+    {
+      "chapter": "Phụ lục A: Bàn giao mã nguồn và hướng dẫn kiểm thử độc lập",
+      "owner": "KR (+HNHL, DQK)",
+      "target_pages": 1.0,
+      "words": 736,
+      "estimated_pages": 1.64,
+      "figures_count": 1,
+      "figures": [
+        "F1"
+      ]
+    }
+  ],
+  "rendered_layout_verified": false,
+  "rendered_layout_note": "Word count estimate only (~450 words/p); actual 10-15 rendered page compliance unverified until layout is rendered."
+}

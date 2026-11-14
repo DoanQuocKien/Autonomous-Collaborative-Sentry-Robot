@@ -96,7 +96,7 @@ With the models on the robot, video latency (risk 16, the p95 < 50 ms target) le
 | Phone hotspot | Fallback already listed in `JetBot Notes.md`; clients must be able to reach each other | Demo-day fallback |
 | Laptop hotspot (today) | Works, p95 22-53 ms | Keep until Stage C; fine in laptop mode |
 
-How the ESP32-CAM joins: it is 2.4 GHz only, so any AP it joins must serve 2.4 GHz. The tile firmware finds its receiver by a `HELO` broadcast, so it works on any subnet where the receiver (`sentry.espcam.TileReceiver`, then on the robot) is on the same network. Give the new AP the same SSID and password as the laptop hotspot and neither the ESP32 nor the robot needs reflashing or a new profile. Traffic is small: the tile stream measured 0.06-0.2 Mbit/s on a still scene (motion bursts unmeasured), the preview ~1 Mbit/s **est.**. `TileReceiver` must be ported to Python 3.6 (it imports `sentry.net.discover`; small).
+How the ESP32-CAM joins: it is 2.4 GHz only, so any AP it joins must serve 2.4 GHz. The tile firmware finds its receiver by a `HELO` broadcast, so it works on any subnet where the receiver (`sentry.espcam.TileReceiver`, then on the robot) is on the same network. Give the new AP the same SSID and password as the laptop hotspot and neither the ESP32 nor the robot needs reflashing or a new profile. Traffic is small: the tile stream measured 0.06-0.2 Mbit/s on a still scene (motion bursts unmeasured), the preview ~1 Mbit/s **est.**. The Python 3.6 port exists: `jetson/espcam.py` (`TileReceiver`).
 
 ## 5. Companion-app interface (same for laptop or robot models)
 
