@@ -1,6 +1,6 @@
 # Hồ sơ giữa kỳ HNHL
 
-**Cập nhật 14/11:** [issue #111/#114 và số đo RTX 4050 mới của DQK](../issues-111-114-2026-11-14.md), [pilot Phase 2 live sau chỉnh camera](../week-07.md), [cách chạy và bàn giao KR](../PHASE2-LIVE-USAGE.md). Đã enrol P01, ghi nhận 3 authorized và 3 enqueue ở hai lượt riêng, giữ các segment thiếu bằng chứng. PR #115 chờ review, T1 còn mở. Các mục có ngày dưới đây là snapshot lịch sử.
+**Cập nhật 14/11:** [issue #111/#114 và số đo RTX 4050 mới của DQK](../issues-111-114-2026-11-14.md), [pilot Phase 2 live và đính chính góc camera lượt 2](../week-07.md), [cách chạy và bàn giao KR](../PHASE2-LIVE-USAGE.md). Đã enrol P01, ghi nhận 3 authorized và 3 enqueue ở hai lượt riêng, giữ các segment thiếu bằng chứng. PR #115 chờ review, T1 còn mở. Các mục có ngày dưới đây là snapshot lịch sử.
 
 **Mới nhất11/11:** [sau merge99/102/103, nguồn tile3/provenance và kết quả Experiment B](update-2026-11-11.md). Ba PR DQK đã review/sửa và merge; nhánh HNHL tích hợp main. Tile3 đã có nguồn; trunk score khác vì script bỏ9 warm-up samples, không phải mâu thuẫn số liệu. ORG tooling/evidence đã merge qua103 nhưng model chưa thay detector, chưa T1/T2. PR101 vẫn chờ sửa và PR100 chờ DQK. Các dòng dưới là snapshots lịch sử.
 

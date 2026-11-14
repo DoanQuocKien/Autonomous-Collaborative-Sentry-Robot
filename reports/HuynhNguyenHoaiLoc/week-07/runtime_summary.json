@@ -106,7 +106,9 @@
       512
     ],
     "test_participants": "P01 only, user confirmed",
-    "scene_review": "Diagnostic frame after the run points at the ceiling. Entry-level identity truth remains unreviewed.",
+    "scene_review": "The diagnostic frame captured after the run points at the ceiling. The operator confirms that the camera faced the door during live run 2, the first P01 run in session chronology. The post-run image does not establish camera orientation during that run. The cause of zero accepted face samples remains undetermined. Entry-level identity truth remains unreviewed.",
+    "operator_camera_orientation": "toward the door during live run 2",
+    "operator_clarification_date": "2026-11-14",
     "model_runtime": {
       "osnet_device": "cuda:0",
       "person_weights_sha256": "f59b3d833e2ff32e194b5bb8e08d211dc7c5bdf144b90d2c8412c47ccfc83b36",

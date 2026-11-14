@@ -1,8 +1,8 @@
 # HNHL — Phase 2 live và cập nhật perception
 
-Kiểm chứng ngày 14/11/2026, Asia/Bangkok, theo issue #114 và snapshot #111. Nhánh `HuynhNguyenHoaiLoc/w07-phase2-live`, base `4f80eac`, code `058c978`. Sau khi enrol P01 và chỉnh camera về phía người, vòng ESP32 → face → OSNet → queue đã chạy live với người đã enrol và người chưa enrol.
+Kiểm chứng ngày 14/11/2026, Asia/Bangkok, theo issue #114 và snapshot #111. Nhánh `HuynhNguyenHoaiLoc/w07-phase2-live`, base `4f80eac`, code `058c978`. Sau khi enrol P01, vòng ESP32 → face → OSNet → queue đã chạy live với người đã enrol và người chưa enrol.
 
-## Kết quả live sau chỉnh camera
+## Kết quả hai lượt live kiểm chứng
 
 Hai lượt chạy riêng, mỗi lượt khoảng 90 giây, dùng whitelist chỉ có P01 với 5 embeddings từ chính ESP32. Người dùng xác nhận lượt đầu chỉ có P01, lượt sau chỉ có người chưa enrol và thực hiện 3 lần vào–ra. Nhãn cohort dựa trên các xác nhận này. Overlay được kiểm tra về framing và bbox, chưa có bộ nhãn nối từng lần đi qua thực tế với từng segment tự động.
 
@@ -38,7 +38,9 @@ $env:YOLO_AUTOINSTALL = 'false'
 .venv/Scripts/python.exe -m pytest tests/test_enroll_door.py tests/test_phase2_live.py tests/test_phase2_reid.py tests/test_phase2_replay.py tests/test_face.py tests/test_d2_pilot.py -p no:cacheprovider -q
 ```
 
-[CPU log](week-07/tests_cpu.txt) và [targeted log](week-07/tests_targeted.txt). Các phép chạy trước khi chỉnh góc vẫn được giữ trong [runtime_summary.json](week-07/runtime_summary.json), gồm replay 298 ảnh D2 mờ với 4 unresolved, probe receiver, lượt live chưa có entry và lượt P01 với camera hướng trần. Lượt enrol đầu timeout ở 2/5, lượt tiếp theo hoàn tất 5/5. Whitelist ở `data/door-whitelist-1114/P01.npz`.
+[CPU log](week-07/tests_cpu.txt) và [targeted log](week-07/tests_targeted.txt). Các phép chạy trước hai lượt kiểm chứng vẫn được giữ trong [runtime_summary.json](week-07/runtime_summary.json), gồm replay 298 ảnh D2 mờ với 4 unresolved, probe receiver, lượt live chưa có entry và lượt P01 đầu với 21 unresolved, 2 interrupted. Lượt enrol đầu timeout ở 2/5, lượt tiếp theo hoàn tất 5/5. Whitelist ở `data/door-whitelist-1114/P01.npz`.
+
+Người thao tác xác nhận camera đã hướng ra cửa ở lượt live 2, tức lượt P01 đầu trong thứ tự chạy của phiên. Ảnh chẩn đoán hướng trần được chụp sau lượt đó. Nhận định trước đây gán góc hướng trần cho cả lượt chạy đã được rút lại. Log của lượt này ghi 0 mẫu mặt hợp lệ trong các segment, nhưng chưa đủ thông tin để xác định nguyên nhân thiếu bằng chứng. Các kết quả số của từng lượt được giữ nguyên.
 
 ## Trạng thái issue và phối hợp
 
