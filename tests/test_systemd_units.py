@@ -36,3 +36,15 @@ def test_estop_unit_arms_with_start_held_1_5s():
 def test_control_unit_never_disables_the_estop():
     unit = (UNITS / "sentry-control.service").read_text()
     assert "--no-estop" not in unit
+
+
+def test_every_service_log_is_rotated():
+    """Each unit appends to a .log under /home/jetbot/sentry; the logrotate rule must cover all of them and be installed."""
+    rule = (UNITS / "sentry-logrotate").read_text()
+    pattern = re.search(r"^(/\S+)\s*\{", rule, re.M).group(1)
+    logs = set()
+    for unit in UNITS.glob("*.service"):
+        logs.update(re.findall(r">>\s*(/\S+\.log)", unit.read_text()))
+    assert logs and all(Path(l).parent == Path(pattern).parent and l.endswith(".log") for l in logs)
+    assert "copytruncate" in rule and re.search(r"^\s*size\s+\d+M", rule, re.M)
+    assert "/etc/logrotate.d/sentry" in (UNITS / "install.sh").read_text()

@@ -249,3 +249,29 @@ def test_the_session_parameters_are_validated_before_anything_live_starts():
     for off, tm, tc in ((float("nan"), 0.5, 0.8), (-1.0, 0.5, 0.8), (50.0, 0.5, 0.8), (3.5, float("inf"), 0.8), (3.5, 0.1, 0.8), (3.5, 0.5, 0.2), (3.5, 0.5, float("nan"))):
         with pytest.raises(SystemExit):
             validate_session_params(ok, off, tm, tc, 1.2)
+
+
+def test_obstacles_reach_the_controller_and_an_unresolved_low_box_blocks_forward_motion():
+    from sentry.perception.obstacle import Detection, Obstacle, ObstacleResult
+    from tools.pursue_live import obstacle_input
+
+    def result(*obstacles):
+        return ObstacleResult(0.0, tuple(obstacles), 0.0, None)
+    chair_left = Obstacle(Detection(56, 0.9, (100.0, 200.0, 200.0, 300.0)), GroundPoint(0.3, 0.1))   # resolved, 0.32 m, to the left
+    far_up = Obstacle(Detection(56, 0.9, (300.0, 50.0, 340.0, 150.0)), None, "reflection_unresolved")  # no distance, high in the image
+    low = Obstacle(Detection(56, 0.9, (300.0, 200.0, 340.0, 400.0)), None, "reflection_unresolved")    # no distance, bottom at 83 % of the height
+    d, bearing, blocked = obstacle_input(result(chair_left, far_up), (W, H))
+    assert abs(d - math.hypot(0.3, 0.1)) < 1e-9 and bearing > 0 and not blocked
+    assert obstacle_input(result(far_up, low), (W, H)) == (None, 0.0, True)
+
+    p = new()
+    v, _ = p.update(0.1, [(7, box_at(2.8))], obstacles=(None, 0.0, True))
+    assert v == 0.0 and p.rows[-1]["obstacle_blocked"] == 1                # far person, but a low unresolved box: no forward motion
+    q = new()
+    assert q.update(0.1, [(7, box_at(2.8))], obstacles=obstacle_input(result(chair_left), (W, H)))[0] <= 0.0   # resolved chair at 0.32 m (< 0.35 m): no forward motion
+    side = Obstacle(Detection(56, 0.9, (100.0, 200.0, 200.0, 300.0)), GroundPoint(0.42, 0.1))      # 0.43 m, left: inside the 0.5 m override
+    v, w = new().update(0.1, [(7, box_at(2.8))], obstacles=obstacle_input(result(side), (W, H)))
+    assert w < 0.0                                                       # turns right, away from it
+    r = new()
+    assert r.update(0.1, [(7, box_at(2.8))])[0] > 0                      # same frame with no obstacle input: drives
+    assert r.summary()["frames_obstacle_blocked"] == 0 and p.summary()["frames_obstacle_blocked"] == 1

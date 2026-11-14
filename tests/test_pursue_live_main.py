@@ -70,6 +70,21 @@ class FakeSender(object):
         self.stopped = bool(stop)
 
 
+class FakeObstacles(object):
+    """The obstacle detector: an empty floor."""
+    geometry = FakeGeom()
+
+    @classmethod
+    def from_config(cls, **kw):
+        cls.kw = kw
+        return cls()
+
+    def __call__(self, frame, t, mode="explore"):
+        from sentry.perception.obstacle import ObstacleResult
+        assert mode == "pursuit"
+        return ObstacleResult(t, (), 0.0, None)
+
+
 def box(dist_m=2.0, u=320.0, h=200.0):
     v = 200.0 + 150.0 / dist_m
     return (u - h / 4, v - h, u + h / 4, v)
@@ -96,6 +111,7 @@ def run_main(monkeypatch, tmp_path, perceive_fail_at=None, fail_with=RuntimeErro
     monkeypatch.setattr(pl, "make_perception", make_perception)
     monkeypatch.setattr("sentry.perception.camera.CameraGeometry.from_files", FakeGeom.from_files)
     monkeypatch.setattr("sentry.net.zmq_rx.ZMQReceiver", FakeRx)
+    monkeypatch.setattr("sentry.perception.obstacle.ObstacleDetector.from_config", FakeObstacles.from_config)
     monkeypatch.setattr("sentry.net.udp_tx.UDPSender", FakeSender)
     monkeypatch.setattr("sentry.net.discover.resolve", lambda ip: "127.0.0.1")
     monkeypatch.setattr("tools.jetbot_ssh.password", lambda p: "x")
@@ -120,6 +136,8 @@ def test_a_normal_run_stops_the_sender_and_saves_the_evidence_with_the_effective
     assert FakeSender.instances[0].stopped and FakeSender.instances[0].sent                  # commands went out, then the stop at close
     assert summary["config"]["pursuit"]["kp_distance"] > 0 and "dwell_time_s" in summary["config"]["hold_detector"]
     assert "NOT EVALUATED" in summary["acceptance"]
+    assert summary["obstacle_avoidance"] is True and summary["frames_obstacle_blocked"] == 0 and rows[0]["obstacle_blocked"] == "0"
+    assert FakeObstacles.kw == {"camera_pose_path": "x.json", "camera_path": "calib/camera.json", "floor_type": "unknown"}
 
 
 def test_the_config_toml_values_reach_the_controller(monkeypatch, tmp_path):

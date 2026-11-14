@@ -12,9 +12,10 @@ import numpy as np
 import zmq
 
 from tools.find_jetbot import resolve
+from sentry.config import load
 from tools.record import load_config
 
-PATTERN = (9, 6)  # inner corners (tools/make_markers.py: 10x7 squares)
+PATTERN = tuple(load()["calibration"]["checkerboard_inner_corners"])  # inner corners (config.toml; tools/make_markers.py prints 10x7 squares)
 GRID = (4, 4)     # rows, cols
 NEED = 40         # corners wanted per cell
 MIN_IN_CELL = 6   # corners a new photo must put into the target cell
