@@ -1,7 +1,7 @@
 """Door-camera (ESP32) face recognition test with several people: genuine and impostor scores at taped distances (plan row D2: TAR >= 95 % at FAR <= 1 %).
 
   python -m tools.door_recognition_seq record --subject HNHL --esp-ip 10.169.60.9        # one person at a time, beep-guided
-  python -m tools.door_recognition_seq score --whitelist data/whitelist                   # all subjects, CPU
+  python -m tools.door_recognition_seq score --whitelist data/whitelist                   # all subjects, GPU if available
 
 record: at each mark 1 beep = look at the lens, 2 beeps = turn away (~45 deg) to your right, 2 beeps again = turn away to your left (8 s each), 3 beeps = walk to the next mark (10 s); one long low tone = finished. Distances are measured from the lens along its axis.
 Frames go to data/door_recog/<label>/<SUBJECT>/<dist>_<gaze>_NNNN.jpg (data/ is git-ignored: faces never leave the laptop). The ESP32 serves ONE stream client at a time.
