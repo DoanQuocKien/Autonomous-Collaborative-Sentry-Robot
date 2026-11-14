@@ -1,0 +1,75 @@
+$ git status --porcelain
+
+exit_code=0
+
+$ /home/hl/Documents/+Project-hoc-ky/Autonomous-Collaborative-Sentry-Robot/.venv/bin/python -m tools.check_midterm_package
+{
+  "scope": "committed tree",
+  "ref": "HEAD",
+  "tracked_files": 1169,
+  "violations": [],
+  "history_verified": false,
+  "note": "Path check only. Deleting tracked files does not remove historical data or credentials."
+}
+
+exit_code=0
+
+$ /home/hl/Documents/+Project-hoc-ky/Autonomous-Collaborative-Sentry-Robot/.venv/bin/python -m tools.check_midterm_sources
+{
+  "status": "PASS",
+  "source_files": 45,
+  "errors": []
+}
+
+exit_code=0
+
+$ /home/hl/Documents/+Project-hoc-ky/Autonomous-Collaborative-Sentry-Robot/.venv/bin/python -m tools.check_midterm_page_budget --pdf reports/midterm_report.pdf
+[MidTermAudit] Report: reports/midterm_report_draft.md
+  Rendered pages: 14 (source/PDF linked: True)
+  Status: PASS
+  Word count estimate: 10.2 pages (4593 words, target 10-15 pages)
+  Chapters present: 9/9 (Missing: None)
+  Referenced figures: 13 (F1, F10, F11, F12, F13, F14, F15, F16, F18, F19, F20, F4, F7)
+  Asset link integrity: PASS (all 11 images exist)
+  Rendered compliance note: PDF page count and source/PDF hashes verified; visual review remains separate.
+
+--- Chapter Breakdown ---
+  Chương 1: Giới thiệu                     | Owner: KR              | Target: 1.0 p | Est: 0.94 p (424 words) | Figs: 0
+  Chương 2: Kiến thức và phương pháp đã ng | Owner: KR              | Target: 1.5 p | Est: 0.96 p (432 words) | Figs: 0
+  Chương 3: Kiến trúc hệ thống             | Owner: DQK             | Target: 2.0 p | Est: 1.38 p (623 words) | Figs: 2
+  Chương 4: Robot, hiệu chuẩn và định vị   | Owner: DQK (+KR)       | Target: 1.5 p | Est: 0.71 p (318 words) | Figs: 2
+  Chương 5: Nhận thức thị giác và tối ưu   | Owner: HNHL (+KR, DQK) | Target: 3.5 p | Est: 2.57 p (1156 words) | Figs: 7
+  Chương 6: Hành vi và điều khiển          | Owner: KR (+DQK)       | Target: 1.5 p | Est: 0.72 p (326 words) | Figs: 1
+  Chương 7: Kiểm thử và kết quả            | Owner: KR (+HNHL, DQK) | Target: 1.5 p | Est: 1.37 p (616 words) | Figs: 2
+  Chương 8: Kết quả kỳ vọng và kế hoạch    | Owner: DQK             | Target: 1.0 p | Est: 0.87 p (393 words) | Figs: 0
+  Phụ lục A: Mã nguồn, tái hiện và nguồn   | Owner: KR (+HNHL, DQK) | Target: 1.0 p | Est: 0.68 p (305 words) | Figs: 0
+
+exit_code=0
+
+$ git diff --check
+
+exit_code=0
+
+$ /home/hl/Documents/+Project-hoc-ky/Autonomous-Collaborative-Sentry-Robot/.venv/bin/python -m tools.build_midterm_package --out /tmp/sentry-week07-verified-candidate.zip
+{
+  "commit": "c90c2440c2e228de1e88d490e0eff46dc8ff0674",
+  "archive": "/tmp/sentry-week07-verified-candidate.zip",
+  "sha256": "8963b81f2ae63a3659517772338dffbb379a115dc686b4d99e7be2b0bc9a9263",
+  "file_count": 1169,
+  "history_included": false
+}
+
+exit_code=0
+
+$ /home/hl/Documents/+Project-hoc-ky/Autonomous-Collaborative-Sentry-Robot/.venv/bin/python -m tools.build_midterm_package --out /tmp/sentry-week07-verified-candidate-repeat.zip
+{
+  "commit": "c90c2440c2e228de1e88d490e0eff46dc8ff0674",
+  "archive": "/tmp/sentry-week07-verified-candidate-repeat.zip",
+  "sha256": "8963b81f2ae63a3659517772338dffbb379a115dc686b4d99e7be2b0bc9a9263",
+  "file_count": 1169,
+  "history_included": false
+}
+
+exit_code=0
+
+ZIP: two builds byte-identical; every manifest hash verified; no private data paths or .git.
