@@ -20,6 +20,18 @@ KR editor/package handoff prepared on 14/11 from the available evidence.
   manifest and refuses to overwrite an earlier package. CPU test launcher records
   commit/tree, dirty status, interpreter/packages and the Linux test-only beep shim.
 
+## Validation results
+
+- **773 passed, 5 skipped, 4 deselected in 46.61 s** from clean clone of
+  `c90c2440c2e228de1e88d490e0eff46dc8ff0674` (tree `3d7bbeb9f36dfed5c7ded52ee36875dc423c94c0`).
+- PDF: **14 actual pages**, matching current-source/PDF SHA256; reproduced
+  byte-for-byte. Visual spot checks: pages 6, 12 and 14.
+- All nine chapters, 11 image assets, 45 registered source hashes: **PASS**.
+- Current committed package paths, manifest hashes and repeated ZIP bytes: **PASS**.
+- Full-model `check_env.py --cpu-ok`: **FAIL** for missing `insightface` and
+  `torchreid`; retained verbatim. CPU/replay validation uses installed test
+  packages and does not certify full inference readiness.
+
 ## Validation handoff
 
 The committed candidate is cloned to a new empty directory without hard links.

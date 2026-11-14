@@ -1,0 +1,108 @@
+{
+  "candidate_commit": "c90c2440c2e228de1e88d490e0eff46dc8ff0674",
+  "candidate_tree": "3d7bbeb9f36dfed5c7ded52ee36875dc423c94c0",
+  "clone_command": "git clone --no-hardlinks --single-branch --branch kouun-rokku/w07-midterm-package /tmp/sentry-week07 /tmp/sentry-week07-clean-final",
+  "clean_at_test_start": true,
+  "copied_data_or_weights": false,
+  "environment": "existing installed test interpreter, not a newly provisioned venv",
+  "pytest": {
+    "passed": 773,
+    "skipped": 5,
+    "deselected": 4,
+    "seconds": 46.61,
+    "exit_code": 0
+  },
+  "pdf": {
+    "source_sha256": "5d5fb138153fba9c0b44ce155edb02b2b8a24a42a1bc31fea465c247dc70b8f5",
+    "pdf_sha256": "641a882aba33b4041a075300e1f5d8a68e463418f226236a1fcab18da6ea5d12",
+    "pages": 14,
+    "renderer": "reportlab; DejaVu Sans"
+  },
+  "pdf_reproduction_byte_identical": true,
+  "visual_review_pages": [
+    6,
+    12,
+    14
+  ],
+  "source_hashes_verified": 45,
+  "package": {
+    "checks": [
+      {
+        "command": [
+          "git",
+          "status",
+          "--porcelain"
+        ],
+        "exit_code": 0
+      },
+      {
+        "command": [
+          "/home/hl/Documents/+Project-hoc-ky/Autonomous-Collaborative-Sentry-Robot/.venv/bin/python",
+          "-m",
+          "tools.check_midterm_package"
+        ],
+        "exit_code": 0
+      },
+      {
+        "command": [
+          "/home/hl/Documents/+Project-hoc-ky/Autonomous-Collaborative-Sentry-Robot/.venv/bin/python",
+          "-m",
+          "tools.check_midterm_sources"
+        ],
+        "exit_code": 0
+      },
+      {
+        "command": [
+          "/home/hl/Documents/+Project-hoc-ky/Autonomous-Collaborative-Sentry-Robot/.venv/bin/python",
+          "-m",
+          "tools.check_midterm_page_budget",
+          "--pdf",
+          "reports/midterm_report.pdf"
+        ],
+        "exit_code": 0
+      },
+      {
+        "command": [
+          "git",
+          "diff",
+          "--check"
+        ],
+        "exit_code": 0
+      },
+      {
+        "command": [
+          "/home/hl/Documents/+Project-hoc-ky/Autonomous-Collaborative-Sentry-Robot/.venv/bin/python",
+          "-m",
+          "tools.build_midterm_package",
+          "--out",
+          "/tmp/sentry-week07-verified-candidate.zip"
+        ],
+        "exit_code": 0
+      },
+      {
+        "command": [
+          "/home/hl/Documents/+Project-hoc-ky/Autonomous-Collaborative-Sentry-Robot/.venv/bin/python",
+          "-m",
+          "tools.build_midterm_package",
+          "--out",
+          "/tmp/sentry-week07-verified-candidate-repeat.zip"
+        ],
+        "exit_code": 0
+      }
+    ],
+    "archive_sha256": "8963b81f2ae63a3659517772338dffbb379a115dc686b4d99e7be2b0bc9a9263",
+    "archive_file_count": 1169,
+    "zip_repeat_identical": true,
+    "manifest_verified": true
+  },
+  "model_environment": {
+    "exit_code": 1,
+    "missing": [
+      "insightface",
+      "torchreid"
+    ],
+    "scope": "full model imports; separate from CPU/replay suite"
+  },
+  "history_verified": false,
+  "final_commit_note": "This evidence commit adds validation files and updates Week 7 handoff text only; tested code/report matches candidate."
+}

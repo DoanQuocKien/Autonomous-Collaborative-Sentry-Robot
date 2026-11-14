@@ -1,0 +1,17 @@
+commit=c90c2440c2e228de1e88d490e0eff46dc8ff0674
+$ python tools/check_env.py --cpu-ok
+ok    python                 3.14.4 (need >= 3.11 for tomllib; 3.12 tested)
+warn  torch cuda             2.15.0+cu132 cuda=13.2 gpu=none
+ok    onnxruntime pkgs       none
+ok    cv2                    5.0.0
+ok    zmq                    27.2.0
+ok    PIL                    13.0.0
+ok    ultralytics            8.4.198
+FAIL  insightface            ModuleNotFoundError: No module named 'insightface'
+FAIL  torchreid              ModuleNotFoundError: No module named 'torchreid'
+ok    pytest                 9.1.1
+ok    cv2.aruco              ArucoDetector present
+
+PROBLEMS: insightface, torchreid
+
+exit_code=1
