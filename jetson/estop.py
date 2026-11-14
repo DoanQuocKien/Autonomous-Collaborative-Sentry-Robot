@@ -160,17 +160,19 @@ def read_devices(devs, logic, now, read=os.read, close=os.close, say=log):
             except BlockingIOError:
                 break
             except OSError as e:
-                if e.errno in (errno.ENODEV, errno.EIO):
-                    say("gamepad gone: " + devs.pop(fd))
-                    close(fd)
-                    lost = logic.device_lost()
-                    if not lost:
-                        say("gamepad lost (already stopped)")
-                    events.extend(lost)
-                    break
-                raise
-            if len(data) < JS_EVENT.size:
+                if e.errno not in (errno.ENODEV, errno.EIO):
+                    raise
+                data = b""
+            if not data:                              # ENODEV / EIO / EOF: the device is gone (HNHL review of #121: EOF too)
+                say("gamepad gone: " + devs.pop(fd))
+                close(fd)
+                lost = logic.device_lost()
+                if not lost:
+                    say("gamepad lost (already stopped)")
+                events.extend(lost)
                 break
+            if len(data) < JS_EVENT.size:
+                break                                 # a short read never happens for js events; skip it
             _, value, typ, number = JS_EVENT.unpack(data)
             if typ & JS_INIT or (typ & 0x7F) != JS_BUTTON:
                 continue  # skip the initial-state dump and every axis (D-pad, sticks)

@@ -175,3 +175,22 @@ def test_one_lost_device_stops_even_when_another_joystick_stays():
     ev = read_devices(devs, e, lambda: 3.0, read=read, close=closed.append, say=lambda m: None)
     assert ev == ["STOP"] and not e.motion_allowed and e.hard
     assert devs == {4: "/dev/input/js1"} and closed == [3]
+
+
+
+def test_eof_on_a_gamepad_is_a_lost_device_too():
+    """HNHL review of #121: a read returning b'' (EOF) must stop like ENODEV, with another idle joystick open."""
+    from jetson.estop import read_devices
+
+    e = EstopLogic()
+    arm(e)
+    e.button(R1, True, 2.0)
+
+    def read(fd, n):
+        if fd == 3:
+            return b""
+        raise BlockingIOError
+    devs, closed = {3: "/dev/input/js0", 4: "/dev/input/js1"}, []
+    ev = read_devices(devs, e, lambda: 3.0, read=read, close=closed.append, say=lambda m: None)
+    assert ev == ["STOP"] and not e.motion_allowed and e.hard
+    assert devs == {4: "/dev/input/js1"} and closed == [3]
