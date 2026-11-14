@@ -1,6 +1,8 @@
 """Incremental door entries using shared face, tracking and Phase 2 contracts."""
 from dataclasses import dataclass, field
+from collections import Counter
 import math
+import time
 from types import SimpleNamespace
 import uuid
 
@@ -61,7 +63,13 @@ class Entry:
     misses: int = 0
     absent: int = 0
     confirmed: bool = False
+    consecutive_person: int = 0
+    person_confirmed: bool = False
     completed: bool = False
+    total_accepted: int = 0
+    confirmation_resets: int = 0
+    rejections: Counter = field(default_factory=Counter)
+    end_trigger: str | None = None
 
 
 class DoorMonitor:
@@ -83,6 +91,7 @@ class DoorMonitor:
         self.epoch = self.counter = self.processed = self.skipped = 0
         self.last_tracks = ()
         self.last_faces = ()
+        self.last_diagnostic = None
         self.evidence_counts = dict(person_observations=0, detected_faces=0, associated_faces=0,
                                     accepted_face_samples=0)
 
@@ -95,6 +104,7 @@ class DoorMonitor:
         self.tracker.reset()
         self.last_tracks = ()
         self.last_faces = ()
+        self.last_diagnostic = None
         self.epoch += 1
         self.next_due = -math.inf
 
@@ -105,6 +115,7 @@ class DoorMonitor:
             self.interrupt(t, "stream_timeout")
 
     def process(self, image, t, seq, reconnects=0):
+        started = time.perf_counter()
         validate_image(image)
         if not math.isfinite(t) or type(seq) is not int or seq < 0:
             raise ValueError("finite timestamp and nonnegative integer sequence required")
@@ -120,8 +131,16 @@ class DoorMonitor:
         if t + 1e-9 < self.next_due:
             self.skipped += 1
             return False
-        self.next_due = t + 1 / self.s.inference_hz
+        period = 1 / self.s.inference_hz
+        if math.isfinite(self.next_due):
+            # Keep the original deadline phase. Skip missed slots and process
+            # only this newest frame, so a slow call cannot create a backlog.
+            slots = max(1, math.floor((t - self.next_due + 1e-9) / period) + 1)
+            self.next_due += slots * period
+        else:
+            self.next_due = t + period
         tracked = self.tracker(image, t)
+        after_tracking = time.perf_counter()
         tracks = tracked.tracks
         if len(tracks) > self.s.max_people:
             self.interrupt(t, "too_many_people")
@@ -132,19 +151,24 @@ class DoorMonitor:
             return False
         self.last_tracks = tracks
         faces = self.face_encoder.extract(image)
+        after_faces = time.perf_counter()
         self.last_faces = tuple(faces)
         self.evidence_counts["person_observations"] += len(tracks)
         self.evidence_counts["detected_faces"] += len(faces)
         detections = [SimpleNamespace(class_id=0, confidence=p.confidence, xyxy=p.xyxy) for p in tracks]
         associated = {p.key: [] for p in tracks}
+        association_rejections = Counter()
         for face in faces:
-            box, _ = associate_person(face["bbox"], detections, 0, self.s.face_overlap)
+            box, reason = associate_person(face["bbox"], detections, 0, self.s.face_overlap)
             if box is not None:
                 self.evidence_counts["associated_faces"] += 1
                 for person in tracks:
                     if person.xyxy == box:
                         associated[person.key].append(face)
+            else:
+                association_rejections[reason] += 1
         present = {p.key for p in tracks}
+        sample_rejections = Counter()
         for person in tracks:
             entry = self.entries.get(person.key)
             if entry is None:
@@ -154,11 +178,20 @@ class DoorMonitor:
             entry.absent = 0
             if entry.completed:
                 continue
+            # Audit a consistently observed person even when no usable face
+            # exists. Face confirmation still owns the decision policy.
+            entry.consecutive_person += 1
+            entry.person_confirmed |= entry.consecutive_person >= self.s.start_frames
             options = associated[person.key]
-            candidate = self._candidate(image, person, options[0], t, seq) if len(options) == 1 else None
+            if len(options) == 1:
+                candidate, rejection = self._candidate(image, person, options[0], t, seq)
+            else:
+                candidate, rejection = None, "no_associated_face" if not options else "multiple_faces"
             if candidate is not None:
                 self.evidence_counts["accepted_face_samples"] += 1
+                entry.total_accepted += 1
                 if not entry.confirmed and entry.consecutive == 0:
+                    entry.confirmation_resets += int(entry.hits > 0)
                     entry.start = None
                     entry.hits = 0
                     entry.candidates.clear()
@@ -174,24 +207,35 @@ class DoorMonitor:
                 entry.candidates.sort(key=lambda c: c["rank"], reverse=True)
                 del entry.candidates[self.s.top_k:]
             else:
+                entry.rejections[rejection] += 1
+                sample_rejections[rejection] += 1
                 entry.consecutive = 0
                 entry.misses += 1
             if entry.start is not None and t <= entry.start + self.pipeline.sector_config.window_s:
                 entry.observations.append((t, person.xyxy))
             if ((entry.confirmed and entry.misses >= self.s.end_frames)
                     or t - entry.first_seen >= self.s.max_entry_s):
-                self._finish(entry, t)
+                self._finish(entry, t, "max_duration" if t - entry.first_seen >= self.s.max_entry_s else "face_gap")
         for key, entry in list(self.entries.items()):
             if key in present:
                 continue
             entry.absent += 1
+            entry.consecutive_person = 0
+            entry.rejections["person_not_observed"] += 1
             entry.misses += 1
             entry.consecutive = 0
             if entry.misses >= self.s.end_frames and not entry.completed:
-                self._finish(entry, t)
+                self._finish(entry, t, "person_gap")
             if entry.absent >= self.s.end_frames:
                 del self.entries[key]
         self.processed += 1
+        finished = time.perf_counter()
+        self.last_diagnostic = dict(seq=seq, receive_t=t, tracks=len(tracks), faces=len(faces),
+            association_rejections=dict(association_rejections), sample_rejections=dict(sample_rejections),
+            timings_ms=dict(tracking_osnet=(after_tracking - started) * 1000,
+                            face=(after_faces - after_tracking) * 1000,
+                            entry=(finished - after_faces) * 1000,
+                            process=(finished - started) * 1000))
         return True
 
     def _candidate(self, image, person, face, t, seq):
@@ -200,23 +244,27 @@ class DoorMonitor:
         h, w = image.shape[:2]
         width = x2 - x1
         confidence = float(face["confidence"])
-        if (not math.isfinite(confidence) or not self.s.min_face_confidence <= confidence <= 1
-                or width < self.s.min_face_width or x1 < 0 or y1 < 0 or x2 > w or y2 > h):
-            return None
+        if not math.isfinite(confidence) or not self.s.min_face_confidence <= confidence <= 1:
+            return None, "low_face_confidence"
+        if width < self.s.min_face_width:
+            return None, "small_face"
+        if x1 < 0 or y1 < 0 or x2 > w or y2 > h:
+            return None, "truncated_face"
         sharp = face_sharpness(image, box)
         if sharp < self.s.min_sharpness:
-            return None
+            return None, "blurred_face"
         crop = crop_person(image, person.xyxy)
         if crop is None:
-            return None
+            return None, "small_person_crop"
         yaw = face_yaw_ratio(face.get("kps"))
         frontal = yaw is not None and abs(yaw) <= self.s.frontal_yaw
         return dict(t=t, seq=seq, embedding=normalize_embedding(face["embedding"]), crop=crop,
                     rank=(frontal, confidence * width * sharp), confidence=confidence,
-                    width_px=width, sharpness=sharp, yaw_ratio=yaw)
+                    width_px=width, sharpness=sharp, yaw_ratio=yaw), None
 
-    def _finish(self, entry, t):
+    def _finish(self, entry, t, end_trigger):
         entry.completed = True
+        entry.end_trigger = end_trigger
         if not entry.confirmed or len(entry.candidates) < self.s.top_k:
             self._log(entry, t, "unresolved", "insufficient_face_evidence")
             entry.candidates.clear()
@@ -245,6 +293,12 @@ class DoorMonitor:
                        last_face_t=entry.last_face, decision_t=t, decision=decision, reason=reason,
                        latency_s=None if entry.start is None else t - entry.start,
                        face_samples=entry.hits, selected_faces=selected, scores=scores,
+                       confirmed=entry.confirmed,
+                       person_confirmed=entry.person_confirmed,
+                       total_accepted_face_samples=entry.total_accepted,
+                       confirmation_resets=entry.confirmation_resets,
+                       sample_rejections=dict(entry.rejections),
+                       end_trigger=entry.end_trigger or reason,
                        threshold=self.pipeline.face_verifier.threshold,
                        threshold_calibrated=False, crop_scope=self.s.crop_scope,
                        authorized_id=None if result is None else result.authorized_id,

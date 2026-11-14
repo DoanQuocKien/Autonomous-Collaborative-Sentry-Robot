@@ -8,6 +8,7 @@ from pathlib import Path
 import time
 
 import cv2
+import numpy as np
 
 from sentry.app.phase2_live import DoorMonitor, DoorSettings
 from sentry.app.phase2_pipeline import OSNetAppearanceExtractor, Phase2Pipeline
@@ -81,7 +82,27 @@ def load_door_encoder(config_path):
     return InsightFaceEncoder(device=face_device, model_root=face_root)
 
 
-def build_monitor(config_path, whitelist_dir, settings, emit, *, live):
+def warmup_models(monitor, iterations):
+    """Warm model execution before the stream, without creating entry evidence."""
+    if type(iterations) is not int or iterations < 0:
+        raise ValueError("nonnegative integer warmup iterations required")
+    image = np.zeros((480, 640, 3), np.uint8)
+    body = np.zeros((256, 128, 3), np.uint8)
+    face = np.zeros((112, 112, 3), np.uint8)
+    started = time.perf_counter()
+    try:
+        for i in range(iterations):
+            monitor.tracker(image, i / monitor.s.inference_hz)
+            monitor.tracker.encoder.encode([body])
+            monitor.face_encoder.extract(image)
+            monitor.face_encoder.app.models["recognition"].get_feat(face)
+    finally:
+        monitor.tracker.reset()
+    return dict(iterations=iterations, synthetic_input=True, image_shape=list(image.shape),
+                duration_s=time.perf_counter() - started, excluded_from_entries=True)
+
+
+def build_monitor(config_path, whitelist_dir, settings, emit, *, live, warmup=True):
     cfg = load(config_path)
     base = Path(config_path).resolve().parent
     whitelist = load_whitelist(whitelist_dir)
@@ -103,6 +124,7 @@ def build_monitor(config_path, whitelist_dir, settings, emit, *, live):
                                providers=model.session.get_providers())
                      for name, model in encoder.app.models.items()},
     )
+    monitor.warmup_info = warmup_models(monitor, cfg["pipeline_profile"]["warmup"]) if warmup else None
     return monitor
 
 
@@ -173,6 +195,7 @@ def main(argv=None):
     parser.add_argument("--save-snapshots", action="store_true")
     parser.add_argument("--save-overlay", action="store_true", help="save private MJPEG AVI and timestamp index")
     parser.add_argument("--display", action="store_true", help="preview, Esc finishes the run")
+    parser.add_argument("--diagnostics", action="store_true", help="private per-frame rejection counts and wall timings")
     args = parser.parse_args(argv)
     if not math.isfinite(args.seconds) or args.seconds <= 0:
         parser.error("seconds must be positive and finite")
@@ -187,6 +210,7 @@ def main(argv=None):
     writer = None
     index = None
     video_shape = None
+    diagnostic_log = None
 
     def emit(row):
         log.write(json.dumps(row, allow_nan=False) + "\n")
@@ -203,6 +227,7 @@ def main(argv=None):
                     replay=manifest is not None, t1_passed=False, motor_commands_sent=0,
                     config_sha256=hashlib.sha256(args.config.read_bytes()).hexdigest(),
                     model_runtime=getattr(monitor, "runtime_info", {}),
+                    warmup=getattr(monitor, "warmup_info", None),
                     whitelist_hashes={p.name: hashlib.sha256(p.read_bytes()).hexdigest()
                                       for p in sorted(args.whitelist.glob("*.npz"))})
     (out / "session.json").write_text(json.dumps(metadata, indent=2), encoding="utf-8")
@@ -212,7 +237,14 @@ def main(argv=None):
 
     def consume(frame):
         nonlocal writer, index, video_shape
+        started = time.perf_counter()
+        def write_diagnostic():
+            if diagnostic_log is not None:
+                row = dict(monitor.last_diagnostic, consume_ms=(time.perf_counter() - started) * 1000)
+                diagnostic_log.write(json.dumps(row, allow_nan=False) + "\n")
+                diagnostic_log.flush()
         if not args.display and not args.save_overlay:
+            write_diagnostic()
             return True
         shown = overlay(frame.frame_bgr, monitor)
         if args.save_overlay:
@@ -230,12 +262,17 @@ def main(argv=None):
             index.write(json.dumps(dict(seq=frame.seq, receive_t=frame.t_rx)) + "\n")
         if args.display:
             cv2.imshow("ESP32 Phase 2", shown)
-            return cv2.waitKey(1) != 27
+            keep_running = cv2.waitKey(1) != 27
+            write_diagnostic()
+            return keep_running
+        write_diagnostic()
         return True
 
     status = "failed"
     source_summary = None
     try:
+        if args.diagnostics:
+            diagnostic_log = (out / "frames.jsonl").open("x", encoding="utf-8")
         with (out / "entries.jsonl").open("x", encoding="utf-8") as log, \
                 (out / "source.jsonl").open("x", encoding="utf-8") as source_log:
             if manifest is None:
@@ -256,6 +293,8 @@ def main(argv=None):
                     monitor.interrupt(last_t, "replay_end")
             status = "completed"
     finally:
+        if diagnostic_log is not None:
+            diagnostic_log.close()
         if writer is not None:
             writer.release()
         if index is not None:
@@ -263,6 +302,7 @@ def main(argv=None):
         if args.display:
             cv2.destroyAllWindows()
         summary = dict(status=status, processed_frames=monitor.processed, skipped_schedule_frames=monitor.skipped,
+                       confirmed_unresolved=sum(r["decision"] == "unresolved" and r.get("person_confirmed", False) for r in rows),
                        source=source_summary,
                        evidence_counts=monitor.evidence_counts,
                        decisions={name: sum(r["decision"] == name for r in rows)
