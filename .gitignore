@@ -5,8 +5,8 @@ graphify-out/
 *.pt
 *.onnx
 data/*
-!data/D5/
 data/D5/_*/
+team_data/*.zip
 runs/
 pip_install.log
 .venv/
@@ -33,3 +33,7 @@ esp32/lib_shared/
 
 # local secrets
 .env
+
+# Submission build outputs and Wi-Fi credentials in any firmware variant
+dist/
+esp32/**/secrets.h

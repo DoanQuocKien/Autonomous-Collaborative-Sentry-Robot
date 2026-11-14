@@ -1,0 +1,103 @@
+{
+ "note": "edge_bench stageB on the robot, 2026-11-13, dorm, MAXN (nvpmodel 0; the robot was in 5 W before), 60 s, 1 person ~2 m in front of the camera, motors never driven, ESP32 not used. tegrastats summary = the last 60 samples (the log also holds ~33 s of model loading). Compare with the 16/10 stageB (no person in view): compute 32.0 / p95 44.5 ms, capture-to-result 37.9 / p95 51.1 ms.",
+ "bench": {
+  "mode": "stageB",
+  "seconds": 60.0,
+  "frames": 1185,
+  "fps": 19.75,
+  "skipped_by_newest_only": 15,
+  "avg_people": 1.0
+ },
+ "stage_ms": {
+  "decode": {
+   "n": 1185,
+   "mean": 5.22,
+   "p50": 5.12,
+   "p95": 5.42
+  },
+  "pre": {
+   "n": 1185,
+   "mean": 3.52,
+   "p50": 3.28,
+   "p95": 3.64
+  },
+  "pose": {
+   "n": 1185,
+   "mean": 25.83,
+   "p50": 24.91,
+   "p95": 30.59
+  },
+  "pose_post": {
+   "n": 1185,
+   "mean": 1.48,
+   "p50": 1.4,
+   "p95": 2.04
+  },
+  "det": {
+   "n": 395,
+   "mean": 25.5,
+   "p50": 24.57,
+   "p95": 29.09
+  },
+  "det_post": {
+   "n": 395,
+   "mean": 2.52,
+   "p50": 2.41,
+   "p95": 3.38
+  },
+  "reid": {
+   "n": 79,
+   "mean": 15.58,
+   "p50": 14.08,
+   "p95": 21.58
+  },
+  "compute": {
+   "n": 1185,
+   "mean": 46.44,
+   "p50": 37.75,
+   "p95": 75.15
+  },
+  "e2e": {
+   "n": 1185,
+   "mean": 61.15,
+   "p50": 61.67,
+   "p95": 89.24
+  }
+ },
+ "tegrastats_last_60": {
+  "ram_used_mb": {
+   "mean": 2071.3,
+   "max": 2074.0,
+   "n": 60
+  },
+  "gpu_load_pct": {
+   "mean": 62.4,
+   "max": 99.0,
+   "n": 60
+  },
+  "gpu_c": {
+   "mean": 34.6,
+   "max": 35.5,
+   "n": 60
+  },
+  "cpu_c": {
+   "mean": 35.2,
+   "max": 36.5,
+   "n": 60
+  },
+  "board_mw": {
+   "mean": 4811.0,
+   "max": 5335.0,
+   "n": 60
+  }
+ },
+ "battery_v_start_to_end": [
+  12.28,
+  12.28,
+  12.3,
+  12.22,
+  12.26,
+  12.23,
+  12.24
+ ]
+}

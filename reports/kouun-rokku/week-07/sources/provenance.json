@@ -1,0 +1,127 @@
+{
+  "pr": 108,
+  "status": "open; owner evidence only, no PR108 code adopted",
+  "files": [
+    {
+      "source_commit": "054d2adc8aabe0ce33b0cdbff40e8b936b232c85",
+      "path": "reports/DoanQuocKien/midterm-chapter-03.md",
+      "archive": "reports/kouun-rokku/week-07/sources/reports/DoanQuocKien/midterm-chapter-03.md.txt",
+      "sha256": "f639e154993fac86b050e6b9771972faa8f26d94881a794b685c8e5ec0b83762",
+      "merged": false
+    },
+    {
+      "source_commit": "054d2adc8aabe0ce33b0cdbff40e8b936b232c85",
+      "path": "reports/DoanQuocKien/midterm-chapter-04.md",
+      "archive": "reports/kouun-rokku/week-07/sources/reports/DoanQuocKien/midterm-chapter-04.md.txt",
+      "sha256": "b154a9d69b902b4f9adc8ae0240683adeedb46491c4cc204d4bf136a0d1d7451",
+      "merged": false
+    },
+    {
+      "source_commit": "054d2adc8aabe0ce33b0cdbff40e8b936b232c85",
+      "path": "reports/DoanQuocKien/midterm-chapter-05x.md",
+      "archive": "reports/kouun-rokku/week-07/sources/reports/DoanQuocKien/midterm-chapter-05x.md.txt",
+      "sha256": "93312c89704e76772d7898ea398a18061e4ea14190bb6894e798a6248913541a",
+      "merged": false
+    },
+    {
+      "source_commit": "054d2adc8aabe0ce33b0cdbff40e8b936b232c85",
+      "path": "reports/DoanQuocKien/midterm-chapter-08.md",
+      "archive": "reports/kouun-rokku/week-07/sources/reports/DoanQuocKien/midterm-chapter-08.md.txt",
+      "sha256": "d0c07ee4e7a33770ca4e69bcfe4db3e5c2e8f5ddcb0e7382b4cbcb08a57681b2",
+      "merged": false
+    },
+    {
+      "source_commit": "054d2adc8aabe0ce33b0cdbff40e8b936b232c85",
+      "path": "reports/DoanQuocKien/week-06/classroom_1111_pm/README.md",
+      "archive": "reports/kouun-rokku/week-07/sources/reports/DoanQuocKien/week-06/classroom_1111_pm/README.md.txt",
+      "sha256": "229c55f9321d5c653c8a58a4f41fb0b7f5f835f56df1804906b09a97fb8a6e15",
+      "merged": false,
+      "source_sha256": "a0e0499367ab1351613aba16aa8244612ad3fd65ae56b30034a4ccbb952e516b",
+      "transformation": "retired shared-data password redacted; all measurement values unchanged"
+    },
+    {
+      "source_commit": "054d2adc8aabe0ce33b0cdbff40e8b936b232c85",
+      "path": "reports/DoanQuocKien/week-06/gpu_rtx4050_1113/pipeline_both.json",
+      "archive": "reports/kouun-rokku/week-07/sources/reports/DoanQuocKien/week-06/gpu_rtx4050_1113/pipeline_both.json",
+      "sha256": "c3a1d465e29b3c6471aec1299efcce3d3465dbc461fa3974eb65255dbb5ef2b7",
+      "merged": false
+    },
+    {
+      "source_commit": "054d2adc8aabe0ce33b0cdbff40e8b936b232c85",
+      "path": "reports/DoanQuocKien/week-06/gpu_rtx4050_1113/pipeline_both_5hz.json",
+      "archive": "reports/kouun-rokku/week-07/sources/reports/DoanQuocKien/week-06/gpu_rtx4050_1113/pipeline_both_5hz.json",
+      "sha256": "a1195fd8d14a1237a6840906103fd9c71897cb88a42761e0cb4e17db4ddaba46",
+      "merged": false
+    },
+    {
+      "source_commit": "054d2adc8aabe0ce33b0cdbff40e8b936b232c85",
+      "path": "reports/DoanQuocKien/week-06/gpu_rtx4050_1113/pipeline_xfeat.json",
+      "archive": "reports/kouun-rokku/week-07/sources/reports/DoanQuocKien/week-06/gpu_rtx4050_1113/pipeline_xfeat.json",
+      "sha256": "fedf8ef213cf7d411b3e28f166f4ccd720b04b60ea0dce5b85a7e02091345e47",
+      "merged": false
+    },
+    {
+      "source_commit": "054d2adc8aabe0ce33b0cdbff40e8b936b232c85",
+      "path": "reports/DoanQuocKien/week-06/figures/F7_video_latency.png",
+      "archive": "reports/kouun-rokku/week-07/sources/reports/DoanQuocKien/week-06/figures/F7_video_latency.png",
+      "sha256": "06ccc17b6e23f88678510b168c09209f67a296da8fa08082d756ebfa2b3c06f9",
+      "merged": false
+    },
+    {
+      "source_commit": "054d2adc8aabe0ce33b0cdbff40e8b936b232c85",
+      "path": "reports/DoanQuocKien/week-06/figures/F8_esp32_stream.png",
+      "archive": "reports/kouun-rokku/week-07/sources/reports/DoanQuocKien/week-06/figures/F8_esp32_stream.png",
+      "sha256": "07720971207ca836bd5bf9bf39326a7274a00b22cc6887c478e0ce86583e0ca1",
+      "merged": false
+    },
+    {
+      "source_commit": "054d2adc8aabe0ce33b0cdbff40e8b936b232c85",
+      "path": "reports/DoanQuocKien/week-06/figures/F22_drive_veer.png",
+      "archive": "reports/kouun-rokku/week-07/sources/reports/DoanQuocKien/week-06/figures/F22_drive_veer.png",
+      "sha256": "38eeb28a90e41218a59ab7597bdb256df305c0b74af3d454369113d89d3a88c3",
+      "merged": false
+    },
+    {
+      "source_commit": "054d2adc8aabe0ce33b0cdbff40e8b936b232c85",
+      "path": "reports/DoanQuocKien/week-06/figures/F23_door_approach.png",
+      "archive": "reports/kouun-rokku/week-07/sources/reports/DoanQuocKien/week-06/figures/F23_door_approach.png",
+      "sha256": "a34188aa3466b23dee6a74843a9f64b833f7949e1169be4da3998110005164f1",
+      "merged": false
+    },
+    {
+      "source_commit": "054d2adc8aabe0ce33b0cdbff40e8b936b232c85",
+      "path": "reports/DoanQuocKien/week-06/figures/F25_d2_face_width.png",
+      "archive": "reports/kouun-rokku/week-07/sources/reports/DoanQuocKien/week-06/figures/F25_d2_face_width.png",
+      "sha256": "0c326fb044d9df109d7d8fbbd5433cfd6a2cfb3f4f3ae9c7f8175fb96d639beb",
+      "merged": false
+    },
+    {
+      "source_commit": "054d2adc8aabe0ce33b0cdbff40e8b936b232c85",
+      "path": "reports/DoanQuocKien/week-06/edge_bench_1113/stageB_person_1113.json",
+      "archive": "reports/kouun-rokku/week-07/sources/reports/DoanQuocKien/week-06/edge_bench_1113/stageB_person_1113.json",
+      "sha256": "eb2c9907178b6dd7a82d194cce09d9e94c1c41d2e53301d668d64a90c2f73be9",
+      "merged": false
+    },
+    {
+      "source_commit": "054d2adc8aabe0ce33b0cdbff40e8b936b232c85",
+      "path": "reports/DoanQuocKien/week-06/edge_bench_1113/stageC600_live_esp32_seated_1113.json",
+      "archive": "reports/kouun-rokku/week-07/sources/reports/DoanQuocKien/week-06/edge_bench_1113/stageC600_live_esp32_seated_1113.json",
+      "sha256": "e5330f8dffd593cf4ccf49750c9f2dcebf92cfd38ccfeb059c85e679f0378d94",
+      "merged": false
+    },
+    {
+      "source_commit": "054d2adc8aabe0ce33b0cdbff40e8b936b232c85",
+      "path": "reports/DoanQuocKien/week-06/edge_bench_1113/stageC60_live_esp32_1113.json",
+      "archive": "reports/kouun-rokku/week-07/sources/reports/DoanQuocKien/week-06/edge_bench_1113/stageC60_live_esp32_1113.json",
+      "sha256": "c5d9e18f25b3b676f6f740833051b9387c82f7b3b7a628a3059602a720ab4aee",
+      "merged": false
+    },
+    {
+      "source_commit": "054d2adc8aabe0ce33b0cdbff40e8b936b232c85",
+      "path": "reports/DoanQuocKien/week-06/edge_bench_1113/stageC60b_live_esp32_phone_closer_1113.json",
+      "archive": "reports/kouun-rokku/week-07/sources/reports/DoanQuocKien/week-06/edge_bench_1113/stageC60b_live_esp32_phone_closer_1113.json",
+      "sha256": "9b5645a623c519226ade020320875607f61747f286b1d49b26d1c2d6c77a9298",
+      "merged": false
+    }
+  ]
+}

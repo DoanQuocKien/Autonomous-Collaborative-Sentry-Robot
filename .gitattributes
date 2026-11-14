@@ -1,2 +1,5 @@
 # systemd units and shell scripts must keep LF line endings (they run on the robot)
 jetson/systemd/* text eol=lf
+
+# Generated reports are binary even when their PDF streams use ASCII85.
+*.pdf binary

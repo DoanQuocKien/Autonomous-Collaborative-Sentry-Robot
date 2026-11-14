@@ -1,0 +1,309 @@
+{
+  "snapshot": "2026-11-14",
+  "files": [
+    {
+      "label": "S0",
+      "path": "docs/Implementation Plan.md",
+      "sha256": "434ce9601a4c5aacc41b21b113c0295d52a0ce8f585ec02c995b88b7595476c6",
+      "scope": "committed source in candidate; historical measurements retain their original date/tier"
+    },
+    {
+      "label": "S0",
+      "path": "docs/Mid-Term Report Plan.md",
+      "sha256": "f21c257ae6ac82b95b5517d95cdafb599d173fde1d4152f7657132c9a0a823ba",
+      "scope": "committed source in candidate; historical measurements retain their original date/tier"
+    },
+    {
+      "label": "C1",
+      "path": "calib/camera.json",
+      "sha256": "1b5a42e2b3838d98b1090c4d9f8a96f4f9b3724feaaff24f9cc6d24c9ac86df3",
+      "scope": "committed source in candidate; historical measurements retain their original date/tier"
+    },
+    {
+      "label": "C2",
+      "path": "reports/DoanQuocKien/week-03/t2_dead_reckoning/README.md",
+      "sha256": "3e0cbdb7a2a7f53dea1c086811041a18467deb51f323f81aa964e72f3e85bdad",
+      "scope": "committed source in candidate; historical measurements retain their original date/tier"
+    },
+    {
+      "label": "H1",
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/chapter-05-current.md",
+      "sha256": "71f88f29ccf312b20c12ee5e19742853b03f7153b13e72fa81e2c198098a557a",
+      "scope": "committed source in candidate; historical measurements retain their original date/tier"
+    },
+    {
+      "label": "H1",
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/evidence.md",
+      "sha256": "4a2bad2c6a837ce8a5fa165ef5ba2d855f9ea30d9168b326023b5a824ce558ee",
+      "scope": "committed source in candidate; historical measurements retain their original date/tier"
+    },
+    {
+      "label": "H1",
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/update-2026-11-05.json",
+      "sha256": "8b85ea6a6e6e55ac070c56f8a059da705b338dd0423e690fe364252161be5a5c",
+      "scope": "committed source in candidate; historical measurements retain their original date/tier"
+    },
+    {
+      "label": "H2",
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/update-2026-11-10.md",
+      "sha256": "7399c8119c698fd3708b8e38b6bf2eb828fa676607791f83029d4484698a3ec9",
+      "scope": "committed source in candidate; historical measurements retain their original date/tier"
+    },
+    {
+      "label": "H2",
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/update-2026-11-11.json",
+      "sha256": "bae01a6f00a8820429c130e2bffb6b61b108b222752b9ff59c3c3fdb188e38ae",
+      "scope": "committed source in candidate; historical measurements retain their original date/tier"
+    },
+    {
+      "label": "H2",
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/update-2026-11-11.md",
+      "sha256": "1f50cba01fc30fac5e4827600a52f74d0dad15d6c66413b7bd7a457cab1f6c4f",
+      "scope": "committed source in candidate; historical measurements retain their original date/tier"
+    },
+    {
+      "label": "K1",
+      "path": "reports/kouun-rokku/week-04/sector_accuracy.json",
+      "sha256": "094bbe50cfed5a5447e263de614c6367754047dba0f82e23a63b5cd3957afd8c",
+      "scope": "committed source in candidate; historical measurements retain their original date/tier"
+    },
+    {
+      "label": "K1",
+      "path": "reports/kouun-rokku/week-05/bytetrack_parity.json",
+      "sha256": "5c00a91d0b554948db953139c5ad2deca4f4a1ce7fc97382f318a501f7ef76a0",
+      "scope": "committed source in candidate; historical measurements retain their original date/tier"
+    },
+    {
+      "label": "K1",
+      "path": "reports/kouun-rokku/week-05/hold_detector_metrics.json",
+      "sha256": "2279625e22e8ad4d0f1ae2b3b4b7e7e071fb4237cca11fb24536e2f275fcec1a",
+      "scope": "committed source in candidate; historical measurements retain their original date/tier"
+    },
+    {
+      "label": "K1",
+      "path": "reports/DoanQuocKien/week-02/d1/entrance_bench_robot_ref.json",
+      "sha256": "5ff6824a19dd78741bdac727c9c8e3e11577a29f6b7d2276129658f786694236",
+      "scope": "committed source in candidate; historical measurements retain their original date/tier"
+    },
+    {
+      "label": "K2",
+      "path": "reports/kouun-rokku/week-06/phase3_replay_summary.json",
+      "sha256": "5241e96f345bf89e3253e8f7d01f9adb921302d81bcb76cf5437eba86f7b680b",
+      "scope": "committed source in candidate; historical measurements retain their original date/tier"
+    },
+    {
+      "label": "K2",
+      "path": "reports/kouun-rokku/week-06/pr101-review-fixes.md",
+      "sha256": "70a76935270748d0a62c7be24246c6f4ffa2f84dcd52c9851a5bb3c39516be43",
+      "scope": "committed source in candidate; historical measurements retain their original date/tier"
+    },
+    {
+      "label": "K2",
+      "path": "reports/kouun-rokku/week-06/pr101-review-pytest.log",
+      "sha256": "b46b40935a30a4339590264ed0300c4a32a5a25bd0c56f365054fd9da9ff133b",
+      "scope": "committed source in candidate; historical measurements retain their original date/tier"
+    },
+    {
+      "label": "E1",
+      "path": "docs/Edge Deployment.md",
+      "sha256": "a9ee9cf8a5835086a1febb94d28cf7b908c4d6a20e0e51b2c869ee56e804fdbe",
+      "scope": "committed source in candidate; historical measurements retain their original date/tier"
+    },
+    {
+      "label": "D13",
+      "path": "reports/kouun-rokku/week-07/sources/reports/DoanQuocKien/midterm-chapter-03.md.txt",
+      "sha256": "f639e154993fac86b050e6b9771972faa8f26d94881a794b685c8e5ec0b83762",
+      "scope": "owner-reported; PR108 open; no code adopted",
+      "source_commit": "054d2adc8aabe0ce33b0cdbff40e8b936b232c85",
+      "source_path": "reports/DoanQuocKien/midterm-chapter-03.md"
+    },
+    {
+      "label": "D13",
+      "path": "reports/kouun-rokku/week-07/sources/reports/DoanQuocKien/midterm-chapter-04.md.txt",
+      "sha256": "b154a9d69b902b4f9adc8ae0240683adeedb46491c4cc204d4bf136a0d1d7451",
+      "scope": "owner-reported; PR108 open; no code adopted",
+      "source_commit": "054d2adc8aabe0ce33b0cdbff40e8b936b232c85",
+      "source_path": "reports/DoanQuocKien/midterm-chapter-04.md"
+    },
+    {
+      "label": "D13",
+      "path": "reports/kouun-rokku/week-07/sources/reports/DoanQuocKien/midterm-chapter-05x.md.txt",
+      "sha256": "93312c89704e76772d7898ea398a18061e4ea14190bb6894e798a6248913541a",
+      "scope": "owner-reported; PR108 open; no code adopted",
+      "source_commit": "054d2adc8aabe0ce33b0cdbff40e8b936b232c85",
+      "source_path": "reports/DoanQuocKien/midterm-chapter-05x.md"
+    },
+    {
+      "label": "D13",
+      "path": "reports/kouun-rokku/week-07/sources/reports/DoanQuocKien/midterm-chapter-08.md.txt",
+      "sha256": "d0c07ee4e7a33770ca4e69bcfe4db3e5c2e8f5ddcb0e7382b4cbcb08a57681b2",
+      "scope": "owner-reported; PR108 open; no code adopted",
+      "source_commit": "054d2adc8aabe0ce33b0cdbff40e8b936b232c85",
+      "source_path": "reports/DoanQuocKien/midterm-chapter-08.md"
+    },
+    {
+      "label": "D13",
+      "path": "reports/kouun-rokku/week-07/sources/reports/DoanQuocKien/week-06/classroom_1111_pm/README.md.txt",
+      "sha256": "229c55f9321d5c653c8a58a4f41fb0b7f5f835f56df1804906b09a97fb8a6e15",
+      "scope": "owner-reported; PR108 open; no code adopted",
+      "source_commit": "054d2adc8aabe0ce33b0cdbff40e8b936b232c85",
+      "source_path": "reports/DoanQuocKien/week-06/classroom_1111_pm/README.md"
+    },
+    {
+      "label": "D13",
+      "path": "reports/kouun-rokku/week-07/sources/reports/DoanQuocKien/week-06/gpu_rtx4050_1113/pipeline_both.json",
+      "sha256": "c3a1d465e29b3c6471aec1299efcce3d3465dbc461fa3974eb65255dbb5ef2b7",
+      "scope": "owner-reported; PR108 open; no code adopted",
+      "source_commit": "054d2adc8aabe0ce33b0cdbff40e8b936b232c85",
+      "source_path": "reports/DoanQuocKien/week-06/gpu_rtx4050_1113/pipeline_both.json"
+    },
+    {
+      "label": "D13",
+      "path": "reports/kouun-rokku/week-07/sources/reports/DoanQuocKien/week-06/gpu_rtx4050_1113/pipeline_both_5hz.json",
+      "sha256": "a1195fd8d14a1237a6840906103fd9c71897cb88a42761e0cb4e17db4ddaba46",
+      "scope": "owner-reported; PR108 open; no code adopted",
+      "source_commit": "054d2adc8aabe0ce33b0cdbff40e8b936b232c85",
+      "source_path": "reports/DoanQuocKien/week-06/gpu_rtx4050_1113/pipeline_both_5hz.json"
+    },
+    {
+      "label": "D13",
+      "path": "reports/kouun-rokku/week-07/sources/reports/DoanQuocKien/week-06/gpu_rtx4050_1113/pipeline_xfeat.json",
+      "sha256": "fedf8ef213cf7d411b3e28f166f4ccd720b04b60ea0dce5b85a7e02091345e47",
+      "scope": "owner-reported; PR108 open; no code adopted",
+      "source_commit": "054d2adc8aabe0ce33b0cdbff40e8b936b232c85",
+      "source_path": "reports/DoanQuocKien/week-06/gpu_rtx4050_1113/pipeline_xfeat.json"
+    },
+    {
+      "label": "D13",
+      "path": "reports/kouun-rokku/week-07/sources/reports/DoanQuocKien/week-06/figures/F7_video_latency.png",
+      "sha256": "06ccc17b6e23f88678510b168c09209f67a296da8fa08082d756ebfa2b3c06f9",
+      "scope": "owner-reported; PR108 open; no code adopted",
+      "source_commit": "054d2adc8aabe0ce33b0cdbff40e8b936b232c85",
+      "source_path": "reports/DoanQuocKien/week-06/figures/F7_video_latency.png"
+    },
+    {
+      "label": "D13",
+      "path": "reports/kouun-rokku/week-07/sources/reports/DoanQuocKien/week-06/figures/F8_esp32_stream.png",
+      "sha256": "07720971207ca836bd5bf9bf39326a7274a00b22cc6887c478e0ce86583e0ca1",
+      "scope": "owner-reported; PR108 open; no code adopted",
+      "source_commit": "054d2adc8aabe0ce33b0cdbff40e8b936b232c85",
+      "source_path": "reports/DoanQuocKien/week-06/figures/F8_esp32_stream.png"
+    },
+    {
+      "label": "D13",
+      "path": "reports/kouun-rokku/week-07/sources/reports/DoanQuocKien/week-06/figures/F22_drive_veer.png",
+      "sha256": "38eeb28a90e41218a59ab7597bdb256df305c0b74af3d454369113d89d3a88c3",
+      "scope": "owner-reported; PR108 open; no code adopted",
+      "source_commit": "054d2adc8aabe0ce33b0cdbff40e8b936b232c85",
+      "source_path": "reports/DoanQuocKien/week-06/figures/F22_drive_veer.png"
+    },
+    {
+      "label": "D13",
+      "path": "reports/kouun-rokku/week-07/sources/reports/DoanQuocKien/week-06/figures/F23_door_approach.png",
+      "sha256": "a34188aa3466b23dee6a74843a9f64b833f7949e1169be4da3998110005164f1",
+      "scope": "owner-reported; PR108 open; no code adopted",
+      "source_commit": "054d2adc8aabe0ce33b0cdbff40e8b936b232c85",
+      "source_path": "reports/DoanQuocKien/week-06/figures/F23_door_approach.png"
+    },
+    {
+      "label": "D13",
+      "path": "reports/kouun-rokku/week-07/sources/reports/DoanQuocKien/week-06/figures/F25_d2_face_width.png",
+      "sha256": "0c326fb044d9df109d7d8fbbd5433cfd6a2cfb3f4f3ae9c7f8175fb96d639beb",
+      "scope": "owner-reported; PR108 open; no code adopted",
+      "source_commit": "054d2adc8aabe0ce33b0cdbff40e8b936b232c85",
+      "source_path": "reports/DoanQuocKien/week-06/figures/F25_d2_face_width.png"
+    },
+    {
+      "label": "D13",
+      "path": "reports/kouun-rokku/week-07/sources/reports/DoanQuocKien/week-06/edge_bench_1113/stageB_person_1113.json",
+      "sha256": "eb2c9907178b6dd7a82d194cce09d9e94c1c41d2e53301d668d64a90c2f73be9",
+      "scope": "owner-reported; PR108 open; no code adopted",
+      "source_commit": "054d2adc8aabe0ce33b0cdbff40e8b936b232c85",
+      "source_path": "reports/DoanQuocKien/week-06/edge_bench_1113/stageB_person_1113.json"
+    },
+    {
+      "label": "D13",
+      "path": "reports/kouun-rokku/week-07/sources/reports/DoanQuocKien/week-06/edge_bench_1113/stageC600_live_esp32_seated_1113.json",
+      "sha256": "e5330f8dffd593cf4ccf49750c9f2dcebf92cfd38ccfeb059c85e679f0378d94",
+      "scope": "owner-reported; PR108 open; no code adopted",
+      "source_commit": "054d2adc8aabe0ce33b0cdbff40e8b936b232c85",
+      "source_path": "reports/DoanQuocKien/week-06/edge_bench_1113/stageC600_live_esp32_seated_1113.json"
+    },
+    {
+      "label": "D13",
+      "path": "reports/kouun-rokku/week-07/sources/reports/DoanQuocKien/week-06/edge_bench_1113/stageC60_live_esp32_1113.json",
+      "sha256": "c5d9e18f25b3b676f6f740833051b9387c82f7b3b7a628a3059602a720ab4aee",
+      "scope": "owner-reported; PR108 open; no code adopted",
+      "source_commit": "054d2adc8aabe0ce33b0cdbff40e8b936b232c85",
+      "source_path": "reports/DoanQuocKien/week-06/edge_bench_1113/stageC60_live_esp32_1113.json"
+    },
+    {
+      "label": "D13",
+      "path": "reports/kouun-rokku/week-07/sources/reports/DoanQuocKien/week-06/edge_bench_1113/stageC60b_live_esp32_phone_closer_1113.json",
+      "sha256": "9b5645a623c519226ade020320875607f61747f286b1d49b26d1c2d6c77a9298",
+      "scope": "owner-reported; PR108 open; no code adopted",
+      "source_commit": "054d2adc8aabe0ce33b0cdbff40e8b936b232c85",
+      "source_path": "reports/DoanQuocKien/week-06/edge_bench_1113/stageC60b_live_esp32_phone_closer_1113.json"
+    },
+    {
+      "label": "Figure",
+      "path": "reports/DoanQuocKien/week-05/figures/F1_system_overview.png",
+      "sha256": "8d592fdd028551daa61bf07f89643c2c5bc0030ba282ceba0d55d793b071f965",
+      "scope": "figure from committed owner evidence; caption defines tier/date"
+    },
+    {
+      "label": "Figure",
+      "path": "reports/DoanQuocKien/week-05/figures/F4_fisheye_error.png",
+      "sha256": "da3a5b05f5323507180320ec0446190157b1ac11ec3fedb26f784bc2002a9a91",
+      "scope": "figure from committed owner evidence; caption defines tier/date"
+    },
+    {
+      "label": "Figure",
+      "path": "reports/DoanQuocKien/week-05/f15/F15_dead_reckoning.png",
+      "sha256": "85952928dbc42c80216ea8a5367b48fed603990907c95063305427f04d892ea2",
+      "scope": "figure from committed owner evidence; caption defines tier/date"
+    },
+    {
+      "label": "Figure",
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/figures/F10_distance.png",
+      "sha256": "5db5684210b6fb990892281969678631e4851cbd23338926be8f2e32fe120073",
+      "scope": "figure from committed owner evidence; caption defines tier/date"
+    },
+    {
+      "label": "Figure",
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/figures/F13_face_roc.png",
+      "sha256": "5f72b53fb5f532996c902aa3d99516744d45650a843e76eae462da28921aaea1",
+      "scope": "figure from committed owner evidence; caption defines tier/date"
+    },
+    {
+      "label": "Figure",
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/figures/F18_d5_precision.png",
+      "sha256": "f73f50782687024cccc5e0156dfb3a73beb49d131c8fef0835da9b8239bbc333",
+      "scope": "figure from committed owner evidence; caption defines tier/date"
+    },
+    {
+      "label": "Figure",
+      "path": "reports/DoanQuocKien/week-05/figures/F20_edge_engines.png",
+      "sha256": "b4cb68ca42f71a5129c4a80fc8fda8f2edac5950116ad45c81a1f2270e8aa6a8",
+      "scope": "figure from committed owner evidence; caption defines tier/date"
+    },
+    {
+      "label": "Figure",
+      "path": "reports/kouun-rokku/week-05/F16_state_machine.png",
+      "sha256": "c8a3c60254891945d9486b43a6ff7cfe84f49e639d1ede8b7d4613a451cc1f48",
+      "scope": "figure from committed owner evidence; caption defines tier/date"
+    },
+    {
+      "label": "Figure",
+      "path": "reports/DoanQuocKien/week-05/figures/F19_test_growth.png",
+      "sha256": "bc4f780fb0525b3a8f89d2b49348f10e754d034de6bbfaae721ac476c5ce8570",
+      "scope": "figure from committed owner evidence; caption defines tier/date"
+    },
+    {
+      "label": "Figure",
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/figures/F10_availability_1109.png",
+      "sha256": "4c8433b117ffefb072d7a17f0377822549a01c036d92ad85a135730e9e7efea9",
+      "scope": "figure from committed owner evidence; caption defines tier/date"
+    }
+  ]
+}
