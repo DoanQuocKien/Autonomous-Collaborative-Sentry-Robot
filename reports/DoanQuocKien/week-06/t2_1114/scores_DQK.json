@@ -1,0 +1,55 @@
+{
+ "subject": "DQK",
+ "threshold": 0.45,
+ "per_distance": {
+  "1.8": {
+   "straight_frames": 101,
+   "straight_detected": 101,
+   "tar": 0.8911,
+   "impostor_scores": 202,
+   "far": 0.0,
+   "impostor_max": 0.295,
+   "straight_frontal": 101,
+   "away_turned": 198,
+   "away_frames": 198,
+   "away_detected": 198,
+   "away_own_ge_thr": 2
+  },
+  "2.4": {
+   "straight_frames": 100,
+   "straight_detected": 100,
+   "tar": 0.9,
+   "impostor_scores": 200,
+   "far": 0.0,
+   "impostor_max": 0.309,
+   "straight_frontal": 100,
+   "away_turned": 200,
+   "away_frames": 201,
+   "away_detected": 201,
+   "away_own_ge_thr": 123
+  },
+  "3.0": {
+   "straight_frames": 99,
+   "straight_detected": 99,
+   "tar": 1.0,
+   "impostor_scores": 198,
+   "far": 0.0,
+   "impostor_max": 0.273,
+   "straight_frontal": 99,
+   "away_turned": 178,
+   "away_frames": 196,
+   "away_detected": 196,
+   "away_own_ge_thr": 127
+  }
+ },
+ "tar": 0.93,
+ "far": 0.0,
+ "impostor_scores": 600,
+ "label": "door_1114",
+ "enrolled": [
+  "DQK",
+  "HNHL",
+  "KR"
+ ],
+ "frames": 895
+}
