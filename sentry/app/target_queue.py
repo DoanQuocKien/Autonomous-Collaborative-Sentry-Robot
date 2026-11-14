@@ -1,6 +1,6 @@
 """Target FIFO queue for managing intruder records across Phases 2 and 3.
 
-Owner: kouun-rokku (KR).
+Author: kouun-rokku (KR). Phase 2 live integration owner: HuynhNguyenHoaiLoc (HNHL, #114).
 Spec §4.4: "A full-body crop is passed to OSNet to generate an appearance feature
 vector (a_target). The intruder is pushed to a First-In, First-Out (FIFO) queue Q.
 The JetBot is signaled to engage."

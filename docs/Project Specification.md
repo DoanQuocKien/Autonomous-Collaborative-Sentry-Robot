@@ -115,7 +115,7 @@ JetBot Deploys \-\> Pursue Target (YOLOv8 \+ ByteTrack)
 When the active intruder ($T_1$) exits through the door, the JetBot stops pursuit and searches for the next target ($T_2$) in $\mathcal{Q}$ using a **Map-Based Coverage Search**:
 
 > 1. **Room map:** the occupancy grid saved in Phase 1 (section 4.1) provides the known-free floor, the obstacles, and the guarding position.  
-> 2. **Coverage path:** from the map and an assumed effective detection radius $r_{\text{det}}$ (the distance within which a person crop can still be re-identified; placeholder 3.0 m, measured in Week 7), the base station plans a path with maximum floor coverage and minimum length. It picks viewpoints on known-free cells until at least 90 % of the known-free cells are within $r_{\text{det}}$ and line of sight of some viewpoint, orders them into a short tour, and connects them with obstacle-avoiding grid paths starting from the robot's current pose.  
+> 2. **Coverage path:** from the map and an assumed effective detection radius $r_{\text{det}}$ (the distance within which a person crop can still be re-identified; placeholder 3.0 m, measured in Week 9), the base station plans a path with maximum floor coverage and minimum length. It picks viewpoints on known-free cells until at least 90 % of the known-free cells are within $r_{\text{det}}$ and line of sight of some viewpoint, orders them into a short tour, and connects them with obstacle-avoiding grid paths starting from the robot's current pose.  
 > 3. **Follow & scan:** the JetBot follows the path and, at each viewpoint, pivots slowly in place for a full turn while the laptop runs detection on every frame.  
 > 4. **Re-ID matching:** detected person crops are passed through OSNet. When the cosine distance matches $\vec{a}_{\text{target2}}$, the JetBot locks on and initiates the pursuit state.  
 > 5. **Not found:** if the path ends without a match, $T_2$ is removed from $\mathcal{Q}$ (the event is logged with timestamp and snapshot) and the JetBot continues with the next target in $\mathcal{Q}$, or returns to standby if $\mathcal{Q}$ is empty.
@@ -124,7 +124,7 @@ When the active intruder ($T_1$) exits through the door, the JetBot stops pursui
 
 *Optional Extension:* If a third overhead camera is available, the base station continuously tracks $(X, Y)$ ground coordinates across the entire room, allowing the JetBot to drive directly toward $T_2$ without searching.
 
-### **4.7 Optional Extension: On-Robot Inference (proposed 2026-10-16, to be agreed at the Week 2 meet-up on Sun 2026-10-18)**
+### **4.7 Optional Extension: On-Robot Inference (proposed 2026-10-16, agreed by all three at gate G0 on 2026-10-17; Stage A gate G2 not met on 2026-11-03, so no edge work before the mid-term: Implementation Plan section 5)**
 
 The core system above keeps every neural model on the laptop (section 5). That stays the **default and the fallback**. This extension asks whether the Jetson Nano can run the time-critical models itself, so that the control loop no longer depends on the Wi-Fi link and the laptop becomes a companion application: start and stop, a live view of what the robot sees, and confirmation of intruders. Nothing in it is due before Week 3.
 
@@ -135,9 +135,9 @@ The core system above keeps every neural model on the laptop (section 5). That s
 
 ## **5\. Network & Processing Architecture**
 
-* **Network Host:** Windows 11 Mobile Hotspot configured with dual-band broadcast (a single-radio hotspot serves one band at a time and the video target p95 < 50 ms is missed on 2.4 GHz: Implementation Plan risk 16, an open team decision).  
-  * **2.4 GHz Band:** Connects the ESP32-CAM: an MJPEG feed (VGA, 15 FPS) with an OV2640 module, or the UDP changed-tile stream (640x480, 14.4 FPS average) with the GC2145 boards we have, which is the frozen interface (2026-10-11).  
-  * **5 GHz Band:** Connects the JetBot. Streams CSI video frames to the laptop via ZeroMQ (JPEG compressed, quality 60\) and receives motor control datagrams (\$v, \\omega\$) via non-blocking UDP packets.  
+* **Network Host:** one 2.4 GHz hotspot shared by the JetBot, the ESP32-CAM and the laptop: a phone hotspot in the classroom, the laptop's Windows hotspot at home (decision 2026-11-14, Implementation Plan risk 16). A single-radio Windows hotspot serves one band at a time and the ESP32 is 2.4 GHz only; the video target p95 < 50 ms is missed by about 3 ms on this network (53 ms measured).  
+  * **ESP32-CAM:** an MJPEG feed (VGA, 15 FPS) with an OV2640 module, or the UDP changed-tile stream (640x480, 14.4 FPS average) with the GC2145 boards we have, which is the frozen interface (2026-10-11).  
+  * **JetBot (same 2.4 GHz network):** Streams CSI video frames to the laptop via ZeroMQ (JPEG compressed, quality 60\) and receives motor control datagrams (\$v, \\omega\$) via non-blocking UDP packets.  
 * **Compute Allocation:** The RTX 4050 processes both video streams, executes all neural models (YOLOv8, YOLOv8-pose, InsightFace, OSNet), and evaluates state machine transitions. The Jetson Nano is restricted to frame acquisition and low-level motor execution.
 * **Optional on-robot inference (extension, section 4.7; proposed 2026-10-16):** the allocation above is the default. If the extension's gates pass, the Jetson also runs YOLOv8n (obstacles), YOLOv8n-pose and OSNet x0.25 (pursuit) through TensorRT FP16 on live frames, and the laptop keeps the ESP32 door pipeline, mapping, the state machine and the companion application. The control packets and the safety design are unchanged.
 

@@ -8,6 +8,11 @@ from sentry.app.phase2_pipeline import (
     Phase2Pipeline,
     Phase2PipelineSummary,
 )
+from sentry.app.phase3_runner import (
+    Phase3Runner,
+    Phase3Settings,
+    Phase3StepResult,
+)
 from sentry.app.state_machine import (
     Command,
     Event,
@@ -31,6 +36,9 @@ __all__ = [
     "Phase2EventResult",
     "Phase2Pipeline",
     "Phase2PipelineSummary",
+    "Phase3Runner",
+    "Phase3Settings",
+    "Phase3StepResult",
     "State",
     "StateMachine",
     "StateMachineConfig",
