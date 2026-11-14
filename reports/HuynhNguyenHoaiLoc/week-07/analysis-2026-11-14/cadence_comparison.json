@@ -1,0 +1,261 @@
+{
+  "schema_version": 1,
+  "date": "2026-11-14",
+  "hardware": "HNHL RTX 5060 Laptop",
+  "experiment": "one repeated private D2 JPEG over localhost MJPEG at 12 Hz, 20 s per run",
+  "evaluation_tier": "synthetic transport with real CUDA models, runtime only",
+  "accuracy_evaluation": false,
+  "t1_passed": false,
+  "runs": {
+    "before": {
+      "summary": {
+        "status": "completed",
+        "processed_frames": 70,
+        "skipped_schedule_frames": 138,
+        "source": {
+          "duration_s": 20.025989399990067,
+          "consumed_frames": 208,
+          "decoded_frames": 240,
+          "reconnects": 0
+        },
+        "evidence_counts": {
+          "person_observations": 140,
+          "detected_faces": 140,
+          "associated_faces": 70,
+          "accepted_face_samples": 0
+        },
+        "decisions": {
+          "authorized": 0,
+          "queued": 0,
+          "unresolved": 2,
+          "interrupted": 2
+        },
+        "t1_passed": false,
+        "motor_commands_sent": 0
+      },
+      "warmup": null,
+      "model_runtime": {
+        "osnet_device": "cuda:0",
+        "person_weights_sha256": "f59b3d833e2ff32e194b5bb8e08d211dc7c5bdf144b90d2c8412c47ccfc83b36",
+        "face_models": {
+          "detection": {
+            "sha256": "5e4447f50245bbd7966bd6c0fa52938c61474a04ec7def48753668a9d8b4ea3a",
+            "providers": [
+              "CUDAExecutionProvider",
+              "CPUExecutionProvider"
+            ]
+          },
+          "recognition": {
+            "sha256": "9cc6e4a75f0e2bf0b1aed94578f144d15175f357bdc05e815e5c4a02b319eb4f",
+            "providers": [
+              "CUDAExecutionProvider",
+              "CPUExecutionProvider"
+            ]
+          }
+        }
+      },
+      "appearance_model_id": "osnet_ain_x1_0:2f38acc25e28cb29407635db2be315edc08d5457a904b72a9a11e427f41f3242",
+      "source": {
+        "synthetic_http_stream": true,
+        "source_hz": 12,
+        "source": "one repeated private D2 JPEG",
+        "source_image_sha256": "aa63751e7699b5f2c4cfc7fc023d445d5e316430f1d222f5632c56b3a170e2b5",
+        "accuracy_evaluation": false,
+        "mode": "before",
+        "baseline_commit": "df513f3",
+        "code_sha256": {
+          "sentry/app/phase2_live.py": "a6064052ed5daeb9163bbe24c8d3aee1972282d0c4ed06ec19d6f28c9c7fbefb",
+          "tools/monitor_door.py": "24b60c254def7e55e1b6d83e13556fd12a4a2c3cde707cce38445a30c9b649f7"
+        },
+        "loaded_monitor_sha256": "1e05919e6c51fb6f726af7af628177cc71be9ce47d2e059f221a2715c4de4e2d"
+      },
+      "config_sha256": "1573ba55d12f5c15a786b60f9f28705e1770f02a415f740cb00dc0bd8dfbfb85",
+      "fps": 3.495457757509585
+    },
+    "after": {
+      "summary": {
+        "status": "completed",
+        "processed_frames": 100,
+        "skipped_schedule_frames": 140,
+        "source": {
+          "duration_s": 20.020513600000413,
+          "consumed_frames": 240,
+          "decoded_frames": 240,
+          "reconnects": 0
+        },
+        "evidence_counts": {
+          "person_observations": 200,
+          "detected_faces": 200,
+          "associated_faces": 100,
+          "accepted_face_samples": 0
+        },
+        "decisions": {
+          "authorized": 0,
+          "queued": 0,
+          "unresolved": 2,
+          "interrupted": 0
+        },
+        "t1_passed": false,
+        "motor_commands_sent": 0
+      },
+      "warmup": {
+        "iterations": 5,
+        "synthetic_input": true,
+        "image_shape": [
+          480,
+          640,
+          3
+        ],
+        "duration_s": 2.0447584000066854,
+        "excluded_from_entries": true
+      },
+      "model_runtime": {
+        "osnet_device": "cuda:0",
+        "person_weights_sha256": "f59b3d833e2ff32e194b5bb8e08d211dc7c5bdf144b90d2c8412c47ccfc83b36",
+        "face_models": {
+          "detection": {
+            "sha256": "5e4447f50245bbd7966bd6c0fa52938c61474a04ec7def48753668a9d8b4ea3a",
+            "providers": [
+              "CUDAExecutionProvider",
+              "CPUExecutionProvider"
+            ]
+          },
+          "recognition": {
+            "sha256": "9cc6e4a75f0e2bf0b1aed94578f144d15175f357bdc05e815e5c4a02b319eb4f",
+            "providers": [
+              "CUDAExecutionProvider",
+              "CPUExecutionProvider"
+            ]
+          }
+        }
+      },
+      "appearance_model_id": "osnet_ain_x1_0:2f38acc25e28cb29407635db2be315edc08d5457a904b72a9a11e427f41f3242",
+      "source": {
+        "synthetic_http_stream": true,
+        "source_hz": 12,
+        "source": "one repeated private D2 JPEG",
+        "source_image_sha256": "aa63751e7699b5f2c4cfc7fc023d445d5e316430f1d222f5632c56b3a170e2b5",
+        "accuracy_evaluation": false,
+        "mode": "after",
+        "baseline_commit": null,
+        "code_sha256": {
+          "sentry/app/phase2_live.py": "a6064052ed5daeb9163bbe24c8d3aee1972282d0c4ed06ec19d6f28c9c7fbefb",
+          "tools/monitor_door.py": "24b60c254def7e55e1b6d83e13556fd12a4a2c3cde707cce38445a30c9b649f7"
+        },
+        "loaded_monitor_sha256": "a6064052ed5daeb9163bbe24c8d3aee1972282d0c4ed06ec19d6f28c9c7fbefb"
+      },
+      "config_sha256": "1573ba55d12f5c15a786b60f9f28705e1770f02a415f740cb00dc0bd8dfbfb85",
+      "fps": 4.99487685470756
+    }
+  },
+  "timing_after": {
+    "tracking_osnet": {
+      "n": 100,
+      "p50": 27.802749988040887,
+      "p95": 51.778105017729104,
+      "maximum": 80.55799998692237
+    },
+    "face": {
+      "n": 100,
+      "p50": 18.933150000520982,
+      "p95": 24.905675002082713,
+      "maximum": 28.359100018860772
+    },
+    "entry": {
+      "n": 100,
+      "p50": 0.047249995986931026,
+      "p95": 0.05613499088212848,
+      "maximum": 0.24709998979233205
+    },
+    "process": {
+      "n": 100,
+      "p50": 49.01765000249725,
+      "p95": 73.8913700231933,
+      "maximum": 100.49439998692833
+    },
+    "consume": {
+      "n": 100,
+      "p50": 0.001200009137392044,
+      "p95": 0.0016050122212618587,
+      "maximum": 0.002800021320581436
+    }
+  },
+  "wifi_followup": {
+    "summary": {
+      "status": "completed",
+      "processed_frames": 0,
+      "skipped_schedule_frames": 0,
+      "source": {
+        "duration_s": 20.528202500019688,
+        "consumed_frames": 0,
+        "decoded_frames": 0,
+        "reconnects": 6
+      },
+      "evidence_counts": {
+        "person_observations": 0,
+        "detected_faces": 0,
+        "associated_faces": 0,
+        "accepted_face_samples": 0
+      },
+      "decisions": {
+        "authorized": 0,
+        "queued": 0,
+        "unresolved": 0,
+        "interrupted": 0
+      },
+      "t1_passed": false,
+      "motor_commands_sent": 0
+    },
+    "previous_address_tcp_reachable": false,
+    "discovery_found_camera": false,
+    "actual_wifi_cadence_verified": false
+  },
+  "limitations": [
+    "one sequential run per version",
+    "same static JPEG and no accuracy labels",
+    "power and thermal state uncontrolled",
+    "cadence and warmup changed together",
+    "the previous live acceptance counts retain their original code version",
+    "successful Wi-Fi follow-up has no people/faces and concurrent CPU regression load"
+  ],
+  "python": "3.12.15 (main, Oct  3 2026, 01:05:37) [MSC v.1944 64 bit (AMD64)]",
+  "versions": {
+    "torch": "2.9.1+cu128",
+    "ultralytics": "8.4.172",
+    "onnxruntime-gpu": "1.23.2",
+    "insightface": "2.1"
+  },
+  "wifi_reconnected_followup": {
+    "summary": {
+      "status": "completed",
+      "processed_frames": 149,
+      "skipped_schedule_frames": 226,
+      "source": {
+        "duration_s": 30.023587400006363,
+        "consumed_frames": 375,
+        "decoded_frames": 375,
+        "reconnects": 0
+      },
+      "evidence_counts": {
+        "person_observations": 0,
+        "detected_faces": 0,
+        "associated_faces": 0,
+        "accepted_face_samples": 0
+      },
+      "decisions": {
+        "authorized": 0,
+        "queued": 0,
+        "unresolved": 0,
+        "interrupted": 0
+      },
+      "t1_passed": false,
+      "motor_commands_sent": 0
+    },
+    "fps": 4.962764709455354,
+    "analysis": "wifi-reconnected.json",
+    "empty_scene": true,
+    "concurrent_cpu_regression": true,
+    "recognition_evaluation": false,
+    "actual_wifi_cadence_verified": true
+  }
+}

@@ -1,0 +1,81 @@
+{
+  "source_commit": "b831e76f073e7de51a774fdaf06b5aee2590f274",
+  "csv_sha256_lf": {
+    "frames_DQK.csv": "c9f779d4288c1d9f58171da2997f9d9d0debb2e182ec089d3ee42cfb39c15dee",
+    "frames_HNHL.csv": "b86b304a20a4fb64eb42c927ed6801c952357606ca10f171e61beebdff8b1148",
+    "frames_KR.csv": "fbaea69a37cfdf8c931d9677d673b2c058eec1b4623b33694e1d9e7fd89ba6c2"
+  },
+  "genuine": "straight frames, missing face counts as miss",
+  "impostor": "available scores of every frame against each other enrolment",
+  "bootstrap": {
+    "seed": 0,
+    "resamples": 5000,
+    "units": 9
+  },
+  "operating_points": [
+    {
+      "threshold": 0.45,
+      "genuine_hits": 822,
+      "genuine_n": 877,
+      "tar": 0.9372862029646523,
+      "impostor_accepts": 0,
+      "impostor_n": 5254,
+      "far": 0.0,
+      "clip_bootstrap_95_interval": [
+        0.9038885029339937,
+        0.9700054410080182
+      ]
+    },
+    {
+      "threshold": 0.4,
+      "genuine_hits": 868,
+      "genuine_n": 877,
+      "tar": 0.9897377423033067,
+      "impostor_accepts": 0,
+      "impostor_n": 5254,
+      "far": 0.0,
+      "clip_bootstrap_95_interval": [
+        0.9806151822579049,
+        0.9977194982896237
+      ]
+    },
+    {
+      "threshold": 0.35,
+      "genuine_hits": 875,
+      "genuine_n": 877,
+      "tar": 0.9977194982896237,
+      "impostor_accepts": 0,
+      "impostor_n": 5254,
+      "far": 0.0,
+      "clip_bootstrap_95_interval": [
+        0.9944381099018706,
+        1.0
+      ]
+    },
+    {
+      "threshold": 0.3,
+      "genuine_hits": 877,
+      "genuine_n": 877,
+      "tar": 1.0,
+      "impostor_accepts": 14,
+      "impostor_n": 5254,
+      "far": 0.0026646364674533687
+    }
+  ],
+  "impostor_max": 0.3362,
+  "straight_impostor_n": 1754,
+  "straight_impostor_accepts_at_045": 0,
+  "selected_policy": {
+    "threshold": 0.45,
+    "top_k": 3,
+    "minimum_same_identity_votes": 2,
+    "calibrated": false
+  },
+  "exact_live_policy_evaluated": false,
+  "t1_passed": false,
+  "limitations": [
+    "3 people, one session and camera; six ordered identity pairs",
+    "correlated frames and clips from the same subjects; bootstrap is descriptive, not population validation",
+    "CSVs lack sharpness and track/entry truth for the live quality-selected rule"
+  ]
+}

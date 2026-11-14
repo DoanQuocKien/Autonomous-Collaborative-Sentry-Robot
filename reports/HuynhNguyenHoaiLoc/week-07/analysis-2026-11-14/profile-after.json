@@ -1,0 +1,126 @@
+{
+  "schema_version": 1,
+  "run_name": "after",
+  "requested_hz": 5.0,
+  "recorded_summary": {
+    "status": "completed",
+    "processed_frames": 100,
+    "skipped_schedule_frames": 140,
+    "source": {
+      "duration_s": 20.020513600000413,
+      "consumed_frames": 240,
+      "decoded_frames": 240,
+      "reconnects": 0
+    },
+    "evidence_counts": {
+      "person_observations": 200,
+      "detected_faces": 200,
+      "associated_faces": 100,
+      "accepted_face_samples": 0
+    },
+    "decisions": {
+      "authorized": 0,
+      "queued": 0,
+      "unresolved": 2,
+      "interrupted": 0
+    },
+    "t1_passed": false,
+    "motor_commands_sent": 0
+  },
+  "decisions": {
+    "unresolved": 2
+  },
+  "logged_segments": 2,
+  "incomplete_segments": [
+    {
+      "segment": 0,
+      "decision": "unresolved",
+      "reason": "insufficient_face_evidence",
+      "end_trigger": "max_duration",
+      "retained_face_samples": 0,
+      "total_accepted_face_samples": 0,
+      "confirmation_resets": 0,
+      "rejection_counts": {
+        "no_associated_face": 76
+      },
+      "duration_s": 15.088160600018455,
+      "stream_samples_in_time_window": 76,
+      "historical_rejection_details_available": true
+    },
+    {
+      "segment": 1,
+      "decision": "unresolved",
+      "reason": "insufficient_face_evidence",
+      "end_trigger": "max_duration",
+      "retained_face_samples": 0,
+      "total_accepted_face_samples": 0,
+      "confirmation_resets": 0,
+      "rejection_counts": {
+        "low_face_confidence": 76
+      },
+      "duration_s": 15.088160600018455,
+      "stream_samples_in_time_window": 76,
+      "historical_rejection_details_available": true
+    }
+  ],
+  "cadence": {
+    "processed_samples": 100,
+    "intervals_s": {
+      "n": 99,
+      "p50": 0.1737348999886308,
+      "p95": 0.252921499995864,
+      "maximum": 0.2538695999828633
+    },
+    "effective_hz": 4.991841389895447,
+    "after_first_interval_hz": 5.005323033361275,
+    "large_processed_gaps": []
+  },
+  "frame_diagnostics_available": true,
+  "stage_wall_ms": {
+    "tracking_osnet": {
+      "n": 100,
+      "p50": 27.802749988040887,
+      "p95": 51.778105017729104,
+      "maximum": 80.55799998692237
+    },
+    "face": {
+      "n": 100,
+      "p50": 18.933150000520982,
+      "p95": 24.905675002082713,
+      "maximum": 28.359100018860772
+    },
+    "entry": {
+      "n": 100,
+      "p50": 0.047249995986931026,
+      "p95": 0.05613499088212848,
+      "maximum": 0.24709998979233205
+    },
+    "process": {
+      "n": 100,
+      "p50": 49.01765000249725,
+      "p95": 73.8913700231933,
+      "maximum": 100.49439998692833
+    },
+    "consume": {
+      "n": 100,
+      "p50": 0.001200009137392044,
+      "p95": 0.0016050122212618587,
+      "maximum": 0.002800021320581436
+    }
+  },
+  "frame_sample_rejections": {
+    "no_associated_face": 76,
+    "low_face_confidence": 76
+  },
+  "frame_association_rejections": {
+    "no_associated_person": 100
+  },
+  "source_sha256": {
+    "session.json": "c1652c5a417b6dc3ae3151c1fb59aae847c6dbe57d3f842c0e4b16b042a9ef82",
+    "summary.json": "e4ca8f6a77f01776cb0db39478e4366c20ce5eb7c7add77b1223fdc22fbea836",
+    "entries.jsonl": "5fd5e4dc9a2c651afe4d705885dd6b3e1895f88a31b934e9d9202c04ad51d6dd",
+    "frames.jsonl": "9566202b1be75d52f5b446b363ceed06caa97328960727c2409b2525b4392822"
+  },
+  "t1_passed": false,
+  "interpretation": "Processed-frame gaps alone do not identify network or inference causes. Historical missing diagnostics remain unknown. Automatic segments require physical-attempt labels."
+}

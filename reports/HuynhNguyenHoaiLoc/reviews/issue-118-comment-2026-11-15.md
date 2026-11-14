@@ -1,0 +1,7 @@
+HNHL decision (2026-11-15 Bangkok): **keep cosine 0.45 and use 2 of 3 quality-selected face samples matching the same identity** in the live loop. K=3, minimum_votes=2, start/end counts=3, 5 Hz requested. This remains provisional; no threshold/model change.
+
+I recomputed the pinned #116 CSVs: 822/877 TAR at 0.45, 0/1754 straight impostor accepts and 0/5254 all-frame impostor accepts; maximum 0.336. The nine-clip bootstrap interval [0.904, 0.970] includes 0.95. Lowering to 0.40 raises the observed TAR to 868/877 but three people in one session cannot validate the impostor tail. ROC, hashes and a standalone reproducer are included in the updated #115 under `reports/HuynhNguyenHoaiLoc/week-07/threshold-118-2026-11-15/`.
+
+The consecutive 5/12-frame experiments support trying aggregation, but they do not measure our quality-selected top-3 live policy: CSVs lack sharpness and reviewed entry/track truth. I am not assigning their TAR to this policy. The #115 follow-up also counts confirmed-person segments ending unresolved, separately from face confirmation.
+
+This answers both decision questions. Keep acceptance in #114: a separate session, webcam/door enrolment compared without test leakage, an unenrolled outsider, physical-entry labels, all missing/unresolved outcomes and latency. No T1 PASS or population FAR claim. I will close this decision issue; the measurements and integration remain open in #114.
