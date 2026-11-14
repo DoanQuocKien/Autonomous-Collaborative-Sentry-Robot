@@ -10,7 +10,7 @@ Spec: `docs/Project Specification.md` (source of truth). Plan: `docs/Implementat
 
 ## Architecture
 - Laptop runs ALL models (YOLOv8, YOLOv8-pose, InsightFace, OSNet, XFeat + DINOv2 for the entrance) and the state machine. Assumption: one entrance door per room (`sentry/perception/entrance.py`, enrolment per room). Jetson only captures frames and drives motors.
-- JetBot -> laptop: ZeroMQ, JPEG q60 (5 GHz). Laptop -> JetBot: non-blocking UDP (v, omega). ESP32-CAM (2.4 GHz): OV2640 -> HTTP MJPEG VGA; our GC2145 boards (no JPEG) -> `esp32/tile_stream` UDP tile stream via `sentry.espcam.TileReceiver`, see `docs/ESP32-CAM.md`.
+- One 2.4 GHz hotspot for robot, ESP32 and laptop (plan risk 16, closed 2026-11-14). JetBot -> laptop: ZeroMQ, JPEG q60. Laptop -> JetBot: non-blocking UDP (v, omega). ESP32-CAM: OV2640 -> HTTP MJPEG VGA; our GC2145 boards (no JPEG) -> `esp32/tile_stream` UDP tile stream via `sentry.espcam.TileReceiver`, see `docs/ESP32-CAM.md`.
 - No encoders; an MPU6050 gyro was installed 2026-11-01 but is faulty/postponed (not used; see the plan): pose = dead reckoning from calibrated (v, omega) + ArUco corrections until it is wired. Camera is a 160deg fisheye: calibrate and undistort before the ground-distance formula.
 - Audio: no speaker on the robot (dropped 2026-10-26 to cut cost). The laptop plays the pre-generated WAV prompts / alarm sound (offline TTS) through its own speakers, triggered by the state machine.
 

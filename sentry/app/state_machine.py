@@ -1,6 +1,6 @@
 """Phase 1–3 sentry state machine (pure CPU logic: events in, commands out).
 
-Owner: kouun-rokku (KR).
+Author: kouun-rokku (KR). Phase 2 live integration owner: HuynhNguyenHoaiLoc (HNHL, #114).
 Never touches sockets or neural models directly (`Implementation Plan.md` §3).
 Consumes discrete events (`ENTRANCE_FOUND`, `ENTRANCE_LOST`, `VANTAGE_REACHED`,
 `ESP32_VERIFIED`, `ESP32_LOST`, `STANDBY_REACHED`, `INTRUDER_QUEUED`,
