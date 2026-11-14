@@ -17,6 +17,9 @@ while time.monotonic() < t_end:
             data = os.read(fd, EV.size)
         except BlockingIOError:
             break
+        except OSError as e:  # dongle pulled: ENODEV
+            print("%.3f device gone: %s" % (time.time(), e), flush=True)
+            sys.exit(0)
         if len(data) < EV.size:
             break
         _, value, typ, number = EV.unpack(data)

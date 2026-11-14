@@ -25,6 +25,23 @@ Setup: battery 12.22 V before, 12.20 V after. The branch's `robot_udp.py` ran in
 
 Between 08:03:40 and 08:03:56 (an aborted attempt, no button log yet) the pad armed three times without a GO: something other than R1 cancelled each arm (any other button, Start included, hard-stops). Run 2 with the button log shows a clean Start -> R1 sequence, so no pad fault is suspected.
 
-Not covered: the dongle-unplug test with R1 held is still open. Clocks: `estop.log` (host) is 8 h behind the container log (time zone). Robot test files removed afterwards. The `sentry-control` service still runs the old `robot_udp.py` until #119 is merged and deployed.
+## Runs 3-4: gamepad dongle pulled while R1 held (REAL motor service, wheels off the ground)
+
+`unplug_1114.py` sent v=0.5 (0.15 per wheel at the service's cap 0.3) to port 5556; the running `sentry-control` service (old `robot_udp.py`, 2.0 s heartbeat; the unplug path is `estop.py`'s) drove the motors. Run 3 (40 s): the dongle was not pulled (no USB disconnect in `dmesg`), so it shows nothing about the unplug; the wheels stopped when the sender ended and R1 release cut in 7 ms.
+
+Run 4 (60 s):
+
+| Event | Time |
+|---|---|
+| ARMED / GO (Start, then R1) | 08:12:04.145 / 08:12:07.934; motors +0.15 +0.15 at 16:12:07.984 |
+| Dongle pulled with R1 held | the button logger saw R1 up (the input layer releases held keys on disconnect) then ENODEV |
+| `estop.py`: gamepad gone | 08:12:13.416 |
+| `estop.py`: STOPPED (gamepad lost), its own motor cut | 08:12:13.464, cut took 6 ms (48 ms after detection) |
+| `robot_udp`: ENGAGED, motors 0 | 16:12:13.475 / 16:12:13.513 (97 ms after detection) |
+| Dongle plugged back | found / gone / found (re-enumeration, as at boot); stayed stopped until armed again (ARMED 08:12:24.9 and 08:12:31.4, GO 08:12:37.9) |
+
+Result: pulling the dongle with R1 held stops the motors (pass). The time from the physical pull to the kernel removing the device is not measured.
+
+Still open: the pad itself dying (batteries out, switched off or out of range) while the dongle stays plugged in. The dongle may then keep reporting R1 as held without any event, which neither `estop.py` nor the heartbeat can detect. Battery after the session: 12.07 V. Clocks: `estop.log` (host) is 8 h behind the container log (time zone). Robot test files removed afterwards. The `sentry-control` service still runs the old `robot_udp.py` until #119 is merged and deployed.
 
 Files: `run_output.txt` (laptop output with both robot logs), `hb_age_1114.log` (per-second maximum), `dryrun_1114.py`, `hb_age_1114.py`.
