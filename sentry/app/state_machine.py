@@ -4,7 +4,7 @@ Owner: kouun-rokku (KR).
 Never touches sockets or neural models directly (`Implementation Plan.md` §3).
 Consumes discrete events (`ENTRANCE_FOUND`, `ENTRANCE_LOST`, `VANTAGE_REACHED`,
 `ESP32_VERIFIED`, `ESP32_LOST`, `STANDBY_REACHED`, `INTRUDER_QUEUED`,
-`TARGET_STATIONARY`, `TARGET_MOVING`, `TARGET_LOST`, `STRIKE`, `EVADE_COMPLETE`,
+`TARGET_STATIONARY`, `TARGET_MOVING`, `TARGET_LOST`, `TRACK_LOST`, `STRIKE`, `EVADE_COMPLETE`,
 `TARGET_EXITED`, `TARGET_FOUND`, `SEARCH_EXHAUSTED`, plus search sub-events)
 and time ticks (`tick(t)`), and emits structured `Command` objects.
 Invalid events for the current state are ignored and logged.
@@ -81,7 +81,8 @@ KNOWN_EVENTS = frozenset({
     "INTRUDER_QUEUED",
     "TARGET_STATIONARY",
     "TARGET_MOVING",
-    "TARGET_LOST",
+    "TARGET_LOST",                 # HoldDetector: observations resumed after a gap while in HOLD (back to PURSUE)
+    "TRACK_LOST",                  # tracker: lock not regained within tracking.lost_timeout_s (TargetLock LOST -> SEARCHING); PURSUE -> SEARCH
     "STRIKE",
     "EVADE_COMPLETE",
     "TARGET_EXITED",
@@ -501,9 +502,10 @@ class StateMachine:
                 return self._trigger_evade(prev, name, ev_data, now)
             if name == "TARGET_EXITED":
                 return self._handle_target_exited(prev, name, ev_data, now)
-            if name == "TARGET_LOST":
+            if name == "TRACK_LOST":
                 # Tracker lost the active target (lock not regained within tracking.lost_timeout_s): stop and run the
-                # coverage search for the SAME target; SEARCH_EXHAUSTED or the search timeout drops it (Spec section 4.6)
+                # coverage search for the SAME target; SEARCH_EXHAUSTED or the search timeout drops it (Spec section 4.6).
+                # Producer (Phase 3 loop, not wired yet): emit it when TargetLock.update() goes from LOST to SEARCHING.
                 self._enter(State.SEARCH, now, search_step="PLAN")
                 cmd = Command(v=0.0, w=0.0, actions=("target_lost", "plan_search"), target_id=self.active_target)
                 return self._record(prev, name, now, cmd)

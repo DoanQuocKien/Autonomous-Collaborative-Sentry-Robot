@@ -341,3 +341,7 @@ def test_pursuit_turns_in_place_before_driving_when_far_off_centre():
     assert v == 0.0 and w >= PursuitConfig().w_spin
     v, w, _, _ = PursuitController(PursuitConfig()).compute(0.0, 2.5, 0.2)   # small error: drive and steer
     assert v >= PursuitConfig().v_min_forward and w > 0
+    # hysteresis: once turning, keep turning down to spin_first_exit_yaw; a fresh controller at 0.45 drives
+    assert ctl.compute(0.1, 2.5, 0.45)[0] == 0.0
+    assert ctl.compute(0.2, 2.5, 0.3)[0] >= PursuitConfig().v_min_forward
+    assert PursuitController(PursuitConfig()).compute(0.0, 2.5, 0.45)[0] >= PursuitConfig().v_min_forward

@@ -301,8 +301,14 @@ def test_heading_gate_recovers_after_drift():
         tracker.update_with_markers(frame, alpha=1.0)
     assert tracker.corrections_count == 3
     tracker.set_pose(1.0, 0.0, math.radians(40.0))                      # dead reckoning drifted 40 deg
-    for i in range(RECOVER_FRAMES - 1):
+    for i in range(3 * RECOVER_FRAMES):                                 # standing robot, one marker: could be a flipped pose
         tracker.update_with_markers(frame, alpha=1.0)
-        assert math.isclose(math.degrees(tracker.pose.theta), 40.0, abs_tol=1e-6), i   # still rejected
-    tracker.update_with_markers(frame, alpha=1.0)
+        assert math.isclose(math.degrees(tracker.pose.theta), 40.0, abs_tol=1e-6), i   # never re-anchored
+    for i in range(RECOVER_FRAMES):                                     # robot driving 2 cm per view: real drift
+        x = 1.0 + 0.02 * (i + 1)
+        tracker.set_pose(x, 0.0, tracker.pose.theta)
+        tracker.detect_markers = lambda frame, d=_detection_from_pose(anchor, x, 0.0, 0.0): [d]
+        tracker.update_with_markers(frame, alpha=1.0)
+        if i < 2:                                                       # moved < 5 cm across the stored views
+            assert math.isclose(math.degrees(tracker.pose.theta), 40.0, abs_tol=1e-6), i
     assert math.isclose(tracker.pose.theta, 0.0, abs_tol=1e-6)          # re-anchored

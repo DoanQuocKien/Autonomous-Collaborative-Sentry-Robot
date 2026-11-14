@@ -244,6 +244,7 @@ kd_yaw = 0.2
 v_max = 0.55
 v_min_forward = 0.45             # slowest forward command: both wheels above the dead zone (0.40 at the 0.3 cap)
 spin_first_yaw = 0.5             # |yaw error| above this (units of the caller's yaw_err: rad or normalised offset) -> turn in place before driving
+spin_first_exit_yaw = 0.35        # ...keep turning until |yaw error| is below this (hysteresis)
 v_min_reverse = -0.45
 w_max = 1.0
 obstacle_critical_m = 0.35

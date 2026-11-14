@@ -257,7 +257,8 @@ def test_target_lost_leaves_hold_and_pursue():
     sm.handle_event("TARGET_STATIONARY", t=4.0)
     assert sm.state == State.HOLD
     assert sm.handle_event("TARGET_LOST", t=5.0).state == State.PURSUE     # gap reset: same as the controller
-    res = sm.handle_event("TARGET_LOST", t=6.0)                            # lost in pursuit: search for the same target
+    assert sm.handle_event("TARGET_LOST", t=5.5).state == State.PURSUE     # HoldDetector's gap event means nothing in PURSUE
+    res = sm.handle_event("TRACK_LOST", t=6.0)                             # tracker lost the lock: search for the same target
     assert sm.state == State.SEARCH and res.command.v == 0.0 and sm.active_target == "T1"
 
 

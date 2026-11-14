@@ -44,6 +44,7 @@ class PursuitConfig:
     v_max: float = 0.55                        # Maximum forward linear command
     v_min_forward: float = 0.45                # Slowest forward command (both wheels above the dead zone 0.40 at w = 0)
     spin_first_yaw: float = 0.5                # |yaw_err| above this: turn in place before driving (same units as yaw_err)
+    spin_first_exit_yaw: float = 0.35          # ...and keep turning until |yaw_err| is below this (hysteresis: no spin/drive flicker)
     v_min_reverse: float = -0.45               # Maximum reverse linear command (exceeds dead zone)
     w_max: float = 1.0                         # Maximum angular velocity command
     w_spin: float = 0.45                       # In-place spin command (exceeds dead zone 0.40)
@@ -75,6 +76,7 @@ class PursuitConfig:
             v_max=float(p.get("v_max", 0.55)),
             v_min_forward=float(p.get("v_min_forward", 0.45)),
             spin_first_yaw=float(p.get("spin_first_yaw", 0.5)),
+            spin_first_exit_yaw=float(p.get("spin_first_exit_yaw", 0.35)),
             v_min_reverse=float(p.get("v_min_reverse", -0.45)),
             w_max=float(p.get("w_max", 1.0)),
             obstacle_critical_m=float(p.get("obstacle_critical_m", 0.35)),
@@ -135,11 +137,13 @@ class PursuitController:
         self._prev_t: Optional[float] = None
         self._prev_dist_err: Optional[float] = None
         self._prev_yaw_err: Optional[float] = None
+        self._spinning = False                 # inside the spin-first band (case 4a)
 
     def reset(self) -> None:
         self._prev_t = None
         self._prev_dist_err = None
         self._prev_yaw_err = None
+        self._spinning = False
 
     def compute(
         self,
@@ -210,6 +214,7 @@ class PursuitController:
 
         # Dead zone handling for differential-drive wheel mixing:
         # Every motion command must satisfy legal(Command(v, w), ExploreSettings())
+        was_spinning, self._spinning = self._spinning, False
         if in_standoff_band and is_centered and not obstacle_active:
             # 1. Standoff deadband: in band, centered, no obstacle -> stop cleanly
             v, w = 0.0, 0.0
@@ -223,9 +228,10 @@ class PursuitController:
             v = 0.0
             w_mag = max(abs(w_raw), self.cfg.w_spin)
             w = math.copysign(min(self.cfg.w_max, w_mag), w_raw if abs(w_raw) > 1e-6 else yaw_err)
-        elif abs(yaw_err) > self.cfg.spin_first_yaw and v_raw >= 0.0 and not obstacle_active:
+        elif abs(yaw_err) > (self.cfg.spin_first_exit_yaw if was_spinning else self.cfg.spin_first_yaw) and v_raw >= 0.0 and not obstacle_active:
             # 4a. Target far off-centre (e.g. walking sideways): while translating the steering is capped at
             # v - dead_zone (about 0.15), too slow to follow, so turn in place first (no translation, no orbit)
+            self._spinning = True
             v = 0.0
             w_mag = max(abs(w_raw), self.cfg.w_spin)
             w = math.copysign(min(self.cfg.w_max, w_mag), w_raw if abs(w_raw) > 1e-6 else yaw_err)

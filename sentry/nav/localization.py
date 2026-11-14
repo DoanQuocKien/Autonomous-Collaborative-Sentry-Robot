@@ -26,7 +26,9 @@ logger = logging.getLogger(__name__)
 REPO = DEFAULT_PATH.parent
 HEADING_GATE_RAD = math.radians(25.0)   # once tracking is established, a marker heading this far from the pose is an outlier...
 RECOVER_FRAMES = 5                       # ...unless this many rejected views in a row agree with each other (within RECOVER_AGREE_RAD):
-RECOVER_AGREE_RAD = math.radians(10.0)   # then dead reckoning drifted, not the marker, and the heading is re-anchored
+RECOVER_AGREE_RAD = math.radians(10.0)   # then dead reckoning drifted, not the marker, and the heading is re-anchored,
+RECOVER_MOVE_M = 0.05                    # provided the views come from 2+ markers or the robot moved this far / turned this much
+RECOVER_TURN_RAD = math.radians(5.0)     # between them: one marker seen from a standing robot can repeat the same flipped pose
 
 
 def wrap_angle(rad: float) -> float:
@@ -196,7 +198,7 @@ class LocalizationTracker:
         self.pose = initial_pose if initial_pose is not None else RobotPose()
         self.anchors: Dict[int, MarkerAnchor] = {}
         self.corrections_count: int = 0
-        self._rejected_yaws = deque(maxlen=RECOVER_FRAMES)   # marker headings rejected by the heading gate since the last accepted correction
+        self._rejected_yaws = deque(maxlen=RECOVER_FRAMES)   # (yaw, marker id, pose x, y, theta) of views rejected by the heading gate since the last accepted correction
 
     @property
     def min_pwm(self) -> float:
@@ -525,12 +527,17 @@ class LocalizationTracker:
                 d_theta = angle_diff(yaw_cam, self.pose.theta)
                 # Outlier jump rejection: once tracking is established, reject erratic heading jumps > 25 deg.
                 # Without a way back a heading drift past the gate would lock every later correction out, so
-                # RECOVER_FRAMES rejected views that agree with each other re-anchor the heading (snap, not blend).
+                # RECOVER_FRAMES rejected views that agree with each other re-anchor the heading (snap, not blend),
+                # but only from 2+ markers or a moving robot: a planar marker's pose ambiguity repeats for a static view.
                 recover = False
                 if self.corrections_count >= 3 and abs(d_theta) > HEADING_GATE_RAD:
-                    self._rejected_yaws.append(yaw_cam)
-                    if len(self._rejected_yaws) < RECOVER_FRAMES or any(
-                            abs(angle_diff(y, yaw_cam)) > RECOVER_AGREE_RAD for y in self._rejected_yaws):
+                    self._rejected_yaws.append((yaw_cam, det.marker_id, self.pose.x, self.pose.y, self.pose.theta))
+                    views = list(self._rejected_yaws)
+                    moved = max(math.hypot(a[2] - b[2], a[3] - b[3]) for a in views for b in views) >= RECOVER_MOVE_M
+                    turned = max(abs(angle_diff(a[4], b[4])) for a in views for b in views) >= RECOVER_TURN_RAD
+                    if (len(views) < RECOVER_FRAMES
+                            or any(abs(angle_diff(v[0], yaw_cam)) > RECOVER_AGREE_RAD for v in views)
+                            or not (len({v[1] for v in views}) >= 2 or moved or turned)):
                         continue
                     recover = True
                     logger.warning("heading re-anchored by %d agreeing marker views: dead reckoning was %.0f deg off",
