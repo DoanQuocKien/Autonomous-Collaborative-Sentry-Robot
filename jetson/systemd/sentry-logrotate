@@ -1,0 +1,11 @@
+# Installed as /etc/logrotate.d/sentry by install.sh (audit 2026-11-15: the services append forever; a full SD card
+# makes the e-stop heartbeat write fail, which stops the robot but leaves it unusable until someone cleans up).
+# copytruncate: the services keep their file open through `>>`, so the file is copied and emptied in place.
+/home/jetbot/sentry/*.log {
+    size 5M
+    rotate 3
+    compress
+    missingok
+    notifempty
+    copytruncate
+}

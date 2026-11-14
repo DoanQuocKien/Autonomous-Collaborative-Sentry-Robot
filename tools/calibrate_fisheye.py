@@ -1,6 +1,6 @@
 """Fisheye (equidistant, cv2.fisheye) calibration from the D1 checkerboard photos -> calib/camera.json.
 
-    python -m tools.calibrate_fisheye                          # data/D1/checkerboard/*.jpg, 9x6 inner corners, 25 mm squares
+    python -m tools.calibrate_fisheye                          # data/D1/checkerboard/*.jpg; board size from config.toml [calibration] (9x6 inner corners, 25 mm)
     python -m tools.calibrate_fisheye --metrics reports/<handle>/week-02/fisheye_metrics.json
 Exit code 1 when the final RMS reprojection error is above --max-rms (plan 4.3: < 1.0 px).
 Views whose own mean error is above --drop-above px are dropped one at a time (worst first, at most --max-drop of the views) and listed in the output: a bent board or a blurred photo is not the lens.
@@ -14,6 +14,8 @@ from pathlib import Path
 
 import cv2
 import numpy as np
+
+from sentry.config import load
 
 _fisheye = getattr(cv2, "fisheye", cv2)
 FLAGS = getattr(_fisheye, "CALIB_RECOMPUTE_EXTRINSIC", getattr(cv2, "CALIB_RECOMPUTE_EXTRINSIC", 2)) + getattr(
@@ -72,10 +74,11 @@ def stability(obj, img, kept, size):
 
 
 def main():
+    board = load()["calibration"]
     ap = argparse.ArgumentParser()
     ap.add_argument("--images", default="data/D1/checkerboard")
-    ap.add_argument("--pattern", type=int, nargs=2, default=[9, 6], help="inner corners (cols rows)")
-    ap.add_argument("--square-mm", type=float, default=25.0)
+    ap.add_argument("--pattern", type=int, nargs=2, default=list(board["checkerboard_inner_corners"]), help="inner corners (cols rows); default config.toml [calibration]")
+    ap.add_argument("--square-mm", type=float, default=board["checkerboard_square_m"] * 1000.0, help="default config.toml [calibration] checkerboard_square_m")
     ap.add_argument("--out", default="calib/camera.json")
     ap.add_argument("--metrics", default="", help="optional metrics JSON (per-view errors, stability)")
     ap.add_argument("--max-rms", type=float, default=1.0)

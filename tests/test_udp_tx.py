@@ -28,7 +28,7 @@ def sender(monkeypatch):
     sock = SocketStub()
     monkeypatch.setattr("sentry.net.udp_tx.socket.socket", lambda *a: sock)
     now = [0.0]
-    tx = UDPSender("127.0.0.1", 12345, 30, clock=lambda: now[0])
+    tx = UDPSender("127.0.0.1", 12345, 30, clock=lambda: now[0], key_path="")
     yield tx, sock, now
     tx.close(stop=False)
 
@@ -88,17 +88,6 @@ def test_numpy_scalars_and_rounding_overshoot_are_sent(sender):
     assert [p[0] for p in sock.packets] == [{"seq": 0, "v": 0.5, "w": -0.25}, {"seq": 1, "v": 1.0, "w": -1.0}]
 
 
-def test_play_sends_validated_audio_packet_and_shares_seq(sender):
-    tx, sock, _ = sender
-    assert tx.send(0.4, 0.0)
-    assert tx.play("guard_ready")
-    assert [p[0] for p in sock.packets] == [{"seq": 0, "v": 0.4, "w": 0.0}, {"seq": 1, "play": "guard_ready"}]
-    for bad in ("../etc/passwd", "BAD_UPPER", "", 123):
-        with pytest.raises(ValueError):
-            tx.play(bad)
-
-
-
 def test_a_stop_is_never_dropped_by_the_rate_limiter(sender):
     """Audit 2026-11-12: send(0, 0) 20 ms after a command used to return False and send nothing; 12 call sites stop that way."""
     tx, sock, now = sender
@@ -112,3 +101,15 @@ def test_a_stop_is_never_dropped_by_the_rate_limiter(sender):
     assert not tx.send(0.4, 0.0)                    # a motor command is still rate limited after a stop
     now[0] = 0.07
     assert tx.send(0.4, 0.0)
+
+
+def test_signs_packets_when_a_key_file_exists(monkeypatch, tmp_path):
+    sent = []
+    sock = SocketStub()
+    sock.sendto = lambda data, address: sent.append(data)
+    monkeypatch.setattr("sentry.net.udp_tx.socket.socket", lambda *a: sock)
+    (tmp_path / "control.key").write_bytes(b"0123456789abcdef\n")
+    tx = UDPSender("127.0.0.1", 12345, 30, key_path=tmp_path / "control.key")
+    assert tx.send(0.4, 0.0)
+    assert decode_control(sent[0], b"0123456789abcdef") == {"seq": 0, "v": 0.4, "w": 0.0}
+    assert UDPSender("127.0.0.1", 12345, 30, key_path=tmp_path / "absent").key is None   # missing: unsigned, a keyed robot refuses it

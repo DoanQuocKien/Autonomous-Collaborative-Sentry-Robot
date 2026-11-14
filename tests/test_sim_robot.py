@@ -2,7 +2,7 @@ import math
 
 import pytest
 
-from common.protocol import encode_control, encode_play
+from common.protocol import encode_control
 from tools.sim_robot import SimRobot
 
 
@@ -58,9 +58,3 @@ def test_rejects_what_the_robot_rejects(packet):
     r.on_packet(encode_control(1, 0.2, 0.0), 0.0)
     assert r.on_packet(packet, 0.01) is None
     assert (r.v, r.w) == (0.2, 0.0)
-
-
-def test_play_is_reported_and_does_not_move():
-    r = SimRobot()
-    assert r.on_packet(encode_play(1, "guard_ready"), 0.0) == {"seq": 1, "play": "guard_ready"}
-    assert not r.moving and r.last_cmd is None

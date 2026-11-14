@@ -148,6 +148,38 @@ def log(msg):
     sys.stdout.flush()
 
 
+def read_devices(devs, logic, now, read=os.read, close=os.close, say=log):
+    """Drain every ready gamepad fd -> events. ANY device that disappears is a lost gamepad (hard stop), even if another
+    /dev/input/js* is still open: a second joystick device (some keyboards and receivers make one) must not keep R1 'held'.
+    devs: {fd: path}, changed in place."""
+    events = []
+    for fd in list(devs):
+        while True:
+            try:
+                data = read(fd, JS_EVENT.size)
+            except BlockingIOError:
+                break
+            except OSError as e:
+                if e.errno not in (errno.ENODEV, errno.EIO):
+                    raise
+                data = b""
+            if not data:                              # ENODEV / EIO / EOF: the device is gone (HNHL review of #121: EOF too)
+                say("gamepad gone: " + devs.pop(fd))
+                close(fd)
+                lost = logic.device_lost()
+                if not lost:
+                    say("gamepad lost (already stopped)")
+                events.extend(lost)
+                break
+            if len(data) < JS_EVENT.size:
+                break                                 # a short read never happens for js events; skip it
+            _, value, typ, number = JS_EVENT.unpack(data)
+            if typ & JS_INIT or (typ & 0x7F) != JS_BUTTON:
+                continue  # skip the initial-state dump and every axis (D-pad, sticks)
+            events.extend(logic.button(number, bool(value), now()))
+    return events
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--dir", default="/home/jetbot/sentry", help="where ESTOP and ESTOP_ALIVE live (the container sees it as /workspace/sentry)")
@@ -202,7 +234,7 @@ def main():
 
     stop("startup")
     devs = {}  # fd -> path
-    had_pad, last_scan, last_alive = False, 0.0, 0.0
+    last_scan, last_alive = 0.0, 0.0
     log("watching the gamepad; hold %s %.1f s to arm, then hold R1 (button %d) to move; any other button = hard stop" % (arm_name, args.arm_hold, args.deadman))
     while True:
         now = time.monotonic()
@@ -215,38 +247,14 @@ def main():
                         log("gamepad found: " + path)
                     except OSError as e:
                         log("cannot open %s: %s" % (path, e))
-        if devs:
-            had_pad = True
-        elif had_pad:
-            had_pad = False
-            ev = logic.device_lost()
-            handle(ev)
-            if not ev:
-                log("gamepad lost (already stopped)")
         if now - last_alive > 0.5:
             last_alive = now
             write_heartbeat(alive, now)
-        r = select.select(list(devs), [], [], 0.05)[0] if devs else []
-        if not devs:
+        if devs:
+            select.select(list(devs), [], [], 0.05)  # wait for input; every fd is non-blocking, so all are drained below
+        else:
             time.sleep(0.05)
-        for fd in r:
-            while True:
-                try:
-                    data = os.read(fd, JS_EVENT.size)
-                except BlockingIOError:
-                    break
-                except OSError as e:
-                    if e.errno in (errno.ENODEV, errno.EIO):
-                        log("gamepad gone: " + devs.pop(fd))
-                        os.close(fd)
-                        break
-                    raise
-                if len(data) < JS_EVENT.size:
-                    break
-                _, value, typ, number = JS_EVENT.unpack(data)
-                if typ & JS_INIT or (typ & 0x7F) != JS_BUTTON:
-                    continue  # skip the initial-state dump and every axis (D-pad, sticks)
-                handle(logic.button(number, bool(value), time.monotonic()))
+        handle(read_devices(devs, logic, time.monotonic))
         handle(logic.tick(time.monotonic()))
 
 
