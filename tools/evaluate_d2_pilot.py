@@ -18,29 +18,9 @@ import cv2
 import numpy as np
 
 from sentry.config import DEFAULT_PATH, load
-from sentry.perception.reid import ARCHITECTURES, OSNetEncoder, crop_person, normalize
+from sentry.perception.reid import ARCHITECTURES, OSNetEncoder, associate_person, crop_person, normalize
 from tools.evaluate_reid import operating_point, retrieval_scores
 
-
-def associate_person(face, detections, confidence, min_overlap=0.8):
-    """Require exactly one class-0 proposal containing >=80% of the face area."""
-    if not 0 < min_overlap <= 1:
-        raise ValueError('face overlap must be in (0,1]')
-    x1, y1, x2, y2 = map(float, face)
-    if not np.isfinite(face).all() or x2 <= x1 or y2 <= y1:
-        raise ValueError('finite positive face box required')
-    candidates = []
-    for d in detections:
-        if d.class_id != 0 or not np.isfinite(d.confidence) or d.confidence < confidence:
-            continue
-        a, b, c, e = d.xyxy
-        if not np.isfinite(d.xyxy).all() or c <= a or e <= b:
-            continue
-        overlap = max(0, min(c, x2) - max(a, x1)) * max(0, min(e, y2) - max(b, y1))
-        if overlap / ((x2 - x1) * (y2 - y1)) >= min_overlap:
-            candidates.append(d.xyxy)
-    return ((candidates[0], None) if len(candidates) == 1 else
-            (None, 'ambiguous_person' if candidates else 'no_associated_person'))
 
 
 def read_session(root):
@@ -78,7 +58,7 @@ def read_session(root):
     return rows, grouped, gallery
 
 
-def entry_metrics(grouped, gallery, vectors):
+def entry_metrics(grouped, gallery, vectors, session='1028'):
     """Average normalized frame vectors within entries; never split an entry."""
     rows, encoded, missing_gallery, missing_query = [], [], 0, 0
     for key, group in sorted(grouped.items()):
@@ -88,7 +68,7 @@ def entry_metrics(grouped, gallery, vectors):
             missing_gallery += int(is_gallery)
             missing_query += int(not is_gallery)
             continue
-        rows.append(dict(identity=key[0], session='1028', entry_id='/'.join(map(str, key)),
+        rows.append(dict(identity=key[0], session=session, entry_id='/'.join(map(str, key)),
                          camera='esp32', partition='pilot', role='gallery' if is_gallery else 'query'))
         encoded.append(normalize(np.mean(values, axis=0)))
     total_queries = sum(k != gallery[k[0]] for k in grouped)
@@ -168,8 +148,8 @@ def run(root, out, config_path=DEFAULT_PATH):
         for start in range(0, len(paths), 16):
             batch = paths[start:start + 16]
             vectors.update(zip(batch, encoder.encode([crops[p] for p in batch])))
-        models[arch] = dict(model_id=encoder.model_id, **entry_metrics(grouped, gallery, vectors))
-    report = dict(status='REAL_D2_SAME_SESSION_PILOT_NOT_T1', session='1028',
+        models[arch] = dict(model_id=encoder.model_id, **entry_metrics(grouped, gallery, vectors, session=root.name))
+    report = dict(status='REAL_D2_SAME_SESSION_PILOT_NOT_T1', session=root.name,
                   identities=len(gallery), entries=len(grouped), walker_frames=len(rows),
                   entry_counts=sorted(Counter(k[0] for k in grouped).values()),
                   person_crops=len(crops), rejections=dict(rejected), models=models,

@@ -1,0 +1,132 @@
+{
+  "replay": {
+    "summary": {
+      "status": "completed",
+      "processed_frames": 17,
+      "skipped_schedule_frames": 281,
+      "decisions": {
+        "authorized": 0,
+        "queued": 0,
+        "unresolved": 4,
+        "interrupted": 0
+      },
+      "t1_passed": false,
+      "motor_commands_sent": 0
+    },
+    "timestamp_source": "APPROXIMATE uniform timestamps from cafe clip duration; runtime smoke only",
+    "appearance_model_id": "osnet_ain_x1_0:2f38acc25e28cb29407635db2be315edc08d5457a904b72a9a11e427f41f3242",
+    "model_runtime": {},
+    "config_sha256": "8bbfd08b9c2e7969601171240ae2c5bf4e3a360496a69b13ecdd0dccac9857f7",
+    "whitelist_identity_count": 2,
+    "threshold": 0.45,
+    "threshold_calibrated": false,
+    "reviewed_identity_truth": false
+  },
+  "live": {
+    "summary": {
+      "status": "completed",
+      "processed_frames": 100,
+      "skipped_schedule_frames": 183,
+      "decisions": {
+        "authorized": 0,
+        "queued": 0,
+        "unresolved": 0,
+        "interrupted": 0
+      },
+      "t1_passed": false,
+      "motor_commands_sent": 0
+    },
+    "timestamp_source": "laptop_mjpeg_receive",
+    "appearance_model_id": "osnet_ain_x1_0:2f38acc25e28cb29407635db2be315edc08d5457a904b72a9a11e427f41f3242",
+    "model_runtime": {
+      "osnet_device": "cuda:0",
+      "person_weights_sha256": "f59b3d833e2ff32e194b5bb8e08d211dc7c5bdf144b90d2c8412c47ccfc83b36",
+      "face_models": {
+        "detection": {
+          "sha256": "5e4447f50245bbd7966bd6c0fa52938c61474a04ec7def48753668a9d8b4ea3a",
+          "providers": [
+            "CUDAExecutionProvider",
+            "CPUExecutionProvider"
+          ]
+        },
+        "recognition": {
+          "sha256": "9cc6e4a75f0e2bf0b1aed94578f144d15175f357bdc05e815e5c4a02b319eb4f",
+          "providers": [
+            "CUDAExecutionProvider",
+            "CPUExecutionProvider"
+          ]
+        }
+      }
+    },
+    "config_sha256": "8bbfd08b9c2e7969601171240ae2c5bf4e3a360496a69b13ecdd0dccac9857f7",
+    "whitelist_identity_count": 1,
+    "threshold": 0.45,
+    "threshold_calibrated": false,
+    "reviewed_identity_truth": false
+  },
+  "receiver_probe": {
+    "duration_s": 10.062886400002753,
+    "received_frames": 27,
+    "reconnects": 3,
+    "dimensions": [
+      [
+        640,
+        480
+      ]
+    ],
+    "receive_fps": 2.6884479480389363,
+    "saved_images": 0
+  },
+  "hardware": "RTX 5060 Laptop, HNHL; model runtime evidence, no target RTX 4050 acceptance",
+  "date": "2026-11-14",
+  "t1_passed": false,
+  "live_p01_first_attempt": {
+    "summary": {
+      "status": "completed",
+      "processed_frames": 349,
+      "skipped_schedule_frames": 707,
+      "source": {
+        "duration_s": 90.04720950001501,
+        "consumed_frames": 1056,
+        "decoded_frames": 1098,
+        "reconnects": 0
+      },
+      "decisions": {
+        "authorized": 0,
+        "queued": 0,
+        "unresolved": 21,
+        "interrupted": 2
+      },
+      "t1_passed": false,
+      "motor_commands_sent": 0
+    },
+    "enrolment_completed": true,
+    "embeddings_shape": [
+      5,
+      512
+    ],
+    "test_participants": "P01 only, user confirmed",
+    "scene_review": "Diagnostic frame after the run points at the ceiling. Entry-level identity truth remains unreviewed.",
+    "model_runtime": {
+      "osnet_device": "cuda:0",
+      "person_weights_sha256": "f59b3d833e2ff32e194b5bb8e08d211dc7c5bdf144b90d2c8412c47ccfc83b36",
+      "face_models": {
+        "detection": {
+          "sha256": "5e4447f50245bbd7966bd6c0fa52938c61474a04ec7def48753668a9d8b4ea3a",
+          "providers": [
+            "CUDAExecutionProvider",
+            "CPUExecutionProvider"
+          ]
+        },
+        "recognition": {
+          "sha256": "9cc6e4a75f0e2bf0b1aed94578f144d15175f357bdc05e815e5c4a02b319eb4f",
+          "providers": [
+            "CUDAExecutionProvider",
+            "CPUExecutionProvider"
+          ]
+        }
+      }
+    },
+    "t1_passed": false
+  }
+}

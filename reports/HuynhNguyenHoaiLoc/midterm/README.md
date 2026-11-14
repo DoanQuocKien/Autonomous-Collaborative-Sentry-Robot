@@ -1,5 +1,7 @@
 # Hồ sơ giữa kỳ HNHL
 
+**C?p nh?t 14/11:** [issue #111/#114 v? b?ng ch?ng RTX 4050 m?i c?a DQK](../issues-111-114-2026-11-14.md), [Phase 2 live v? ki?m ch?ng](../week-07.md), [c?ch ch?y v? b?n giao KR](../PHASE2-LIVE-USAGE.md). PR #100 ?? merge. C?c m?c c? ng?y d??i ??y l? snapshot l?ch s?.
+
 **Mới nhất11/11:** [sau merge99/102/103, nguồn tile3/provenance và kết quả Experiment B](update-2026-11-11.md). Ba PR DQK đã review/sửa và merge; nhánh HNHL tích hợp main. Tile3 đã có nguồn; trunk score khác vì script bỏ9 warm-up samples, không phải mâu thuẫn số liệu. ORG tooling/evidence đã merge qua103 nhưng model chưa thay detector, chưa T1/T2. PR101 vẫn chờ sửa và PR100 chờ DQK. Các dòng dưới là snapshots lịch sử.
 
 **Mới nhất10/11:** [thử lớp09/11 và các phương án ranging DQK đã làm](update-2026-11-10.md). Thêm0/36 distance ghế, [F10 availability supplement](figures/F10_availability_1109.png), kết quả depth/zoom/floor-anchor thất bại, trunk0,50/0,49m và giới hạn khác protocol. Không gộp chair front-tape với person lens-forward hoặc F10 cũ. Source giới hạn một người/ghế; chưa D3/D5 độc lập hay T2. PR99 đã sửa config/main tests/pose cap nhưng còn overwrite log; PR102 cleanup motor chưa sửa. #101 không đổi; #100 chờ DQK. Những dòng09/11 dưới đây là snapshot lịch sử theo từng head.
