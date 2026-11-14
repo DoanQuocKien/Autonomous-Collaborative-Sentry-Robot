@@ -25,7 +25,7 @@ Phép thử cửa sổ liên tiếp 5/12 frame của DQK cho thấy phương án
 
 Trước khi thay ngưỡng, cần session khác với enrolment webcam/ESP32 được giữ tách biệt, ba khoảng cách 1,8/2,4/3,0 m và ít nhất một người ngoài whitelist/ngoài nhóm. Ghi lượt qua cửa vật lý, ID và thời điểm bắt đầu/kết thúc đã review; chạy chính top-K live với thresholds cố định trước khi xem test. Báo TAR/FAR theo entry, coverage, confirmed-unresolved, missing và latency; đối chiếu body visibility/cross-camera với DQK và queue dùng chung với KR. Không thêm T1 PASS từ dữ liệu hiện tại.
 
-Issue #118 có thể đóng cho **quyết định ngưỡng/N đã trả lời**. Nghiệm thu và dữ liệu bổ sung tiếp tục theo #114; D3, independent D5 và accuracy FP16/FP32 trên RTX4050 vẫn là các việc đo riêng.
+Issue #118 đã được đăng trả lời và đóng cho **quyết định ngưỡng/N đã trả lời**. Nghiệm thu và dữ liệu bổ sung tiếp tục theo #114; D3, independent D5 và accuracy FP16/FP32 trên RTX4050 vẫn là các việc đo riêng.
 
 ```powershell
 .venv/Scripts/python.exe reports/HuynhNguyenHoaiLoc/week-07/threshold-118-2026-11-15/reproduce.py --csv-dir reports/DoanQuocKien/week-06/t2_1114 --out-dir data/threshold-118-rerun

@@ -1,28 +1,28 @@
-1) impostor scores by ordered pair (frames of A against the enrolment of B)
-   DQK   -> HNHL  n=895 p99 0.285 max 0.309  >=0.40: 0  >=0.45: 0
-   DQK   -> KR    n=895 p99 0.169 max 0.209  >=0.40: 0  >=0.45: 0
-   HNHL  -> DQK   n=892 p99 0.303 max 0.336  >=0.40: 0  >=0.45: 0
-   HNHL  -> KR    n=892 p99 0.211 max 0.242  >=0.40: 0  >=0.45: 0
-   KR    -> DQK   n=840 p99 0.155 max 0.172  >=0.40: 0  >=0.45: 0
-   KR    -> HNHL  n=840 p99 0.168 max 0.185  >=0.40: 0  >=0.45: 0
-
-2) pooled TAR, clip-level bootstrap (9 clips, 5000 resamples): point [2.5 %, 97.5 %]
-   thr 0.45: 0.937 [0.904, 0.970]
-   thr 0.40: 0.990 [0.981, 0.998]
-   thr 0.35: 0.998 [0.994, 1.000]
-
-3) entry-level rules on windows of N consecutive frames (12.5 fps: N=12 is about 1 s); windows overlap, counts are not independent
-   N=1  max        thr 0.45: TAR 0.937 FAR 0.0000 max impostor 0.336 (877 genuine, 5254 impostor windows)
-   N=1  max        thr 0.40: TAR 0.990 FAR 0.0000 max impostor 0.336 (877 genuine, 5254 impostor windows)
-   N=5  max        thr 0.45: TAR 0.998 FAR 0.0000 max impostor 0.336 (841 genuine, 5110 impostor windows)
-   N=5  max        thr 0.40: TAR 1.000 FAR 0.0000 max impostor 0.336 (841 genuine, 5110 impostor windows)
-   N=12 max        thr 0.45: TAR 1.000 FAR 0.0000 max impostor 0.336 (778 genuine, 4858 impostor windows)
-   N=12 max        thr 0.40: TAR 1.000 FAR 0.0000 max impostor 0.336 (778 genuine, 4858 impostor windows)
-   N=5  mean       thr 0.45: TAR 0.974 FAR 0.0000 max impostor 0.291 (841 genuine, 5110 impostor windows)
-   N=5  mean       thr 0.40: TAR 1.000 FAR 0.0000 max impostor 0.291 (841 genuine, 5110 impostor windows)
-   N=12 mean       thr 0.45: TAR 0.976 FAR 0.0000 max impostor 0.287 (778 genuine, 4858 impostor windows)
-   N=12 mean       thr 0.40: TAR 1.000 FAR 0.0000 max impostor 0.287 (778 genuine, 4858 impostor windows)
-   N=5  kofn (k=3) thr 0.45: TAR 0.969 FAR 0.0000 max impostor 0.289 (841 genuine, 5110 impostor windows)
-   N=5  kofn (k=3) thr 0.40: TAR 0.999 FAR 0.0000 max impostor 0.289 (841 genuine, 5110 impostor windows)
-   N=12 kofn (k=6) thr 0.45: TAR 0.990 FAR 0.0000 max impostor 0.286 (778 genuine, 4858 impostor windows)
-   N=12 kofn (k=6) thr 0.40: TAR 1.000 FAR 0.0000 max impostor 0.286 (778 genuine, 4858 impostor windows)
+1) impostor scores by ordered pair (frames of A against the enrolment of B)
+   DQK   -> HNHL  n=895 p99 0.285 max 0.309  >=0.40: 0  >=0.45: 0
+   DQK   -> KR    n=895 p99 0.169 max 0.209  >=0.40: 0  >=0.45: 0
+   HNHL  -> DQK   n=892 p99 0.303 max 0.336  >=0.40: 0  >=0.45: 0
+   HNHL  -> KR    n=892 p99 0.211 max 0.242  >=0.40: 0  >=0.45: 0
+   KR    -> DQK   n=840 p99 0.155 max 0.172  >=0.40: 0  >=0.45: 0
+   KR    -> HNHL  n=840 p99 0.168 max 0.185  >=0.40: 0  >=0.45: 0
+
+2) pooled TAR, clip-level bootstrap (9 clips, 5000 resamples): point [2.5 %, 97.5 %]
+   thr 0.45: 0.937 [0.904, 0.970]
+   thr 0.40: 0.990 [0.981, 0.998]
+   thr 0.35: 0.998 [0.994, 1.000]
+
+3) entry-level rules on windows of N consecutive frames (12.5 fps: N=12 is about 1 s); windows overlap, counts are not independent
+   N=1  max        thr 0.45: TAR 0.937 FAR 0.0000 max impostor 0.336 (877 genuine, 5254 impostor windows)
+   N=1  max        thr 0.40: TAR 0.990 FAR 0.0000 max impostor 0.336 (877 genuine, 5254 impostor windows)
+   N=5  max        thr 0.45: TAR 0.998 FAR 0.0000 max impostor 0.336 (841 genuine, 5110 impostor windows)
+   N=5  max        thr 0.40: TAR 1.000 FAR 0.0000 max impostor 0.336 (841 genuine, 5110 impostor windows)
+   N=12 max        thr 0.45: TAR 1.000 FAR 0.0000 max impostor 0.336 (778 genuine, 4858 impostor windows)
+   N=12 max        thr 0.40: TAR 1.000 FAR 0.0000 max impostor 0.336 (778 genuine, 4858 impostor windows)
+   N=5  mean       thr 0.45: TAR 0.974 FAR 0.0000 max impostor 0.291 (841 genuine, 5110 impostor windows)
+   N=5  mean       thr 0.40: TAR 1.000 FAR 0.0000 max impostor 0.291 (841 genuine, 5110 impostor windows)
+   N=12 mean       thr 0.45: TAR 0.976 FAR 0.0000 max impostor 0.287 (778 genuine, 4858 impostor windows)
+   N=12 mean       thr 0.40: TAR 1.000 FAR 0.0000 max impostor 0.287 (778 genuine, 4858 impostor windows)
+   N=5  kofn (k=3) thr 0.45: TAR 0.969 FAR 0.0000 max impostor 0.289 (841 genuine, 5110 impostor windows)
+   N=5  kofn (k=3) thr 0.40: TAR 0.999 FAR 0.0000 max impostor 0.289 (841 genuine, 5110 impostor windows)
+   N=12 kofn (k=6) thr 0.45: TAR 0.990 FAR 0.0000 max impostor 0.286 (778 genuine, 4858 impostor windows)
+   N=12 kofn (k=6) thr 0.40: TAR 1.000 FAR 0.0000 max impostor 0.286 (778 genuine, 4858 impostor windows)

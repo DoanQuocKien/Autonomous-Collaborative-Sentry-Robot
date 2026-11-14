@@ -129,5 +129,36 @@
       "state": "CHANGES_REQUESTED",
       "submitted_at": "2026-11-14T18:13:35Z"
     }
-  ]
+  ],
+  "issue_comments": [
+    {
+      "number": 111,
+      "url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/issues/111#issuecomment-6882164965",
+      "already_present": false
+    },
+    {
+      "number": 114,
+      "url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/issues/114#issuecomment-6882165911",
+      "already_present": false
+    },
+    {
+      "number": 118,
+      "url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/issues/118#issuecomment-6882166896",
+      "already_present": false
+    }
+  ],
+  "closed_decision_issue": {
+    "number": 118,
+    "state": "closed",
+    "state_reason": "completed",
+    "url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/issues/118"
+  },
+  "115_review_requested": {
+    "number": 115,
+    "head": "8959a33165da4f11d53d68b8f6b650559728d443",
+    "reviewers": [
+      "DoanQuocKien",
+      "kouun-rokku"
+    ]
+  }
 }
