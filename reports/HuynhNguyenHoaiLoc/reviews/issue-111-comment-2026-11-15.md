@@ -1,0 +1,7 @@
+HNHL status correction, 2026-11-15 Bangkok: Phase 2 live now has a named owner and implementation in #115. It includes a single ESP32 receiver, a 5 Hz scheduler, incremental entry segmentation, same-identity face voting, real OSNet inputs, queue events and private overlay/diagnostic recording. Two separate 90 s pilots produced three P01 authorizations and three unenrolled-person enqueues; five unresolved and one interrupted segment are retained. This is a small same-session pilot, not complete T1.
+
+The runtime follow-up fixes deadline drift and warms models before streaming. Localhost static-image CUDA runtime reached 4.995 FPS; after ESP32 reconnection the empty-scene Wi-Fi run processed 149/375 decoded frames in 30.024 s, zero reconnects. No new recognition accuracy is inferred from that empty scene. Raw logs/video stay under data; public summaries are in HNHL's week-07 reports.
+
+DQK's RTX4050 combined-workload evidence is attributed in `issues-111-114-2026-11-14.md`; it is not a measurement by HNHL's RTX5060. Issue #118 now has a documented provisional threshold/aggregation decision and recomputed ROC. Reviewed all nine open PRs: merged #101/#117/#120, requested changes on #108/#113/#121, approved the scoped diffs of #116/#119 pending dependencies. #109/#110 were already merged.
+
+D3 robot scenes/re-lock calibration, independent D5/per-class gates, RTX4050 FP16-vs-FP32 accuracy, full door T1/body visibility and final demo screen capture remain pending. The existing unresolved evidence has not been relabelled as acceptance.

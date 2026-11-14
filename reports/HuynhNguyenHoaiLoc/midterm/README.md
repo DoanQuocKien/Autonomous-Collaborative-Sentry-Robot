@@ -2,6 +2,10 @@
 
 **Cập nhật 14/11:** [issue #111/#114 và số đo RTX 4050 mới của DQK](../issues-111-114-2026-11-14.md), [pilot Phase 2 live và đính chính góc camera lượt 2](../week-07.md), [cách chạy và bàn giao KR](../PHASE2-LIVE-USAGE.md). Đã enrol P01, ghi nhận 3 authorized và 3 enqueue ở hai lượt riêng, giữ các segment thiếu bằng chứng. PR #115 chờ review, T1 còn mở. Các mục có ngày dưới đây là snapshot lịch sử.
 
+**Bổ sung 15/11:** [quyết định #118 và ROC](../week-07/threshold-118-2026-11-15/README.md) giữ ngưỡng face 0,45, top-3 và 2 phiếu cùng ID; thêm counter confirmed-unresolved. [Review PR và đối chiếu issue](../reviews/2026-11-15.md) ghi #101/#117/#120 đã merge, các lỗi và phụ thuộc còn chờ.
+
+**Phân tích runtime tiếp theo:** [sửa deadline bị trôi, warm-up và diagnostics](../week-07/analysis-2026-11-14/README.md). Nguồn localhost 12 Hz với CUDA thật đạt 4,995 FPS sau sửa, so với 3,495 FPS ở baseline. ESP32 Wi-Fi sau kết nối lại đạt 4,963 FPS trong 30,024 giây, 0 reconnect, cảnh trống. Các phép nhận diện pilot và kiểm chứng runtime có phạm vi dữ liệu riêng.
+
 **Mới nhất11/11:** [sau merge99/102/103, nguồn tile3/provenance và kết quả Experiment B](update-2026-11-11.md). Ba PR DQK đã review/sửa và merge; nhánh HNHL tích hợp main. Tile3 đã có nguồn; trunk score khác vì script bỏ9 warm-up samples, không phải mâu thuẫn số liệu. ORG tooling/evidence đã merge qua103 nhưng model chưa thay detector, chưa T1/T2. PR101 vẫn chờ sửa và PR100 chờ DQK. Các dòng dưới là snapshots lịch sử.
 
 **Mới nhất10/11:** [thử lớp09/11 và các phương án ranging DQK đã làm](update-2026-11-10.md). Thêm0/36 distance ghế, [F10 availability supplement](figures/F10_availability_1109.png), kết quả depth/zoom/floor-anchor thất bại, trunk0,50/0,49m và giới hạn khác protocol. Không gộp chair front-tape với person lens-forward hoặc F10 cũ. Source giới hạn một người/ghế; chưa D3/D5 độc lập hay T2. PR99 đã sửa config/main tests/pose cap nhưng còn overwrite log; PR102 cleanup motor chưa sửa. #101 không đổi; #100 chờ DQK. Những dòng09/11 dưới đây là snapshot lịch sử theo từng head.

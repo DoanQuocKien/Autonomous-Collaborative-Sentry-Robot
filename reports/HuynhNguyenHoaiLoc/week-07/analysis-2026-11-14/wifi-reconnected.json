@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "run_name": "wifi-after-reconnected",
+  "requested_hz": 5.0,
+  "recorded_summary": {
+    "status": "completed",
+    "processed_frames": 149,
+    "skipped_schedule_frames": 226,
+    "source": {
+      "duration_s": 30.023587400006363,
+      "consumed_frames": 375,
+      "decoded_frames": 375,
+      "reconnects": 0
+    },
+    "evidence_counts": {
+      "person_observations": 0,
+      "detected_faces": 0,
+      "associated_faces": 0,
+      "accepted_face_samples": 0
+    },
+    "decisions": {
+      "authorized": 0,
+      "queued": 0,
+      "unresolved": 0,
+      "interrupted": 0
+    },
+    "t1_passed": false,
+    "motor_commands_sent": 0
+  },
+  "decisions": {},
+  "logged_segments": 0,
+  "incomplete_segments": [],
+  "cadence": {
+    "processed_samples": 149,
+    "intervals_s": {
+      "n": 148,
+      "p50": 0.2013639999931911,
+      "p95": 0.27356847499177095,
+      "maximum": 0.3637060000037309
+    },
+    "effective_hz": 4.999044321209397,
+    "after_first_interval_hz": 5.0270240673741595,
+    "large_processed_gaps": []
+  },
+  "frame_diagnostics_available": true,
+  "stage_wall_ms": {
+    "tracking_osnet": {
+      "n": 149,
+      "p50": 10.927299998002127,
+      "p95": 17.883320018881932,
+      "maximum": 41.57119998126291
+    },
+    "face": {
+      "n": 149,
+      "p50": 15.031599992653355,
+      "p95": 18.300239980453625,
+      "maximum": 32.293900003423914
+    },
+    "entry": {
+      "n": 149,
+      "p50": 0.00890000956133008,
+      "p95": 0.015279999934136862,
+      "maximum": 0.08700002217665315
+    },
+    "process": {
+      "n": 149,
+      "p50": 26.155700004892424,
+      "p95": 35.12090001022443,
+      "maximum": 51.6873000015039
+    },
+    "consume": {
+      "n": 149,
+      "p50": 0.001300009898841381,
+      "p95": 0.0029999937396496504,
+      "maximum": 0.005199981387704611
+    }
+  },
+  "frame_sample_rejections": {},
+  "frame_association_rejections": {},
+  "source_sha256": {
+    "session.json": "23ce9077045f5fbf1a9c588ce68a7335b321cb2a26cb0d6cab8704ba192b56fd",
+    "summary.json": "c42dc19ab6f6df3d4cdfdf7673e96513ab9ea1b6c7df82ec8ee17188cebae5a7",
+    "entries.jsonl": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "frames.jsonl": "ad320d6a95d622ad8a3c58329e8793c21744e1f5900f82f8d0b0a6b2a7b9fa95"
+  },
+  "t1_passed": false,
+  "interpretation": "Processed-frame gaps alone do not identify network or inference causes. Historical missing diagnostics remain unknown. Automatic segments require physical-attempt labels."
+}

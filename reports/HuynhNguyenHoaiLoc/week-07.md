@@ -1,5 +1,11 @@
 # HNHL — Phase 2 live và cập nhật perception
 
+**Bổ sung 15/11:** [quyết định issue #118 và ROC từ dữ liệu DQK](week-07/threshold-118-2026-11-15/README.md): giữ ngưỡng 0,45 và 2/3 mẫu cùng ID ở trạng thái tạm thời. Bổ sung `confirmed_unresolved` để audit person được xác nhận nhưng thiếu bằng chứng nhận diện. Đã review chín PR, merge #101/#117/#120; kết quả và phần còn chờ ở [audit ngày 15/11](reviews/2026-11-15.md).
+
+**Phân tích runtime 14–15/11:** [log/overlay, sửa lịch 5 Hz, warm-up và thời gian từng bước](week-07/analysis-2026-11-14/README.md). Bản sửa xử lý 100 frame/20 giây với CUDA trên MJPEG localhost 12 Hz. Sau khi camera kết nối lại, ESP32 Wi-Fi xử lý 149/375 frame trong 30,024 giây, 4,963 FPS, 0 reconnect; cảnh trống, chỉ kiểm chứng runtime. Các kết quả pilot bên dưới giữ theo code `058c978`.
+
+Regression sau tích hợp main: **801 passed, 2 skipped, 4 GPU deselected, 56,44 s**; [log](week-07/analysis-2026-11-14/tests_cpu.txt). Evidence checker đạt 223 liên kết local và giữ hash Word đã review. Các phép đo và kết quả kiểm thử bên dưới có ngày riêng.
+
 Kiểm chứng ngày 14/11/2026, Asia/Bangkok, theo issue #114 và snapshot #111. Nhánh `HuynhNguyenHoaiLoc/w07-phase2-live`, base `4f80eac`, code `058c978`. Sau khi enrol P01, vòng ESP32 → face → OSNet → queue đã chạy live với người đã enrol và người chưa enrol.
 
 ## Kết quả hai lượt live kiểm chứng

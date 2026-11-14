@@ -29,6 +29,8 @@ Mỗi lần chạy dùng thư mục output mới. Mặc định chỉ lưu log v
 - Kết thúc sau 3 mẫu được xử lý liên tiếp thiếu face hợp lệ, khi entry đã được xác nhận. Giới hạn một lượt 15 giây. Người chưa có mặt rõ có thể quay về phía camera để bắt đầu entry sau đó. Một track đã hoàn tất được giữ suppressed đến khi person biến mất đủ 3 mẫu.
 - Hai person cùng chứa một face, hoặc nhiều face ghép một person, đều không cung cấp mẫu nhận diện. Chưa đủ bằng chứng thì ghi `unresolved`. Rớt stream, reconnect, sequence restart, đổi kích thước ảnh hoặc tracker epoch thì hủy entry dang dở và ghi `interrupted`.
 - Lịch dựa trên timestamp frame mới. Không phát lại frame cũ để đếm N/M và không chạy bù backlog. 5 Hz là mức yêu cầu. Inference chậm có thể làm nhịp thực tế thấp hơn.
+
+Deadline giữ pha ban đầu để tránh trôi nhịp theo thời điểm frame đến. CLI chạy warm-up theo số vòng trong `[pipeline_profile].warmup` trước khi mở stream, rồi reset tracker. Warm-up gồm đầu vào tổng hợp cho tracking/OSNet và face, được ghi metadata và loại khỏi entry/counter.
 - OSNet dùng crop người nhìn thấy, ghi `crop_scope=visible_body`. Camera thấp có thể chỉ thấy đầu/ngực. DQK cần đo body visibility và team cần kiểm chứng cross-camera trước khi dùng vector này để kết luận re-ID đạt yêu cầu.
 
 ## Bàn giao cho KR
@@ -37,7 +39,7 @@ Mỗi lần chạy dùng thư mục output mới. Mặc định chỉ lưu log v
 
 Pipeline nhận thêm `face_embeddings`, `minimum_face_votes`, `decision_timestamp`, `decision_clock` và `entry_metadata` dưới dạng keyword. Callers dùng một `face_embedding` vẫn hoạt động. `record.timestamp` giữ lúc bắt đầu entry; `enqueued_at` và thời gian event lấy ngay trước enqueue sau appearance inference. Log tính `latency_s` từ face đầu tiên đến mốc quyết định đó. Với MJPEG, đây là thời gian theo clock nhận của laptop. ESP32 chưa gửi capture timestamp.
 
-CLI có queue/state machine trong process của nó. Ứng dụng tổng cần inject cùng các object để KR nhận active target và gọi tracker `set_target_record`. Phase3Runner còn nằm trong PR #101. Vòng camera này không kết nối transport điều khiển motor.
+CLI có queue/state machine trong process của nó. Ứng dụng tổng cần inject cùng các object để KR nhận active target và gọi tracker `set_target_record`. Phase3Runner từ PR #101 đã merge vào main ngày 15/11 giờ Bangkok. Vòng camera này không kết nối transport điều khiển motor. Tích hợp `sync_with` và `TRACK_LOST` còn chờ #119 được merge.
 
 ## Replay và chấm kết quả
 
@@ -51,3 +53,15 @@ Replay nhận JSON riêng dưới `data/` với `camera="esp32"`, `timestamp_sou
 Truth do người review tạo có `camera="esp32"`, `reviewed=true`, `entries=[...]`. Mỗi entry có `entry_id`, `enrolled` boolean và `identity` nếu đã enrol. Ghi cả lượt mong đợi bị bỏ lỡ bằng một ID riêng trong truth. Tool từ chối ID trùng và log chưa có nhãn. TAR chia trên tất cả lượt enrolled. FAR chia trên impostor đã có quyết định authorized/queued, đồng thời ghi `far_all_attempts`, coverage, missing và unresolved. Khi chưa có impostor được quyết định, FAR là null. Kết quả ghi rõ đơn vị entry và không tự chọn ngưỡng hay bật T1 PASS.
 
 T1 cần người đã enrol được authorized, người để ngoài whitelist được queued, có nhãn danh tính đã kiểm tra và latency từng lượt. Tách dữ liệu chọn ngưỡng với dữ liệu kiểm chứng. DQK cung cấp tower/stream, body-visibility và buổi cửa ba người. KR phối hợp queue/Phase 3. Trạng thái được cập nhật ở [báo cáo tuần 7](week-07.md).
+
+## Phân tích runtime và mẫu bị loại
+
+Bật `--diagnostics` để lưu `frames.jsonl` riêng trong run directory. Mỗi frame đã xử lý có wall time của tracking/OSNet, face, entry và callback, cùng các bộ đếm lỗi association/quality. Entry log giữ tổng mẫu hợp lệ qua các lần reset xác nhận, các lý do loại và trigger kết thúc.
+
+Summary có `confirmed_unresolved`: số segment unresolved đã thấy cùng person track đủ N frame liên tiếp (`person_confirmed`). Trường `confirmed` trong entry vẫn chỉ việc xác nhận bằng face hợp lệ. Hai bộ đếm tách biệt để thấy người không có mặt dùng được; không thay đổi chính sách unresolved/no-queue. Log lịch sử chưa có các trường này không được mặc định là 0. [Quyết định ngưỡng và giới hạn dữ liệu](week-07/threshold-118-2026-11-15/README.md).
+
+```powershell
+.venv/Scripts/python.exe -m tools.analyse_door_run --run-dir data/phase2/session-001 --out data/phase2/session-001-analysis.json
+```
+
+Công cụ đọc được log cũ và giữ các diagnostics thiếu là chưa biết. Khoảng cách giữa frame đã xử lý tự nó chưa xác định nguyên nhân mạng hoặc inference. [Phân tích và phép đo kiểm soát](week-07/analysis-2026-11-14/README.md).
