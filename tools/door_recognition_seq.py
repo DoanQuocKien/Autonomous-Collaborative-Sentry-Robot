@@ -5,10 +5,11 @@
 
 record: at each mark 1 beep = look at the lens, 2 beeps = turn away (~45 deg) to your right, 2 beeps again = turn away to your left (8 s each), 3 beeps = walk to the next mark (10 s); one long low tone = finished. Distances are measured from the lens along its axis.
 Frames go to data/door_recog/<label>/<SUBJECT>/<dist>_<gaze>_NNNN.jpg (data/ is git-ignored: faces never leave the laptop). The ESP32 serves ONE stream client at a time.
-score: every frame is scored against every enrolment (max cosine over the enrolment's vectors, InsightFace). Per subject writes <label>/scores_<SUBJECT>.json (numbers only, safe to commit).
+score: every frame is scored against every enrolment (max cosine over the enrolment's vectors, InsightFace). Per subject writes <label>/scores_<SUBJECT>.json and frames_<SUBJECT>.csv (numbers only, safe to commit).
 TAR = share of the subject's "straight" frames whose face is detected AND >= threshold against their OWN enrolment (a missed face counts as a miss).
 FAR = share of detected "straight" frames of a subject that reach the threshold against ANOTHER enrolment (needs >= 2 enrolled subjects). "away" frames are reported apart."""
 import argparse
+import csv
 import json
 import socket
 import threading
@@ -138,6 +139,9 @@ def score(a):
     from tools.enroll_guided import yaw_ratio
     wl = {k: np.asarray(v) for k, v in load_whitelist(a.whitelist).items()}
     base = Path(a.out) / a.label
+    if a.device == "auto":
+        import torch
+        a.device = "cuda" if torch.cuda.is_available() else "cpu"
     enc = InsightFaceEncoder(device=a.device)
     for folder in sorted(p for p in base.iterdir() if p.is_dir()):
         if folder.name not in wl:
@@ -152,7 +156,13 @@ def score(a):
                 yaw = None if f["kps"] is None else yaw_ratio(f["kps"])
             else:
                 scores, yaw = {k: None for k in wl}, None
-            rows.append({"window": img_path.name.rsplit("_", 1)[0], "scores": scores, "yaw": yaw})
+            rows.append({"window": img_path.name.rsplit("_", 1)[0], "scores": scores, "yaw": yaw, "file": img_path.name,
+                         "width": None if not faces else round(f["bbox"][2] - f["bbox"][0], 1), "conf": None if not faces else round(f["confidence"], 3)})
+        with open(base / ("frames_%s.csv" % folder.name), "w", newline="") as fh:     # every frame's numbers (no image): lets the TAR be re-cut by threshold, pose or size later
+            w = csv.writer(fh)
+            w.writerow(["file", "window", "yaw", "width_px", "conf"] + ["cos_" + k for k in sorted(wl)])
+            for r in rows:
+                w.writerow([r["file"], r["window"], "" if r["yaw"] is None else round(r["yaw"], 3), r["width"], r["conf"]] + ["" if r["scores"][k] is None else round(r["scores"][k], 4) for k in sorted(wl)])
         res = summarize(rows, folder.name, a.threshold)
         res.update(label=a.label, enrolled=sorted(wl), frames=len(rows))
         (base / ("scores_%s.json" % folder.name)).write_text(json.dumps(res, indent=1))
@@ -182,7 +192,7 @@ def main():
     s.add_argument("--label", default="door_1114")
     s.add_argument("--whitelist", default="data/whitelist")
     s.add_argument("--threshold", type=float, default=THR)
-    s.add_argument("--device", default="cpu", choices=["cpu", "cuda"])
+    s.add_argument("--device", default="auto", choices=["auto", "cpu", "cuda"], help="auto: the GPU when torch sees one (about 10x faster than the CPU), else the CPU")
     s.add_argument("--out", default="data/door_recog")
     s.set_defaults(fn=score)
     a = ap.parse_args()

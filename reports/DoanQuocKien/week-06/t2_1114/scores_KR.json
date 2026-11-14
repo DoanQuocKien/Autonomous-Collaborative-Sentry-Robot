@@ -31,10 +31,10 @@
   "3.0": {
    "straight_frames": 95,
    "straight_detected": 95,
-   "tar": 0.8737,
+   "tar": 0.8842,
    "impostor_scores": 190,
    "far": 0.0,
-   "impostor_max": 0.152,
+   "impostor_max": 0.151,
    "straight_frontal": 95,
    "away_turned": 192,
    "away_frames": 192,
@@ -42,7 +42,7 @@
    "away_own_ge_thr": 62
   }
  },
- "tar": 0.8921,
+ "tar": 0.8957,
  "far": 0.0,
  "impostor_scores": 556,
  "label": "door_1114",

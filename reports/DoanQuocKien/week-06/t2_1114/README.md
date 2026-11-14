@@ -15,16 +15,22 @@ Counted T2 runs: 6 (4 on 10-30 + runs 8 and 9). Tape offset from the sweet spot 
 
 ## Door-camera recognition, three people (plan row D2)
 
-Tool: `tools/door_recognition_seq.py` (record + score), test `tests/test_door_recognition_seq.py`. Enrolments: `tools.enroll_guided`, 5 poses each (DQK, HNHL, KR), webcam of the laptop. Recording through the ESP32 door camera (12.5 fps) at taped 1.8 / 2.4 / 3.0 m from the lens, per mark: 8 s looking at the lens, 8 s turned away to the right, 8 s turned away to the left. Every frame is scored against all three enrolments (max cosine over the enrolment vectors, largest face), threshold 0.45. Frames stay local (`data/door_recog/door_1114/`); `scores_*.json` hold numbers only.
+Tool: `tools/door_recognition_seq.py` (record + score), test `tests/test_door_recognition_seq.py`. Enrolments: `tools.enroll_guided`, 5 poses each (DQK, HNHL, KR), webcam of the laptop. Recording through the ESP32 door camera (12.5 fps) at taped 1.8 / 2.4 / 3.0 m from the lens, per mark: 8 s looking at the lens, 8 s turned away to the right, 8 s turned away to the left. Every frame is scored against all three enrolments (max cosine over the enrolment vectors, largest face), threshold 0.45; scored on the GPU (the first scoring on the CPU gave KR 0.892 instead of 0.896, the rest identical: the device changes at most a frame or two). Frames stay local (`data/door_recog/door_1114/`); `scores_*.json` and `frames_*.csv` (one row of numbers per frame, no image) are committed.
 
 | Subject | TAR 1.8 m | TAR 2.4 m | TAR 3.0 m | TAR all | Straight frames |
 |---|---|---|---|---|---|
 | DQK | 0.891 | 0.900 | 1.000 | 0.930 | 300 |
 | HNHL | 0.980 | 1.000 | 0.970 | 0.983 | 299 |
-| KR | 0.860 | 0.952 | 0.874 | 0.892 | 278 |
-| pooled | | | | **0.936** (821/877) | 877 |
+| KR | 0.860 | 0.952 | 0.884 | 0.896 | 278 |
+| pooled | | | | **0.937** (822/877) | 877 |
 
-FAR: 0 of 1754 impostor scores reached 0.45; the highest impostor score is 0.323. A face was detected in every straight frame, so the misses are scores below 0.45 (not lost faces). Plan row D2 (TAR >= 95 % at FAR <= 1 %): FAR met, pooled TAR 93.6 % is below the target (only HNHL reaches it alone). The misses do not follow the distance (DQK is worst at 1.8 and 2.4 m, KR at 1.8 and 3.0 m); the cause is not established (enrolment quality is a suspect, not shown). With three people the threshold 0.45 is not validated and not changed.
+FAR: 0 of 1754 impostor scores (straight frames; 0 of 5254 counting the away frames too) reached 0.45; the highest impostor score is 0.336 (HNHL's frames against another enrolment, away frames included; 0.323 on straight frames). A face was detected in every straight frame, so the misses are scores below 0.45 (not lost faces). Plan row D2 (TAR >= 95 % at FAR <= 1 %): FAR met, pooled TAR 93.7 % at the fixed threshold 0.45 is below the target (only HNHL reaches it alone). With three people the threshold 0.45 is not validated and not changed.
+
+### Where the misses are (from `frames_*.csv`, straight frames)
+
+- The genuine scores sit just above the threshold: median 0.54 (DQK), 0.55 (HNHL), 0.51 (KR); the 5th percentile is 0.44-0.46, so 0.45 cuts into the genuine distribution. The impostor scores stay low (99th percentile 0.16-0.29, maximum 0.336): the two distributions are separated, the threshold is simply placed at the lower edge of the genuine one.
+- Threshold sweep over all three subjects (genuine = straight frames; impostor = every frame against the two other enrolments, 5254 scores): 0.45 -> TAR 0.937, FAR 0; 0.40 -> TAR 0.990, FAR 0; 0.35 -> TAR 0.998, FAR 0; 0.30 -> TAR 1.000, FAR 0.27 % (14/5254). On this data every threshold from 0.30 to 0.45 satisfies FAR <= 1 %, and 0.40 or lower satisfies TAR >= 95 %. This is three people from one session and one camera, 6 enrolment pairs: it is a candidate for the threshold, not a validation, and the choice belongs to the model owner (HNHL).
+- The misses (scores below 0.45) are not explained by face size or head turn: median width 84 px for KR's misses against 84 px for all KR frames, median |yaw| 0.05 against 0.04; DQK's misses are slightly larger faces (91 against 79 px). They are not a clean distance effect either (DQK: 11 and 10 misses at 1.8 and 2.4 m, none at 3.0 m; KR: 14, 4 and 11 at 1.8, 2.4 and 3.0 m; HNHL: 2, 0 and 3). They are spread over the clip (DQK 8/6/5/2, KR 4/11/8/6, HNHL 0/4/1/0 per quarter), so a settling period at the start of a clip is not the main cause either. What remains, not tested: enrolment (webcam, one session) against the ESP32 image, and the head being cut by the top of the frame at 1.8 m (seen in the montage, bounding boxes were not stored).
 
 Quality notes: a first DQK recording was discarded because the poses ran one cue ahead at 3.0 m (head turned during the "lens" clip); the scorer now reports, per mark, how many "straight" frames are frontal and how many "away" frames are turned (|yaw ratio| <= 0.25 / >= 0.30). HNHL's away clips are turned less than that cutoff (94/203, 29/191, 100/199 frames); the away frames are reported apart and do not enter TAR/FAR. Per-frame scores are not stored in the JSON.
 
