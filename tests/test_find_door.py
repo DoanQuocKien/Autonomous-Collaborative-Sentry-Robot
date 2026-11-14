@@ -44,3 +44,42 @@ def test_clear_radius_scales_with_the_drive_command():
     assert required_clear_radius_m(10.0, 1.0) > required_clear_radius_m(10.0, 0.85)          # the audit case: a 10 s drive at v 1.0 needs more than at 0.85
     assert abs(required_clear_radius_m(10.0, 1.0) - (4.35 + 0.6)) < 1e-9
     assert abs(required_clear_radius_m(max_baseline_s(2.0, 1.0), 1.0) - 2.0) < 1e-9 and drive_distance_m(0.85, 5.5) > 1.9
+
+
+import pytest
+
+
+@pytest.mark.parametrize("tool, extra", [
+    ("find_door", ["--clear-radius-m", "nan"]),
+    ("find_door", ["--turn-deg", "90", "--clear-radius-m", "0.6", "--clear-ahead-m", "nan"]),
+    ("find_door", ["--clear-radius-m", "inf"]),
+    ("find_door", ["--clear-radius-m", "3", "--spin-s", "0.4"]),       # the fallback pulse angle is calibrated for 0.2 s only
+    ("find_door", ["--clear-radius-m", "3", "--samples", "0"]),
+    ("find_door", ["--clear-radius-m", "3", "--wait", "nan"]),
+    ("approach_door", ["--door-range-m", "inf", "--path-clear"]),
+    ("approach_door", ["--door-range-m", "nan", "--path-clear"]),
+    ("approach_door", ["--door-range-m", "3", "--path-clear", "--max-steps", "0"]),
+    ("approach_door", ["--door-range-m", "3", "--path-clear", "--stop-range=-inf"]),
+    ("scan_boards", ["--spin-s", "0.3"]),
+    ("scan_boards", ["--min-battery", "nan"]),
+])
+def test_a_bad_operator_value_aborts_before_any_live_setup(monkeypatch, tool, extra):
+    """HNHL review of #108: NaN passed `clear_radius_m < required` and infinity passed the range bounds. A guard that let them through would
+    reach the live setup, which opens the camera-pose file first (FileNotFoundError here), not a SystemExit."""
+    import importlib
+    import sys
+    mod = importlib.import_module("tools." + tool)
+    base = {"find_door": ["--entrance", "e"], "approach_door": ["--entrance", "e"], "scan_boards": []}[tool]
+    monkeypatch.setattr(sys, "argv", [tool, "--label", "t", "--camera-pose", "missing_pose.json"] + base + extra)
+    with pytest.raises(SystemExit, match="ABORT"):
+        mod.main()
+
+
+@pytest.mark.parametrize("tool, extra", [("find_door", ["--entrance", "e", "--clear-radius-m", "3"]), ("approach_door", ["--entrance", "e", "--door-range-m", "3", "--path-clear"])])
+def test_good_values_pass_the_guards(monkeypatch, tool, extra):
+    import importlib
+    import sys
+    mod = importlib.import_module("tools." + tool)
+    monkeypatch.setattr(sys, "argv", [tool, "--label", "t", "--camera-pose", "missing_pose.json"] + extra)
+    with pytest.raises(FileNotFoundError):                                # got past every guard to the first live step
+        mod.main()
