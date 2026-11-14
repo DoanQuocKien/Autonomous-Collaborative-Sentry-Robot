@@ -42,6 +42,18 @@ Run 4 (60 s):
 
 Result: pulling the dongle with R1 held stops the motors (pass). The time from the physical pull to the kernel removing the device is not measured.
 
-Still open: the pad itself dying (batteries out, switched off or out of range) while the dongle stays plugged in. The dongle may then keep reporting R1 as held without any event, which neither `estop.py` nor the heartbeat can detect. Battery after the session: 12.07 V. Clocks: `estop.log` (host) is 8 h behind the container log (time zone). Robot test files removed afterwards. The `sentry-control` service still runs the old `robot_udp.py` until #119 is merged and deployed.
+## Run 5: gamepad switched off while R1 held, dongle plugged in (REAL motor service, wheels off the ground)
+
+Same script, 60 s. The operator (DQK) switched the pad off twice with R1 held and switched it on again holding R1 (operator's account; the logs cannot tell a switch-off from a release).
+
+| Event | Time |
+|---|---|
+| ARMED / GO | 08:14:32.723 / 08:14:38.404; motors +0.15 +0.15 |
+| Pad switched off (1) | dongle reported R1 up 08:14:48; `estop.py` STOPPED (R1 released) 08:14:48.076, cut 6 ms; `robot_udp` motors 0 at 16:14:48.103 |
+| Pad on, R1 held | GO 08:14:56.769 without re-arming (R1 release is a soft stop by design) |
+| Pad switched off (2) | STOPPED 08:15:15.477, cut 6 ms; motors 0 at 16:15:15.526 |
+| End | GO 08:15:20.199; sender ended (motors 0 at 16:15:29.399); R1 released 08:15:33.381; latch set afterwards |
+
+Result: this pad's dongle reports every button released when the pad switches off, so a dead pad with R1 held stops the motors like a released R1 (pass for switch-off). Switching the pad back on with R1 held resumes without re-arming. Not tested: batteries pulled and the pad walking out of range (both expected to look like the switch-off on this dongle, not shown). Battery after the session: 11.98 V. Clocks: `estop.log` (host) is 8 h behind the container log (time zone). Robot test files removed afterwards. The `sentry-control` service still runs the old `robot_udp.py` until #119 is merged and deployed.
 
 Files: `run_output.txt` (laptop output with both robot logs), `hb_age_1114.log` (per-second maximum), `dryrun_1114.py`, `hb_age_1114.py`.
