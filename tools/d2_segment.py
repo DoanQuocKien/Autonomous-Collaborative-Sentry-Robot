@@ -15,6 +15,8 @@ from pathlib import Path
 
 import numpy as np
 
+from sentry.perception.face import face_sharpness as sharpness
+
 IMG_W = 640
 
 
@@ -39,16 +41,6 @@ def segment(rows, max_gap=3):
         entries.append(cur)
     return entries
 
-
-def sharpness(img, box):
-    import cv2
-    x1, y1, x2, y2 = [int(v) for v in box]
-    h, w = img.shape[:2]
-    crop = img[max(0, y1):min(h, y2), max(0, x1):min(w, x2)]
-    if crop.size == 0:
-        return 0.0
-    g = cv2.cvtColor(cv2.resize(crop, (112, 112)), cv2.COLOR_BGR2GRAY)
-    return float(cv2.Laplacian(g, cv2.CV_64F).var())
 
 
 def make_encoder():

@@ -1,5 +1,7 @@
 """Face verification for Week 3 (HNHL)."""
 from pathlib import Path
+from collections import Counter
+import math
 import numpy as np
 
 from sentry.config import load
@@ -65,10 +67,49 @@ class FaceVerifier:
             best_score,
             authorized,
         )
+
+    def verify_many(self, embeddings, minimum_votes):
+        """Require a strict majority for the same enrolled identity."""
+        samples = list(embeddings)
+        if (not samples or type(minimum_votes) is not int
+                or not len(samples) / 2 < minimum_votes <= len(samples)):
+            raise ValueError("a strict majority of nonempty face samples is required")
+        results = [self.verify(sample) for sample in samples]
+        votes = Counter(identity for identity, _, accepted in results if accepted)
+        winners = [identity for identity, count in votes.items() if count >= minimum_votes]
+        identity = winners[0] if winners else None
+        scores = [score for _, score, _ in results if score is not None]
+        return identity, max(scores, default=-1.0), identity is not None
+
+
+def face_yaw_ratio(kps):
+    """Nose offset from the eye midpoint, in eye distances; None if unavailable."""
+    if kps is None:
+        return None
+    points = np.asarray(kps, dtype=float)
+    if points.shape != (5, 2) or not np.isfinite(points).all():
+        return None
+    left, right, nose = points[:3, 0]
+    distance = abs(right - left)
+    return None if distance < 1e-6 else float((nose - (left + right) / 2) / distance)
+
+
+def face_sharpness(image, box):
+    """Variance of a 112x112 grayscale face crop, shared by live and D2."""
+    import cv2
+    if len(box) != 4 or not all(math.isfinite(v) for v in box):
+        raise ValueError("finite face box required")
+    x1, y1, x2, y2 = map(int, box)
+    h, w = image.shape[:2]
+    crop = image[max(0, y1):min(h, y2), max(0, x1):min(w, x2)]
+    if crop.size == 0:
+        return 0.0
+    gray = cv2.cvtColor(cv2.resize(crop, (112, 112)), cv2.COLOR_BGR2GRAY)
+    return float(cv2.Laplacian(gray, cv2.CV_64F).var())
 class InsightFaceEncoder:
     """Detect faces and extract normalized 512D embeddings."""
 
-    def __init__(self, app=None, device="cuda"):
+    def __init__(self, app=None, device="cuda", model_root=None):
         if app is None:
             if device not in ("cuda", "cpu"):
                 raise ValueError("device must be cuda or cpu")
@@ -84,6 +125,7 @@ class InsightFaceEncoder:
 
             app = FaceAnalysis(
                 name="buffalo_s",
+                **({"root": str(model_root)} if model_root is not None else {}),
                 allowed_modules=["detection", "recognition"],
                 providers=providers,
             )
@@ -122,7 +164,7 @@ class InsightFaceEncoder:
             results.append({
                 "bbox": tuple(float(v) for v in face.bbox),
                 "confidence": float(face.det_score),
-                "kps": None if getattr(face, "kps", None) is None else np.asarray(face.kps, dtype=float),  # 5 points: eyes, nose, mouth corners
+                "kps": None if getattr(face, "kps", None) is None else np.asarray(face.kps, dtype=float),
                 "embedding": normalize_embedding(face.embedding),
             })
 

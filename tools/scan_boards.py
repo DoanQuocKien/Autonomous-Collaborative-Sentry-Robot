@@ -7,6 +7,7 @@ about 25 degrees to the left), then the robot holds still for --hold s and the v
 bearing falls by the pulse angle); the heading at each stop is the running sum, so each board's position is expressed in the START frame (x forward, y left, metres).
 Output data/scan/<label>_<n>/: stops.csv (one row per stop and board), summary.json (turn per pulse with its spread, board positions, door bearing), anchors.csv (marker_id,x_m,y_m,z_m,yaw_deg).
 The anchor yaw is not measured here (0 is written): it only matters for the pose fixes, not for the servo or the layout.
+Only the calibrated 0.2 s pulse is supported. Missing/stale video or an incomplete frame sample aborts the scan and sends an immediate stop; a valid image without boards is allowed.
 """
 import argparse
 import csv
@@ -21,8 +22,9 @@ from pathlib import Path
 import numpy as np
 
 SPIN_W = 0.45
+CALIBRATED_SPIN_S = 0.2                           # the pulse length PRIOR_PULSE_RAD was measured for: tools that fall back on the prior must spin exactly this long
 PRIOR_PULSE_RAD = 0.438                           # turn per 0.2 s pulse measured on 2026-10-30 and 2026-11-11 (25 deg); only used until a board gives a measurement
-PRIOR_PULSE_S = 0.2                               # the pulse length PRIOR_PULSE_RAD was measured for: tools that fall back on the prior must spin exactly this long (HNHL review of #108)
+MAX_VIDEO_AGE_S = 0.5
 ESTOP_LATCH = "/home/jetbot/sentry/ESTOP"
 MIN_BATTERY_V = 11.4
 
@@ -80,7 +82,7 @@ def main():
     ap.add_argument("--user", default="jetbot")
     ap.add_argument("--password", default=os.environ.get("JETBOT_PASSWORD"))
     ap.add_argument("--max-pulses", type=int, default=18)
-    ap.add_argument("--spin-s", type=float, default=PRIOR_PULSE_S, help="fixed at %.1f s: a pulse without a board in common falls back on the turn calibrated for that length" % PRIOR_PULSE_S)
+    ap.add_argument("--spin-s", type=float, default=CALIBRATED_SPIN_S, help="fixed at %.1f s: a pulse without a board in common falls back on the turn calibrated for that length" % CALIBRATED_SPIN_S)
     ap.add_argument("--hold", type=float, default=1.0, help="seconds to stay still after a pulse before sampling (video lag < 0.16 s)")
     ap.add_argument("--samples", type=int, default=6)
     ap.add_argument("--wait", type=float, default=90.0, help="seconds to arm the e-stop and hold R1")
@@ -89,7 +91,7 @@ def main():
     ap.add_argument("--heading0", type=float, default=0.0, help="continue a scan: the robot is already turned by this many degrees (left positive) from the start heading; the scan ends at 355 deg")
     ap.add_argument("--out", default="data/scan")
     a = ap.parse_args()
-    check_args(a, dict(spin_s=(PRIOR_PULSE_S, PRIOR_PULSE_S), hold=(0.05, 5.0), max_pulses=(1, 40), samples=(1, 30), wait=(1.0, 600.0),
+    check_args(a, dict(spin_s=(CALIBRATED_SPIN_S, CALIBRATED_SPIN_S), hold=(0.05, 5.0), max_pulses=(1, 40), samples=(1, 30), wait=(1.0, 600.0),
                        min_battery=(10.5, 13.0), heading0=(-360.0, 360.0)))
 
     from sentry.config import load
@@ -117,13 +119,18 @@ def main():
         raise SystemExit("ABORT: battery %.2f V < %.1f V: charge first" % (volts0, a.min_battery))
     port = load()["net"]["control_port"]
     rx = ZMQReceiver(ip=a.ip)
-    rx.start()
     stops, boards, doors, pulses = [], {}, [], []
     end_reason = {"r": None}
     sender = state = None
     volts1 = None
     heading = math.radians(a.heading0)
     link = {"ssh": ssh}
+    video = {"last_rx": None}
+
+    def require_fresh_video():
+        last = video["last_rx"]
+        if last is None or not 0 <= time.perf_counter() - last <= MAX_VIDEO_AGE_S:
+            raise RuntimeError("ABORT: no fresh robot video; scan stopped")
 
     def r1_held():
         """R1 over SSH; one dropped connection is retried once with a fresh connection (the robot's Wi-Fi is weak), a second failure ends the run."""
@@ -143,6 +150,9 @@ def main():
             f = rx.read(timeout=0.5)
             if f is None:
                 continue
+            if not 0 <= time.perf_counter() - f.t_rx <= MAX_VIDEO_AGE_S:
+                continue
+            video["last_rx"] = f.t_rx
             n += 1
             for d in tr.detect_markers(f.frame_bgr):
                 fwd, left = camera_to_robot(d.tvec, pitch)
@@ -151,10 +161,14 @@ def main():
                 r = entrance(f.frame_bgr, 0.0)
                 if r.in_view and r.bearing_rad is not None:
                     door.append((r.bearing_rad, r.inliers))
+        if n < a.samples:
+            raise RuntimeError("ABORT: incomplete robot video sample (%d/%d fresh frames); scan stopped" % (n, a.samples))
+        require_fresh_video()
         seen = {m: tuple(float(np.median([v[i] for v in vs])) for i in range(4)) + (len(vs),) for m, vs in per.items()}
         return seen, door
 
     try:
+        rx.start()
         if not a.dry_run:
             print("ARM the e-stop (hold Start 1.5 s) and HOLD R1 within %.0f s; the robot will spin in place, keep 0.3 m clear around it. Release R1 at any problem." % a.wait, flush=True)
             beep(1000, 400)
@@ -194,9 +208,10 @@ def main():
                 break
             t_pulse = time.time() + a.spin_s                                     # one spin pulse, then stop and hold
             while time.time() < t_pulse:
+                require_fresh_video()
                 sender.send(0.0, SPIN_W)
                 time.sleep(1 / 30.0)
-            sender.send(0.0, 0.0)
+            sender.stop()
             time.sleep(a.hold)
         if end_reason["r"] is None:
             end_reason["r"] = "dry run" if a.dry_run else ("full turn" if math.degrees(heading) >= 355 else "max pulses")
@@ -206,7 +221,6 @@ def main():
     finally:
         try:
             if sender is not None:
-                sender.send(0.0, 0.0)
                 sender.close(stop=True)
         except Exception:
             pass
