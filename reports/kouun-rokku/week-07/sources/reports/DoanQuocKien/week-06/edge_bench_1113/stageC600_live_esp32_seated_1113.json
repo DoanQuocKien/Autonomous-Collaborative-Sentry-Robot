@@ -1,0 +1,216 @@
+{
+ "note": "edge_bench stageC, door pipeline in its own thread on the live ESP32 stream (opt4, battery pack, -49 dBm), 600 s (the plan row says 15 min), MAXN, operator SEATED about 2 m in front of the robot and the ESP32 (earlier runs: standing), motors never driven, dorm hotspot with the phone moved closer. esp_reconnects counts one extra at shutdown (reader quirk). tegrastats = the last 600 samples.",
+ "bench": {
+  "mode": "stageC",
+  "seconds": 600.1,
+  "frames": 8672,
+  "fps": 14.45,
+  "skipped_by_newest_only": 3328,
+  "avg_people": 0.99,
+  "door_runs": 2994,
+  "avg_faces_per_door_run": 0.98,
+  "door_live": {
+   "esp_frames": 7214,
+   "esp_fps": 12.02,
+   "esp_reconnects": 1
+  }
+ },
+ "stage_ms": {
+  "decode": {
+   "n": 8672,
+   "mean": 7.95,
+   "p50": 5.32,
+   "p95": 17.21
+  },
+  "pre": {
+   "n": 8672,
+   "mean": 6.03,
+   "p50": 3.6,
+   "p95": 18.13
+  },
+  "pose": {
+   "n": 8672,
+   "mean": 36.68,
+   "p50": 34.91,
+   "p95": 50.04
+  },
+  "pose_post": {
+   "n": 8672,
+   "mean": 1.92,
+   "p50": 1.47,
+   "p95": 3.64
+  },
+  "det": {
+   "n": 2891,
+   "mean": 37.68,
+   "p50": 33.93,
+   "p95": 54.56
+  },
+  "det_post": {
+   "n": 2891,
+   "mean": 4.09,
+   "p50": 3.08,
+   "p95": 8.42
+  },
+  "reid": {
+   "n": 571,
+   "mean": 22.56,
+   "p50": 19.26,
+   "p95": 44.79
+  },
+  "door_pre": {
+   "n": 2994,
+   "mean": 7.93,
+   "p50": 7.02,
+   "p95": 18.84
+  },
+  "door_scrfd": {
+   "n": 2994,
+   "mean": 25.78,
+   "p50": 23.34,
+   "p95": 48.06
+  },
+  "door_post": {
+   "n": 2994,
+   "mean": 7.09,
+   "p50": 3.84,
+   "p95": 24.14
+  },
+  "door_mbf": {
+   "n": 2943,
+   "mean": 48.89,
+   "p50": 43.97,
+   "p95": 75.81
+  },
+  "door": {
+   "n": 2994,
+   "mean": 88.9,
+   "p50": 87.08,
+   "p95": 125.48
+  },
+  "compute": {
+   "n": 8672,
+   "mean": 68.01,
+   "p50": 59.48,
+   "p95": 119.39
+  },
+  "e2e": {
+   "n": 8672,
+   "mean": 97.71,
+   "p50": 91.86,
+   "p95": 153.01
+  }
+ },
+ "tegrastats_last_600": {
+  "ram_used_mb": {
+   "mean": 2128.8,
+   "max": 2141.0,
+   "first_min_mean": 2122.6,
+   "last_min_mean": 2113.7,
+   "n": 600
+  },
+  "gpu_load_pct": {
+   "mean": 80.7,
+   "max": 99.0,
+   "first_min_mean": 71.9,
+   "last_min_mean": 82.9,
+   "n": 600
+  },
+  "gpu_c": {
+   "mean": 37.3,
+   "max": 38.5,
+   "first_min_mean": 34.8,
+   "last_min_mean": 37.9,
+   "n": 600
+  },
+  "cpu_c": {
+   "mean": 38.0,
+   "max": 39.5,
+   "first_min_mean": 35.5,
+   "last_min_mean": 38.5,
+   "n": 600
+  },
+  "board_mw": {
+   "mean": 4883.4,
+   "max": 5324.0,
+   "first_min_mean": 4957.8,
+   "last_min_mean": 4721.2,
+   "n": 600
+  }
+ },
+ "battery_v_every_20s": [
+  11.96,
+  11.96,
+  11.91,
+  11.89,
+  11.88,
+  11.88,
+  11.91,
+  11.91,
+  11.85,
+  11.84,
+  11.84,
+  11.87,
+  11.83,
+  11.83,
+  11.81,
+  11.82,
+  11.81,
+  11.79,
+  11.8,
+  11.8,
+  11.77,
+  11.79,
+  11.77,
+  11.76,
+  11.75,
+  11.78,
+  11.78,
+  11.74,
+  11.73,
+  11.72,
+  11.72,
+  11.71,
+  11.74
+ ],
+ "per_minute_tegrastats_check": {
+  "gpu_load_pct": [
+   71.9,
+   77.1,
+   79.3,
+   79.7,
+   80.7,
+   87.1,
+   80.1,
+   84.8,
+   83.9,
+   82.9
+  ],
+  "gpu_clock_mhz": "899-921 (max 921 all run: no throttling)",
+  "cpu_clock_mhz": "1472-1479 (max)",
+  "ram_used_mb": "2113-2135 (flat, no leak)",
+  "gpu_temp_c": "34.8 -> 38.0 plateau",
+  "board_mw": "4958 -> 4721",
+  "battery_v_every_minute": [
+   11.96,
+   11.89,
+   11.91,
+   11.84,
+   11.83,
+   11.82,
+   11.8,
+   11.79,
+   11.75,
+   11.74,
+   11.72
+  ]
+ },
+ "plan_row_edge_latency_and_load": {
+  "fps_ge_20": "FAIL (14.45)",
+  "capture_to_result_p95_le_100ms": "FAIL (153.0 ms)",
+  "ram_lt_3gb": "pass (2.13 GB)",
+  "gpu_temp_lt_80c": "pass (38.5 C max)",
+  "battery_ge_11p1v": "pass (min 11.71 V)",
+  "duration": "600 s, the row says 15 min"
+ }
+}

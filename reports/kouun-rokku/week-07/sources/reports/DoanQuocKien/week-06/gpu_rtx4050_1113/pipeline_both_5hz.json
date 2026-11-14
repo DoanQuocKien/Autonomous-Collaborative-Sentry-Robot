@@ -1,0 +1,921 @@
+{
+  "fps": 19.2250678889357,
+  "p50_ms": 40.385849999438506,
+  "p95_ms": 121.36431000362789,
+  "device_used_peak_gib": 0.88983154296875,
+  "fps_limit_met": true,
+  "vram_limit_met": true,
+  "measured_workload_budget_met": true,
+  "full_model_mix": true,
+  "target_rtx4050_verified": false,
+  "t1_accepted": false,
+  "settings": {
+    "warmup": 5,
+    "iterations": 100,
+    "imgsz": 640,
+    "pose_weights": "data/models/yolov8n-pose.pt",
+    "face_root": "data/insightface",
+    "torch_home": "data/torch_w5",
+    "min_fps": 15.0,
+    "max_vram_bytes": 5500000000,
+    "profile_people": 2,
+    "nvml_sample_s": 0.02
+  },
+  "entrance_mode": "both",
+  "gpu": "NVIDIA GeForce RTX 4050 Laptop GPU",
+  "requested_door_hz": 5.0,
+  "actual_door_hz": 4.6140162933445685,
+  "model_id": "osnet_ain_x1_0:2f38acc25e28cb29407635db2be315edc08d5457a904b72a9a11e427f41f3242",
+  "versions": {
+    "torch": "2.9.1+cu128",
+    "torchvision": "0.24.1+cu128",
+    "numpy": "2.5.2",
+    "opencv-python": "5.0.0.93",
+    "pyzmq": "27.2.0",
+    "ultralytics": "8.4.172",
+    "insightface": "2.0",
+    "onnx": "1.23.1",
+    "onnxruntime": null,
+    "onnxruntime-gpu": "1.23.2",
+    "torchreid": "0.2.5",
+    "pytest": "9.1.1"
+  },
+  "memory_samples": 195,
+  "memory_errors": [],
+  "memory_scope": "NVML device-used sampled; includes ORT, torch, driver and unrelated processes, sampling may miss short spikes",
+  "torch_peak_allocated_mib": 281.595703125,
+  "torch_peak_reserved_mib": 462.0,
+  "gpu_before": {
+    "fields": [
+      "name",
+      "driver_version",
+      "memory.total",
+      "power.limit",
+      "enforced.power.limit",
+      "pstate",
+      "temperature.gpu",
+      "clocks.current.graphics"
+    ],
+    "rows": [
+      "NVIDIA GeForce RTX 4050 Laptop GPU, 581.86, 6141 MiB, [N/A], 69.18 W, P3, 49, 2055 MHz"
+    ]
+  },
+  "gpu_after": {
+    "fields": [
+      "name",
+      "driver_version",
+      "memory.total",
+      "power.limit",
+      "enforced.power.limit",
+      "pstate",
+      "temperature.gpu",
+      "clocks.current.graphics"
+    ],
+    "rows": [
+      "NVIDIA GeForce RTX 4050 Laptop GPU, 581.86, 6141 MiB, [N/A], 60.00 W, P0, 51, 1455 MHz"
+    ]
+  },
+  "latency_s": [
+    0.06402940000407398,
+    0.03907430000253953,
+    0.0448716000028071,
+    0.029661400003533345,
+    0.04402770000160672,
+    0.11740229999850271,
+    0.045439699999406,
+    0.03224920000502607,
+    0.037427900002512615,
+    0.06353559999843128,
+    0.030552500000339933,
+    0.04032490000099642,
+    0.027106900000944734,
+    0.037060899994685315,
+    0.11914480000268668,
+    0.02983729999687057,
+    0.026784599998791236,
+    0.03479110000625951,
+    0.08062269999936689,
+    0.039561800003866665,
+    0.02477549999457551,
+    0.03355590000137454,
+    0.04152780000003986,
+    0.11653899999510031,
+    0.04664990000310354,
+    0.034200200003397185,
+    0.029637499996169936,
+    0.06708090000029188,
+    0.043063299999630544,
+    0.03809890000411542,
+    0.03425720000086585,
+    0.04203660000348464,
+    0.11061139999947045,
+    0.03689699999813456,
+    0.02565649999451125,
+    0.02584220000426285,
+    0.07248200000321958,
+    0.040769300001556985,
+    0.044006899996020366,
+    0.02923490000102902,
+    0.03349359999992885,
+    0.11121189999539638,
+    0.03192529999796534,
+    0.045095400004356634,
+    0.04152069999690866,
+    0.057908400005544536,
+    0.04733660000056261,
+    0.03102299999591196,
+    0.037582899996777996,
+    0.027689800001098774,
+    0.1129713999980595,
+    0.047202800000377465,
+    0.03256949999922654,
+    0.0350897000025725,
+    0.07126669999706792,
+    0.028221300002769567,
+    0.04432290000113426,
+    0.03830310000194004,
+    0.026375200002803467,
+    0.11980810000386555,
+    0.04478499999822816,
+    0.04374230000394164,
+    0.1296206999977585,
+    0.03165749999607215,
+    0.030501899993396364,
+    0.0313255000000936,
+    0.11323540000012144,
+    0.025726700005179737,
+    0.044030999997630715,
+    0.04285149999486748,
+    0.12103310000384226,
+    0.032678800002031494,
+    0.0327813000039896,
+    0.03867970000283094,
+    0.07869889999710722,
+    0.048497299998416565,
+    0.038944600004469976,
+    0.02825229999871226,
+    0.1276572999995551,
+    0.044135000003734604,
+    0.03968239999812795,
+    0.08421349999844097,
+    0.04446789999929024,
+    0.03766580000228714,
+    0.04296930000418797,
+    0.12980099999549566,
+    0.03236599999945611,
+    0.03218360000028042,
+    0.03610409999964759,
+    0.13290089999645716,
+    0.038107400003354996,
+    0.03364349999901606,
+    0.08283919999666978,
+    0.040909900002588984,
+    0.045589299996208865,
+    0.04044679999788059,
+    0.13482130000193138,
+    0.04327159999957075,
+    0.02411729999585077,
+    0.035257700001238845
+  ],
+  "stage_p50_ms": {
+    "tracking_osnet": 27.31560000029276,
+    "pose": 8.361100000911392,
+    "face": 0.013299999409355223,
+    "entrance": 0.010849998943740502
+  },
+  "workload": [
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 1,
+      "padded_faces": 1,
+      "door_ran": true
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 2,
+      "padded_faces": 0,
+      "door_ran": true
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 1,
+      "padded_faces": 1,
+      "door_ran": true
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 2,
+      "padded_faces": 0,
+      "door_ran": true
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 1,
+      "padded_faces": 1,
+      "door_ran": true
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 2,
+      "padded_faces": 0,
+      "door_ran": true
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 1,
+      "padded_faces": 1,
+      "door_ran": true
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 2,
+      "padded_faces": 0,
+      "door_ran": true
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 1,
+      "padded_faces": 1,
+      "door_ran": true
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 2,
+      "padded_faces": 0,
+      "door_ran": true
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 1,
+      "padded_faces": 1,
+      "door_ran": true
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 2,
+      "padded_faces": 0,
+      "door_ran": true
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 1,
+      "padded_faces": 1,
+      "door_ran": true
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 2,
+      "padded_faces": 0,
+      "door_ran": true
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 2,
+      "door_ran": true
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 2,
+      "door_ran": true
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 2,
+      "padded_faces": 0,
+      "door_ran": true
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 1,
+      "padded_faces": 1,
+      "door_ran": true
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 1,
+      "padded_faces": 1,
+      "door_ran": true
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 1,
+      "padded_faces": 1,
+      "door_ran": true
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 3,
+      "padded_faces": 0,
+      "door_ran": true
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 2,
+      "door_ran": true
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 1,
+      "padded_faces": 1,
+      "door_ran": true
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 1,
+      "padded_faces": 1,
+      "door_ran": true
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    },
+    {
+      "observed_bodies": 0,
+      "padded_bodies": 2,
+      "observed_faces": 0,
+      "padded_faces": 0,
+      "door_ran": false
+    }
+  ],
+  "weights_sha256": {
+    "yolov8n-pose.pt": "c6fa93dd1ee4a2c18c900a45c1d864a1c6f7aba75d84f91648a30b7fb641d212",
+    "yolov8n.pt": "f59b3d833e2ff32e194b5bb8e08d211dc7c5bdf144b90d2c8412c47ccfc83b36",
+    "xfeat.pt": "0f5187fd7bedd26c7fe6acc9685444493a165a35ecc087b33c2db3627f3ea10b",
+    "det_500m.onnx": "5e4447f50245bbd7966bd6c0fa52938c61474a04ec7def48753668a9d8b4ea3a",
+    "w600k_mbf.onnx": "9cc6e4a75f0e2bf0b1aed94578f144d15175f357bdc05e815e5c4a02b319eb4f",
+    "dinov2_vitb14_pretrain.pth": "0b8b82f85de91b424aded121c7e1dcc2b7bc6d0adeea651bf73a13307fad8c73"
+  },
+  "config_sha256": "27d10b6e1dfb15a9a84b3a4aee3e1582fb91e188fa691d7c3ca474d29f6c4b91",
+  "input_manifest_sha256": "e911376220a955a9250eafbdc1fa091d3d96524d42243d24011051b65da8e4b7",
+  "input_image_sha256": [
+    "308216c8a9078d25c60baca246f363df855b6e6194f13f59100664fd270c859b",
+    "75b98ee33c72a52e6617d30431ead6fdb9bde1971e4f11199552b9b464bb2ce0",
+    "95495300c7a2f04f819b8b05cb34123cb3951dc4b24ec6751a1192167be28a44",
+    "d07c77a046d208cb1290228b7c7412cf02670bee15e2214869e1ca42ba314265",
+    "e2fbf1a50aebbbc4521a895ca285d8b7916a0eab21b7b2be3bea60b918705b7f",
+    "5f9327d85246aef22d04990ec4a3e4809617e58c6b2c34ce9ede39db328554fa",
+    "4c035717188d65c99aebe9d34ade025ed0ea7c14ef597eaf5d8699608287301c",
+    "ca64870cddcc673f5bd832411f3535b1804b7986abbb7eb414547541de75d4b7",
+    "a8a7cb60212ed5ee65b703fc05f9855f546adfb59bb962bf3cf3af3cd3904f46"
+  ],
+  "dino_repo": "facebookresearch/dinov2:7764ea0f912e53c92e82eb78a2a1631e92725fc8",
+  "dino_precision": "FP16",
+  "other_torch_precision": "FP32",
+  "network_access": false,
+  "motor_commands_sent": 0,
+  "limitations": [
+    "runtime workload only, padded synthetic embeddings are not accuracy evidence",
+    "one supplied frame serves robot and door models; no live dual-stream transport or motor loop",
+    "all selected models resident; sequential stages; optional door frequency is wall-clock scheduled without backlog",
+    "RTX5060 evidence does not substitute for RTX4050 acceptance",
+    "power source not user-confirmed"
+  ]
+}
