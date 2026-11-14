@@ -17,6 +17,7 @@ import math
 import random
 
 from common.mixing import mix
+from sentry.nav.wheel_model import MAX_SPEED, MIN_PWM
 
 Command = namedtuple("Command", "v w state reason")
 
@@ -32,8 +33,8 @@ class ExploreSettings:
     return_tol_deg: float = 25.0  # heading error to the box centre above which the robot spins instead of steering
     max_spin_s: float = 8.0       # spinning longer than this without a clear view = stuck: stop
     max_time_s: float = 180.0
-    min_pwm: float = 0.12
-    max_speed: float = 0.3
+    min_pwm: float = MIN_PWM          # calib/motion.json (sentry/nav/wheel_model.py)
+    max_speed: float = MAX_SPEED
 
     @property
     def dead(self):

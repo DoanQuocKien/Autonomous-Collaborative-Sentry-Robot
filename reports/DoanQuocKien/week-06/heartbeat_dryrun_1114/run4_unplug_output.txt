@@ -1,0 +1,54 @@
+allow args: (none)
+services: active active
+sending v=0.5 to 10.169.60.160:5556 for 60 s
+===== estop.log (new lines, host clock)
+08:12:04.145 ARMED (Start held 1.5 s); now hold R1 to move
+08:12:07.934 GO (R1 held and armed); robot may move
+08:12:13.416 gamepad gone: /dev/input/js0
+08:12:13.464 STOPPED (gamepad lost); motors CUT in 6 ms
+08:12:20.325 gamepad found: /dev/input/js0
+08:12:21.271 gamepad gone: /dev/input/js0
+08:12:21.286 gamepad lost (already stopped)
+08:12:23.406 gamepad found: /dev/input/js0
+08:12:24.919 ARMED (Start held 1.5 s); now hold R1 to move
+08:12:31.359 ARMED (Start held 1.5 s); now hold R1 to move
+08:12:37.871 GO (R1 held and armed); robot may move
+08:12:55.743 STOPPED (R1 released); motors CUT in 7 ms
+===== robot_udp.log (new lines, container clock)
+16:12:01.219 packets accepted=1378 foreign=0 malformed=0 received=1378 stale=0
+16:12:07.947 e-stop released: motor commands accepted
+16:12:07.984 motors +0.15 +0.15
+16:12:11.238 packets accepted=1670 foreign=0 malformed=0 received=1670 stale=0
+16:12:13.475 e-stop ENGAGED: refusing motor commands
+16:12:13.513 motors +0.00 +0.00
+16:12:21.247 packets accepted=1962 foreign=0 malformed=0 received=1962 stale=0
+16:12:31.248 packets accepted=2253 foreign=0 malformed=0 received=2253 stale=0
+16:12:37.884 e-stop released: motor commands accepted
+16:12:37.921 motors +0.15 +0.15
+16:12:41.259 packets accepted=2544 foreign=0 malformed=0 received=2544 stale=0
+16:12:51.268 packets accepted=2837 foreign=0 malformed=0 received=2837 stale=0
+16:12:54.591 motors +0.00 +0.00
+16:12:55.760 e-stop ENGAGED: refusing motor commands
+===== js_log_1114.log (host clock)
+08:11:53 button  0 up (init)
+08:11:53 button  1 up (init)
+08:11:53 button  2 up (init)
+08:11:53 button  3 up (init)
+08:11:53 button  4 up (init)
+08:11:53 button  5 up (init)
+08:11:53 button  6 up (init)
+08:11:53 button  7 up (init)
+08:11:53 button  8 up (init)
+08:11:53 button  9 up (init)
+08:11:53 button 10 up (init)
+08:11:53 button 11 up (init)
+08:11:53 button 12 up (init)
+08:11:53 button 13 up (init)
+08:11:53 button 14 up (init)
+08:12:02 button 11 DOWN
+08:12:06 button 11 up
+08:12:07 button  7 DOWN
+08:12:13 button  7 up
+1794672733.411 device gone: [Errno 19] No such device
+
+[exited with code 0]

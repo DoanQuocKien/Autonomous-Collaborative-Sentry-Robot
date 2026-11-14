@@ -1,0 +1,55 @@
+dry-run started
+heartbeat logger started
+button logger started
+sending v=0.5 to 10.169.60.160:5701 for 45 s: ARM (hold Start 1.5 s) and HOLD R1 now; release R1 when told
+t= 0 s
+t=10 s
+t=20 s
+t=30 s
+t=40 s
+===== dryrun_1114.log
+16:06:33.403 motors +0.00 +0.00 (dry-run)
+16:06:33.404 e-stop ENGAGED: refusing motor commands
+16:06:42.701 e-stop released: motor commands accepted
+16:06:42.714 motors +0.15 +0.15 (dry-run)
+16:06:43.414 packets accepted=229 foreign=0 malformed=0 received=229 stale=0
+16:06:53.418 packets accepted=524 foreign=0 malformed=0 received=524 stale=0
+16:06:53.503 e-stop ENGAGED: refusing motor commands
+16:06:53.521 motors +0.00 +0.00 (dry-run)
+16:07:03.427 packets accepted=815 foreign=0 malformed=0 received=815 stale=0
+16:07:13.434 packets accepted=1093 foreign=0 malformed=0 received=1093 stale=0
+===== hb_age_1114.log (summary + seconds over 0.6 s)
+SUMMARY samples 4240 read_errors 0 max 0.542 p99 0.501 p50 0.254 over0.6 0 over0.8 0 over1.0 0
+44
+===== js_log_1114.log (host clock)
+08:06:33 button  0 up (init)
+08:06:33 button  1 up (init)
+08:06:33 button  2 up (init)
+08:06:33 button  3 up (init)
+08:06:33 button  4 up (init)
+08:06:33 button  5 up (init)
+08:06:33 button  6 up (init)
+08:06:33 button  7 up (init)
+08:06:33 button  8 up (init)
+08:06:33 button  9 up (init)
+08:06:33 button 10 up (init)
+08:06:33 button 11 up (init)
+08:06:33 button 12 up (init)
+08:06:33 button 13 up (init)
+08:06:33 button 14 up (init)
+08:06:34 button 11 DOWN
+08:06:39 button 11 up
+08:06:42 button  7 DOWN
+08:06:53 button  7 up
+===== estop.log tail
+08:01:16.396 GO (R1 held and armed); robot may move
+08:03:05.001 STOPPED (R1 released); motors CUT in 5 ms
+08:03:40.387 ARMED (Start held 1.5 s); now hold R1 to move
+08:03:49.301 ARMED (Start held 1.5 s); now hold R1 to move
+08:03:56.338 ARMED (Start held 1.5 s); now hold R1 to move
+08:06:35.527 ARMED (Start held 1.5 s); now hold R1 to move
+08:06:42.692 GO (R1 held and armed); robot may move
+08:06:53.486 STOPPED (R1 released); motors CUT in 5 ms
+robot test scripts removed (logs kept: dryrun_1114.log, hb_age_1114.log)
+
+[exited with code 0]

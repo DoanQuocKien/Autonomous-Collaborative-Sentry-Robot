@@ -1,0 +1,41 @@
+dry-run started
+heartbeat logger started
+sending v=0.5 to 10.169.60.160:5701 for 90 s: ARM (hold Start 1.5 s) and HOLD R1 now; release R1 when told
+t= 0 s
+t=10 s
+t=20 s
+t=30 s
+t=40 s
+t=50 s
+t=60 s
+t=70 s
+t=80 s  -> RELEASE R1 now
+===== dryrun_1114.log
+16:00:11.477 motors +0.00 +0.00 (dry-run)
+16:00:11.477 e-stop ENGAGED: refusing motor commands
+16:00:21.496 packets accepted=221 foreign=0 malformed=0 received=221 stale=0
+16:00:31.508 packets accepted=513 foreign=0 malformed=0 received=513 stale=0
+16:00:41.515 packets accepted=808 foreign=0 malformed=0 received=808 stale=0
+16:00:51.530 packets accepted=1104 foreign=0 malformed=0 received=1104 stale=0
+16:01:01.530 packets accepted=1399 foreign=0 malformed=0 received=1399 stale=0
+16:01:11.538 packets accepted=1694 foreign=0 malformed=0 received=1694 stale=0
+16:01:16.402 e-stop released: motor commands accepted
+16:01:16.413 motors +0.15 +0.15 (dry-run)
+16:01:21.542 packets accepted=1988 foreign=0 malformed=0 received=1988 stale=0
+16:01:31.551 packets accepted=2282 foreign=0 malformed=0 received=2282 stale=0
+16:01:41.562 packets accepted=2577 foreign=0 malformed=0 received=2577 stale=0
+16:01:44.005 motors +0.00 +0.00 (dry-run)
+===== hb_age_1114.log (summary + seconds over 0.6 s)
+SUMMARY samples 8489 read_errors 0 max 0.548 p99 0.501 p50 0.254 over0.6 0 over0.8 0 over1.0 0
+89
+===== estop.log tail
+00:23:57.697 watching the gamepad; hold Start 1.5 s to arm, then hold R1 (button 7) to move; any other button = hard stop
+00:23:57.763 gamepad found: /dev/input/js0
+00:24:00.480 gamepad gone: /dev/input/js0
+00:24:00.496 gamepad lost (already stopped)
+00:24:01.559 gamepad found: /dev/input/js0
+08:01:02.719 ARMED (Start held 1.5 s); now hold R1 to move
+08:01:12.702 ARMED (Start held 1.5 s); now hold R1 to move
+08:01:16.396 GO (R1 held and armed); robot may move
+
+[exited with code 0]

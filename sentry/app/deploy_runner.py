@@ -18,6 +18,7 @@ from dataclasses import dataclass
 import math
 
 from sentry.app.state_machine import State
+from sentry.nav.wheel_model import MAX_SPEED, MIN_PWM
 
 
 def wrap(a):
@@ -28,8 +29,8 @@ def wrap(a):
 class DeploySettings:
     v_forward: float = 0.55        # normalised; about 0.2 m/s measured (explore.py)
     w_spin: float = 0.45           # spin in place; each wheel 0.45 > the dead-zone value 0.4
-    min_pwm: float = 0.12
-    max_speed: float = 0.3
+    min_pwm: float = MIN_PWM       # calib/motion.json (sentry/nav/wheel_model.py)
+    max_speed: float = MAX_SPEED
     tol_m: float = 0.12            # arrived when this close to the vantage point (dead reckoning is only indicative: +-10 deg per metre)
     turn_only_rad: float = 0.5     # heading error above which the robot spins instead of driving (about 29 deg)
     face_tol_rad: float = 0.12     # facing the room centre: a spin tick turns about 0.07 rad at 30 Hz, so this cannot oscillate
@@ -79,6 +80,8 @@ def face_command(pose, target_xy, s=None):
 class DeployRunner(object):
     def __init__(self, sm, speaker, vantage_xy, centre_xy, settings=None, servo=None, servo_stop_m=None, servo_board_xy=None, servo_margin_m=0.0):
         """servo: optional callable t -> (range_m, bearing_rad) of the target board when it is in view (fresh), else None: the approach then follows the board (stops at servo_stop_m) instead of dead reckoning."""
+        if servo is not None and (servo_stop_m is None or not servo_stop_m > 0):
+            raise ValueError("servo needs a positive servo_stop_m (where the board-following approach stops)")
         self.sm, self.speaker = sm, speaker
         self.servo, self.servo_stop_m, self.servo_board_xy = servo, servo_stop_m, servo_board_xy
         self.servo_margin_m = servo_margin_m   # the motors stop this much before servo_stop_m: the robot coasts about 0.043 m after the command goes to zero

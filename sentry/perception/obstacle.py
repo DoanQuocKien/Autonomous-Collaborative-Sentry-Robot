@@ -190,7 +190,7 @@ class ObstacleDetector:
                 if contact is None:
                     reason = ("floor_type_unknown" if floor_type == "unknown" else "semantic_contact_unresolved"
                               if detection.source == "semantic_nonfloor" else "reflection_unresolved")
-                elif not self.geometry.valid[min(int(contact.v), h - 1), min(int(contact.u), w - 1)]:
+                elif not (0 <= contact.u < w and 0 <= contact.v < h) or not self.geometry.valid[int(contact.v), int(contact.u)]:
                     reason = "invalid_rectified_pixel"
                 else:
                     point = self.geometry.ground_point(contact.u, contact.v)

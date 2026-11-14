@@ -33,7 +33,7 @@ from pathlib import Path
 
 from sentry.app.audio import AudioPromptPlayer, LocalSpeaker
 from sentry.app.deploy_runner import DeployRunner, DeploySettings
-from sentry.app.state_machine import State, StateMachine, StateMachineConfig
+from sentry.app.state_machine import State, StateMachine
 from sentry.nav.explore import ExploreSettings, Explorer, fresh_command
 from sentry.nav.wheel_model import WheelModel
 
@@ -292,7 +292,7 @@ def main():
             raise SystemExit("no ESP32 found on this network (is it powered and on the hotspot? give --esp-ip)")
         print("ESP32 found at %s" % a.esp_ip, flush=True)
     detector = None if a.handshake == "manual" else make_handshake(a.handshake)
-    sm = StateMachine(StateMachineConfig())
+    sm = StateMachine()                                                  # StateMachineConfig.from_toml(): config.toml [thresholds] + [state_machine]
     pose_now = {"p": (0.0, 0.0, 0.0)}
     fixer, fixed = None, {"m": None, "servo": None}
 
