@@ -16,7 +16,7 @@ python -m tools.team_data unpack team_data/D2_1028.zip data/D2/1028
 **Password: `12345678`** (the team standard, `tools/team_data.py`). It keeps the files unreadable for anyone who only finds the zip. It is **not** a secret inside the team and not strong protection, because it sits in this repository.
 
 **What this does not do**
-- A committed zip stays in the git history **forever**, also after it is deleted from the branch. The repository is private; after grading it is deleted or archived (same rule as the D5 exception in `Implementation Plan.md` section 4.2).
+- A committed zip stays in the git history **forever**, also after it is deleted from the branch. The repository is public (team decision 2026-11-14, DQK), so anyone can download the zip, and the password is in this file: treat a committed zip as readable by anyone who looks for it.
 - Frames that show bystanders (the D2 cafe set) are shared inside the team only, never in the report or video unmasked (`tools/mask_faces.py` first).
 - GitHub refuses single files over 100 MB: bigger sets go through the team Drive, with the same password on the zip.
 - Never commit the unzipped folder, and never run `git add data/`.
