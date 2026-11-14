@@ -153,6 +153,8 @@ class TargetQueue:
             if not self._queue:
                 return None
             now = float(time.time() if t is None else t)
+            if self._active_target is not None:     # never lose a target silently: record that it ended without an outcome
+                self.drop_active(reason="superseded_without_outcome", t=now)
             rec = self._queue.popleft()
             rec.dequeued_at = now
             rec.status = "active"
@@ -210,6 +212,23 @@ class TargetQueue:
             self._dropped.append(target)
             self._active_target = None
             return target
+
+    def sync_with(self, sm, t: Optional[float] = None) -> None:
+        """Follow the state machine, which owns the order of service (its own FIFO `sm.queue` of ids): finish the active
+        record when the machine moved on (dropped if the machine dropped it, else completed) and pop until the active record
+        is the machine's active target. Call after every StateMachine event or tick that may have changed `sm.active_target`."""
+        with self._lock:
+            want = sm.active_target
+            act = self._active_target
+            if act is not None and act.id != want:
+                if any(tid == act.id for _, tid in sm.dropped_targets):
+                    self.drop_active(t=t)
+                else:
+                    self.complete_active(t=t)
+            while self._active_target is None and any(r.id == want for r in self._queue):   # an id with no record (e.g. a has_next placeholder) pops nothing
+                rec = self.pop(t=t)
+                if rec.id != want:              # the machine skipped it (e.g. a dropped search target): keep the record's outcome
+                    self.drop_active(reason="skipped_by_state_machine", t=t)
 
     def get_by_id(self, target_id: str) -> Optional[IntruderRecord]:
         """Find intruder record by ID across active, queued, and historical targets."""
@@ -296,14 +315,19 @@ class TargetQueue:
             payload = json.load(f)
 
         tq = cls()
+        by_id = {}                              # one object per record id, so history and the queue stay the same records after a reload
+
+        def rec(item):
+            r = IntruderRecord.from_dict(item)
+            return by_id.setdefault(r.id, r)
         if payload.get("active_target"):
-            tq._active_target = IntruderRecord.from_dict(payload["active_target"])
+            tq._active_target = rec(payload["active_target"])
         for item in payload.get("queued", []):
-            tq._queue.append(IntruderRecord.from_dict(item))
+            tq._queue.append(rec(item))
         for item in payload.get("completed", []):
-            tq._completed.append(IntruderRecord.from_dict(item))
+            tq._completed.append(rec(item))
         for item in payload.get("dropped", []):
-            tq._dropped.append(IntruderRecord.from_dict(item))
+            tq._dropped.append(rec(item))
         for item in payload.get("history", []):
-            tq._history.append(IntruderRecord.from_dict(item))
+            tq._history.append(rec(item))
         return tq

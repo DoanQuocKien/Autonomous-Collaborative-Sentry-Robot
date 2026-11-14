@@ -29,6 +29,7 @@ logger = logging.getLogger(__name__)
 from sentry.config import DEFAULT_PATH, load
 from sentry.nav.explore import Command, ExploreSettings, legal
 from sentry.nav.hold_detector import HoldConfig, HoldDetector, HoldState
+from sentry.nav.wheel_model import MAX_SPEED, MIN_PWM
 
 
 @dataclass(frozen=True)
@@ -41,11 +42,13 @@ class PursuitConfig:
     kp_yaw: float = 1.5                        # Proportional gain on centering error (rad or norm)
     kd_yaw: float = 0.2                        # Derivative gain on centering error
     v_max: float = 0.55                        # Maximum forward linear command
+    v_min_forward: float = 0.45                # Slowest forward command (both wheels above the dead zone 0.40 at w = 0)
+    spin_first_yaw: float = 0.5                # |yaw_err| above this: turn in place before driving (same units as yaw_err)
     v_min_reverse: float = -0.45               # Maximum reverse linear command (exceeds dead zone)
     w_max: float = 1.0                         # Maximum angular velocity command
     w_spin: float = 0.45                       # In-place spin command (exceeds dead zone 0.40)
-    min_pwm: float = 0.12                      # Motor dead-zone threshold
-    max_speed_cap: float = 0.3                 # Hardware cap on robot
+    min_pwm: float = MIN_PWM                   # Motor dead-zone threshold (calib/motion.json)
+    max_speed_cap: float = MAX_SPEED           # Speed cap on the robot (calib/motion.json)
     obstacle_threshold_m: float = 0.5          # Override active when obstacle closer than this
     obstacle_critical_m: float = 0.35          # Forward speed cut when obstacle closer than this
     obstacle_avoid_w: float = 0.45             # Yaw deflection offset when obstacle detected
@@ -70,6 +73,8 @@ class PursuitConfig:
             kp_yaw=float(p.get("kp_yaw", 1.5)),
             kd_yaw=float(p.get("kd_yaw", 0.2)),
             v_max=float(p.get("v_max", 0.55)),
+            v_min_forward=float(p.get("v_min_forward", 0.45)),
+            spin_first_yaw=float(p.get("spin_first_yaw", 0.5)),
             v_min_reverse=float(p.get("v_min_reverse", -0.45)),
             w_max=float(p.get("w_max", 1.0)),
             obstacle_critical_m=float(p.get("obstacle_critical_m", 0.35)),
@@ -85,8 +90,8 @@ class HoldBehaviorConfig:
     kd_yaw: float = 0.2                        # Yaw centering derivative gain
     w_max: float = 0.8                         # Max angular speed during hold
     w_spin: float = 0.45                       # In-place spin command (exceeds dead zone 0.40)
-    min_pwm: float = 0.12                      # Motor dead-zone threshold
-    max_speed_cap: float = 0.3                 # Hardware cap on robot
+    min_pwm: float = MIN_PWM                   # Motor dead-zone threshold (calib/motion.json)
+    max_speed_cap: float = MAX_SPEED           # Speed cap on the robot (calib/motion.json)
     center_tolerance_norm: float = 0.10        # Centering requirement: within +/- 10% width
     max_recenter_time_s: float = 1.5           # Required to re-center within 1.5 s
 
@@ -218,6 +223,12 @@ class PursuitController:
             v = 0.0
             w_mag = max(abs(w_raw), self.cfg.w_spin)
             w = math.copysign(min(self.cfg.w_max, w_mag), w_raw if abs(w_raw) > 1e-6 else yaw_err)
+        elif abs(yaw_err) > self.cfg.spin_first_yaw and v_raw >= 0.0 and not obstacle_active:
+            # 4a. Target far off-centre (e.g. walking sideways): while translating the steering is capped at
+            # v - dead_zone (about 0.15), too slow to follow, so turn in place first (no translation, no orbit)
+            v = 0.0
+            w_mag = max(abs(w_raw), self.cfg.w_spin)
+            w = math.copysign(min(self.cfg.w_max, w_mag), w_raw if abs(w_raw) > 1e-6 else yaw_err)
         elif v_raw < 0.0 and not in_standoff_band:
             # 4. Target too close: back up cleanly. In reverse (v = -0.45), wheel mixing requires
             # abs(w) <= |v| - dead - 0.01 = 0.04 to avoid wheel stall; straight reverse w = 0 is safest.
@@ -225,7 +236,7 @@ class PursuitController:
             w = 0.0
         else:
             # 5. Translating forward: saturate within [0.45, v_max]
-            v = max(0.45, min(self.cfg.v_max, v_raw))
+            v = max(self.cfg.v_min_forward, min(self.cfg.v_max, v_raw))
             # Bound steering so slower wheel stays strictly above motor dead zone after mix(v, w):
             # min(v - w, v + w) = v - |w| >= dead_zone + 0.01  ==>  |w| <= v - dead_zone - 0.01
             w_trans_max = max(0.0, v - self.cfg.dead_zone - 0.01)
@@ -233,12 +244,7 @@ class PursuitController:
 
         # Enforce legal wheel commands for JetBot differential drive:
         # If an illegal command is ever generated, fail-safe to stop (0, 0) and log warning.
-        explore_s = ExploreSettings(
-            v_forward=self.cfg.v_max,
-            w_spin=self.cfg.w_spin,
-            min_pwm=self.cfg.dead_zone * 0.3,
-            max_speed=0.3,
-        )
+        explore_s = ExploreSettings(w_spin=self.cfg.w_spin, min_pwm=self.cfg.min_pwm, max_speed=self.cfg.max_speed_cap)
         if not legal(Command(v, w, "", ""), explore_s):
             logger.warning(
                 "PursuitController generated illegal command (v=%.3f, w=%.3f); safe stop (0, 0) applied",
@@ -335,12 +341,7 @@ class HoldController:
             w_mag = max(abs(w_raw), self.cfg.w_spin)
             w = math.copysign(min(self.cfg.w_max, w_mag), w_raw if abs(w_raw) > 1e-6 else yaw_err)
 
-        explore_s = ExploreSettings(
-            v_forward=0.55,
-            w_spin=self.cfg.w_spin,
-            min_pwm=self.cfg.dead_zone * 0.3,
-            max_speed=0.3,
-        )
+        explore_s = ExploreSettings(w_spin=self.cfg.w_spin, min_pwm=self.cfg.min_pwm, max_speed=self.cfg.max_speed_cap)
         if not legal(Command(v, w, "", ""), explore_s):
             logger.warning(
                 "HoldController generated illegal command (v=%.3f, w=%.3f); safe stop (0, 0) applied",

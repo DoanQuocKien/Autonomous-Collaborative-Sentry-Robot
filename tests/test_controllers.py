@@ -332,3 +332,12 @@ def test_gap_reset_reconciles_interception_controller_mode_and_resumes_pursuit()
     assert ctrl.mode == "PURSUE"
     # Robot should actively drive forward in pursuit of moving target
     assert any(o.v > 0.4 for o in moving_outputs), "Robot must resume forward pursuit motion!"
+
+
+def test_pursuit_turns_in_place_before_driving_when_far_off_centre():
+    """Audit 2026-11-14: forward steering is capped at v - dead_zone (about 0.15), so a sideways walker was lost."""
+    ctl = PursuitController(PursuitConfig())
+    v, w, _, _ = ctl.compute(0.0, 2.5, 0.8)                     # far and 0.8 off-centre (left)
+    assert v == 0.0 and w >= PursuitConfig().w_spin
+    v, w, _, _ = PursuitController(PursuitConfig()).compute(0.0, 2.5, 0.2)   # small error: drive and steer
+    assert v >= PursuitConfig().v_min_forward and w > 0

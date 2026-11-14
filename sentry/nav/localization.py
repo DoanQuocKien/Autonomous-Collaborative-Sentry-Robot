@@ -7,8 +7,10 @@ calib/motion.json), and correcting drift when known ArUco fiducial markers
 """
 from __future__ import annotations
 
+from collections import deque
 import csv
 import json
+import logging
 import math
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -17,7 +19,14 @@ from typing import Any, Dict, List, Optional, Tuple
 import cv2
 import numpy as np
 
+from sentry.config import DEFAULT_PATH, load
 from sentry.nav.wheel_model import K_WHEEL, M0, TRACK, WheelModel
+
+logger = logging.getLogger(__name__)
+REPO = DEFAULT_PATH.parent
+HEADING_GATE_RAD = math.radians(25.0)   # once tracking is established, a marker heading this far from the pose is an outlier...
+RECOVER_FRAMES = 5                       # ...unless this many rejected views in a row agree with each other (within RECOVER_AGREE_RAD):
+RECOVER_AGREE_RAD = math.radians(10.0)   # then dead reckoning drifted, not the marker, and the heading is re-anchored
 
 
 def wrap_angle(rad: float) -> float:
@@ -127,12 +136,12 @@ class LocalizationTracker:
 
     def __init__(
         self,
-        motion_calib: dict[str, Any] | str | Path | None = "calib/motion.json",
-        camera_calib: dict[str, Any] | str | Path | None = "calib/camera.json",
+        motion_calib: dict[str, Any] | str | Path | None = REPO / "calib" / "motion.json",
+        camera_calib: dict[str, Any] | str | Path | None = REPO / "calib" / "camera.json",
         aruco_dict_name: str | None = None,
         marker_size_m: float | None = None,
         initial_pose: RobotPose | None = None,
-        config_path: str | Path | None = "config.toml",
+        config_path: str | Path | None = DEFAULT_PATH,
         max_marker_distance_m: float = 1.5,
         wheel_model: WheelModel | None = None,
     ) -> None:
@@ -158,18 +167,18 @@ class LocalizationTracker:
         # Load config tunables if available
         config_marker_m = 0.15
         config_dict = "DICT_4X4_50"
+        self.camera_offset = (0.0, 0.0)   # lens forward / left of the robot's pose origin ([gridmap] camera_forward_m / camera_left_m)
         if config_path is not None:
             cp = Path(config_path)
             if cp.is_file():
-                try:
-                    import tomllib
-                    with open(cp, "rb") as f:
-                        cfg = tomllib.load(f)
-                    calib_cfg = cfg.get("calibration", {})
-                    config_marker_m = float(calib_cfg.get("aruco_marker_m", config_marker_m))
-                    config_dict = str(calib_cfg.get("aruco_dict", config_dict))
-                except Exception:
-                    pass
+                cfg = load(cp)                # a broken config.toml must fail loudly, not fall back to defaults
+                calib_cfg = cfg.get("calibration", {})
+                config_marker_m = float(calib_cfg.get("aruco_marker_m", config_marker_m))
+                config_dict = str(calib_cfg.get("aruco_dict", config_dict))
+                g = cfg.get("gridmap", {})
+                self.camera_offset = (float(g.get("camera_forward_m", 0.0)), float(g.get("camera_left_m", 0.0)))
+            else:
+                logger.warning("config %s not found: ArUco marker size %.3f m and dictionary %s are defaults", cp, config_marker_m, config_dict)
 
         # ArUco detector setup
         self.marker_size_m = float(marker_size_m if marker_size_m is not None else config_marker_m)
@@ -187,6 +196,7 @@ class LocalizationTracker:
         self.pose = initial_pose if initial_pose is not None else RobotPose()
         self.anchors: Dict[int, MarkerAnchor] = {}
         self.corrections_count: int = 0
+        self._rejected_yaws = deque(maxlen=RECOVER_FRAMES)   # marker headings rejected by the heading gate since the last accepted correction
 
     @property
     def min_pwm(self) -> float:
@@ -219,6 +229,8 @@ class LocalizationTracker:
             if p.is_file():
                 with open(p, "r", encoding="utf-8") as f:
                     data = json.load(f)
+            else:
+                logger.warning("motion calibration %s not found: dead reckoning uses the default wheel model", p)
         elif isinstance(calib_source, dict):
             data = calib_source
 
@@ -255,6 +267,8 @@ class LocalizationTracker:
             if p.is_file():
                 with open(p, "r", encoding="utf-8") as f:
                     data = json.load(f)
+            else:
+                logger.warning("camera calibration %s not found: using the built-in fisheye K/D of 2026-10, marker poses may be off", p)
         elif isinstance(calib_source, dict):
             data = calib_source
 
@@ -278,6 +292,7 @@ class LocalizationTracker:
         """Loads marker anchors from a CSV file (e.g. marker_positions_template.csv)."""
         p = Path(csv_path)
         if not p.is_file():
+            logger.warning("marker anchors %s not found: no ArUco corrections from it", p)
             return
         with open(p, "r", encoding="utf-8") as f:
             reader = csv.DictReader(f)
@@ -487,6 +502,11 @@ class LocalizationTracker:
                 # Normal of marker seen in camera frame is R_cm[:, 2].
                 yaw_cam = wrap_angle(anchor.yaw_rad + math.atan2(R_cm[0, 2], R_cm[2, 2]))
 
+                # Robot pose origin = lens position minus the lens offset rotated by the heading (offset 0 until measured)
+                fwd, left = self.camera_offset
+                x_cam_world -= fwd * math.cos(yaw_cam) - left * math.sin(yaw_cam)
+                y_cam_world -= fwd * math.sin(yaw_cam) + left * math.cos(yaw_cam)
+
                 # Filter update (alpha blend with range falloff beyond 0.8 m)
                 base_alpha = float(np.clip(alpha, 0.0, 1.0))
                 near_range_m = 0.8
@@ -503,13 +523,23 @@ class LocalizationTracker:
                     continue
 
                 d_theta = angle_diff(yaw_cam, self.pose.theta)
-                # Outlier jump rejection: once tracking is established, reject erratic heading jumps > 25 deg
-                if self.corrections_count >= 3 and abs(d_theta) > math.radians(25.0):
-                    continue
+                # Outlier jump rejection: once tracking is established, reject erratic heading jumps > 25 deg.
+                # Without a way back a heading drift past the gate would lock every later correction out, so
+                # RECOVER_FRAMES rejected views that agree with each other re-anchor the heading (snap, not blend).
+                recover = False
+                if self.corrections_count >= 3 and abs(d_theta) > HEADING_GATE_RAD:
+                    self._rejected_yaws.append(yaw_cam)
+                    if len(self._rejected_yaws) < RECOVER_FRAMES or any(
+                            abs(angle_diff(y, yaw_cam)) > RECOVER_AGREE_RAD for y in self._rejected_yaws):
+                        continue
+                    recover = True
+                    logger.warning("heading re-anchored by %d agreeing marker views: dead reckoning was %.0f deg off",
+                                   RECOVER_FRAMES, math.degrees(d_theta))
+                self._rejected_yaws.clear()
 
                 new_x = (1.0 - effective_alpha) * self.pose.x + effective_alpha * x_cam_world
                 new_y = (1.0 - effective_alpha) * self.pose.y + effective_alpha * y_cam_world
-                new_theta = wrap_angle(self.pose.theta + effective_alpha * d_theta)
+                new_theta = yaw_cam if recover else wrap_angle(self.pose.theta + effective_alpha * d_theta)
 
                 self.pose = RobotPose(x=new_x, y=new_y, theta=new_theta, t=self.pose.t)
                 self.corrections_count += 1

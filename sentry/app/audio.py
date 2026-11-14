@@ -14,6 +14,7 @@ import argparse
 from array import array
 from dataclasses import dataclass
 import hashlib
+import logging
 import math
 from pathlib import Path
 import random
@@ -24,6 +25,8 @@ import tempfile
 import wave
 
 from common.protocol import decode_control, encode_play
+
+logger = logging.getLogger(__name__)
 
 ROOT = Path(__file__).resolve().parents[2]
 AUDIO_DIR = ROOT / "assets" / "audio"
@@ -345,12 +348,14 @@ class LocalSpeaker:
         validate_clip_name(clip)
         path = self.audio_dir / ("%s.wav" % clip)
         if not path.exists():
+            logger.warning("audio clip missing, not played: %s", path)
             return False
         try:
             if self._backend is None:
                 self._backend = _default_backend()
             self._backend(str(path))
-        except Exception:
+        except Exception as e:              # never stop the state machine, but tell the operator the prompt was not heard
+            logger.warning("audio clip %s not played: %s", clip, e)
             return False
         self.played.append(clip)
         return True

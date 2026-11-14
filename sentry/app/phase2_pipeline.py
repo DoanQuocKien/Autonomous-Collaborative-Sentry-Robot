@@ -120,6 +120,8 @@ class Phase2Pipeline:
         frame_width: float = 640.0,
     ):
         self.face_verifier = FaceVerifier() if face_verifier is None else face_verifier
+        if not self.face_verifier.whitelist:
+            logger.warning("Phase 2 whitelist is EMPTY: every entrant will be treated as an intruder (pass FaceVerifier(whitelist=...))")
         # Simulations must opt into MockAppearanceExtractor explicitly. A missing
         # real model/crop must never silently create a synthetic pursuit target.
         self.appearance_extractor = appearance_extractor
@@ -241,9 +243,8 @@ class Phase2Pipeline:
             t=t0,
         )
 
-        # If StateMachine transitioned from STANDBY to PURSUE, promote intruder to active in TargetQueue
-        if sm_transition.prev_state == State.STANDBY and sm_transition.state == State.PURSUE:
-            self.target_queue.pop(t=t0)
+        # The state machine decides who is served next; the record queue follows it (also after exits and drops)
+        self.target_queue.sync_with(self.state_machine, t=t0)
 
         return Phase2EventResult(
             entry_id=entry_id,

@@ -217,3 +217,27 @@ def test_target_queue_thread_safety():
 
     assert len(popped) == num_threads * items_per_thread
     assert len(tq) == 0
+
+
+def test_sync_with_state_machine_follows_exits_and_drops():
+    """Audit 2026-11-14: the record queue did not follow TARGET_EXITED / SEARCH_EXHAUSTED pops of the state machine."""
+    from sentry.app.state_machine import State, StateMachine
+    sm, tq = StateMachine(initial_state=State.STANDBY), TargetQueue()
+    for i, tid in enumerate(("T1", "T2", "T3")):
+        tq.push(IntruderRecord(id=tid), t=float(i))
+        sm.handle_event("INTRUDER_QUEUED", {"id": tid}, t=float(i))
+        tq.sync_with(sm, t=float(i))
+    assert tq.active.id == "T1" and len(tq) == 2
+    sm.handle_event("TARGET_EXITED", t=5.0)                  # T1 done, search for T2
+    tq.sync_with(sm, t=5.0)
+    assert tq.active.id == "T2" and [r.id for r in tq.all_completed()] == ["T1"]
+    sm.handle_event("SEARCH_EXHAUSTED", t=9.0)                # T2 not found -> dropped, T3 next
+    tq.sync_with(sm, t=9.0)
+    assert tq.active.id == "T3" and [r.id for r in tq.all_dropped()] == ["T2"]
+
+
+def test_pop_never_loses_the_active_target():
+    tq = TargetQueue([IntruderRecord(id="A"), IntruderRecord(id="B")])
+    tq.pop(t=1.0)
+    tq.pop(t=2.0)
+    assert [r.id for r in tq.all_dropped()] == ["A"] and tq.active.id == "B"

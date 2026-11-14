@@ -230,3 +230,40 @@ def test_backwards_or_nonfinite_timestamps_rejected():
         sm.handle_event(Event("ENTRANCE_FOUND", t=float("nan")))
     with pytest.raises(ValueError):
         sm.handle_event(Event("ENTRANCE_FOUND", t=4.9))
+
+
+def test_config_from_toml_reads_state_machine_section_and_rejects_typos():
+    cfg = StateMachineConfig.from_toml({"thresholds": {}, "state_machine": {"retract_duration_s": 1.5, "explore_v": 0.5}})
+    assert (cfg.retract_duration_s, cfg.explore_v) == (1.5, 0.5)
+    with pytest.raises(ValueError):
+        StateMachineConfig.from_toml({"state_machine": {"retract_secs": 1.0}})
+
+
+def test_camera_recheck_from_standby_does_not_retract_again():
+    """Audit 2026-11-14: STANDBY -> ESP32_LOST -> WAIT_CAMERA -> ESP32_VERIFIED used to back up another retract_duration_s blind."""
+    sm = StateMachine(initial_state=State.STANDBY)
+    sm.handle_event("ESP32_LOST", t=1.0)
+    assert sm.state == State.WAIT_CAMERA
+    res = sm.handle_event("ESP32_VERIFIED", t=2.0)
+    assert sm.state == State.STANDBY and res.command.v == 0.0
+    # the first deployment still retracts
+    sm2 = StateMachine(initial_state=State.WAIT_CAMERA)
+    assert sm2.handle_event("ESP32_VERIFIED", t=1.0).state == State.RETRACT
+
+
+def test_target_lost_leaves_hold_and_pursue():
+    sm = StateMachine(initial_state=State.STANDBY)
+    sm.handle_event("INTRUDER_QUEUED", {"id": "T1"}, t=1.0)
+    sm.handle_event("TARGET_STATIONARY", t=4.0)
+    assert sm.state == State.HOLD
+    assert sm.handle_event("TARGET_LOST", t=5.0).state == State.PURSUE     # gap reset: same as the controller
+    res = sm.handle_event("TARGET_LOST", t=6.0)                            # lost in pursuit: search for the same target
+    assert sm.state == State.SEARCH and res.command.v == 0.0 and sm.active_target == "T1"
+
+
+def test_history_is_bounded():
+    from sentry.app.state_machine import HISTORY_LEN
+    sm = StateMachine(initial_state=State.STANDBY)
+    for i in range(HISTORY_LEN + 10):
+        sm.tick(i * 0.033)
+    assert len(sm.history) == HISTORY_LEN
