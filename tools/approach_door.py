@@ -21,7 +21,7 @@ from pathlib import Path
 import numpy as np
 
 from tools.drive_model import drive_distance_m
-from tools.scan_boards import ESTOP_LATCH, MIN_BATTERY_V, SPIN_W
+from tools.scan_boards import ESTOP_LATCH, MIN_BATTERY_V, SPIN_W, check_args
 
 
 DISTANCE_BOUND_MARGIN_M = 1.0                             # runaway guard only: the worst-case speed model overestimates what the real runs drove (ap_1: 1.75 m in 10 bursts = 0.175 m per burst against 0.21 modelled)
@@ -95,8 +95,11 @@ def main():
     a = ap.parse_args()
     if not a.dry_run and not a.path_clear:
         raise SystemExit("ABORT: the robot drives toward the door: add --path-clear to confirm that the whole way to the door is clear and 0.3 m around the robot (the only obstacle check is a board straight ahead, a chair is not seen)")
-    if not (1.5 <= a.stand_off <= 3.0 and a.door_range_m > a.stand_off - 0.5 and 1.0 <= a.area_exponent <= 2.5 and 0.3 <= a.drive_v <= 1.0 and 0.1 <= a.burst_s <= 1.0 and 0.05 <= a.small_spin_s <= a.spin_s <= 0.5 and 1 <= a.center_tol_deg <= 15 and abs(a.aim_offset_deg) <= 8):
-        raise SystemExit("ABORT: argument out of its safe range")
+    check_args(a, dict(door_range_m=(1.0, 8.0), stand_off=(1.5, 3.0), area_exponent=(1.0, 2.5), drive_v=(0.3, 1.0), burst_s=(0.1, 1.0), spin_s=(0.05, 0.5),
+                       small_spin_s=(0.05, 0.5), center_tol_deg=(1.0, 15.0), aim_offset_deg=(-8.0, 8.0), hold=(0.05, 5.0), samples=(1, 30), max_bursts=(1, 100),
+                       max_steps=(1, 300), search_pulses=(1, 40), lost_max=(1, 20), stop_range=(0.3, 1.5), wait=(1.0, 600.0), min_battery=(10.5, 13.0)))
+    if not (a.door_range_m > a.stand_off - 0.5 and a.small_spin_s <= a.spin_s):
+        raise SystemExit("ABORT: --door-range-m must exceed --stand-off - 0.5 and --small-spin-s must not exceed --spin-s")
 
     from sentry.config import load
     from sentry.nav.localization import LocalizationTracker
