@@ -19,6 +19,7 @@ def build(ref: str, out: Path, *, cwd=None) -> dict:
         raise ValueError('Forbidden paths in committed package: ' + ', '.join(result['violations']))
     raw = subprocess.check_output(['git', 'archive', '--format=zip', commit], cwd=cwd)
     with zipfile.ZipFile(io.BytesIO(raw)) as archive:
+        timestamp = archive.infolist()[0].date_time
         files = {item.filename: hashlib.sha256(archive.read(item)).hexdigest()
                  for item in archive.infolist() if not item.is_dir()}
     manifest = dict(commit=commit, files=files, file_count=len(files),
@@ -30,7 +31,10 @@ def build(ref: str, out: Path, *, cwd=None) -> dict:
     with out.open('xb') as stream:
         stream.write(raw)
     with zipfile.ZipFile(out, 'a', compression=zipfile.ZIP_DEFLATED) as archive:
-        archive.writestr('SUBMISSION-MANIFEST.json', json.dumps(manifest, indent=2) + '\n')
+        info = zipfile.ZipInfo('SUBMISSION-MANIFEST.json', date_time=timestamp)
+        info.compress_type = zipfile.ZIP_DEFLATED
+        info.external_attr = 0o100644 << 16
+        archive.writestr(info, json.dumps(manifest, indent=2) + '\n')
     return dict(commit=commit, archive=str(out), sha256=hashlib.sha256(out.read_bytes()).hexdigest(),
                 file_count=len(files), history_included=False)
 

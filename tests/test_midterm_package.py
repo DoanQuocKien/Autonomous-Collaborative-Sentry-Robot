@@ -64,3 +64,12 @@ def test_untracking_does_not_make_committed_tree_pass(tmp_path):
     with pytest.raises(ValueError):
         build('HEAD', tmp_path/'bad.zip', cwd=tmp_path)
     assert not (tmp_path/'bad.zip').exists()
+
+
+def test_same_commit_produces_same_zip_independent_of_wall_clock(tmp_path, monkeypatch):
+    repo(tmp_path)
+    monkeypatch.setattr(zipfile.time, 'localtime', lambda *_: (1980, 1, 1, 0, 0, 0, 1, 1, 0))
+    first = build('HEAD', tmp_path/'first.zip', cwd=tmp_path)
+    monkeypatch.setattr(zipfile.time, 'localtime', lambda *_: (2000, 1, 1, 0, 0, 0, 1, 1, 0))
+    second = build('HEAD', tmp_path/'second.zip', cwd=tmp_path)
+    assert first['sha256'] == second['sha256']
