@@ -374,3 +374,88 @@ def test_motor_command_projector_legality_sweep():
                     f"Failed legality with s.dead={s.dead:.3f}: input ({v_in}, {w_in}) "
                     f"projected to ({v_out}, {w_out})"
                 )
+
+
+@pytest.mark.parametrize('external', [False, True])
+def test_hold_reacquisition_after_no_tick_gap(runner, external):
+    runner.enqueue_intruder('A', t=0.0)
+    for i in range(1, 61):
+        runner.step(i * .05, (0, 0, 0), (1.5, 0))
+    assert runner.state == State.HOLD
+    assert runner.mode == 'HOLD'
+
+    if external:
+        runner.observe_target((3, 0), t=5, target_id='A')
+        command = runner.step(5, (0, 0, 0))
+    else:
+        command = runner.step(5, (0, 0, 0), (3, 0))
+    assert runner.state == State.PURSUE
+    assert runner.mode == 'PURSUE'
+    assert command[0] > .4
+    for i in range(1, 20):
+        runner.step(5 + i * .05, (0, 0, 0), (3 + i * .02, 0))
+        assert runner.state == State.PURSUE
+        assert runner.mode == 'PURSUE'
+
+
+def test_external_observation_consumed_once_at_measurement_time(runner, monkeypatch):
+    runner.enqueue_intruder('A', t=0)
+    calls = []
+    original = runner.controller.step
+
+    def record(**kwargs):
+        calls.append(kwargs['t'])
+        return original(**kwargs)
+
+    monkeypatch.setattr(runner.controller, 'step', record)
+    runner.observe_target((2, 0), t=.1, target_id='A')
+    assert runner.step(.15, (0, 0, 0))[0] > .4
+    runner.step(.2, (0, 0, 0))
+    # Re-delivery and out-of-order frames cannot restart dwell or change the command.
+    runner.observe_target((1, 0), t=.1, target_id='A')
+    runner.observe_target((1, 0), t=.05, target_id='A')
+    runner.observe_target((1, 0), t=.25, target_id='B')
+    runner.step(.25, (0, 0, 0))
+    assert calls == [.1]
+    runner.observe_target((2, 0), t=.3, target_id='A')
+    assert runner.step(.35, (0, 0, 0))[0] > .4
+    assert calls == [.1, .3]
+    assert runner.step(.6, (0, 0, 0)) == (0, 0)
+
+
+def test_external_observations_can_enter_hold(runner):
+    runner.enqueue_intruder('A', t=0)
+    for i in range(1, 61):
+        runner.observe_target((1.5, 0), t=i * .05, target_id='A')
+        runner.step(i * .05 + .01, (0, 0, 0))
+    assert runner.state == State.HOLD
+    assert runner.mode == 'HOLD'
+
+
+@pytest.mark.parametrize('measurement_t', [.1, 1.1])
+def test_stale_or_future_external_observation_cannot_drive(runner, measurement_t):
+    runner.enqueue_intruder('A', t=0)
+    runner.observe_target((2, 0), t=measurement_t, target_id='A')
+    assert runner.step(1, (0, 0, 0)) == (0, 0)
+    assert runner.controller.detector._last_t is None
+
+
+@pytest.mark.parametrize('bad', [float('nan'), float('inf'), -float('inf')])
+@pytest.mark.parametrize('axis', [0, 1])
+def test_nonfinite_motor_command_stops_before_saturation(bad, axis):
+    from sentry.app.phase3_runner import project_legal_command
+    command = [.55, .3]
+    command[axis] = bad
+    assert project_legal_command(*command, ExploreSettings()) == (0, 0)
+
+
+def test_detector_gap_release_reconciles_runner_mode(runner):
+    # The detector may have a shorter gap timeout than the runner's HOLD policy.
+    runner.s = Phase3Settings(target_lost_timeout_s=10)
+    runner.enqueue_intruder('A', t=0)
+    for i in range(1, 61):
+        runner.step(i * .05, (0, 0, 0), (1.5, 0))
+    assert runner.state == State.HOLD
+    runner.step(5, (0, 0, 0), (3, 0))
+    assert runner.mode == 'PURSUE'
+    assert runner.state == State.PURSUE

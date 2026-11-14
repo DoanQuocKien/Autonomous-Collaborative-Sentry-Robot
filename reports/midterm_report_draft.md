@@ -160,7 +160,7 @@ Trạm ESP32-CAM thu nhận khuôn mặt người bước vào cửa. Module `Fa
 
 ## 5.5 Nhận dạng lại ngoại hình (Re-ID) và Theo dõi mục tiêu (ByteTrack)
 
-Khi kẻ xâm nhập bị từ chối tại cửa, một vector đặc trưng toàn thân 512D được trích xuất qua mạng `OSNet-AIN x1.0`. Vector này được đóng gói cùng thông tin sector di chuyển (Trái/Giữa/Phải dựa trên độ trôi bounding box 2 giây) gửi sang robot JetBot.
+Khi kẻ xâm nhập bị từ chối tại cửa, một vector đặc trưng toàn thân 512D được trích xuất qua mạng `OSNet-AIN x1.0`. Vector này cùng sector di chuyển (Trái/Giữa/Phải dựa trên độ trôi bounding box 2 giây) được lưu trong TargetQueue trên laptop để khóa mục tiêu. JetBot nhận lệnh vận tốc $(v, w)$ qua UDP; vector ngoại hình không được gửi sang robot.
 - Module theo dõi chạy hoàn toàn trên laptop. Đánh giá trên tập benchmark hoán đổi quỹ đạo (crossing tracks) đạt độ khớp ID **100,0%** so với bản gốc Ultralytics — đây là kiểm thử parity thuần túy giữa bản vendor Python 3.6 và bản gốc, **chưa phải độ chính xác theo dõi danh tính người thật**.
 - Về Re-ID: Tập D2 hiện mới có 23 body crops không mơ hồ và thiếu gallery ở 2/3 người, do đó **chưa có kết quả rank-1 / CMC hợp lệ**, chưa chọn được mô hình chiến thắng chính thức và chưa nghiệm thu gate rank-1 $\ge 85\%$ (với $\ge 5$ danh tính gallery).
 - Về Target Lock: Đã replay 822 frame D2 nhưng do chưa có body ID ground truth nên chưa có độ chính xác ID-switch. Kịch bản D3 hai người có ID/tầm nhìn được review vẫn còn thiếu; mục tiêu $\le 1$ switch/phút chưa được nghiệm thu [E04, E11, E12].
@@ -174,6 +174,13 @@ Khi kẻ xâm nhập bị từ chối tại cửa, một vector đặc trưng to
 
 ![F9_gpu](HuynhNguyenHoaiLoc/midterm/figures/F9_gpu.png)
 *Hình F9: Throughput workload và dung lượng VRAM chiếm dụng trên GPU laptop RTX 5060 [E05-E07].*
+
+### 5.7 FP32/FP16 và giới hạn đo cự ly mới nhất
+
+![F18](HuynhNguyenHoaiLoc/midterm/figures/F18_d5_precision.png)
+*F18 — Native PyTorch CUDA trên RTX 5060, YOLOv8n D5-640, cùng 90 ảnh dev-val: FP32/FP16 đạt 123,59/107,38 FPS, p95 12,01/16,35 ms, peak allocated 32,41/17,53 MiB và mAP50 81,071%/81,072%. FP16 chậm hơn ở lần đo này; chưa phải TensorRT, T1 độc lập hoặc kết quả trên RTX 4050. Protocol và nguồn: [bổ sung HNHL 05/11](HuynhNguyenHoaiLoc/midterm/update-2026-11-05.md).*
+
+Các lượt chạy DQK 06–08/11 cho thấy giới hạn của cự ly chiếu tia xuống sàn: camera cao 0,100 m, ở 2,4 m một pixel hàng chân có thể đổi kết quả khoảng 0,19 m. Log pursuit có lúc báo 1,3 m khi thước và chiều cao bbox gợi ý khoảng 1,7 m, làm robot dừng sớm. Pitch thay đổi theo gá và thao tác nên cần `self_pose` trước mỗi lượt. Đây là thử nghiệm có giám sát, chưa có nghiệm thu step response hoặc thời gian HOLD; không suy từ mô phỏng sang kết quả robot. Nguồn: [home_1107](DoanQuocKien/week-05/home_1107/README.md), [cập nhật kế hoạch](../docs/Mid-Term%20Report%20Plan.md).
 
 ---
 
@@ -229,7 +236,7 @@ Module `Phase3Runner` (`sentry/app/phase3_runner.py`) kết nối máy trạng t
 ## 7.1 Phân tầng kiểm thử và kỷ luật nghiệm thu
 
 Dự án áp dụng quy chuẩn kiểm thử nghiêm ngặt phân tách thành 3 tầng:
-- **Tầng T0 (Unit Tests & Simulation):** Kiểm thử logic thuần CPU, thuật toán hình học và mô phỏng động học unicycle trong CI/CD. Toàn bộ **625 tests CPU đã pass 100%**.
+- **Tầng T0 (Unit Tests & Simulation):** Kiểm thử logic thuần CPU, thuật toán hình học và mô phỏng động học unicycle trong CI/CD. Lần chạy CPU/replay ngày 14/11 đạt **754 passed, 5 skipped, 4 deselected**; [log và điều kiện chạy](kouun-rokku/week-06/pr101-review-fixes.md). Đây không phải nghiệm thu GPU hoặc T2.
 - **Tầng T1 (Replay & Offline Data):** Đo đạc trên tập dữ liệu thu nhận thực tế (D1, D2, D5) và benchmark GPU.
 - **Tầng T2 (Hardware-in-the-Loop & Robot thật):** Thử nghiệm chạy trên phần cứng JetBot và ESP32-CAM tại phòng học thực tế.
 
@@ -239,13 +246,13 @@ Nguyên tắc bất di bất dịch của báo cáo: **Mọi con số đều ph�
 
 | Hạng mục chức năng | Trạng thái kỹ thuật | Kết quả định lượng hiện có | File bằng chứng |
 | :-- | :--: | :-- | :-- |
-| **Độ trễ truyền video & điều khiển** | **ĐẠT (T2)** | 20 FPS, p95 53 ms (mục tiêu < 50 ms), mất gói 0,0% | `reports/DoanQuocKien/week-01/` |
+| **Độ trễ truyền video & điều khiển** | **CHƯA ĐẠT độ trễ video** | 20 FPS, p95 53 ms (mục tiêu < 50 ms), mất gói 0,0% | `reports/DoanQuocKien/week-01/` |
 | **An toàn E-Stop & Watchdog** | **ĐẠT (T2)** | Watchdog ngắt motor sau 305–315 ms khi mất gói; phím dead-man R1 ngắt mạch tức thì | `tests/test_estop.py`, `docs/JetBot Notes.md` |
 | **Hiệu chuẩn thấu kính fisheye** | **ĐẠT (T1)** | 52/58 góc nhìn, sai số chiếu lại RMS **0,83 px** | `calib/camera.json` |
 | **Bù góc camera động LiveTilt** | **ĐẠT (T1/T2)**| Sai số khoảng cách 0,5%–6,0% tĩnh, 3,0%–20,0% động | `calib/camera_pose_classroom.json` |
-| **Mô hình di chuyển & ArUco** | **ĐẠT (T1/T2)**| Sai số vị trí sau 3 m: 98,3 cm (không mốc) $\rightarrow$ **14,5 cm** (có ArUco) | `reports/DoanQuocKien/week-05/f15/` |
+| **Mô hình di chuyển & ArUco** | **PENDING (1/5 lượt T2)** | Sai số sau 3 m: 98,3 cm thuần DR (FAIL ngưỡng 40 cm); 14,5 cm có ArUco, mới 1/5 lượt cần thiết | `reports/DoanQuocKien/week-05/f15/` |
 | **Nhận diện cửa vào (Bake-off)** | **ĐẠT (T1)** | XFeat đạt AUC **0,99–1,00**, vượt trội so với ORB (0,91) | `reports/kouun-rokku/week-05/F12_*.png` |
-| **Khoảng cách vật cản mặt sàn** | **ĐẠT (T1)** | Sai số trung vị 5,34%, p90 là 20,91% (8/9 vị trí ghế, thiếu ID21 mép ảnh) | `reports/HuynhNguyenHoaiLoc/midterm/` |
+| **Khoảng cách vật cản mặt sàn** | **CHƯA ĐẠT / PENDING T1** | Median 5,34%; p90 20,91% vượt giới hạn 20%; 8/9 IDs, thiếu ID21, chưa đủ ≥20 IDs và điều kiện độc lập | `reports/HuynhNguyenHoaiLoc/midterm/` |
 | **Fine-tune YOLOv8n vật cản D5** | **DEV-VAL (T1)** | mAP50 đạt 0,810 (input 640); recall chân ghế 96,0%; 307/90 cùng session | `reports/HuynhNguyenHoaiLoc/midterm/` |
 | **Phát hiện dây cáp sàn nhà** | *CHƯA ĐẠT* | Recall 0,000 (0,0%) tại điểm vận hành; chuyển sang fallback hình học | `reports/HuynhNguyenHoaiLoc/midterm/` |
 | **Xác thực khuôn mặt cửa D2** | *PILOT (T1)* | Ngưỡng cosine 0,45: TAR 82,99%, FAR 46,40% (chưa đạt tiêu chuẩn nghiệm thu TAR95%@FAR1%) | `reports/HuynhNguyenHoaiLoc/midterm/` |

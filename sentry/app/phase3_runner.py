@@ -51,8 +51,11 @@ def project_legal_command(v: float, w: float, s: ExploreSettings) -> Tuple[float
     The continuous transition between regimes occurs at |v| = (1 + dead) / 2.
     Rechecks legality and fails safe to (0.0, 0.0) if still invalid.
     """
-    v = max(-1.0, min(1.0, float(v)))
-    w = max(-1.0, min(1.0, float(w)))
+    v, w = float(v), float(w)
+    if not (math.isfinite(v) and math.isfinite(w)):
+        return 0.0, 0.0
+    v = max(-1.0, min(1.0, v))
+    w = max(-1.0, min(1.0, w))
 
     cmd = NavCommand(v, w, "", "")
     if legal(cmd, s):
@@ -137,6 +140,7 @@ class Phase3Runner:
         self._last_target_obs: Optional[Tuple[float, float]] = None
         self._last_target_t: Optional[float] = None
         self._last_obs_target_id: Optional[str] = None
+        self._consumed_target_t: Optional[float] = None
         self._last_ctrl_v: float = 0.0
         self._last_ctrl_w: float = 0.0
         self._last_ctrl_t: Optional[float] = None
@@ -149,6 +153,7 @@ class Phase3Runner:
         self._last_target_obs = None
         self._last_target_t = None
         self._last_obs_target_id = None
+        self._consumed_target_t = None
         self._last_ctrl_v = 0.0
         self._last_ctrl_w = 0.0
         self._last_ctrl_t = None
@@ -257,6 +262,16 @@ class Phase3Runner:
         if tid is not None and self.sm.active_target is not None and tid != self.sm.active_target:
             return
 
+        measurement_t = float(t)
+        if not math.isfinite(measurement_t):
+            raise ValueError("observation timestamp must be finite")
+        # Ignore duplicate/out-of-order measurements, including already consumed ones.
+        latest_t = self._last_target_t
+        if self._consumed_target_t is not None:
+            latest_t = max(latest_t, self._consumed_target_t) if latest_t is not None else self._consumed_target_t
+        if latest_t is not None and measurement_t <= latest_t:
+            return
+
         if hasattr(target_obs, "forward_m") and hasattr(target_obs, "left_m"):
             self._last_target_obs = (float(target_obs.forward_m), float(target_obs.left_m))
         elif hasattr(target_obs, "distance_m") and hasattr(target_obs, "bearing_rad"):
@@ -268,7 +283,7 @@ class Phase3Runner:
         else:
             raise ValueError(f"Unrecognized target observation format: {target_obs!r}")
 
-        self._last_target_t = float(t)
+        self._last_target_t = measurement_t
         self._last_obs_target_id = tid
 
     def observe_obstacle(self, dist_m: Optional[float], bearing_rad: float = 0.0, t: Optional[float] = None) -> None:
@@ -324,10 +339,8 @@ class Phase3Runner:
         curr_state = self.sm.state
 
         # 2. Update observations: track observation arrival explicitly
-        is_new_obs = False
         if target_pos is not None:
             self.observe_target(target_pos, t)
-            is_new_obs = (self._last_target_obs is not None)
         if obstacle_dist_m is not None:
             self.observe_obstacle(obstacle_dist_m, obstacle_bearing_rad, t)
 
@@ -356,14 +369,19 @@ class Phase3Runner:
             target_is_fresh = (
                 target_obs is not None
                 and self._last_obs_target_id == self.active_target
-                and obs_age <= self.s.obs_freshness_timeout_s
+                and 0.0 <= obs_age <= self.s.obs_freshness_timeout_s
             )
 
-            # Freshness contract: release target from HOLD if stale past target_lost_timeout_s
-            if curr_state == State.HOLD and obs_age > self.s.target_lost_timeout_s:
+            is_new_obs = (
+                target_is_fresh
+                and (self._consumed_target_t is None or self._last_target_t > self._consumed_target_t)
+            )
+            # Check the previous consumed sample before the new one can hide a gap.
+            previous_age = t - self._consumed_target_t if self._consumed_target_t is not None else float("inf")
+            if curr_state == State.HOLD and previous_age > self.s.target_lost_timeout_s:
                 logger.info(
                     "Target %r lost while in HOLD (age=%.2fs > %.2fs); releasing HOLD -> PURSUE",
-                    self.active_target, obs_age, self.s.target_lost_timeout_s,
+                    self.active_target, previous_age, self.s.target_lost_timeout_s,
                 )
                 self._dispatch_event("TARGET_MOVING", t)
                 curr_state = self.sm.state
@@ -375,7 +393,7 @@ class Phase3Runner:
                 yaw_err = math.atan2(left_m, max(1e-6, fwd_m))
 
                 ctrl_out = self.controller.step(
-                    t=t,
+                    t=self._last_target_t,
                     robot_pose=robot_pose,
                     target_local_pos=(fwd_m, left_m),
                     yaw_err=yaw_err,
@@ -383,12 +401,14 @@ class Phase3Runner:
                     obstacle_bearing_rad=obs_bearing,
                 )
 
+                self._consumed_target_t = self._last_target_t
+
                 # Check if hold detector triggered mode changes
                 if ctrl_out.event == "TARGET_STATIONARY" and curr_state == State.PURSUE:
                     self._dispatch_event("TARGET_STATIONARY", t)
                     curr_state = self.sm.state
 
-                elif ctrl_out.event == "TARGET_MOVING" and curr_state == State.HOLD:
+                elif (ctrl_out.event in ("TARGET_MOVING", "TARGET_LOST") or ctrl_out.mode == "PURSUE") and curr_state == State.HOLD:
                     self._dispatch_event("TARGET_MOVING", t)
                     curr_state = self.sm.state
 
