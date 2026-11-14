@@ -197,3 +197,24 @@ class PersonReID:
             row = rows[index]
             rows[index] = PersonAppearance(row.xyxy, row.confidence, normalize(vector))
         return ReIDResult(float(t), tuple(rows), self.encoder.model_id)
+
+
+def associate_person(face, detections, confidence, min_overlap=0.8):
+    """Require exactly one class-0 proposal containing >=80% of the face area."""
+    if not 0 < min_overlap <= 1:
+        raise ValueError('face overlap must be in (0,1]')
+    x1, y1, x2, y2 = map(float, face)
+    if not np.isfinite(face).all() or x2 <= x1 or y2 <= y1:
+        raise ValueError('finite positive face box required')
+    candidates = []
+    for d in detections:
+        if d.class_id != 0 or not np.isfinite(d.confidence) or d.confidence < confidence:
+            continue
+        a, b, c, e = d.xyxy
+        if not np.isfinite(d.xyxy).all() or c <= a or e <= b:
+            continue
+        overlap = max(0, min(c, x2) - max(a, x1)) * max(0, min(e, y2) - max(b, y1))
+        if overlap / ((x2 - x1) * (y2 - y1)) >= min_overlap:
+            candidates.append(d.xyxy)
+    return ((candidates[0], None) if len(candidates) == 1 else
+            (None, 'ambiguous_person' if candidates else 'no_associated_person'))

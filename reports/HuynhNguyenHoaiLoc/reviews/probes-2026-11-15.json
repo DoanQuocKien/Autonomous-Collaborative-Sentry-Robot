@@ -1,0 +1,15 @@
+{
+  "scope": "argument guards only (AST truncated before runtime imports); no models, network or motors",
+  "find_finite_insufficient": "ABORT: 0.1 m of clear floor is not enough for a 5.5 s drive (needs 1.8 m): use --baseline-s 0.0 or less, or find more room",
+  "find_nan_clearance": "passed argument guards",
+  "approach_inf_range": "passed argument guards",
+  "eof": {
+    "events": [],
+    "motion_allowed": true,
+    "open_fds": [
+      3,
+      4
+    ],
+    "closed_fds": []
+  }
+}

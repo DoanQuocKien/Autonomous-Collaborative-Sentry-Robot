@@ -1,0 +1,170 @@
+{
+  "schema_version": 1,
+  "date": "2026-11-14",
+  "code_commit": "058c97883ee7152dfb6cbb9c88426756e078105a",
+  "participants": {
+    "enrolled": "P01",
+    "impostor": "P02_UNENROLLED",
+    "labels_source": "user declarations for separate single-actor runs",
+    "impostor_physical_attempts_confirmed": 3,
+    "enrolled_physical_attempts_confirmed": null
+  },
+  "count_unit": "automatic segments, including incomplete segments; no physical-attempt alignment asserted",
+  "threshold": 0.45,
+  "threshold_calibrated": false,
+  "crop_scope": "visible_body",
+  "t1_passed": false,
+  "limitations": [
+    "one enrolled person and one impostor in one session",
+    "physical attempts and automatically segmented entries are different units",
+    "incomplete and interrupted segments retained",
+    "upper-body crops require cross-camera validation",
+    "combined robot application and three-member protocol remain pending"
+  ],
+  "genuine": {
+    "summary": {
+      "status": "completed",
+      "processed_frames": 336,
+      "skipped_schedule_frames": 656,
+      "source": {
+        "duration_s": 90.18173959999694,
+        "consumed_frames": 992,
+        "decoded_frames": 1074,
+        "reconnects": 0
+      },
+      "evidence_counts": {
+        "person_observations": 43,
+        "detected_faces": 194,
+        "associated_faces": 43,
+        "accepted_face_samples": 42
+      },
+      "decisions": {
+        "authorized": 3,
+        "queued": 0,
+        "unresolved": 2,
+        "interrupted": 1
+      },
+      "t1_passed": false,
+      "motor_commands_sent": 0
+    },
+    "source_config_sha256": "1573ba55d12f5c15a786b60f9f28705e1770f02a415f740cb00dc0bd8dfbfb85",
+    "appearance_model_id": "osnet_ain_x1_0:2f38acc25e28cb29407635db2be315edc08d5457a904b72a9a11e427f41f3242",
+    "model_runtime": {
+      "osnet_device": "cuda:0",
+      "person_weights_sha256": "f59b3d833e2ff32e194b5bb8e08d211dc7c5bdf144b90d2c8412c47ccfc83b36",
+      "face_models": {
+        "detection": {
+          "sha256": "5e4447f50245bbd7966bd6c0fa52938c61474a04ec7def48753668a9d8b4ea3a",
+          "providers": [
+            "CUDAExecutionProvider",
+            "CPUExecutionProvider"
+          ]
+        },
+        "recognition": {
+          "sha256": "9cc6e4a75f0e2bf0b1aed94578f144d15175f357bdc05e815e5c4a02b319eb4f",
+          "providers": [
+            "CUDAExecutionProvider",
+            "CPUExecutionProvider"
+          ]
+        }
+      }
+    },
+    "logged_segments": 6,
+    "decided_segments": 3,
+    "expected_decisions": 3,
+    "expected_fraction_of_logged_segments": 0.5,
+    "selected_score_min": 0.6688566207885742,
+    "selected_score_max": 0.7555924654006958,
+    "latency_s": {
+      "n": 3,
+      "values": [
+        3.660285899997689,
+        3.0753560999874026,
+        4.913324100023601
+      ],
+      "p50": 3.660285899997689,
+      "p95": 4.788020280021009,
+      "minimum": 3.0753560999874026,
+      "maximum": 4.913324100023601
+    },
+    "processed_fps": 3.7258096981754316,
+    "false_queue_events_observed": 0
+  },
+  "impostor": {
+    "summary": {
+      "status": "completed",
+      "processed_frames": 359,
+      "skipped_schedule_frames": 723,
+      "source": {
+        "duration_s": 90.12729299999774,
+        "consumed_frames": 1082,
+        "decoded_frames": 1104,
+        "reconnects": 0
+      },
+      "evidence_counts": {
+        "person_observations": 158,
+        "detected_faces": 178,
+        "associated_faces": 139,
+        "accepted_face_samples": 95
+      },
+      "decisions": {
+        "authorized": 0,
+        "queued": 3,
+        "unresolved": 3,
+        "interrupted": 0
+      },
+      "t1_passed": false,
+      "motor_commands_sent": 0
+    },
+    "source_config_sha256": "1573ba55d12f5c15a786b60f9f28705e1770f02a415f740cb00dc0bd8dfbfb85",
+    "appearance_model_id": "osnet_ain_x1_0:2f38acc25e28cb29407635db2be315edc08d5457a904b72a9a11e427f41f3242",
+    "model_runtime": {
+      "osnet_device": "cuda:0",
+      "person_weights_sha256": "f59b3d833e2ff32e194b5bb8e08d211dc7c5bdf144b90d2c8412c47ccfc83b36",
+      "face_models": {
+        "detection": {
+          "sha256": "5e4447f50245bbd7966bd6c0fa52938c61474a04ec7def48753668a9d8b4ea3a",
+          "providers": [
+            "CUDAExecutionProvider",
+            "CPUExecutionProvider"
+          ]
+        },
+        "recognition": {
+          "sha256": "9cc6e4a75f0e2bf0b1aed94578f144d15175f357bdc05e815e5c4a02b319eb4f",
+          "providers": [
+            "CUDAExecutionProvider",
+            "CPUExecutionProvider"
+          ]
+        }
+      }
+    },
+    "logged_segments": 6,
+    "decided_segments": 3,
+    "expected_decisions": 3,
+    "expected_fraction_of_logged_segments": 0.5,
+    "selected_score_min": 0.07586884498596191,
+    "selected_score_max": 0.1745557337999344,
+    "latency_s": {
+      "n": 3,
+      "values": [
+        9.387037200009217,
+        9.355186400003731,
+        10.245487400010461
+      ],
+      "p50": 9.387037200009217,
+      "p95": 10.159642380010336,
+      "minimum": 9.355186400003731,
+      "maximum": 10.245487400010461
+    },
+    "processed_fps": 3.9832551056427383,
+    "false_authorizations_observed": 0,
+    "queued_lengths_after_event": [
+      0,
+      1,
+      2
+    ],
+    "first_record_active": true,
+    "subsequent_records_keep_first_active": true,
+    "all_queue_events_emitted": true
+  }
+}
