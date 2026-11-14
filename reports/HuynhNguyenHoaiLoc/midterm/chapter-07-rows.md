@@ -1,5 +1,19 @@
 # Kết quả HNHL để ghép Chương 7
 
+**Bổ sung11/11:** #99/#102/#103 đã merge sau review và sửa guard/cleanup; code tests không đồng nghĩa T2. Tile3 có21 HOLD rows trong2 đoạn ngắn;80 rows stopped PURSUE trước đó không phải HOLD. Bảng trunk cần ghi full-series/full-window (bỏ9 warm-up samples) riêng. Experiment B tooling đã merge: D1 configured/ORG-obstacle/ORG-free-space tìm1/24,8/24,6/24 objects; error0,041m chỉ trên8 found, không all-object PASS hoặc model adoption. [Nguồn, controls thiếu và bảng so sánh](update-2026-11-11.md).
+
+**Bổ sung10/11:** retest ghế lớp09/11 cho4/36 frame detection và0/36 distance (giữ error=null). Đây là kết quả failure/coverage mới, không thay8/9 IDs F10 cũ hoặc gộp hai tape origins. Depth/zoom/floor-anchor chưa transfer; trunk một người có per-set bias,0,49m và0,50m là protocol khác. [Bảng nguồn/so sánh](update-2026-11-10.md), [F10 availability](figures/F10_availability_1109.png). Không có T1/T2 PASS mới; không đổi default detector.
+
+**Đối chiếu bản sửa KR969a5e0 ngày09/11:** Chương7 của draft vẫn ghi distance “ĐẠT T1”; phải đổi sang kết quả bộ nhỏ/partial pending vì p90=20,91%, chỉ8/9 IDs và chưa≥20. Các sửa scope/links khác đã có, không yêu cầu làm lại. [Theo dõi review mới](followup-pr101-2026-11-09.md); chưa có experimental acceptance mới.
+
+**Hiện hành09/11:** [nguồn mới và đính chính](update-2026-11-09.md). DQK rút lại giả thuyết mount-slip/foot-stance; nguyên nhân ranging vẫn chưa rõ. `home_6_1` log≈1,27m nhưng tape1,77m, chưa accuracy/T2 PASS. Link-cut có5 video stop-proxy, median516ms/range481–524ms; chưa đo mechanical stop hoặc chứng minh≤350ms, trial4 có R1 end=0. KR có Phase3 T0/bản thảo nhưng còn findings ở #101; không thay D3 hoặc robot acceptance. D3/gallery/D5 độc lập/F11/F7 raw/combined4050 vẫn pending. [Sửa claim và figure paths cho editor](HNHL-EDITOR-CORRECTIONS-1109.md).
+
+**Bổ sung 07/11 từ DQK:** [home pilot và camera/tape diagnostics](update-2026-11-07.md). Pose mới pitch −4,68..−4,49°, roll biến thiên chưa giải thích; readings tại tape 1,2/1,8/2,4 m được DQK báo 1,02/1,57/1,63 m. `home_4_1` có 362 log rows, logged HOLD tại 7,45 s và một tape endpoint 1,25 m do DQK báo, chưa time-aligned. Không dùng `home_1_3` in-band đã withdraw hoặc `home_3_1` start-near để báo pursuit PASS. PR nguồn #99 chưa merge; đây không phải kết quả HNHL chạy robot hoặc full T1/T2.
+
+**Trạng thái 06/11:** DQK báo camera sửa socket gốc, stream hoạt động khoảng 18,6 FPS; chưa có raw repair log hoặc HNHL HIL để xác minh. Camera mất stream đã được báo khắc phục, nhưng self-pose/height phải kiểm tra lại trước run được tính. Không dùng phép kiểm tra stream này làm F7 latency, D3 tracking hoặc T2 PASS. Adapter recording→D3 manifests đã qua T0, chưa có reviewed D3 mới. [Nguồn và cập nhật hiện hành](update-2026-11-06.md).
+
+**Bổ sung mới nhất 05/11:** [F18 và trạng thái sau PR #98](update-2026-11-05.md). Dòng mới để ghép: native PyTorch FP32/FP16 D5-640 trên RTX5060 đạt 123,59/107,38 FPS, p95 12,01/16,35 ms, Torch peak allocated 32,41/17,53 MiB; mAP50 81,071%/81,072% trên cùng 90 ảnh dev-val. FP16 chưa tăng tốc; chưa TensorRT/independent T1. Camera JetBot hỏng: các thử nghiệm cần video bị chặn. G2 chưa đạt, không làm Stage A/B mới trước giữa kỳ. Các kết quả lịch sử dưới đây giữ nguyên.
+
 Snapshot 01/11/2026. Mã E01–E12 tra tại [evidence.md](evidence.md). “Đã đo” mô tả bằng chứng, không mặc định đồng nghĩa đạt nghiệm thu. KR có thể rút gọn các dòng này trong ngân sách chung 1,5 trang của Chương 7.
 
 Bổ sung 03/11: [bảng GPU từng model, D5 per-class và video/watchdog/Jetson](update-2026-11-03.md) cung cấp E13–E20. [Audit tuần 5](week-05-audit.md) cập nhật PR #92 đã merge; không dùng suite review nhánh KR để thay nghiệm thu D3 của HNHL.

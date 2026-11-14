@@ -1,0 +1,17 @@
+{
+ "trials": 5,
+ "seen": 5,
+ "upper_bound_s": [
+  0.481,
+  0.503,
+  0.516,
+  0.521,
+  0.524
+ ],
+ "max_s": 0.524,
+ "median_s": 0.516,
+ "battery_v_start": 11.84,
+ "battery_v_end": 11.816,
+ "date": "2026-11-08 17:52",
+ "note": "upper bound from the video: includes the video delay (< 0.16 s on 2026-10-30) and the frame period; spin in place at w = 0.45; laptop path only, NOT the on-robot Edge safety pass; plan limit 0.35 s"
+}

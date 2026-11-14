@@ -383,6 +383,15 @@ def main():
             from sentry.perception.obstacle import ObstacleDetector
             obs_det = ObstacleDetector.from_config(camera_pose_path=a.camera_pose, floor_type=a.floor)
             explorer = Explorer(ExploreSettings(), obs_det.geometry.size)
+            first = None                                                       # warm-up: the first inference loads the model and takes seconds; inside the control loop it
+            for _ in range(40):                                                # tripped the 0.5 s frame-stale stop 3 s into every run (found 2026-11-11, dry runs t2c_dry_1/2)
+                first = rx.read(timeout=1.0)
+                if first is not None:
+                    break
+            if first is not None:
+                print("warming up the obstacle detector...", flush=True)
+                for k in range(3):
+                    obs_det(first.frame_bgr, time.time() + k * 0.1, mode="explore", floor_type=a.floor)
         else:
             print("NO OBSTACLE CHECK (no --camera-pose): the floor must be cleared and you must hold R1", flush=True)
 

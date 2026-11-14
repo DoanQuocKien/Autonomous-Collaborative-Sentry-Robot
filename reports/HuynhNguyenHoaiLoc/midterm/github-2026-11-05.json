@@ -1,0 +1,24 @@
+{
+  "checked_date": "2026-11-05",
+  "timezone": "Asia/Bangkok",
+  "pull_requests": [
+    {
+      "number": 98,
+      "url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/pull/98",
+      "state": "closed",
+      "merged": true,
+      "head_sha": "24f5a0490aabbae6c23dacdfb05c21c30e499de2",
+      "merge_commit_sha": "4c041b647529153debd4679f5669905206c3aea6",
+      "merged_at": "2026-11-05T07:21:14Z"
+    },
+    {
+      "number": 99,
+      "url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/pull/99",
+      "state": "open",
+      "merged": false,
+      "head_sha": "87a4a4ad6020fe974306781d5f735c82e9d67652",
+      "merge_commit_sha": "2f82d1572bddf9e94d9c293981f22d5dbab08ed6",
+      "merged_at": null
+    }
+  ]
+}

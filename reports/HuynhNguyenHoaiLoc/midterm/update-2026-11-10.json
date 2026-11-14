@@ -1,0 +1,907 @@
+{
+  "snapshot_date": "2026-11-10",
+  "evidence": {
+    "C00": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-10/classroom/README.md",
+      "sha256": "3d5a8e2dd83e818ce76e7adb15cd1a6c47f622c0cbc6b12219a7f8cdbe2b795d"
+    },
+    "C01": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-10/classroom/pose/camera_pose_self_1109_1.json",
+      "sha256": "642991741d8b7b43578e76768d018bd6b4ff955b0ff8b24131753335957ad62c"
+    },
+    "C02": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-10/classroom/pose/camera_pose_self_1109_2.json",
+      "sha256": "f1800a4a1fb71dc6b3c42920ce3c3eb125a239d569ead845f6c7f54ab4967f4b"
+    },
+    "C03": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-10/classroom/pose/camera_pose_self_1109_3.json",
+      "sha256": "4a1c88d8ffc0060395f5f219b207f3f72cc6093aaf2aa2bc47ae9e9bd18a5305"
+    },
+    "C04": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-10/classroom/pose/camera_pose_self_1109_4.json",
+      "sha256": "eeeeb83ed9201afed0deaf563938316d7e74d46be46f525d98c7cc4e0ddbef87"
+    },
+    "C05": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-10/classroom/furniture/chair_1p2_1109/result.json",
+      "sha256": "29c1fac0389f3eaee654eafb484141ec7969d36e794afacd7ccaac29afd121e8"
+    },
+    "C06": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-10/classroom/furniture/chair_1p8_1109/result.json",
+      "sha256": "de9d2c49cadeaddacb78285daf25683f1910de3f5849e12c88f9b53d061dc683"
+    },
+    "C07": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-10/classroom/furniture/chair_2p4_1109/result.json",
+      "sha256": "1505a44ee7b39c6bfb7c33ac5d0c57c0b90244315b8504689975b0a68245d961"
+    },
+    "C08": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-10/classroom/experiment_B_offline_pass1.json",
+      "sha256": "66276a21c644354ab4ad1016da380585c8e23dc79c099f90c2f1753aca63fcf2"
+    },
+    "C09": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-10/classroom/experiment_A_depth_pass1_body_zoom2.json",
+      "sha256": "60daada72a81785830c95d8bb54baf49ce32dcfd68055c57e0d827fd822e1c4f"
+    },
+    "C10": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-10/classroom/experiment_A_depth_zoom_holdout.json",
+      "sha256": "5191d5c1b70fe16d945213947854628b1dbee12750d5aed0b9bd72adae929db5"
+    },
+    "C11": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-10/classroom/experiment_A_models_trial.json",
+      "sha256": "5f3c0772669437e2379d64f2f99173832be066a2a0864e54931dee7d640ab842"
+    },
+    "C12": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-10/classroom/experiment_A_floor_anchor_trial.json",
+      "sha256": "bfe837118e6ff203e36714014768b61a87f9c09945fc2b602ebcde93806d0572"
+    },
+    "C13": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-10/classroom/experiment_A_anthro_range.json",
+      "sha256": "9a1bb562e84fed01379a66532a43991e061ae62b88187861d7d17984bb84c829"
+    },
+    "C14": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-10/classroom/experiment_A_anthro_temporal.json",
+      "sha256": "709715d60fc6c52905e358425e3c0ceb561e350016ff0f533d3699640c5bf754"
+    },
+    "C15": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-10/classroom/experiment_A_anthro_fusion.json",
+      "sha256": "e0fff3f3c4610e9ee0e45bd2e7e0a9a84f2a8443f4ae6e055b47e0d585aa9035"
+    },
+    "C16": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-10/pursuit/README.md",
+      "sha256": "14486f728a4d767f07c455aa17bc5711457e38ca84dd8115b93d867ae75c6c45"
+    },
+    "C17": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-10/plan/week06.md",
+      "sha256": "567cdd8345dddabaef12535dad41b218a67620b7960bd54f528a584162ff7240"
+    },
+    "C18": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-10/plan/limits.md",
+      "sha256": "1c616d873cfc153f49d7ac1f7a95c5ea55c0b5474a6f5845ab603145500ed19c"
+    },
+    "C19": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-10/pursuit/p2_dry_1/log.csv",
+      "sha256": "dfc03d71148fca4493fb6eb99a7487391791cd1b37604736636ef013893f3796"
+    },
+    "C20": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-10/pursuit/p2_dry_1/summary.json",
+      "sha256": "ed5bdd5386bb609db69bb6be0307d2fa17a4a3a3714ca458b7a69dda3fe1bf68"
+    },
+    "C21": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-10/pursuit/tile_1_1/log.csv",
+      "sha256": "bbe6ffceb1793f741d17c4eb1f382cc0f17abefb4dde759a18dbfdbd1f4323b3"
+    },
+    "C22": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-10/pursuit/tile_1_1/summary.json",
+      "sha256": "e290fc14f44878eec06bfe6a1f3ef6936cf58ab706591b0c6613721064e6e1bc"
+    },
+    "C23": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-10/pursuit/tile_2_1/log.csv",
+      "sha256": "b9faac6acbf8fb829be80c5d66808ecda5ea1a3c2231351f9bda4f347f6c32b3"
+    },
+    "C24": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-10/pursuit/tile_2_1/summary.json",
+      "sha256": "89b2b332b6f06490388160698ace7cda38742d47e8ec19365577b149b07a47f5"
+    },
+    "C-provenance": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-10/provenance.json",
+      "sha256": "3bfeaa4ae95e13ab0ae6b41e792e967b9d6758f234269c240d4deb60ac6c4140"
+    },
+    "review99.md": {
+      "path": "reports/HuynhNguyenHoaiLoc/reviews/PR-99-2026-11-10.md",
+      "sha256": "df012a5609adc159e12fcc1c9d543c8d950a052de4b2ab7054ef7f197176c74a"
+    },
+    "review99.json": {
+      "path": "reports/HuynhNguyenHoaiLoc/reviews/PR-99-2026-11-10.json",
+      "sha256": "0c233ad49a2890c2edbbe3ad5fbba3981c82230d92043faf3d14487dab81f487"
+    },
+    "review102.md": {
+      "path": "reports/HuynhNguyenHoaiLoc/reviews/PR-102-2026-11-10.md",
+      "sha256": "9e005cd88c7ab7b7d9857fe54de9706a9a9f49e9ee1cafbea0ef7782ab2d98c8"
+    },
+    "review102.json": {
+      "path": "reports/HuynhNguyenHoaiLoc/reviews/PR-102-2026-11-10.json",
+      "sha256": "25392c010717d55dad99b378b50716e4319f1cbaab7733397676f88909656068"
+    },
+    "tests99": {
+      "path": "reports/HuynhNguyenHoaiLoc/reviews/PR-99-2026-11-10-tests.log",
+      "sha256": "21e63042999e80ed8ca4337db28cfb0669fd12bdc17ed78bf3146f6b87d5b036"
+    },
+    "evidence-tests": {
+      "path": "reports/HuynhNguyenHoaiLoc/week-06/tests_evidence_2026-11-10.log",
+      "sha256": "72c0a098434ff57a46350a5eb089bcad7a95762aec8baaa3d0552fe7f515f1fb"
+    },
+    "repro99": {
+      "path": "reports/HuynhNguyenHoaiLoc/reviews/PR-99-2026-11-10-reproductions.json",
+      "sha256": "71af21aa5d1b677c9c1bece29d6ea5fa3dd0470c84d925372ea7af92afcfc2ec"
+    }
+  },
+  "source_heads": {
+    "99": "45416e7ed13293df805e2f4e9255b4dd9e1d3393",
+    "102": "8ec3598c4387640e790a33d82785b3c76ed8375a"
+  },
+  "source_prs_merged": false,
+  "chairs": [
+    {
+      "front_marker_m": 1.2,
+      "frames": 12,
+      "detected": 0,
+      "ranged": 0,
+      "median_error_m": null,
+      "tape_origin": "robot front to nearest chair floor point; not lens-forward truth",
+      "acceptance": false
+    },
+    {
+      "front_marker_m": 1.8,
+      "frames": 12,
+      "detected": 4,
+      "ranged": 0,
+      "median_error_m": null,
+      "tape_origin": "robot front to nearest chair floor point; not lens-forward truth",
+      "acceptance": false
+    },
+    {
+      "front_marker_m": 2.4,
+      "frames": 12,
+      "detected": 0,
+      "ranged": 0,
+      "median_error_m": null,
+      "tape_origin": "robot front to nearest chair floor point; not lens-forward truth",
+      "acceptance": false
+    }
+  ],
+  "offline_B": {
+    "base": {
+      "1.2": [
+        0,
+        0,
+        null
+      ],
+      "1.8": [
+        6,
+        0,
+        null
+      ],
+      "2.4": [
+        0,
+        0,
+        null
+      ]
+    },
+    "yolov8s": {
+      "1.2": [
+        5,
+        0,
+        null
+      ],
+      "1.8": [
+        1,
+        0,
+        null
+      ],
+      "2.4": [
+        12,
+        5,
+        2.21
+      ]
+    },
+    "world": {
+      "1.2": [
+        0,
+        0,
+        null
+      ],
+      "1.8": [
+        8,
+        0,
+        null
+      ],
+      "2.4": [
+        12,
+        0,
+        null
+      ]
+    },
+    "segfloor": {
+      "1.2": [
+        0,
+        0,
+        null
+      ],
+      "1.8": [
+        6,
+        0,
+        null
+      ],
+      "2.4": [
+        0,
+        0,
+        null
+      ]
+    },
+    "yolov8s+segfloor": {
+      "1.2": [
+        5,
+        0,
+        null
+      ],
+      "1.8": [
+        1,
+        0,
+        null
+      ],
+      "2.4": [
+        12,
+        5,
+        2.21
+      ]
+    }
+  },
+  "temporal_trunk_prior_m": 0.5,
+  "temporal": {
+    "1.25 m (home_4_1)": {
+      "tape_m": 1.25,
+      "frames": 171,
+      "gated": 171,
+      "raw": {
+        "samples": 171,
+        "median_m": 1.4064493932655735,
+        "median_signed_error_m": 0.1564493932655735,
+        "sd_m": 0.025040207795295484,
+        "frame_fraction_within_15cm": 0.391812865497076
+      },
+      "smoothed": {
+        "samples": 171,
+        "median_m": 1.4043532549305193,
+        "median_signed_error_m": 0.15435325493051932,
+        "sd_m": 0.015026759640194197,
+        "frame_fraction_within_15cm": 0.32748538011695905
+      }
+    },
+    "1.77 m (home_6_1)": {
+      "tape_m": 1.77,
+      "frames": 455,
+      "gated": 455,
+      "raw": {
+        "samples": 455,
+        "median_m": 1.7543895781194947,
+        "median_signed_error_m": -0.01561042188050532,
+        "sd_m": 0.02585261413146062,
+        "frame_fraction_within_15cm": 1.0
+      },
+      "smoothed": {
+        "samples": 455,
+        "median_m": 1.7541647259314619,
+        "median_signed_error_m": -0.01583527406853813,
+        "sd_m": 0.020603808987683974,
+        "frame_fraction_within_15cm": 1.0
+      }
+    },
+    "1.80 m (box_1p8_1)": {
+      "tape_m": 1.8,
+      "frames": 122,
+      "gated": 122,
+      "raw": {
+        "samples": 122,
+        "median_m": 1.9589732180009318,
+        "median_signed_error_m": 0.15897321800093178,
+        "sd_m": 0.02230954427403338,
+        "frame_fraction_within_15cm": 0.3360655737704918
+      },
+      "smoothed": {
+        "samples": 122,
+        "median_m": 1.9593071827522788,
+        "median_signed_error_m": 0.15930718275227873,
+        "sd_m": 0.014405937424192498,
+        "frame_fraction_within_15cm": 0.29508196721311475
+      }
+    }
+  },
+  "fusion_trunk_prior_m": 0.49,
+  "fusion": {
+    "1.25 m (home_4_1)": {
+      "foot": {
+        "samples": 162,
+        "median_m": 1.4073595284408955,
+        "median_signed_error_m": 0.1573595284408955,
+        "sd_m": 0.017691884350513287,
+        "frame_fraction_within_15cm": 0.19753086419753085
+      },
+      "trunk": {
+        "samples": 162,
+        "median_m": 1.3766604103801419,
+        "median_signed_error_m": 0.12666041038014186,
+        "sd_m": 0.014322984600259362,
+        "frame_fraction_within_15cm": 0.8765432098765432
+      },
+      "hip_knee": {
+        "samples": 162,
+        "median_m": 1.6025281102128761,
+        "median_signed_error_m": 0.3525281102128762,
+        "sd_m": 0.02874521479301357,
+        "frame_fraction_within_15cm": 0.0
+      },
+      "knee_ankle": {
+        "samples": 162,
+        "median_m": 1.7363147904581488,
+        "median_signed_error_m": 0.48631479045814896,
+        "sd_m": 0.017619148940428465,
+        "frame_fraction_within_15cm": 0.0
+      },
+      "sh_ankle": {
+        "samples": 162,
+        "median_m": 1.5337547629028405,
+        "median_signed_error_m": 0.2837547629028405,
+        "sd_m": 0.006905238199708956,
+        "frame_fraction_within_15cm": 0.0
+      },
+      "body_median": {
+        "samples": 162,
+        "median_m": 1.5681932085699868,
+        "median_signed_error_m": 0.3181932085699868,
+        "sd_m": 0.017106343308033203,
+        "frame_fraction_within_15cm": 0.0
+      },
+      "fusion": {
+        "samples": 162,
+        "median_m": 1.4824383765654603,
+        "median_signed_error_m": 0.2324383765654603,
+        "sd_m": 0.010842002255614807,
+        "frame_fraction_within_15cm": 0.0
+      }
+    },
+    "1.77 m (home_6_1)": {
+      "foot": {
+        "samples": 446,
+        "median_m": 1.4341328818298635,
+        "median_signed_error_m": -0.3358671181701365,
+        "sd_m": 0.01336465357893317,
+        "frame_fraction_within_15cm": 0.0
+      },
+      "trunk": {
+        "samples": 446,
+        "median_m": 1.7190814314128324,
+        "median_signed_error_m": -0.05091856858716759,
+        "sd_m": 0.020307494265754653,
+        "frame_fraction_within_15cm": 1.0
+      },
+      "hip_knee": {
+        "samples": 446,
+        "median_m": 2.1095343628409955,
+        "median_signed_error_m": 0.3395343628409955,
+        "sd_m": 0.013583230987997774,
+        "frame_fraction_within_15cm": 0.0
+      },
+      "knee_ankle": {
+        "samples": 446,
+        "median_m": 2.1989078675683675,
+        "median_signed_error_m": 0.4289078675683675,
+        "sd_m": 0.02081490022378871,
+        "frame_fraction_within_15cm": 0.0
+      },
+      "sh_ankle": {
+        "samples": 446,
+        "median_m": 1.959231525892148,
+        "median_signed_error_m": 0.18923152589214787,
+        "sd_m": 0.013312294554638377,
+        "frame_fraction_within_15cm": 0.0
+      },
+      "body_median": {
+        "samples": 446,
+        "median_m": 2.0359484349119294,
+        "median_signed_error_m": 0.26594843491192943,
+        "sd_m": 0.012704065077839466,
+        "frame_fraction_within_15cm": 0.0
+      },
+      "fusion": {
+        "samples": 446,
+        "median_m": 1.733667493726091,
+        "median_signed_error_m": -0.03633250627390905,
+        "sd_m": 0.011029549544769878,
+        "frame_fraction_within_15cm": 1.0
+      }
+    },
+    "1.80 m (box_1p8_1)": {
+      "foot": {
+        "samples": 113,
+        "median_m": 1.9137250342791465,
+        "median_signed_error_m": 0.11372503427914649,
+        "sd_m": 0.02856059917758372,
+        "frame_fraction_within_15cm": 0.9292035398230089
+      },
+      "trunk": {
+        "samples": 113,
+        "median_m": 1.919347435356031,
+        "median_signed_error_m": 0.11934743535603087,
+        "sd_m": 0.013617941844762366,
+        "frame_fraction_within_15cm": 1.0
+      },
+      "hip_knee": {
+        "samples": 113,
+        "median_m": 2.280415022552621,
+        "median_signed_error_m": 0.48041502255262114,
+        "sd_m": 0.01698870225156636,
+        "frame_fraction_within_15cm": 0.0
+      },
+      "knee_ankle": {
+        "samples": 113,
+        "median_m": 2.3995721659653912,
+        "median_signed_error_m": 0.5995721659653912,
+        "sd_m": 0.021035912568373016,
+        "frame_fraction_within_15cm": 0.0
+      },
+      "sh_ankle": {
+        "samples": 113,
+        "median_m": 2.1508409152814325,
+        "median_signed_error_m": 0.35084091528143246,
+        "sd_m": 0.008880427758614078,
+        "frame_fraction_within_15cm": 0.0
+      },
+      "body_median": {
+        "samples": 113,
+        "median_m": 2.2128808529939623,
+        "median_signed_error_m": 0.41288085299396227,
+        "sd_m": 0.012485070664998103,
+        "frame_fraction_within_15cm": 0.0
+      },
+      "fusion": {
+        "samples": 113,
+        "median_m": 2.0620490019430306,
+        "median_signed_error_m": 0.2620490019430306,
+        "sd_m": 0.016749678371270147,
+        "frame_fraction_within_15cm": 0.0
+      }
+    }
+  },
+  "depth_zoom": {
+    "cal 1.8 m (box_1p8_1, tape 1.80)": {
+      "1.0": {
+        "samples": 12,
+        "median_m": 3.777720241909006,
+        "median_signed_error_m": 1.9777202419090059,
+        "sd_m": 0.13938614495049292,
+        "frame_fraction_within_15cm": 0.0
+      },
+      "1.4": {
+        "samples": 12,
+        "median_m": 2.737968244367597,
+        "median_signed_error_m": 0.9379682443675965,
+        "sd_m": 0.11002582240421922,
+        "frame_fraction_within_15cm": 0.0
+      },
+      "1.6": {
+        "samples": 12,
+        "median_m": 2.1587967726953625,
+        "median_signed_error_m": 0.3587967726953625,
+        "sd_m": 0.1353761725299278,
+        "frame_fraction_within_15cm": 0.08333333333333333
+      },
+      "1.7": {
+        "samples": 12,
+        "median_m": 1.9750072027208037,
+        "median_signed_error_m": 0.1750072027208036,
+        "sd_m": 0.12180497200000945,
+        "frame_fraction_within_15cm": 0.4166666666666667
+      },
+      "1.8": {
+        "samples": 12,
+        "median_m": 1.7932890557579035,
+        "median_signed_error_m": -0.006710944242096506,
+        "sd_m": 0.1355085206340553,
+        "frame_fraction_within_15cm": 0.8333333333333334
+      }
+    },
+    "cal 1.77 m (home_6_1 hold, tape 1.77)": {
+      "1.0": {
+        "samples": 12,
+        "median_m": 3.672061185317955,
+        "median_signed_error_m": 1.9020611853179552,
+        "sd_m": 0.053653509696225274,
+        "frame_fraction_within_15cm": 0.0
+      },
+      "1.4": {
+        "samples": 12,
+        "median_m": 2.6506439914292153,
+        "median_signed_error_m": 0.8806439914292152,
+        "sd_m": 0.10970930721533889,
+        "frame_fraction_within_15cm": 0.0
+      },
+      "1.6": {
+        "samples": 12,
+        "median_m": 2.250481343828982,
+        "median_signed_error_m": 0.4804813438289819,
+        "sd_m": 0.07601837541891747,
+        "frame_fraction_within_15cm": 0.0
+      },
+      "1.7": {
+        "samples": 12,
+        "median_m": 2.1227332009686313,
+        "median_signed_error_m": 0.35273320096863126,
+        "sd_m": 0.12238747457502039,
+        "frame_fraction_within_15cm": 0.08333333333333333
+      }
+    },
+    "VAL 1.25 m (home_4_1 hold, tape 1.25)": {
+      "1.0": {
+        "samples": 12,
+        "median_m": 3.150676276060304,
+        "median_signed_error_m": 1.9006762760603042,
+        "sd_m": 0.08090893496637612,
+        "frame_fraction_within_15cm": 0.0
+      },
+      "1.4": {
+        "samples": 12,
+        "median_m": 2.2651102974075075,
+        "median_signed_error_m": 1.0151102974075075,
+        "sd_m": 0.04246960786086764,
+        "frame_fraction_within_15cm": 0.0
+      },
+      "1.6": {
+        "samples": 12,
+        "median_m": 2.14997093803391,
+        "median_signed_error_m": 0.8999709380339096,
+        "sd_m": 0.044399017754690795,
+        "frame_fraction_within_15cm": 0.0
+      },
+      "1.7": {
+        "samples": 12,
+        "median_m": 1.8550989561112239,
+        "median_signed_error_m": 0.605098956111224,
+        "sd_m": 0.09039951270251952,
+        "frame_fraction_within_15cm": 0.0
+      }
+    }
+  },
+  "runs": {
+    "p2_dry_1": {
+      "stats": {
+        "rows": 302,
+        "processed_span_s": 15.019,
+        "median_forward_m": 1.378,
+        "max_processed_gap_s": 0.07499999999999929,
+        "processed_gaps_over_300ms": 0,
+        "events": [
+          {
+            "t": 6.215,
+            "event": "TARGET_STATIONARY"
+          },
+          {
+            "t": 13.817,
+            "event": "TARGET_MOVING"
+          }
+        ],
+        "acceptance": false,
+        "timestamps_scope": "processed-loop relative wall clock, not camera capture time"
+      },
+      "summary": {
+        "frames": 302,
+        "frames_with_distance": 302,
+        "pursue_frames": 150,
+        "run_time_s": 15.07,
+        "tracked_time_s": 15.07,
+        "coverage_tracked_fraction": 1.0,
+        "time_fraction_distance_in_band_of_tracked": 0.818,
+        "time_fraction_distance_in_band_of_run": 0.818,
+        "time_fraction_centred_of_tracked": 1.0,
+        "time_fraction_centred_of_run": 1.0,
+        "diag_frame_fraction_distance_in_band": 0.853,
+        "diag_frame_fraction_centred": 1.0,
+        "centre_unit": "|bbox centre - image centre| / full frame width <= 0.10 (yaw_err in the log is relative to HALF the width: divided by 2 here)",
+        "hold_events": [
+          [
+            6.21,
+            "TARGET_STATIONARY"
+          ],
+          [
+            13.82,
+            "TARGET_MOVING"
+          ]
+        ],
+        "reacquires": 0,
+        "acceptance": "NOT EVALUATED: first supervised trials; the time fractions are diagnostics (no-target time counts in the 'of_run' versions), not the plan's 80 % acceptance",
+        "plan_thresholds": "distance 1.2 +/- 0.2 m and bbox centre within +/- 10 % of the frame width for 80 % of the time (plan 4.3 'Pursuit PD')",
+        "label": "p2_dry",
+        "dry_run": true,
+        "replay": null,
+        "end_reason": "time limit",
+        "camera_pose_file": "calib/camera_pose_self_1109_1.json",
+        "pitch_down_deg": -4.61,
+        "feet_row_offset_px": 0.0,
+        "config": {
+          "pursuit": {
+            "target_distance_m": 1.2,
+            "distance_tolerance_m": 0.2,
+            "kp_distance": 0.8,
+            "kd_distance": 0.1,
+            "kp_yaw": 1.5,
+            "kd_yaw": 0.2,
+            "v_max": 0.55,
+            "v_min_reverse": -0.45,
+            "w_max": 1.0,
+            "w_spin": 0.45,
+            "min_pwm": 0.12,
+            "max_speed_cap": 0.3,
+            "obstacle_threshold_m": 0.5,
+            "obstacle_critical_m": 0.35,
+            "obstacle_avoid_w": 0.45,
+            "center_tolerance_norm": 0.1
+          },
+          "hold_behavior": {
+            "kp_yaw": 1.5,
+            "kd_yaw": 0.2,
+            "w_max": 0.8,
+            "w_spin": 0.45,
+            "min_pwm": 0.12,
+            "max_speed_cap": 0.3,
+            "center_tolerance_norm": 0.1,
+            "max_recenter_time_s": 1.5
+          },
+          "hold_detector": {
+            "speed_threshold_mps": 0.1,
+            "dwell_time_s": 2.0,
+            "exit_speed_mps": 0.2,
+            "window_s": 0.5,
+            "min_samples": 5,
+            "min_window_span_s": 0.2,
+            "max_observation_gap_s": 1.0
+          }
+        },
+        "battery_v_start": 12.1,
+        "battery_v_end": 12.1,
+        "seconds": 15.5,
+        "date": "2026-11-09 15:12",
+        "obstacle_avoidance": false
+      },
+      "acceptance": false
+    },
+    "tile_1_1": {
+      "stats": {
+        "rows": 1188,
+        "processed_span_s": 60.039,
+        "median_forward_m": 1.343,
+        "max_processed_gap_s": 0.36299999999999955,
+        "processed_gaps_over_300ms": 2,
+        "events": [
+          {
+            "t": 3.943,
+            "event": "TARGET_STATIONARY"
+          },
+          {
+            "t": 13.788,
+            "event": "TARGET_MOVING"
+          }
+        ],
+        "acceptance": false,
+        "timestamps_scope": "processed-loop relative wall clock, not camera capture time"
+      },
+      "summary": {
+        "frames": 1188,
+        "frames_with_distance": 1185,
+        "pursue_frames": 988,
+        "run_time_s": 59.88,
+        "tracked_time_s": 59.81,
+        "coverage_tracked_fraction": 0.999,
+        "time_fraction_distance_in_band_of_tracked": 0.542,
+        "time_fraction_distance_in_band_of_run": 0.54,
+        "time_fraction_centred_of_tracked": 0.912,
+        "time_fraction_centred_of_run": 0.911,
+        "diag_frame_fraction_distance_in_band": 0.456,
+        "diag_frame_fraction_centred": 0.912,
+        "centre_unit": "|bbox centre - image centre| / full frame width <= 0.10 (yaw_err in the log is relative to HALF the width: divided by 2 here)",
+        "hold_events": [
+          [
+            3.94,
+            "TARGET_STATIONARY"
+          ],
+          [
+            13.79,
+            "TARGET_MOVING"
+          ]
+        ],
+        "reacquires": 0,
+        "acceptance": "NOT EVALUATED: first supervised trials; the time fractions are diagnostics (no-target time counts in the 'of_run' versions), not the plan's 80 % acceptance",
+        "plan_thresholds": "distance 1.2 +/- 0.2 m and bbox centre within +/- 10 % of the frame width for 80 % of the time (plan 4.3 'Pursuit PD')",
+        "label": "tile_1",
+        "dry_run": false,
+        "replay": null,
+        "end_reason": "time limit",
+        "camera_pose_file": "calib/camera_pose_self_1109_2.json",
+        "pitch_down_deg": -4.34,
+        "feet_row_offset_px": 0.0,
+        "config": {
+          "pursuit": {
+            "target_distance_m": 1.2,
+            "distance_tolerance_m": 0.2,
+            "kp_distance": 0.8,
+            "kd_distance": 0.1,
+            "kp_yaw": 1.5,
+            "kd_yaw": 0.2,
+            "v_max": 0.55,
+            "v_min_reverse": -0.45,
+            "w_max": 1.0,
+            "w_spin": 0.45,
+            "min_pwm": 0.12,
+            "max_speed_cap": 0.3,
+            "obstacle_threshold_m": 0.5,
+            "obstacle_critical_m": 0.35,
+            "obstacle_avoid_w": 0.45,
+            "center_tolerance_norm": 0.1
+          },
+          "hold_behavior": {
+            "kp_yaw": 1.5,
+            "kd_yaw": 0.2,
+            "w_max": 0.8,
+            "w_spin": 0.45,
+            "min_pwm": 0.12,
+            "max_speed_cap": 0.3,
+            "center_tolerance_norm": 0.1,
+            "max_recenter_time_s": 1.5
+          },
+          "hold_detector": {
+            "speed_threshold_mps": 0.1,
+            "dwell_time_s": 2.0,
+            "exit_speed_mps": 0.2,
+            "window_s": 0.5,
+            "min_samples": 5,
+            "min_window_span_s": 0.2,
+            "max_observation_gap_s": 1.0
+          }
+        },
+        "battery_v_start": 12.032,
+        "battery_v_end": 12.004,
+        "seconds": 60.5,
+        "date": "2026-11-09 15:19",
+        "obstacle_avoidance": false
+      },
+      "acceptance": false
+    },
+    "tile_2_1": {
+      "stats": {
+        "rows": 1193,
+        "processed_span_s": 60.047,
+        "median_forward_m": 1.344,
+        "max_processed_gap_s": 0.17499999999999893,
+        "processed_gaps_over_300ms": 0,
+        "events": [],
+        "acceptance": false,
+        "timestamps_scope": "processed-loop relative wall clock, not camera capture time"
+      },
+      "summary": {
+        "frames": 1193,
+        "frames_with_distance": 1193,
+        "pursue_frames": 1193,
+        "run_time_s": 60.1,
+        "tracked_time_s": 60.1,
+        "coverage_tracked_fraction": 1.0,
+        "time_fraction_distance_in_band_of_tracked": 0.52,
+        "time_fraction_distance_in_band_of_run": 0.52,
+        "time_fraction_centred_of_tracked": 0.889,
+        "time_fraction_centred_of_run": 0.889,
+        "diag_frame_fraction_distance_in_band": 0.517,
+        "diag_frame_fraction_centred": 0.889,
+        "centre_unit": "|bbox centre - image centre| / full frame width <= 0.10 (yaw_err in the log is relative to HALF the width: divided by 2 here)",
+        "hold_events": [],
+        "reacquires": 0,
+        "acceptance": "NOT EVALUATED: first supervised trials; the time fractions are diagnostics (no-target time counts in the 'of_run' versions), not the plan's 80 % acceptance",
+        "plan_thresholds": "distance 1.2 +/- 0.2 m and bbox centre within +/- 10 % of the frame width for 80 % of the time (plan 4.3 'Pursuit PD')",
+        "label": "tile_2",
+        "dry_run": false,
+        "replay": null,
+        "end_reason": "time limit",
+        "camera_pose_file": "calib/camera_pose_self_1109_2.json",
+        "pitch_down_deg": -4.34,
+        "feet_row_offset_px": 3.5,
+        "config": {
+          "pursuit": {
+            "target_distance_m": 1.2,
+            "distance_tolerance_m": 0.2,
+            "kp_distance": 0.8,
+            "kd_distance": 0.1,
+            "kp_yaw": 1.5,
+            "kd_yaw": 0.2,
+            "v_max": 0.55,
+            "v_min_reverse": -0.45,
+            "w_max": 1.0,
+            "w_spin": 0.45,
+            "min_pwm": 0.12,
+            "max_speed_cap": 0.3,
+            "obstacle_threshold_m": 0.5,
+            "obstacle_critical_m": 0.35,
+            "obstacle_avoid_w": 0.45,
+            "center_tolerance_norm": 0.1
+          },
+          "hold_behavior": {
+            "kp_yaw": 1.5,
+            "kd_yaw": 0.2,
+            "w_max": 0.8,
+            "w_spin": 0.45,
+            "min_pwm": 0.12,
+            "max_speed_cap": 0.3,
+            "center_tolerance_norm": 0.1,
+            "max_recenter_time_s": 1.5
+          },
+          "hold_detector": {
+            "speed_threshold_mps": 0.1,
+            "dwell_time_s": 2.0,
+            "exit_speed_mps": 0.2,
+            "window_s": 0.5,
+            "min_samples": 5,
+            "min_window_span_s": 0.2,
+            "max_observation_gap_s": 1.0
+          }
+        },
+        "battery_v_start": 11.988,
+        "battery_v_end": 11.948,
+        "seconds": 60.6,
+        "date": "2026-11-09 15:24",
+        "obstacle_avoidance": false
+      },
+      "acceptance": false
+    }
+  },
+  "tile3_source_available": false,
+  "camera_mount_cause": "DQK attributes to handling/movement; not independently measured",
+  "robot_commands_sent": 0,
+  "inference_rerun": false,
+  "review99_reproduction": {
+    "head": "45416e7ed13293df805e2f4e9255b4dd9e1d3393",
+    "save_run_destination": "x_3",
+    "synthetic_old_marker_lost": true,
+    "actual_sample_span_s": 10,
+    "summary": {
+      "frames": 2,
+      "frames_with_distance": 2,
+      "pursue_frames": 2,
+      "run_time_s": 0.3,
+      "tracked_time_s": 0.3,
+      "coverage_tracked_fraction": 1.0,
+      "time_fraction_distance_in_band_of_tracked": 1.0,
+      "time_fraction_distance_in_band_of_run": 1.0,
+      "time_fraction_centred_of_tracked": 1.0,
+      "time_fraction_centred_of_run": 1.0,
+      "diag_frame_fraction_distance_in_band": 1.0,
+      "diag_frame_fraction_centred": 1.0,
+      "centre_unit": "|bbox centre - image centre| / full frame width <= 0.10 (yaw_err in the log is relative to HALF the width: divided by 2 here)",
+      "hold_events": [],
+      "reacquires": 0,
+      "target_id": 1,
+      "acceptance": "NOT EVALUATED: first supervised trials; the time fractions are diagnostics (no-target time counts in the 'of_run' versions), not the plan's 80 % acceptance",
+      "plan_thresholds": "distance 1.2 +/- 0.2 m and bbox centre within +/- 10 % of the frame width for 80 % of the time (plan 4.3 'Pursuit PD')"
+    },
+    "motor_commands_sent": 0
+  },
+  "acceptance": {
+    "d3": false,
+    "reid": false,
+    "independent_d5": false,
+    "map_world_truth": false,
+    "raw_latency": false,
+    "combined4050": false,
+    "pursuit_hold": false
+  },
+  "limitations": [
+    "one chair/one person, correlated frames and previously inspected sets",
+    "chair tape origin differs from lens-forward; do not pool with earlier F10 errors",
+    "round7 frame accuracy is not round8 per-set median-bias success",
+    "source experiment date labels say Nov10 evening/night; exact execution time not independently verified",
+    "table/empty-floor controls, person1.2/2.4m/other people, raw D3 IDs still absent"
+  ]
+}

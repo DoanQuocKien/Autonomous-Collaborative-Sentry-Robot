@@ -1,0 +1,57 @@
+{
+  "status": "PASS",
+  "evaluation_tier": "T0_SIMULATION_CLOSED_LOOP",
+  "total_duration_s": 18.0,
+  "metrics": {
+    "dwell_time_trigger_s": 6.32,
+    "dwell_requirement_met": true,
+    "hysteresis_exit_trigger_s": 8.26,
+    "hysteresis_exit_met": true,
+    "hold_zero_translation_verified": true,
+    "hold_sample_count": 111,
+    "max_recenter_time_s": 0.26,
+    "recenter_requirement_met": true,
+    "all_commands_legal": true,
+    "illegal_command_count": 0,
+    "fifo_queue_sequence_met": true,
+    "completed_target_count": 2
+  },
+  "events_recorded": [
+    {
+      "t": 1.0,
+      "event": "INTRUDER_QUEUED",
+      "target": "intruder_T1",
+      "state": "PURSUE"
+    },
+    {
+      "t": 6.5,
+      "event": "INTRUDER_QUEUED",
+      "target": "intruder_T2",
+      "state": "HOLD"
+    },
+    {
+      "t": 10.0,
+      "event": "STRIKE",
+      "state": "EVADE"
+    },
+    {
+      "t": 12.0,
+      "event": "TARGET_EXITED",
+      "target": "intruder_T1",
+      "state": "SEARCH"
+    },
+    {
+      "t": 12.5,
+      "event": "TARGET_FOUND",
+      "target": "intruder_T2",
+      "state": "PURSUE"
+    },
+    {
+      "t": 15.0,
+      "event": "TARGET_EXITED",
+      "target": "intruder_T2",
+      "state": "STANDBY"
+    }
+  ],
+  "sample_count": 900
+}

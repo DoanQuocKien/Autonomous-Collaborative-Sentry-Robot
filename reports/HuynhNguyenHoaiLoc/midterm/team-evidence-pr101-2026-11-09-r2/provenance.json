@@ -1,0 +1,61 @@
+{
+  "source_head": "969a5e0b61a804784344741f868c57fb2ecbd508",
+  "source_pr": 101,
+  "merged": false,
+  "files": [
+    {
+      "source_path": "sentry/app/phase3_runner.py",
+      "source_commit": "969a5e0b61a804784344741f868c57fb2ecbd508",
+      "archive": "sentry/app/phase3_runner.py.txt",
+      "sha256": "013c610f5bc7ddc858bfc7336cc27b694612e228cc55c0e4b9fae6ef8d82d883",
+      "source_url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/blob/969a5e0b61a804784344741f868c57fb2ecbd508/sentry/app/phase3_runner.py",
+      "transformation": "CRLF to LF; trim trailing whitespace/EOF blank lines; source claims not endorsed",
+      "original_sha256": "013c610f5bc7ddc858bfc7336cc27b694612e228cc55c0e4b9fae6ef8d82d883"
+    },
+    {
+      "source_path": "tests/test_phase3_runner.py",
+      "source_commit": "969a5e0b61a804784344741f868c57fb2ecbd508",
+      "archive": "tests/test_phase3_runner.py.txt",
+      "sha256": "25ecebffb44a72b10015c005e227b027b2516712fc9f43f424afb2eb3e75cfc1",
+      "source_url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/blob/969a5e0b61a804784344741f868c57fb2ecbd508/tests/test_phase3_runner.py",
+      "transformation": "CRLF to LF; trim trailing whitespace/EOF blank lines; source claims not endorsed",
+      "original_sha256": "25ecebffb44a72b10015c005e227b027b2516712fc9f43f424afb2eb3e75cfc1"
+    },
+    {
+      "source_path": "reports/midterm_report_draft.md",
+      "source_commit": "969a5e0b61a804784344741f868c57fb2ecbd508",
+      "archive": "reports/midterm_report_draft.md.txt",
+      "sha256": "b91938f96cad9e4cddfcf06a017c0d5476b0439b833b0cf42880912b85371310",
+      "source_url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/blob/969a5e0b61a804784344741f868c57fb2ecbd508/reports/midterm_report_draft.md",
+      "transformation": "CRLF to LF; trim trailing whitespace/EOF blank lines; source claims not endorsed",
+      "original_sha256": "a9c3c654309d9601dd2f50664b73606d256376d8f892dc8896395f0d9ba8a8b3"
+    },
+    {
+      "source_path": "tools/check_midterm_page_budget.py",
+      "source_commit": "969a5e0b61a804784344741f868c57fb2ecbd508",
+      "archive": "tools/check_midterm_page_budget.py.txt",
+      "sha256": "76aaeec7846299fe639a6f0771f3c8487e6f29cb7c1cf523207244cbee7062f4",
+      "source_url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/blob/969a5e0b61a804784344741f868c57fb2ecbd508/tools/check_midterm_page_budget.py",
+      "transformation": "CRLF to LF; trim trailing whitespace/EOF blank lines; source claims not endorsed",
+      "original_sha256": "c7f00980c64eba64f2be222acf16a63da3ef11899a216f203126ac6292d8c723"
+    },
+    {
+      "source_path": "reports/kouun-rokku/week-06.md",
+      "source_commit": "969a5e0b61a804784344741f868c57fb2ecbd508",
+      "archive": "reports/kouun-rokku/week-06.md.txt",
+      "sha256": "d0f6061804bfb8e9d9ae6bf77ed759705550ec552447737cadc25062c89f4afd",
+      "source_url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/blob/969a5e0b61a804784344741f868c57fb2ecbd508/reports/kouun-rokku/week-06.md",
+      "transformation": "CRLF to LF; trim trailing whitespace/EOF blank lines; source claims not endorsed",
+      "original_sha256": "d0f6061804bfb8e9d9ae6bf77ed759705550ec552447737cadc25062c89f4afd"
+    },
+    {
+      "source_path": "reports/kouun-rokku/week-06/phase3_replay_summary.json",
+      "source_commit": "969a5e0b61a804784344741f868c57fb2ecbd508",
+      "archive": "reports/kouun-rokku/week-06/phase3_replay_summary.json.txt",
+      "sha256": "a0973e76dce01a8d25290041874449599dc107a0723ca78770a290156aabddcc",
+      "source_url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/blob/969a5e0b61a804784344741f868c57fb2ecbd508/reports/kouun-rokku/week-06/phase3_replay_summary.json",
+      "transformation": "CRLF to LF; trim trailing whitespace/EOF blank lines; source claims not endorsed",
+      "original_sha256": "5241e96f345bf89e3253e8f7d01f9adb921302d81bcb76cf5437eba86f7b680b"
+    }
+  ]
+}

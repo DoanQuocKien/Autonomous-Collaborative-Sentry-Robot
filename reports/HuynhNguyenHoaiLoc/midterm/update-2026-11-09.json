@@ -1,0 +1,419 @@
+{
+  "snapshot_date": "2026-11-09",
+  "evidence": {
+    "U00": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-09/home/README.md",
+      "sha256": "29ddddcdbd9622afbdd608aa1616958bc2c1dc720c1b53bd468efcfc8b23564e"
+    },
+    "U01": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-09/home/pose/camera_pose_self_1108_1.json",
+      "sha256": "95c07b2d68f31f602e4d2ebaf39bafbd10a86be39bc047726116b2bb4a826bad"
+    },
+    "U02": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-09/home/pose/camera_pose_self_1108_2.json",
+      "sha256": "2b2585ba9a1dd9a635cc6de0d527dfb531b70ddcab65bb1477f3f57faf99b8f2"
+    },
+    "U03": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-09/home/pose/camera_pose_self_1108_3.json",
+      "sha256": "450dc5d446f88175b9da855a1ab8c06b5671ad39bd8e6f8a79d0d7ffdab0e6a2"
+    },
+    "U04": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-09/home/height_marks_1108_box_heights.json",
+      "sha256": "65ea1af0477ecf7d0aabf96c547641a62dffab5f0077942fff053f70571e0bd8"
+    },
+    "U05": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-09/home/pursuit/home_5_1/log.csv",
+      "sha256": "3c787581fa3940bad42449d8d5436b7724211fd088fe2311eb50391ad2d10f7b"
+    },
+    "U06": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-09/home/pursuit/home_5_1/summary.json",
+      "sha256": "41b3724d03b524995981bb0ce0c1369f0d36dfa28c847fa129cf0a6896344646"
+    },
+    "U07": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-09/home/pursuit/home_6_1/log.csv",
+      "sha256": "d65f17176940d661c1ef981908a9302136ce038f5a917fc0ea8ed8bb5643e0e7"
+    },
+    "U08": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-09/home/pursuit/home_6_1/summary.json",
+      "sha256": "f9c116e151fb2f77e984ac2e4d8fa84a219d67a902b10d8bce1100d283d7f731"
+    },
+    "U09": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-09/home/pursuit/static_1p8_0108_1/log.csv",
+      "sha256": "6d824ffb877c5ceb0f10b41cafc6c44ea18eb31ce722cbd31daaa3f6bd589afe"
+    },
+    "U10": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-09/home/pursuit/static_1p8_0108_1/summary.json",
+      "sha256": "9548b17f387bf48c3d6f70fe5bbf9278ce78bbdd45d382c1a4b10b0b6f9b439d"
+    },
+    "U11": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-09/link/README.md",
+      "sha256": "3b2e7957def51356f307b3911fd2ab7410c8d626403d6131b422871838c0ae97"
+    },
+    "U12": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-09/link/summary.json",
+      "sha256": "333eedad9407845f71e36dd85a23b056631c69ee8205acb78a301b53c35d38bb"
+    },
+    "U13": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-09/link/trials.csv",
+      "sha256": "08f6318382e121f3926c417301d8769077fb9c8908854322a65a78f35caba944"
+    },
+    "U14": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-09/kr/phase3_replay_summary.json",
+      "sha256": "75a9c080da728f382b05b2edb7c1c68a943393b5792a92d1f58446fdb7d3ce1e"
+    },
+    "U15": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-09/kr/chapter5_source.md",
+      "sha256": "cc6410edd2e63ae91d0740f673d63b0ca60f7fa90be22c1dd32001a523942f5e"
+    },
+    "U16": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-09/plan/carryover_source.md",
+      "sha256": "1f93a6647732ba2ddb859891f21da93b77fc73fd4770ff59fe72b61c258ed93d"
+    },
+    "U17": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-09/plan/classroom_source.md",
+      "sha256": "25a0be9de295acebe64c9ff898f08c5c0cd407839503717e72120725e0ce660b"
+    },
+    "U-provenance": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/team-evidence-2026-11-09/provenance.json",
+      "sha256": "0e75d527a5c268518ded82d5b2266763d12477fdcbd53580472cd597d1caead4"
+    },
+    "U-github": {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/github-2026-11-09.json",
+      "sha256": "84545c64a3ef29c3640764ad21c9ac80364abb8ecda3de1c66f186465c30ec8a"
+    },
+    "U-review-99": {
+      "path": "reports/HuynhNguyenHoaiLoc/reviews/PR-99-2026-11-09.md",
+      "sha256": "b32d6c6bf3b1dd208d31a787f7a064630d6dceba04bd61f3b9ba392dd638a4aa"
+    },
+    "U-tests-99": {
+      "path": "reports/HuynhNguyenHoaiLoc/reviews/PR-99-2026-11-09-tests.log",
+      "sha256": "defde3953a1604380096b7033c4cce3be4893765db45a44782020df3fa81ab20"
+    },
+    "U-review-101": {
+      "path": "reports/HuynhNguyenHoaiLoc/reviews/PR-101-2026-11-09.md",
+      "sha256": "5fa01ee4008c9bf58fc3d2f4e4349987d82bffa64aa27bbb61c3ac83b4c7dd53"
+    },
+    "U-tests-101": {
+      "path": "reports/HuynhNguyenHoaiLoc/reviews/PR-101-2026-11-09-tests.log",
+      "sha256": "48d7a3bb8476ebb4eae11222c6e083912751253c207797c198a25d097e343496"
+    },
+    "U-review-102": {
+      "path": "reports/HuynhNguyenHoaiLoc/reviews/PR-102-2026-11-09.md",
+      "sha256": "2f40f9ae3ceb0d13bd85c3235fffb4d395493fa8d7bee6e91d80c23a16daf9ff"
+    },
+    "U-tests-102": {
+      "path": "reports/HuynhNguyenHoaiLoc/reviews/PR-102-2026-11-09-tests.log",
+      "sha256": "c72edd20e160ca04e2437bfbb4398d31f1d06361f14e27302cbb2d5df4c73259"
+    },
+    "U-evidence-tests": {
+      "path": "reports/HuynhNguyenHoaiLoc/week-06/tests_evidence_2026-11-09.log",
+      "sha256": "a4bc2012a8991b70c8be6a375bcdea89722b080fa0653a85051036cbd0fb53fa"
+    }
+  },
+  "github": {
+    "checked_date": "2026-11-09",
+    "timezone": "Asia/Bangkok",
+    "main_sha": "4c041b647529153debd4679f5669905206c3aea6",
+    "pull_requests": [
+      {
+        "number": 99,
+        "url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/pull/99",
+        "state": "open",
+        "merged": false,
+        "head_sha": "969c06d3fda2f14a03e607b11c81ddaa78bc676a",
+        "updated_at": "2026-11-08T10:43:27Z"
+      },
+      {
+        "number": 100,
+        "url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/pull/100",
+        "state": "open",
+        "merged": false,
+        "head_sha": "0ee35543136cb12391108d7830802847eb0e8a95",
+        "updated_at": "2026-11-07T06:51:28Z"
+      },
+      {
+        "number": 101,
+        "url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/pull/101",
+        "state": "open",
+        "merged": false,
+        "head_sha": "4d733af9a8447e8159314430c3450d4f63b1799c",
+        "updated_at": "2026-11-08T10:39:15Z"
+      },
+      {
+        "number": 102,
+        "url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/pull/102",
+        "state": "open",
+        "merged": false,
+        "head_sha": "3f9cd936d4e7adcf8de923ed219615ce2f1d567e",
+        "updated_at": "2026-11-08T10:57:22Z"
+      }
+    ],
+    "reviews": [
+      {
+        "number": 99,
+        "head_sha": "969c06d3fda2f14a03e607b11c81ddaa78bc676a",
+        "state": "CHANGES_REQUESTED",
+        "url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/pull/99#pullrequestreview-5820899653",
+        "tests_passed": 31,
+        "seconds": 12.23
+      },
+      {
+        "number": 101,
+        "head_sha": "4d733af9a8447e8159314430c3450d4f63b1799c",
+        "state": "CHANGES_REQUESTED",
+        "url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/pull/101#pullrequestreview-5820900144",
+        "tests_passed": 53,
+        "seconds": 12.17
+      },
+      {
+        "number": 102,
+        "head_sha": "3f9cd936d4e7adcf8de923ed219615ce2f1d567e",
+        "state": "CHANGES_REQUESTED",
+        "url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/pull/102#pullrequestreview-5820900544",
+        "tests_passed": 1,
+        "seconds": 11.26
+      }
+    ],
+    "pr100_independent_approval": false,
+    "snapshot_scope": "before this session's PR100 update; source heads are not merged"
+  },
+  "all_new_source_prs_merged": false,
+  "camera_poses": [
+    {
+      "file": "camera_pose_self_1108_1.json",
+      "tag": "self_1108",
+      "H_cam_m": 0.1,
+      "H_tape_m": 0.1,
+      "pitch_down_deg": -4.48,
+      "camera_roll_deg": -1.99,
+      "passed": true,
+      "pitch_spread_deg": 0.062,
+      "marker_frames": 40,
+      "method": "self-calibration from one ArUco marker on a vertical surface (tools/self_pose.py): H fixed at the mechanical 0.100 m, pitch = median of the marker position estimates"
+    },
+    {
+      "file": "camera_pose_self_1108_2.json",
+      "tag": "self_1108",
+      "H_cam_m": 0.1,
+      "H_tape_m": 0.1,
+      "pitch_down_deg": -4.26,
+      "camera_roll_deg": 0.09,
+      "passed": true,
+      "pitch_spread_deg": 0.047,
+      "marker_frames": 38,
+      "method": "self-calibration from one ArUco marker on a vertical surface (tools/self_pose.py): H fixed at the mechanical 0.100 m, pitch = median of the marker position estimates"
+    },
+    {
+      "file": "camera_pose_self_1108_3.json",
+      "tag": "self_1108",
+      "H_cam_m": 0.1,
+      "H_tape_m": 0.1,
+      "pitch_down_deg": -0.64,
+      "camera_roll_deg": -1.26,
+      "passed": true,
+      "pitch_spread_deg": 0.096,
+      "marker_frames": 33,
+      "method": "self-calibration from one ArUco marker on a vertical surface (tools/self_pose.py): H fixed at the mechanical 0.100 m, pitch = median of the marker position estimates"
+    }
+  ],
+  "runs": {
+    "home_5_1": {
+      "stats": {
+        "rows": 303,
+        "processed_span_s": 15.071,
+        "median_forward_m": 1.319,
+        "max_processed_gap_s": 0.08000000000000007,
+        "processed_gaps_over_300ms": 0,
+        "events": [
+          {
+            "t": 7.223,
+            "event": "TARGET_STATIONARY"
+          },
+          {
+            "t": 11.172,
+            "event": "TARGET_MOVING"
+          },
+          {
+            "t": 13.274,
+            "event": "TARGET_STATIONARY"
+          }
+        ],
+        "acceptance": false,
+        "timestamps_scope": "processed-loop relative wall clock, not camera capture time"
+      },
+      "source_summary": {
+        "frames": 303,
+        "frames_with_distance": 303,
+        "pursue_frames": 187,
+        "fraction_distance_within_band": 0.524,
+        "fraction_centred_within_10pct": 0.934,
+        "hold_events": [
+          [
+            7.22,
+            "TARGET_STATIONARY"
+          ],
+          [
+            11.17,
+            "TARGET_MOVING"
+          ],
+          [
+            13.27,
+            "TARGET_STATIONARY"
+          ]
+        ],
+        "plan_thresholds": "distance 1.2 +/- 0.2 m and centre within +/- 10 % of the frame width for 80 % of the time (plan 4.3 'Pursuit PD'); these are first-trial numbers, not an acceptance",
+        "label": "home_5",
+        "dry_run": false,
+        "replay": null,
+        "end_reason": "R1 released (e-stop latch present)",
+        "camera_pose_file": "calib/camera_pose_self_1108_1.json",
+        "pitch_down_deg": -4.48,
+        "feet_row_offset_px": 3.5,
+        "battery_v_start": 12.344,
+        "battery_v_end": 12.316,
+        "seconds": 15.6,
+        "date": "2026-11-08 17:10",
+        "obstacle_avoidance": false
+      },
+      "acceptance": false
+    },
+    "home_6_1": {
+      "stats": {
+        "rows": 614,
+        "processed_span_s": 31.112,
+        "median_forward_m": 1.261,
+        "max_processed_gap_s": 0.33200000000000074,
+        "processed_gaps_over_300ms": 1,
+        "events": [
+          {
+            "t": 3.399,
+            "event": "TARGET_STATIONARY"
+          }
+        ],
+        "acceptance": false,
+        "timestamps_scope": "processed-loop relative wall clock, not camera capture time"
+      },
+      "source_summary": {
+        "frames": 614,
+        "frames_with_distance": 614,
+        "pursue_frames": 68,
+        "fraction_distance_within_band": 0.765,
+        "fraction_centred_within_10pct": 0.992,
+        "hold_events": [
+          [
+            3.4,
+            "TARGET_STATIONARY"
+          ]
+        ],
+        "plan_thresholds": "distance 1.2 +/- 0.2 m and centre within +/- 10 % of the frame width for 80 % of the time (plan 4.3 'Pursuit PD'); these are first-trial numbers, not an acceptance",
+        "label": "home_6",
+        "dry_run": false,
+        "replay": null,
+        "end_reason": "R1 released (e-stop latch present)",
+        "camera_pose_file": "calib/camera_pose_self_1108_2.json",
+        "pitch_down_deg": -4.26,
+        "feet_row_offset_px": 3.5,
+        "battery_v_start": 12.212,
+        "battery_v_end": 12.208,
+        "seconds": 31.6,
+        "date": "2026-11-08 17:21",
+        "obstacle_avoidance": false
+      },
+      "acceptance": false
+    },
+    "static_1p8_0108_1": {
+      "stats": {
+        "rows": 202,
+        "processed_span_s": 10.018,
+        "median_forward_m": 1.701,
+        "max_processed_gap_s": 0.07400000000000029,
+        "processed_gaps_over_300ms": 0,
+        "events": [],
+        "acceptance": false,
+        "timestamps_scope": "processed-loop relative wall clock, not camera capture time"
+      },
+      "source_summary": {
+        "frames": 202,
+        "frames_with_distance": 202,
+        "pursue_frames": 202,
+        "fraction_distance_within_band": 0.0,
+        "fraction_centred_within_10pct": 0.0,
+        "hold_events": [],
+        "plan_thresholds": "distance 1.2 +/- 0.2 m and centre within +/- 10 % of the frame width for 80 % of the time (plan 4.3 'Pursuit PD'); these are first-trial numbers, not an acceptance",
+        "label": "static_1p8_0108",
+        "dry_run": true,
+        "replay": null,
+        "end_reason": "time limit",
+        "camera_pose_file": "calib/camera_pose_self_1108_2.json",
+        "pitch_down_deg": -4.26,
+        "feet_row_offset_px": 3.5,
+        "battery_v_start": 12.26,
+        "battery_v_end": 12.272,
+        "seconds": 10.5,
+        "date": "2026-11-08 17:15",
+        "obstacle_avoidance": false
+      },
+      "acceptance": false
+    }
+  },
+  "link_video_proxy": {
+    "trials": 5,
+    "min_video_proxy_ms": 481.0,
+    "median_video_proxy_ms": 516.0,
+    "max_video_proxy_ms": 524.0,
+    "r1_not_held_at_end_trials": [
+      4
+    ],
+    "limit_350ms_proven": false,
+    "violation_proven": false,
+    "mechanical_stop_measured": false
+  },
+  "source_corrections": {
+    "mount_slip_cause_withdrawn": true,
+    "foot_stance_cause_withdrawn": true,
+    "new_pitch_estimate_deg": -0.64,
+    "physical_cause_known": false,
+    "home6_operator_tape_forward_m": 1.77,
+    "home6_reported_estimate_m": 1.27,
+    "ankle_and_box_height_not_adopted": true
+  },
+  "kr_phase3": {
+    "source_status": "PASS",
+    "tier": "T0_SIMULATION_CLOSED_LOOP",
+    "source_metrics": {
+      "dwell_time_trigger_s": 6.32,
+      "dwell_requirement_met": true,
+      "hysteresis_exit_trigger_s": 8.26,
+      "hysteresis_exit_met": true,
+      "hold_zero_translation_verified": true,
+      "hold_sample_count": 111,
+      "max_recenter_time_s": 0.26,
+      "recenter_requirement_met": true,
+      "all_commands_legal": true,
+      "illegal_command_count": 0,
+      "fifo_queue_sequence_met": true,
+      "completed_target_count": 2
+    },
+    "review_state": "CHANGES_REQUESTED",
+    "robot_acceptance": false
+  },
+  "plan_proposals": {
+    "classroom_nov9_postponed": true,
+    "replacement_date_confirmed": false,
+    "matte_scope_removal_proposed": true,
+    "merged": false,
+    "hnhl_converter_already_implemented": true,
+    "f18_already_measured": true
+  },
+  "acceptance": {
+    "d3": false,
+    "reid": false,
+    "independent_d5": false,
+    "world_map": false,
+    "latency_cdf": false,
+    "rtx4050_combined": false,
+    "pursuit_hold": false
+  },
+  "inference_rerun": false,
+  "motor_commands_sent": 0
+}
