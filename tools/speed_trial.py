@@ -12,6 +12,7 @@ OUTPUT: data/speed_runs/<label>_v<v>_<n>.csv (t, range_m, bearing_deg, cmd_v, cm
 start-up lag from tools.speedfit when the marker was seen densely enough.
 """
 import argparse
+import atexit
 import csv
 import math
 import os
@@ -72,6 +73,7 @@ def main():
     ap.add_argument("v", type=float)
     ap.add_argument("seconds", type=float)
     ap.add_argument("--label", default="run")
+    ap.add_argument("--max-start-m", type=float, default=2.6, help="start check: the marker may be at most this far (m); --stop-at still ends the run")
     ap.add_argument("--steer", action="store_true", help="steer toward the marker (off by default)")
     ap.add_argument("--wait", type=float, default=20.0, help="seconds to wait for R1 after the beeps; the command starts once R1 has been held for 0.5 s")
     ap.add_argument("--stop-at", type=float, default=0.8, help="stop the commands when the marker is closer than this (m)")
@@ -107,80 +109,84 @@ def main():
         finally:
             s.close(stop=True)
 
-    th = threading.Thread(target=sender)
+    th = threading.Thread(target=sender, daemon=True)         # daemon: if the main thread dies (Ctrl+C, a video or SSH error) the process can still exit and the command stream ends (the robot's 300 ms watchdog stops it); audit 2026-11-12
     th.start()
-    rows, why, t_cmd0, t_cmd1 = [], "time", None, None
+    atexit.register(lambda: (cmd.update(v=0.0, w=0.0), done.set()))      # zero the command first when the interpreter shuts down
+    try:
+        rows, why, t_cmd0, t_cmd1 = [], "time", None, None
 
-    def stop(reason):
-        nonlocal why, t_cmd1
-        cmd["v"] = cmd["w"] = 0.0
-        t_cmd1 = t_cmd1 or time.time()
-        why = reason
+        def stop(reason):
+            nonlocal why, t_cmd1
+            cmd["v"] = cmd["w"] = 0.0
+            t_cmd1 = t_cmd1 or time.time()
+            why = reason
 
-    with ZMQReceiver() as rx:
-        r0 = None
-        for _ in range(30):                                  # about 2 s: people may walk in front of the board
-            f = rx.read(timeout=5)
-            r0 = marker_range(g, obj, f.frame_bgr) if f is not None else None
-            if r0:
-                break
-        if r0 is None or not 1.4 <= r0[0] <= 2.6:
-            done.set()
-            th.join()
-            print("ABORT: start check failed (%s)" % ("marker not seen" if r0 is None else "marker %.2f m away, need 1.4-2.6 m" % r0[0]))
-            raise SystemExit(1)
-        print("start: marker %.2f m away, bearing %+.1f deg. HOLD R1 at the beeps." % r0, flush=True)
-        t0 = time.time()
-        for _ in range(3):
-            beep(1500, 300)
-        t_wait_end = time.time() + a.wait
-        t_go = None                                                  # set when R1 has been held for 0.5 s
-        r1_since = None
-        last_poll = 0.0
-        seen = time.time()
-        while True:
-            now = time.time()
-            if t_go is None and now - last_poll >= 0.25:             # the e-stop latch file exists whenever motion is NOT allowed (R1 up or not armed)
-                last_poll = now
-                held = _sh(c, "test -e %s && echo no || echo yes" % ESTOP_LATCH).strip() == "yes"
-                r1_since = (r1_since or now) if held else None
-                if r1_since and now - r1_since >= 0.5:
-                    t_go = now
-                    print("R1 held: starting the command", flush=True)
-                elif now > t_wait_end:
-                    done.set()
-                    th.join()
-                    print("ABORT: R1 was not held (and the e-stop armed) within %.0f s of the beeps" % a.wait)
-                    raise SystemExit(1)
-            if t_cmd0 is None and t_go is not None and now >= t_go:
-                cmd["v"] = a.v
-                t_cmd0 = now
-            if t_cmd0 is not None and t_cmd1 is None and now - t_cmd0 >= a.seconds:
-                cmd["v"] = cmd["w"] = 0.0
-                t_cmd1 = now
-            if t_cmd1 is not None and now - t_cmd1 > 1.5:
-                break
-            f = rx.read(timeout=5)
-            if f is None:
-                stop("no frames")
-                break
-            mr = marker_range(g, obj, f.frame_bgr)
-            now = time.time()
-            if mr is None:
-                if cmd["v"] > 0 and now - seen > LOST_S:
-                    stop("marker lost")
-                continue
-            seen = now
-            if cmd["v"] > 0 and a.steer:
-                wmax = max(0.0, min(0.2, a.v - MIN_PWM / MAX_SPEED - 1e-3))        # both wheels must stay above the dead zone
-                cmd["w"] = max(-wmax, min(wmax, KP * math.radians(mr[1]) / W_GAIN))
-            rows.append((now - t0, mr[0], mr[1], cmd["v"], cmd["w"]))
-            if cmd["v"] > 0 and mr[0] < a.stop_at:
-                stop("marker closer than %.1f m" % a.stop_at)
-            elif cmd["v"] > 0 and abs(mr[1]) > MAX_BEARING:
-                stop("marker %.0f deg off the heading (guard %.0f)" % (mr[1], MAX_BEARING))
-    done.set()
-    th.join()
+        with ZMQReceiver() as rx:
+            r0 = None
+            for _ in range(30):                                  # about 2 s: people may walk in front of the board
+                f = rx.read(timeout=5)
+                r0 = marker_range(g, obj, f.frame_bgr) if f is not None else None
+                if r0:
+                    break
+            if r0 is None or not 1.4 <= r0[0] <= a.max_start_m:
+                done.set()
+                th.join()
+                print("ABORT: start check failed (%s)" % ("marker not seen" if r0 is None else "marker %.2f m away, need 1.4-%.1f m" % (r0[0], a.max_start_m)))
+                raise SystemExit(1)
+            print("start: marker %.2f m away, bearing %+.1f deg. HOLD R1 at the beeps." % r0, flush=True)
+            t0 = time.time()
+            for _ in range(3):
+                beep(1500, 300)
+            t_wait_end = time.time() + a.wait
+            t_go = None                                                  # set when R1 has been held for 0.5 s
+            r1_since = None
+            last_poll = 0.0
+            seen = time.time()
+            while True:
+                now = time.time()
+                if t_go is None and now - last_poll >= 0.25:             # the e-stop latch file exists whenever motion is NOT allowed (R1 up or not armed)
+                    last_poll = now
+                    held = _sh(c, "test -e %s && echo no || echo yes" % ESTOP_LATCH).strip() == "yes"
+                    r1_since = (r1_since or now) if held else None
+                    if r1_since and now - r1_since >= 0.5:
+                        t_go = now
+                        print("R1 held: starting the command", flush=True)
+                    elif now > t_wait_end:
+                        done.set()
+                        th.join()
+                        print("ABORT: R1 was not held (and the e-stop armed) within %.0f s of the beeps" % a.wait)
+                        raise SystemExit(1)
+                if t_cmd0 is None and t_go is not None and now >= t_go:
+                    cmd["v"] = a.v
+                    t_cmd0 = now
+                if t_cmd0 is not None and t_cmd1 is None and now - t_cmd0 >= a.seconds:
+                    cmd["v"] = cmd["w"] = 0.0
+                    t_cmd1 = now
+                if t_cmd1 is not None and now - t_cmd1 > 1.5:
+                    break
+                f = rx.read(timeout=5)
+                if f is None:
+                    stop("no frames")
+                    break
+                mr = marker_range(g, obj, f.frame_bgr)
+                now = time.time()
+                if mr is None:
+                    if cmd["v"] > 0 and now - seen > LOST_S:
+                        stop("marker lost")
+                    continue
+                seen = now
+                if cmd["v"] > 0 and a.steer:
+                    wmax = max(0.0, min(0.2, a.v - MIN_PWM / MAX_SPEED - 1e-3))        # both wheels must stay above the dead zone
+                    cmd["w"] = max(-wmax, min(wmax, KP * math.radians(mr[1]) / W_GAIN))
+                rows.append((now - t0, mr[0], mr[1], cmd["v"], cmd["w"]))
+                if cmd["v"] > 0 and mr[0] < a.stop_at:
+                    stop("marker closer than %.1f m" % a.stop_at)
+                elif cmd["v"] > 0 and abs(mr[1]) > MAX_BEARING:
+                    stop("marker %.0f deg off the heading (guard %.0f)" % (mr[1], MAX_BEARING))
+    finally:                                             # stop the sender on ANY exit path (audit 2026-11-12: it used to outlive an error and keep streaming the last command)
+        cmd.update(v=0.0, w=0.0)
+        done.set()
+        th.join(timeout=2.0)
     time.sleep(0.6)
     moving = moving_seconds(_sh(c, "tail -n +%d %s" % (before + 1, LOG)).splitlines())
     volts = ina219_bus_volts(jetbot_ssh.sudo(c, "i2cget -y 1 0x41 0x02 w", password))

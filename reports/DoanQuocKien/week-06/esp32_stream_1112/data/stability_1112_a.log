@@ -1,0 +1,72 @@
+dim (480, 640) frames 7503 mean 12.50 fps p5 11 | KB/s 121 | frame 9.5 KB | first-third 12.50 last-third 12.50
+  min 0: 12.50 fps 122 KB/s
+  min 1: 12.52 fps 121 KB/s
+  min 2: 12.50 fps 122 KB/s
+  min 3: 12.50 fps 120 KB/s
+  min 4: 12.52 fps 117 KB/s
+  min 5: 12.50 fps 118 KB/s
+  min 6: 12.50 fps 124 KB/s
+  min 7: 12.50 fps 121 KB/s
+  min 8: 12.48 fps 125 KB/s
+  min 9: 12.52 fps 115 KB/s
+  stats0 {"fw": "opt4", "up_ms": 263581, "reset": 3, "frames": 317, "bytes": 2826363, "get_us": 20468673, "send_us": 1962348, "max_get_ms": 66, "max_send_ms": 9, "nullfb": 0, "sendfail": 1, "streams": 2, "heap": 161080, "heap_min": 140984, "heap_big": 110580, "psram": 4069211, "rssi": -51, "temp_c": 60.0, "sndbuf": 23040, "xclk_drive": 0, "clkrc": 128, "t": 0.11521148681640625}
+     10s fps 12.5 KB/s  112 get   64 send    7 ms max 66/9 null 0 fail 1 str 2 heap 172160 min 138908 big 110580 psram 4069211 rssi -50 T 60
+     20s fps 12.5 KB/s  121 get   64 send    7 ms max 66/10 null 0 fail 1 str 2 heap 172164 min 138908 big 110580 psram 4069211 rssi -50 T 61
+     30s fps 12.6 KB/s  129 get   63 send    8 ms max 66/52 null 0 fail 1 str 2 heap 171308 min 130784 big 110580 psram 4069211 rssi -49 T 61
+     40s fps 12.5 KB/s  121 get   64 send    7 ms max 66/9 null 0 fail 1 str 2 heap 172176 min 130784 big 110580 psram 4069211 rssi -48 T 61
+     51s fps 12.5 KB/s  119 get   64 send    7 ms max 66/9 null 0 fail 1 str 2 heap 173752 min 130608 big 110580 psram 4069211 rssi -46 T 62
+     61s fps 12.5 KB/s  121 get   65 send    7 ms max 66/9 null 0 fail 1 str 2 heap 170744 min 130608 big 110580 psram 4069211 rssi -48 T 62
+     71s fps 12.5 KB/s  120 get   64 send    7 ms max 66/8 null 0 fail 1 str 2 heap 173752 min 130608 big 110580 psram 4069211 rssi -48 T 62
+     81s fps 12.5 KB/s  118 get   64 send    7 ms max 66/10 null 0 fail 1 str 2 heap 173756 min 130608 big 110580 psram 4069211 rssi -48 T 62
+     91s fps 12.6 KB/s  120 get   65 send    7 ms max 66/8 null 0 fail 1 str 2 heap 170584 min 130608 big 110580 psram 4069211 rssi -47 T 62
+    101s fps 12.5 KB/s  121 get   64 send    7 ms max 66/10 null 0 fail 1 str 2 heap 173752 min 130608 big 110580 psram 4069211 rssi -49 T 62
+    111s fps 12.6 KB/s  122 get   64 send    7 ms max 65/10 null 0 fail 1 str 2 heap 156156 min 130608 big 106484 psram 4069211 rssi -48 T 62
+    121s fps 12.5 KB/s  120 get   64 send    7 ms max 66/9 null 0 fail 1 str 2 heap 170564 min 125688 big 110580 psram 4069211 rssi -47 T 62
+    131s fps 12.5 KB/s  118 get   64 send    7 ms max 66/9 null 0 fail 1 str 2 heap 173760 min 125688 big 110580 psram 4069211 rssi -46 T 62
+    141s fps 12.5 KB/s  117 get   65 send    7 ms max 66/9 null 0 fail 1 str 2 heap 173756 min 125688 big 110580 psram 4069211 rssi -47 T 61
+    152s fps 12.5 KB/s  119 get   64 send    7 ms max 66/8 null 0 fail 1 str 2 heap 164268 min 125688 big 110580 psram 4069211 rssi -48 T 61
+    162s fps 12.6 KB/s  119 get   64 send    7 ms max 66/9 null 0 fail 1 str 2 heap 173756 min 125688 big 110580 psram 4069211 rssi -49 T 61
+    172s fps 12.5 KB/s  122 get   64 send    7 ms max 66/10 null 0 fail 1 str 2 heap 172168 min 125688 big 110580 psram 4069211 rssi -47 T 61
+    182s fps 12.5 KB/s  125 get   64 send    7 ms max 66/10 null 0 fail 1 str 2 heap 170592 min 125688 big 110580 psram 4069211 rssi -46 T 61
+    192s fps 12.5 KB/s  118 get   65 send    6 ms max 66/9 null 0 fail 1 str 2 heap 172176 min 125688 big 110580 psram 4069211 rssi -50 T 61
+    202s fps 12.6 KB/s  120 get   65 send    6 ms max 66/9 null 0 fail 1 str 2 heap 173756 min 125688 big 110580 psram 4069211 rssi -49 T 61
+    212s fps 12.5 KB/s  115 get   65 send    6 ms max 66/9 null 0 fail 1 str 2 heap 170588 min 125688 big 110580 psram 4069211 rssi -47 T 61
+    222s fps 12.5 KB/s  120 get   64 send    7 ms max 66/9 null 0 fail 1 str 2 heap 170592 min 124136 big 110580 psram 4069211 rssi -52 T 61
+    232s fps 12.5 KB/s  118 get   65 send    7 ms max 66/9 null 0 fail 1 str 2 heap 172176 min 124136 big 110580 psram 4069211 rssi -48 T 61
+    243s fps 12.5 KB/s  119 get   64 send    7 ms max 66/9 null 0 fail 1 str 2 heap 148400 min 122584 big 86004 psram 4069211 rssi -49 T 61
+    253s fps 12.5 KB/s  118 get   65 send    7 ms max 66/9 null 0 fail 1 str 2 heap 172164 min 122584 big 94196 psram 4069211 rssi -48 T 61
+    263s fps 12.5 KB/s  114 get   65 send    6 ms max 66/9 null 0 fail 1 str 2 heap 173756 min 122584 big 110580 psram 4069211 rssi -47 T 61
+    273s fps 12.5 KB/s  121 get   64 send    7 ms max 66/9 null 0 fail 1 str 2 heap 173756 min 122584 big 110580 psram 4069211 rssi -49 T 61
+    283s fps 12.6 KB/s  118 get   64 send    7 ms max 66/9 null 0 fail 1 str 2 heap 150828 min 122404 big 102388 psram 4069211 rssi -48 T 61
+    293s fps 12.5 KB/s  110 get   65 send    6 ms max 66/9 null 0 fail 1 str 2 heap 172168 min 122404 big 110580 psram 4069211 rssi -49 T 61
+    303s fps 12.5 KB/s  108 get   65 send    6 ms max 66/9 null 0 fail 1 str 2 heap 173744 min 122404 big 110580 psram 4069211 rssi -48 T 60
+    313s fps 12.5 KB/s  115 get   65 send    6 ms max 66/8 null 0 fail 1 str 2 heap 173756 min 122404 big 110580 psram 4069211 rssi -47 T 59
+    323s fps 12.4 KB/s  114 get   64 send    8 ms max 82/133 null 0 fail 1 str 2 heap 173756 min 122280 big 110580 psram 4069211 rssi -47 T 59
+    333s fps 12.6 KB/s  118 get   65 send    7 ms max 66/9 null 0 fail 1 str 2 heap 170588 min 122280 big 110580 psram 4069211 rssi -49 T 59
+    344s fps 12.5 KB/s  120 get   64 send    7 ms max 66/9 null 0 fail 1 str 2 heap 172168 min 122280 big 110580 psram 4069211 rssi -50 T 59
+    354s fps 12.5 KB/s  117 get   65 send    7 ms max 66/8 null 0 fail 1 str 2 heap 170592 min 122280 big 110580 psram 4069211 rssi -47 T 61
+    364s fps 12.5 KB/s  120 get   65 send    7 ms max 66/9 null 0 fail 1 str 2 heap 170592 min 122248 big 110580 psram 4069211 rssi -49 T 61
+    374s fps 12.5 KB/s  124 get   64 send    7 ms max 65/9 null 0 fail 1 str 2 heap 172176 min 122248 big 110580 psram 4069211 rssi -50 T 61
+    384s fps 12.5 KB/s  125 get   64 send    7 ms max 65/10 null 0 fail 1 str 2 heap 171884 min 122248 big 110580 psram 4069211 rssi -49 T 61
+    394s fps 12.6 KB/s  126 get   64 send    7 ms max 65/9 null 0 fail 1 str 2 heap 170772 min 122248 big 110580 psram 4069211 rssi -48 T 61
+    404s fps 12.5 KB/s  124 get   64 send    7 ms max 65/9 null 0 fail 1 str 2 heap 170588 min 122248 big 110580 psram 4069211 rssi -48 T 61
+    414s fps 12.5 KB/s  119 get   64 send    7 ms max 66/9 null 0 fail 1 str 2 heap 173756 min 122248 big 110580 psram 4069211 rssi -48 T 61
+    424s fps 12.5 KB/s  114 get   65 send    7 ms max 66/9 null 0 fail 1 str 2 heap 172168 min 122248 big 110580 psram 4069211 rssi -48 T 62
+    434s fps 12.5 KB/s  120 get   64 send    7 ms max 66/9 null 0 fail 1 str 2 heap 170592 min 122248 big 110580 psram 4069211 rssi -47 T 62
+    445s fps 12.6 KB/s  112 get   65 send    7 ms max 66/9 null 0 fail 1 str 2 heap 151036 min 122248 big 102388 psram 4069211 rssi -48 T 62
+    455s fps 12.5 KB/s  116 get   64 send    7 ms max 66/9 null 0 fail 1 str 2 heap 170648 min 122248 big 110580 psram 4069211 rssi -48 T 62
+    465s fps 12.5 KB/s  124 get   64 send    7 ms max 65/9 null 0 fail 1 str 2 heap 170592 min 122248 big 110580 psram 4069211 rssi -50 T 62
+    475s fps 12.5 KB/s  126 get   64 send    7 ms max 66/11 null 0 fail 1 str 2 heap 173760 min 122248 big 110580 psram 4069211 rssi -48 T 62
+    485s fps 12.6 KB/s  123 get   64 send    7 ms max 65/10 null 0 fail 1 str 2 heap 171944 min 122248 big 110580 psram 4069211 rssi -48 T 63
+    495s fps 12.5 KB/s  121 get   64 send    7 ms max 66/9 null 0 fail 1 str 2 heap 171120 min 122248 big 110580 psram 4069211 rssi -46 T 63
+    505s fps 12.6 KB/s  120 get   64 send    7 ms max 66/9 null 0 fail 1 str 2 heap 159496 min 122248 big 110580 psram 4069211 rssi -48 T 63
+    515s fps 12.5 KB/s  125 get   64 send    7 ms max 66/13 null 0 fail 1 str 2 heap 172168 min 122248 big 110580 psram 4069211 rssi -47 T 63
+    525s fps 12.4 KB/s  124 get   63 send    8 ms max 66/146 null 0 fail 1 str 2 heap 172172 min 122248 big 110580 psram 4069211 rssi -46 T 63
+    535s fps 12.5 KB/s  127 get   64 send    7 ms max 65/9 null 0 fail 1 str 2 heap 171644 min 122248 big 110580 psram 4069211 rssi -49 T 63
+    546s fps 12.6 KB/s  123 get   64 send    7 ms max 65/9 null 0 fail 1 str 2 heap 151240 min 122248 big 98292 psram 4069211 rssi -48 T 63
+    556s fps 12.5 KB/s  123 get   64 send    7 ms max 65/10 null 0 fail 1 str 2 heap 170588 min 122220 big 110580 psram 4069211 rssi -50 T 63
+    566s fps 12.5 KB/s  112 get   65 send    7 ms max 66/9 null 0 fail 1 str 2 heap 170588 min 122220 big 110580 psram 4069211 rssi -48 T 63
+    576s fps 12.6 KB/s  108 get   65 send    6 ms max 66/9 null 0 fail 1 str 2 heap 151236 min 122220 big 102388 psram 4069211 rssi -49 T 63
+    586s fps 12.5 KB/s  110 get   65 send    6 ms max 66/10 null 0 fail 1 str 2 heap 172168 min 122220 big 110580 psram 4069211 rssi -47 T 63
+    596s fps 12.5 KB/s  111 get   64 send    7 ms max 66/52 null 0 fail 1 str 2 heap 170488 min 122220 big 110580 psram 4069211 rssi -49 T 63
+  inter-frame ms: median 80 p95 145 max 322

@@ -1,0 +1,109 @@
+{
+  "label": "cl_5_ff",
+  "marker": 0,
+  "battery_v": 11.992,
+  "v": 0.55,
+  "turn_deg": 45.0,
+  "drive_m": 0.3,
+  "min_m": 1.1,
+  "kp": 0.2,
+  "ki": 0.05,
+  "trim0": -0.0085,
+  "q_std": 0.01,
+  "no_ff": false,
+  "rate_deg_s": 140.0,
+  "ended": "done",
+  "start_dist_m": 2.0345140901890773,
+  "repeats": [
+    {
+      "repeat": 1,
+      "turn_left": {
+        "target_deg": 45.0,
+        "achieved_deg": 37.1,
+        "error_deg": 7.9,
+        "pulses": 1,
+        "reason": "ok"
+      },
+      "turn_right": {
+        "target_deg": -45.0,
+        "achieved_deg": -47.7,
+        "error_deg": 2.7,
+        "pulses": 2,
+        "reason": "ok"
+      },
+      "drive": {
+        "start_m": 2.091,
+        "end_m": 1.772,
+        "seconds": 1.57,
+        "trim_used": -0.0085,
+        "trim_measured": -0.0035,
+        "trim_after": -0.0038,
+        "trim_std_after": 0.0029,
+        "veer_deg_per_m": 7.0,
+        "mean_abs_bearing_deg": 5.24,
+        "max_abs_bearing_deg": 12.98,
+        "entropy_nats": 3.19
+      }
+    },
+    {
+      "repeat": 2,
+      "turn_left": {
+        "target_deg": 45.0,
+        "achieved_deg": 38.6,
+        "error_deg": 6.4,
+        "pulses": 1,
+        "reason": "ok"
+      },
+      "turn_right": {
+        "target_deg": -45.0,
+        "achieved_deg": -36.9,
+        "error_deg": -8.1,
+        "pulses": 1,
+        "reason": "ok"
+      },
+      "drive": {
+        "start_m": 1.697,
+        "end_m": 1.389,
+        "seconds": 1.8,
+        "trim_used": -0.0038,
+        "trim_measured": -0.0105,
+        "trim_after": -0.01,
+        "trim_std_after": 0.0029,
+        "veer_deg_per_m": 20.8,
+        "mean_abs_bearing_deg": 5.82,
+        "max_abs_bearing_deg": 9.02,
+        "entropy_nats": 1.88
+      }
+    },
+    {
+      "repeat": 3,
+      "turn_left": {
+        "target_deg": 45.0,
+        "achieved_deg": 50.6,
+        "error_deg": -5.6,
+        "pulses": 2,
+        "reason": "ok"
+      },
+      "turn_right": {
+        "target_deg": -45.0,
+        "achieved_deg": -50.8,
+        "error_deg": 5.8,
+        "pulses": 2,
+        "reason": "ok"
+      },
+      "drive": {
+        "start_m": 1.348,
+        "end_m": 1.089,
+        "seconds": 1.33,
+        "trim_used": -0.01,
+        "trim_measured": -0.0127,
+        "trim_after": -0.0125,
+        "trim_std_after": 0.0029,
+        "veer_deg_per_m": 25.2,
+        "mean_abs_bearing_deg": 3.28,
+        "max_abs_bearing_deg": 3.73,
+        "entropy_nats": 0.51
+      }
+    }
+  ]
+}

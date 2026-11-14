@@ -1,0 +1,7 @@
+reading,fps,note
+1,8.8,record_d2 8 s at VGA q25 XCLK 10 (first run on the tower)
+2,6.6,3 s capture
+3,3.9,8 s capture
+4,4.2,8 s capture after restoring VGA q25
+5,1.2,6 s capture during a window test
+6,0.2,12 s capture (3 frames): the board was degrading

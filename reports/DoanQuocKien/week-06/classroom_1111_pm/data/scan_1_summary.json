@@ -1,0 +1,40 @@
+{
+ "label": "t2_1111_scan",
+ "end_reason": "full turn",
+ "pulses": 13,
+ "pulses_measured": 9,
+ "total_heading_deg": 356.6,
+ "turn_per_pulse_rad": 0.464,
+ "turn_per_pulse_sd_rad": 0.035,
+ "turn_per_pulse_deg": 26.6,
+ "spin_s": 0.2,
+ "spin_w": 0.45,
+ "boards": {
+  "0": {
+   "x_m": 3.73,
+   "y_m": 0.14,
+   "stops": 5,
+   "spread_m": 0.09
+  },
+  "1": {
+   "x_m": 0.05,
+   "y_m": -1.8,
+   "stops": 4,
+   "spread_m": 0.01
+  },
+  "2": {
+   "x_m": -0.14,
+   "y_m": 1.47,
+   "stops": 4,
+   "spread_m": 0.01
+  }
+ },
+ "door_bearing_deg": 336.8,
+ "door_sightings": 14,
+ "camera_pose_file": "calib/camera_pose_self_1111_2.json",
+ "battery_v_start": 12.16,
+ "battery_v_end": 12.14,
+ "date": "2026-11-11 14:43",
+ "dry_run": false,
+ "note": "positions from the boards' pose in the video and the heading summed from the measured pulse angles; boards seen only at the start stop have no heading error; 150 mm boards are noisy beyond 2-3 m"
+}

@@ -174,22 +174,33 @@ def f20():
 
 
 def f21():
-    items = [("detector + pose, nobody in view (60 s)", "bench_stageB"), ("+ door pipeline on a still image (60 s)", "bench_stageC"), ("sustained 600 s", "bench_C_sustained")]
-    fig, a = plt.subplots(figsize=(10, 4), dpi=150)
+    """On-robot bench, capture-to-result latency. Light bars: 2026-10-16 (nobody in view, door pipeline on a still image). Dark bars: 2026-11-13 (a person in view, MAXN; the stageC runs read the live ESP32 stream).
+    The plan row 'Edge latency and load' wants >= 20 fps and p95 <= 100 ms (dashed line)."""
+    old = R / "week-02" / "edge_deploy"
+    new = R / "week-06" / "edge_bench_1113"
+    nl = chr(10)
+    items = [("16/10 detector+pose," + nl + "nobody (60 s)", old / "bench_stageB.json", False), ("16/10 + door on a" + nl + "still image (60 s)", old / "bench_stageC.json", False),
+             ("16/10 sustained" + nl + "(600 s)", old / "bench_C_sustained.json", False),
+             ("13/11 detector+pose," + nl + "person (60 s)", new / "stageB_person_1113.json", True), ("13/11 + live ESP32" + nl + "(60 s, run 1)", new / "stageC60_live_esp32_1113.json", True),
+             ("13/11 + live ESP32" + nl + "(60 s, phone closer)", new / "stageC60b_live_esp32_phone_closer_1113.json", True), ("13/11 + live ESP32" + nl + "(600 s, seated)", new / "stageC600_live_esp32_seated_1113.json", True)]
+    fig, a = plt.subplots(figsize=(13, 4.6), dpi=150)
     labels = []
-    for i, (label, f) in enumerate(items):
-        d = json.load(open(R / "week-02" / "edge_deploy" / (f + ".json")))
+    for i, (label, f, dark) in enumerate(items):
+        d = json.load(open(f))
+        d = d.get("bench", d) | {"stage_ms": d["stage_ms"]}
         e = d["stage_ms"]["e2e"]
-        a.bar(i - 0.2, e["mean"], 0.4, color=BLUE, label="mean" if i == 0 else None)
-        a.bar(i + 0.2, e["p95"], 0.4, color=RED, label="p95" if i == 0 else None)
-        a.text(i - 0.2, e["mean"] + 1.5, "%.0f" % e["mean"], ha="center", fontsize=8)
-        a.text(i + 0.2, e["p95"] + 1.5, "%.0f" % e["p95"], ha="center", fontsize=8)
-        labels.append("%s\n%.1f fps" % (label, d["fps"]))
+        a.bar(i - 0.2, e["mean"], 0.4, color=BLUE, alpha=1.0 if dark else 0.4, label="mean" if i == 0 else None)
+        a.bar(i + 0.2, e["p95"], 0.4, color=RED, alpha=1.0 if dark else 0.4, label="p95" if i == 0 else None)
+        a.text(i - 0.2, e["mean"] + 2, "%.0f" % e["mean"], ha="center", fontsize=8)
+        a.text(i + 0.2, e["p95"] + 2, "%.0f" % e["p95"], ha="center", fontsize=8)
+        labels.append("%s%s%.1f fps" % (label, nl, d["fps"]))
+    a.axhline(100, color=GREY, ls="--", lw=1)
+    a.text(-0.45, 102, "plan: p95 <= 100 ms and >= 20 fps", ha="left", fontsize=7, color=GREY)
     a.set_xticks(range(len(items)))
-    a.set_xticklabels(labels, fontsize=8)
+    a.set_xticklabels(labels, fontsize=7)
     a.set_ylabel("capture-to-result latency on the robot (ms)")
-    a.legend(fontsize=8)
-    a.set_title("F21 On-robot live bench (2026-10-16, nobody in view); the person-in-view runs are in week-03/edge_deploy")
+    a.legend(fontsize=8, loc="upper left")
+    a.set_title("F21 On-robot live bench. Light: 2026-10-16, nobody in view. Dark: 2026-11-13, a person in view (MAXN; the live runs read the ESP32 stream)." + nl + "The 13/11 live runs do not meet the plan row (fps and p95); one person, one session each.", fontsize=9)
     fig.tight_layout()
     fig.savefig(OUT / "F21_robot_bench.png")
     plt.close(fig)
@@ -213,6 +224,158 @@ def f19():
     a.set_title("F19 Test growth by week (def test_ in tests/, git history of origin/main @ %s,\nweek ends Sunday 23:59 Asia/Bangkok)" % head, fontsize=9)
     fig.tight_layout()
     fig.savefig(OUT / "F19_test_growth.png")
+    plt.close(fig)
+
+
+PM = R / "week-06" / "classroom_1111_pm" / "data"
+OUT6 = R / "week-06" / "figures"
+
+
+def f22():
+    """Open-loop forward drive: heading change per metre vs commanded v (every logged speed run with a marker in view, 2026-10-15..11-11). Source: week-06/classroom_1111_pm/data/veer_per_run.csv."""
+    rows = list(csv.DictReader(open(PM / "veer_per_run.csv")))
+    fig, ax = plt.subplots(figsize=(7, 4.2))
+    style = {"classroom v sweep": (BLUE, "o"), "head_* runs": (GREEN, "s"), "low battery 10.97 V": ("#c08a00", "^"), "today 2026-11-11": (RED, "D")}
+    for grp, (c, m) in style.items():
+        pts = [(float(r["cmd_v"]), float(r["deg_per_m"])) for r in rows if r["group"] == grp]
+        if pts:
+            ax.scatter(*zip(*pts), color=c, marker=m, s=45, label=grp, zorder=3)
+    ax.axhline(0, color=GREY, lw=0.8)
+    ax.axhline(-10.7, color=GREY, ls="--", lw=1)
+    ax.text(0.99, -10.7, "motion.json calibration (2026-10-11): -0.19 rad/m", transform=ax.get_yaxis_transform(), ha="right", va="bottom", fontsize=7, color=GREY)
+    ax.set_xlabel("commanded v (speed cap 0.3 m/s at v = 1)")
+    ax.set_ylabel("heading change per metre (deg/m, left +)")
+    ax.set_title("F22 Open-loop drive veers unpredictably: the same command gives -16 to +59 deg/m", fontsize=9)
+    ax.legend(fontsize=7)
+    fig.tight_layout()
+    fig.savefig(OUT6 / "F22_drive_veer.png")
+    plt.close(fig)
+
+
+def f23():
+    """Autonomous approach run ap_1: range estimate (outline area scaled from the tape at the first sighting) and door bearing vs step; tape afterwards 1.67 m. Source: classroom_1111_pm/data/approach_ap_1_log.csv."""
+    rows = [r for r in csv.DictReader(open(PM / "approach_ap_1_log.csv")) if r["range_m"] != ""]
+    st = [int(r["step"]) for r in rows]
+    fig, ax = plt.subplots(2, 1, figsize=(7.5, 5.2), sharex=True)
+    ax[0].plot(st, [float(r["range_m"]) for r in rows], color=BLUE, marker=".", lw=1)
+    ax[0].axhspan(1.5, 3.0, color=GREEN, alpha=0.1, label="legal sweet-spot window 1.5-3.0 m")
+    ax[0].axhline(2.0, color=GREY, ls="--", lw=0.8, label="stand-off 2.0 m")
+    ax[0].scatter([st[-1]], [1.67], color=RED, marker="*", s=120, zorder=4, label="tape after the run: 1.67 m")
+    ax[0].set_ylabel("range estimate (m)")
+    ax[0].legend(fontsize=7)
+    ax[1].plot(st, [float(r["bearing_deg"]) for r in rows], color=RED, marker=".", lw=1)
+    ax[1].axhspan(-4, 4, color=GREY, alpha=0.2, label="+/- 4 deg window used (hunting)")
+    ax[1].axhspan(-8, 8, color=GREEN, alpha=0.1, label="+/- 8 deg window proposed")
+    for r in rows:
+        if r["action"] == "drive":
+            ax[1].axvline(int(r["step"]), color=BLUE, alpha=0.25, lw=2)
+    ax[1].set_ylabel("door bearing (deg, left +)")
+    ax[1].set_xlabel("step (blue bars = drive bursts)")
+    ax[1].legend(fontsize=7)
+    fig.suptitle("F23 Autonomous door approach (ap_1): pulse, re-measure, drive\n51 steps, 10 bursts, arrived at 1.67 m by tape (estimate 1.97 m)", fontsize=8.5)
+    fig.tight_layout()
+    fig.savefig(OUT6 / "F23_door_approach.png")
+    plt.close(fig)
+
+
+def f24():
+    """Person ranging, three people at the tape marks 1.2 / 1.8 / 2.4 m (tape from the robot front; the lens sits about 0.2-0.26 m behind: expected = tape + 0.23). Source: person_ranges_1111.json."""
+    sets = json.load(open(PM / "person_ranges_1111.json"))["sets"]
+    fig, ax = plt.subplots(figsize=(7.5, 4.6))
+    ser = [("foot row, 0 px", lambda d: d["foot_row"]["0.0"]["median"], "#999999", "o"), ("foot row, 3.5 px", lambda d: d["foot_row"]["3.5"]["median"], BLUE, "s"),
+           ("foot row, 5 px", lambda d: d["foot_row"]["5.0"]["median"], "#7fa6d8", "^"), ("trunk, prior 0.50 m", lambda d: d["trunk"]["median"], RED, "D")]
+    for k, (name, fn, c, m) in enumerate(ser):
+        xs, ys = [], []
+        for tag, d in sets.items():
+            xs.append(d["tape_m"] + (k - 1.5) * 0.06)
+            ys.append(fn(d))
+        ax.scatter(xs, ys, color=c, marker=m, s=34, label=name, zorder=3)
+    xx = [1.1, 2.5]
+    ax.plot(xx, [x + 0.23 for x in xx], color=GREEN, lw=1.2, label="expected: tape + 0.23 m (lens offset, unmeasured +/- 0.03)")
+    ax.fill_between(xx, [x + 0.03 for x in xx], [x + 0.43 for x in xx], color=GREEN, alpha=0.08)
+    ax.set_xlabel("tape distance, robot front to feet (m); three people per mark")
+    ax.set_ylabel("median forward range from the lens (m)")
+    ax.set_title("F24 Foot-row range depends on the box-bottom offset; trunk range needs none (12 frames per point)", fontsize=8.5)
+    ax.legend(fontsize=7, loc="upper left")
+    fig.tight_layout()
+    fig.savefig(OUT6 / "F24_person_ranges.png")
+    plt.close(fig)
+
+
+def f25():
+    """D2 face width at the door ESP32: the cafe pilot (2026-10-28) vs the classroom clips (2026-11-11, low tilted placement), 45 px = the pipeline's walker threshold. Source: d2_face_widths_*.csv."""
+    new = [float(r["width_px"]) for r in csv.DictReader(open(PM / "d2_face_widths_1111.csv"))]
+    old = [float(r["width_px"]) for r in csv.DictReader(open(PM / "d2_face_widths_pilot_1028.csv"))]
+    fig, ax = plt.subplots(figsize=(7.5, 4))
+    bins = range(20, 66, 2)
+    ax.hist(old, bins=bins, color=GREEN, alpha=0.6, label="cafe pilot 2026-10-28 (%d frames, median %.0f px)" % (len(old), sorted(old)[len(old) // 2]))
+    ax.hist(new, bins=bins, color=RED, alpha=0.6, label="classroom 2026-11-11 (%d frames, median %.0f px)" % (len(new), sorted(new)[len(new) // 2]))
+    ax.axvline(45, color="k", ls="--", lw=1)
+    ax.text(45.5, ax.get_ylim()[1] * 0.92, "45 px walker threshold", fontsize=7)
+    ax.set_xlabel("walker face width in the ESP32 frame (px, 640x480)")
+    ax.set_ylabel("frames")
+    ax.set_title("F25 Faces at the classroom door placement are 22-53 px: below the pilot's 45-60 px", fontsize=9)
+    ax.legend(fontsize=7)
+    fig.tight_layout()
+    fig.savefig(OUT6 / "F25_d2_face_width.png")
+    plt.close(fig)
+
+
+def f7():
+    """Video latency (JetBot capture -> laptop decode, after UDP clock sync) of two 120 s runs on 2026-11-11, robot stationary next to the laptop (-31 dBm), and the delivered frame rate.
+    Source: week-06/latency_1111/*.csv and .json (tools.log_latency). The e-stop / watchdog stop times are NOT in this figure (they need motion)."""
+    base = R / "week-06" / "latency_1111"
+    fig, ax = plt.subplots(figsize=(7.5, 4.4))
+    for tag, name, c in (("video_latency_1111", "run 1 (2 min after boot, Jetson load 3.6)", BLUE), ("video_latency_1111_settled", "run 2 (4 min after boot, load 1.0)", RED)):
+        x = sorted(float(r["decoded_latency_ms"]) for r in csv.DictReader(open(base / (tag + ".csv"))))
+        d = json.load(open(base / (tag + ".json")))
+        ax.plot(x, [(i + 1) / len(x) for i in range(len(x))], color=c, label="%s: %.1f fps, p50 %.0f, p95 %.0f, max %.0f ms" % (name, d["run_fps"], x[len(x) // 2], x[int(0.95 * len(x))], x[-1]))
+    ax.axvline(50, color=GREY, ls="--", lw=1)
+    ax.text(52, 0.05, "config p95 limit 50 ms", fontsize=7, color=GREY)
+    ax.axvline(500, color=GREEN, ls=":", lw=1)
+    ax.text(470, 0.5, "video-freshness guard 0.5 s", fontsize=7, color=GREEN, rotation=90, ha="right")
+    ax.set_xlabel("decoded latency (ms)")
+    ax.set_ylabel("cumulative fraction of frames")
+    ax.set_xlim(0, 550)
+    ax.set_title("F7 Video latency CDF, 2 x 120 s (2,351 and 2,325 frames); delivered 19.6 and 19.4 fps (config minimum 20)", fontsize=8.5)
+    ax.legend(fontsize=7, loc="lower right")
+    fig.tight_layout()
+    fig.savefig(OUT6 / "F7_video_latency.png")
+    plt.close(fig)
+
+
+def f8():
+    """ESP32-CAM door stream, 2026-11-12 (desk, USB power). Left: delivered fps per second: the original firmware on a fresh boot (VGA), the camera clock pin at 20 MHz with the default drive strength (sends stall: the
+    0.2 fps signature), the same clock with drive strength 0, and the final 'opt4' build over 10 minutes (640x480 sensor crop, clock doubler); dots = the original firmware's readings during the evening (fps fell 8.8 to 0.2 at identical settings).
+    Right: an empty-door frame at VGA full field from the tower placement. Source: week-06/esp32_stream_1112/data (per-second counts from the laptop, meas.py)."""
+    import cv2
+    base = R / "week-06" / "esp32_stream_1112" / "data"
+
+    def load(name):
+        rows = list(csv.DictReader(open(base / (name + ".csv"))))
+        return [float(r["sec"]) for r in rows], [float(r["fps"]) for r in rows]
+
+    def smooth(v, k=5):
+        return [sum(v[max(0, i - k + 1):i + 1]) / len(v[max(0, i - k + 1):i + 1]) for i in range(len(v))]
+    fig, ax = plt.subplots(1, 2, figsize=(11, 4.2), gridspec_kw={"width_ratios": [1.5, 1]})
+    for name, label, c in (("base_fresh", "original firmware, fresh boot (VGA, clock 10 MHz)", GREY), ("r2d", "clock pin 20 MHz, drive 2: sends stall", RED),
+                           ("r3b_d0", "clock pin 20 MHz, drive strength 0", GREEN), ("r3c", "opt4: 640x480 sensor crop + doubler, 10 min", BLUE)):
+        x, y = load(name)
+        ax[0].plot(x, smooth(y), color=c, lw=1.3, label=label)
+    rd = list(csv.DictReader(open(base / "original_firmware_readings.csv")))
+    ax[0].text(0.99, 0.62, "original firmware, same settings (VGA, q25, clock 10 MHz),\nreadings over about 90 min:  " + ", ".join(r["fps"] for r in rd) + " fps", transform=ax[0].transAxes, ha="right", va="top", fontsize=7, color="#8a6200",
+               bbox=dict(boxstyle="round", fc="#fff6dd", ec="#c08a00", lw=0.6))
+    ax[0].set_xlabel("time (s)")
+    ax[0].set_ylabel("delivered frames per second (5 s mean)")
+    ax[0].set_ylim(0, 15)
+    ax[0].legend(fontsize=6.5, loc="lower right")
+    ax[0].set_title("F8 ESP32-CAM stream rate, desk measurements", fontsize=9)
+    img = cv2.cvtColor(cv2.imread(str(base / "door_view_vga_empty.jpg")), cv2.COLOR_BGR2RGB)
+    ax[1].imshow(img)
+    ax[1].axis("off")
+    ax[1].set_title("sample frame, empty door, VGA full field\n(faces 22-40 px wide here; opt4 crop: about 77 px at 2.1 m)", fontsize=8)
+    fig.tight_layout()
+    fig.savefig(OUT6 / "F8_esp32_stream.png")
     plt.close(fig)
 
 
@@ -248,7 +411,8 @@ def f17():
 
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
-    for fn in (f1, f2, f4, f5, f6, f17, f19, f20, f21):
+    OUT6.mkdir(parents=True, exist_ok=True)
+    for fn in (f1, f2, f4, f5, f6, f17, f19, f20, f21, f7, f8, f22, f23, f24, f25):
         fn()
         print("made", fn.__name__)
 
