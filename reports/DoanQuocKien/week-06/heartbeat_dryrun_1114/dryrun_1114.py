@@ -17,6 +17,10 @@ pw = jetbot_ssh.password()
 c = jetbot_ssh.connect(ip, "jetbot", pw)
 sftp = c.open_sftp()
 sftp.put(sys.argv[0].replace("dryrun_1114.py", "hb_age_1114.py"), "/home/jetbot/sentry/hb_age_1114.py")
+import subprocess  # noqa: E402
+new = subprocess.run(["git", "show", "DoanQuocKien/w07-audit-fixes:jetson/robot_udp.py"], stdout=subprocess.PIPE, check=True).stdout
+with sftp.open("/home/jetbot/sentry/jetson/robot_udp_audit1114.py", "wb") as fh:
+    fh.write(new.replace(b"\r\n", b"\n"))
 sftp.close()
 
 run_s = int(dur + 5)
@@ -27,6 +31,11 @@ print(jetbot_ssh.sudo(c, start, pw) or "dry-run started")
 hb = ("docker exec -d -w /workspace/sentry jetbot_jupyter sh -c "
       "'python3 -u hb_age_1114.py /workspace/sentry %d > hb_age_1114.log 2>&1'" % int(dur))
 print(jetbot_ssh.sudo(c, hb, pw) or "heartbeat logger started")
+sftp = c.open_sftp()
+sftp.put(sys.argv[0].replace("dryrun_1114.py", "js_log_1114.py"), "/home/jetbot/sentry/js_log_1114.py")
+sftp.close()
+c.exec_command("sudo -S -p '' sh -c 'nohup python3 -u /home/jetbot/sentry/js_log_1114.py %d > /home/jetbot/sentry/js_log_1114.log 2>&1 &'" % int(dur))[0].write(pw + "\n")
+print("button logger started")
 time.sleep(2.0)
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -46,6 +55,11 @@ print("===== dryrun_1114.log")
 print(jetbot_ssh.run(c, "cat /home/jetbot/sentry/dryrun_1114.log"))
 print("===== hb_age_1114.log (summary + seconds over 0.6 s)")
 print(jetbot_ssh.run(c, "grep -E 'SUMMARY|max_age (0\\.[6-9]|[1-9])' /home/jetbot/sentry/hb_age_1114.log; grep -c max_age /home/jetbot/sentry/hb_age_1114.log"))
+print("===== js_log_1114.log (host clock)")
+print(jetbot_ssh.run(c, "cat /home/jetbot/sentry/js_log_1114.log"))
 print("===== estop.log tail")
 print(jetbot_ssh.run(c, "tail -8 /home/jetbot/sentry/estop.log"))
+if "--keep" not in sys.argv:
+    jetbot_ssh.sudo(c, "rm -f /home/jetbot/sentry/hb_age_1114.py /home/jetbot/sentry/js_log_1114.py /home/jetbot/sentry/jetson/robot_udp_audit1114.py", pw)
+    print("robot test scripts removed (logs kept: dryrun_1114.log, hb_age_1114.log)")
 c.close()
