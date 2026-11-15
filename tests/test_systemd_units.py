@@ -47,4 +47,5 @@ def test_every_service_log_is_rotated():
         logs.update(re.findall(r">>\s*(/\S+\.log)", unit.read_text()))
     assert logs and all(Path(l).parent == Path(pattern).parent and l.endswith(".log") for l in logs)
     assert "copytruncate" in rule and re.search(r"^\s*size\s+\d+M", rule, re.M)
+    assert re.search(r"^\s*su root root$", rule, re.M)          # without it logrotate skips a group-writable log folder
     assert "/etc/logrotate.d/sentry" in (UNITS / "install.sh").read_text()

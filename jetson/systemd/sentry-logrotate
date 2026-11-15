@@ -1,7 +1,9 @@
 # Installed as /etc/logrotate.d/sentry by install.sh (audit 2026-11-15: the services append forever; a full SD card
 # makes the e-stop heartbeat write fail, which stops the robot but leaves it unusable until someone cleans up).
 # copytruncate: the services keep their file open through `>>`, so the file is copied and emptied in place.
+# su: logrotate refuses to rotate inside a group-writable folder ("insecure permissions") unless the rule names the user.
 /home/jetbot/sentry/*.log {
+    su root root
     size 5M
     rotate 3
     compress
