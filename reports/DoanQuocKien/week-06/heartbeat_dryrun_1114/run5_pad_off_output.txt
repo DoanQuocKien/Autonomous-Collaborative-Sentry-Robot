@@ -1,0 +1,53 @@
+allow args: (none)
+services: active active
+sending v=0.5 to 10.169.60.160:5556 for 60 s
+===== estop.log (new lines, host clock)
+08:14:32.723 ARMED (Start held 1.5 s); now hold R1 to move
+08:14:38.404 GO (R1 held and armed); robot may move
+08:14:48.076 STOPPED (R1 released); motors CUT in 6 ms
+08:14:56.769 GO (R1 held and armed); robot may move
+08:15:15.477 STOPPED (R1 released); motors CUT in 6 ms
+08:15:20.199 GO (R1 held and armed); robot may move
+===== robot_udp.log (new lines, container clock)
+16:14:31.359 packets accepted=3001 foreign=0 malformed=0 received=3001 stale=0
+16:14:38.408 e-stop released: motor commands accepted
+16:14:38.461 motors +0.15 +0.15
+16:14:41.372 packets accepted=3293 foreign=0 malformed=0 received=3293 stale=0
+16:14:48.084 e-stop ENGAGED: refusing motor commands
+16:14:48.103 motors +0.00 +0.00
+16:14:51.390 packets accepted=3585 foreign=0 malformed=0 received=3585 stale=0
+16:14:56.788 e-stop released: motor commands accepted
+16:14:56.810 motors +0.15 +0.15
+16:15:01.411 packets accepted=3878 foreign=0 malformed=0 received=3878 stale=0
+16:15:11.427 packets accepted=4171 foreign=0 malformed=0 received=4171 stale=0
+16:15:15.496 e-stop ENGAGED: refusing motor commands
+16:15:15.526 motors +0.00 +0.00
+16:15:20.206 e-stop released: motor commands accepted
+16:15:20.237 motors +0.15 +0.15
+16:15:21.439 packets accepted=4462 foreign=0 malformed=0 received=4462 stale=0
+16:15:29.399 motors +0.00 +0.00
+===== js_log_1114.log (host clock)
+08:14:28 button  0 up (init)
+08:14:28 button  1 up (init)
+08:14:28 button  2 up (init)
+08:14:28 button  3 up (init)
+08:14:28 button  4 up (init)
+08:14:28 button  5 up (init)
+08:14:28 button  6 up (init)
+08:14:28 button  7 up (init)
+08:14:28 button  8 up (init)
+08:14:28 button  9 up (init)
+08:14:28 button 10 up (init)
+08:14:28 button 11 up (init)
+08:14:28 button 12 up (init)
+08:14:28 button 13 up (init)
+08:14:28 button 14 up (init)
+08:14:31 button 11 DOWN
+08:14:36 button 11 up
+08:14:38 button  7 DOWN
+08:14:48 button  7 up
+08:14:56 button  7 DOWN
+08:15:15 button  7 up
+08:15:20 button  7 DOWN
+
+[exited with code 0]

@@ -33,3 +33,6 @@ esp32/lib_shared/
 
 # local secrets
 .env
+
+# local session recaps (handoff notes for a new session)
+session_recaps/

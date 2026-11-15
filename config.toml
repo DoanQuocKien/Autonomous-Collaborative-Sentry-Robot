@@ -79,6 +79,19 @@ exit_frames = 5                  # ENTRANCE_LOST after this many without
 detection_radius_m = 3.0         # PLACEHOLDER r_det; DQK measures it in W9
 coverage_target = 0.90           # fraction of known-free cells the planned viewpoints must cover
 
+[state_machine]                 # sentry/app/state_machine.py StateMachineConfig (spec values stay in [thresholds]); normalised commands, seconds
+explore_v = 0.45
+explore_w = 0.0
+approach_v = 0.45
+retract_v = -0.45                # nothing senses behind the robot: keep the retract short
+retract_duration_s = 2.0
+evade_cooldown_s = 1.0
+scan_w = 0.45
+explore_timeout_s = 180.0
+approach_timeout_s = 30.0
+handshake_timeout_s = 60.0
+search_timeout_s = 120.0
+
 [obstacle]
 weights = "data/models/yolov8n.pt" # existing local weights; inference never downloads implicitly
 device = "0"                    # use "cpu" for offline CPU work
@@ -229,6 +242,9 @@ kd_distance = 0.1
 kp_yaw = 1.5
 kd_yaw = 0.2
 v_max = 0.55
+v_min_forward = 0.45             # slowest forward command: both wheels above the dead zone (0.40 at the 0.3 cap)
+spin_first_yaw = 0.5             # |yaw error| above this (units of the caller's yaw_err: rad or normalised offset) -> turn in place before driving
+spin_first_exit_yaw = 0.35        # ...keep turning until |yaw error| is below this (hysteresis)
 v_min_reverse = -0.45
 w_max = 1.0
 obstacle_critical_m = 0.35

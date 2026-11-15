@@ -147,6 +147,7 @@ def test_heartbeat_interlock(tmp_path):
     write_heartbeat(alive, 100.0)
     assert not estop_engaged(latch, alive, 101.0)               # fresh heartbeat, no latch: released
     assert estop_engaged(latch, alive, 102.5)                   # stale
+    assert estop_engaged(latch, alive, 101.6)                   # stale after 1 s (two missed 0.5 s writes)
     assert estop_engaged(latch, alive, 98.0)                    # from the future (old wall-clock writer, clock jump)
     (tmp_path / "ESTOP_ALIVE").write_text("")
     assert estop_engaged(latch, alive, 100.0)                   # unreadable

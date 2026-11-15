@@ -86,9 +86,12 @@ class Controller(object):
         return None
 
 
+HEARTBEAT_MAX_AGE_S = 1.0  # estop.py writes every 0.5 s: two missed writes stop the motors (was 2.0 s until the 2026-11-14 audit)
+
+
 def estop_engaged(latch, heartbeat, now):
     """Fail-safe: engaged if the latch exists, or the heartbeat (time.monotonic() written by jetson/estop.py; the host and
-    the container share CLOCK_MONOTONIC) is missing, unreadable, older than 2 s or from the future. A monotonic stamp in the
+    the container share CLOCK_MONOTONIC) is missing, unreadable, older than HEARTBEAT_MAX_AGE_S or from the future. A monotonic stamp in the
     file, not the file's mtime: the Jetson has no RTC, and a wall-clock step back made a dead e-stop look alive."""
     if os.path.exists(latch):
         return True
@@ -97,7 +100,7 @@ def estop_engaged(latch, heartbeat, now):
             age = now - float(f.read())
     except (OSError, ValueError):
         return True
-    return not -0.5 <= age <= 2.0
+    return not -0.5 <= age <= HEARTBEAT_MAX_AGE_S
 
 
 def _clock_echo(port):
@@ -142,7 +145,7 @@ def main():
     ap.add_argument("--port", type=int, default=PORT_CONTROL)
     ap.add_argument("--clock-port", type=int, default=PORT_CLOCK)
     ap.add_argument("--allow-ip", help="only accept control packets from this IP (the laptop)")
-    ap.add_argument("--max-speed", type=float, default=0.5, help="cap on every wheel value, 0-1")
+    ap.add_argument("--max-speed", type=float, default=None, help="cap on every wheel value, 0-1 (default: max_speed in --calib, else 0.3, the cap the laptop controllers assume)")
     ap.add_argument("--watchdog", type=float, default=0.3, help="seconds of silence before stopping")
     ap.add_argument("--calib", default="calib/motion.json", help='JSON {"k": .., "min_pwm": .., "trim": ..} (trim optional, default 0)')
     ap.add_argument("--audio-dir", default="assets/audio")
@@ -156,7 +159,8 @@ def main():
         with open(args.calib) as f:
             calib = json.load(f)
     try:
-        ctl = Controller(calib.get("k", 1.0), calib.get("min_pwm", 0.0), args.max_speed, args.watchdog, calib.get("trim", 0.0))
+        max_speed = calib.get("max_speed", 0.3) if args.max_speed is None else args.max_speed
+        ctl = Controller(calib.get("k", 1.0), calib.get("min_pwm", 0.0), max_speed, args.watchdog, calib.get("trim", 0.0))
     except ValueError as e:
         raise SystemExit("refusing to start: %s (check --max-speed, --watchdog and %s)" % (e, args.calib))
     robot = None if args.dry_run else _make_robot()

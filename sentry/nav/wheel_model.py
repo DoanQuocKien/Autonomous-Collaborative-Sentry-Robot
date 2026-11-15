@@ -10,7 +10,24 @@ Why: the old calibration (v_gain * v, w_gain * w) is right only at command 1.0. 
 CAVEATS: one floor, one battery state (the offset was 0.044 motor units at 10.97-11.3 V: it shrinks as the battery is full), and the tile veers the robot left by tens of degrees (not modelled).
 `scale` and `m0` are the knobs an online estimator (sentry/nav/motion_estimator.py) can adjust for the floor and the battery.
 """
+import json
+from pathlib import Path
+
 from common.mixing import deadzone, mix
+
+
+def robot_motor_limits(path=Path(__file__).resolve().parents[2] / "calib" / "motion.json"):
+    """(min_pwm, max_speed) the robot drives with: calib/motion.json is the laptop copy of the robot's file, and jetson/robot_udp.py reads
+    the same two keys (its --max-speed overrides the cap; the systemd unit passes 0.3). Every laptop dead-zone check uses these two numbers."""
+    try:
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+    except (OSError, ValueError):
+        data = {}
+    return float(data.get("min_pwm", 0.12)), float(data.get("max_speed", 0.3))
+
+
+MIN_PWM, MAX_SPEED = robot_motor_limits()
 
 K_WHEEL = 1.64          # m/s per motor unit above the offset
 M0 = 0.038              # motor units: the wheel offset
@@ -18,7 +35,7 @@ TRACK = 0.137           # m between the wheels (fitted from the turn / speed slo
 
 
 class WheelModel:
-    def __init__(self, k=K_WHEEL, m0=M0, track=TRACK, max_speed=0.3, min_pwm=0.12, scale=1.0, k_mix=1.0, w_scale_left=1.0, w_scale_right=1.0, drift_rad_per_m=0.0):
+    def __init__(self, k=K_WHEEL, m0=M0, track=TRACK, max_speed=MAX_SPEED, min_pwm=MIN_PWM, scale=1.0, k_mix=1.0, w_scale_left=1.0, w_scale_right=1.0, drift_rad_per_m=0.0):
         self.k, self.m0, self.track, self.max_speed, self.min_pwm, self.scale, self.k_mix = k, m0, track, max_speed, min_pwm, scale, k_mix
         # Per-session floor corrections measured with the ArUco boards (tools/motion_check.py): an unlevel floor turns left and right at different rates and bends straight paths.
         self.w_scale_left, self.w_scale_right, self.drift_rad_per_m = w_scale_left, w_scale_right, drift_rad_per_m
