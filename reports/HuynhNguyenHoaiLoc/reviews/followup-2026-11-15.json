@@ -74,5 +74,27 @@
       "url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/pull/123"
     }
   ],
-  "main_after_merges": "1a20ba5d439b13b359d7a66301418209b0381b7d"
+  "main_after_merges": "1a20ba5d439b13b359d7a66301418209b0381b7d",
+  "created_hnhl_pr": {
+    "number": 124,
+    "url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/pull/124",
+    "head": "a45679505a6d79b83ecaa071245ca50fa71a8392",
+    "state": "open",
+    "reviewers": [
+      "DoanQuocKien",
+      "kouun-rokku"
+    ]
+  },
+  "issue_comments": [
+    {
+      "number": 111,
+      "url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/issues/111#issuecomment-6891737701",
+      "already_present": false
+    },
+    {
+      "number": 114,
+      "url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/issues/114#issuecomment-6891736820",
+      "already_present": false
+    }
+  ]
 }

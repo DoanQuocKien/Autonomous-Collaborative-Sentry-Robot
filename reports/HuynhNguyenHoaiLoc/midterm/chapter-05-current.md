@@ -42,6 +42,6 @@ D5 custom export ONNX opset11: 90/90 ảnh cùng bbox count, 294 reference boxes
 
 PR99/102/103 đã merge11/11; #100/#101/#108/#115 cũng đã merge sau review. Tile_3_1 có902 rows:21 HOLD rows trong hai đoạn ngắn,80 rows3,4–7,4s là stopped PURSUE; smooth-score bỏ9 warm-up nên full-series/full-window ghi riêng. Experiment B tooling đã merge: ORG/D1 coverage8/24 obstacle-route,6/24 free-space so với configured1/24; error0,041m chỉ trên8 found, false components≈1,87/ảnh, empty-floor control còn thiếu. Không đổi detector mặc định. Retest ghế cũ0/36 distances và khác gốc tape giữ nguyên. [Nguồn11/11](update-2026-11-11.md).
 
-Code handoff queue/tracker và TRACK_LOST bổ sung được kiểm tra T0; search coverage vẫn kế hoạch W9. DQK có6 lượt deployment được tính; hai lượt mới dùng manual_vantage nên không thay nghiệm thu map/automatic vantage/F11. D3/gallery/D5 độc lập, full door T1, raw latency và pursuit/hold đủ protocol vẫn thiếu. [Trạng thái15/11](update-2026-11-15.md). Chốt hình16/11, draft18/11, nộp23/11.
+Code handoff queue/tracker và TRACK_LOST bổ sung ở PR #124 đang chờ review, đã kiểm tra T0; search coverage vẫn kế hoạch W9. DQK có6 lượt deployment được tính; hai lượt mới dùng manual_vantage nên không thay nghiệm thu map/automatic vantage/F11. D3/gallery/D5 độc lập, full door T1, raw latency và pursuit/hold đủ protocol vẫn thiếu. [Trạng thái15/11](update-2026-11-15.md). Chốt hình16/11, draft18/11, nộp23/11.
 
 [Dòng Chương 7](chapter-07-rows.md), [appendix code](code-appendix.md), [checklist dữ liệu và bàn giao](update-checklist.md).
