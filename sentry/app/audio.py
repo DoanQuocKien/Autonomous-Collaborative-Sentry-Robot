@@ -1,11 +1,8 @@
 """Offline TTS prompt generation and audio clip catalog for Phase 1–3 HCI & deterrence.
 
-The Jetson plays pre-generated WAV files from `assets/audio/<clip>.wav` via `aplay -q`
-when it receives a `{"seq": int, "play": "<clip>"}` UDP packet (`jetson/robot_udp.py`).
-Clip names must match `^[a-z0-9_]{1,32}$` (`common/protocol.py`).
-
-Since 2026-10-28 there is NO speaker on the robot (cost): the laptop plays the clips. Use `AudioPromptPlayer(sender=LocalSpeaker())`; the Jetson `play` path above stays
-in the code but is unused.
+There is NO speaker on the robot (dropped 2026-10-26, cost): the laptop plays the pre-generated WAV files from
+`assets/audio/<clip>.wav` with `AudioPromptPlayer(sender=LocalSpeaker())`. The robot's UDP `play` packet was removed
+in the 2026-11-14 audit. Clip names must match `^[a-z0-9_]{1,32}$` (they become file names).
 
 Run offline generation from the repo root:
     python -m sentry.app.audio
@@ -14,6 +11,7 @@ import argparse
 from array import array
 from dataclasses import dataclass
 import hashlib
+import logging
 import math
 from pathlib import Path
 import random
@@ -23,7 +21,8 @@ import subprocess
 import tempfile
 import wave
 
-from common.protocol import decode_control, encode_play
+
+logger = logging.getLogger(__name__)
 
 ROOT = Path(__file__).resolve().parents[2]
 AUDIO_DIR = ROOT / "assets" / "audio"
@@ -75,10 +74,9 @@ class WavInfo:
 
 
 def validate_clip_name(clip):
-    """Validate `clip` against common.protocol's regex (`^[a-z0-9_]{1,32}$`)."""
-    if not isinstance(clip, str):
-        raise ValueError("clip name must be a string, got %r" % (clip,))
-    decode_control(encode_play(0, clip))
+    """`clip` must match `^[a-z0-9_]{1,32}$`: it becomes a file name, so no paths."""
+    if not isinstance(clip, str) or not re.fullmatch(r"[a-z0-9_]{1,32}", clip):
+        raise ValueError("bad clip name %r" % (clip,))
     return clip
 
 
@@ -345,12 +343,14 @@ class LocalSpeaker:
         validate_clip_name(clip)
         path = self.audio_dir / ("%s.wav" % clip)
         if not path.exists():
+            logger.warning("audio clip missing, not played: %s", path)
             return False
         try:
             if self._backend is None:
                 self._backend = _default_backend()
             self._backend(str(path))
-        except Exception:
+        except Exception as e:              # never stop the state machine, but tell the operator the prompt was not heard
+            logger.warning("audio clip %s not played: %s", clip, e)
             return False
         self.played.append(clip)
         return True

@@ -1,0 +1,14 @@
+run,group,cmd_v,moved_m,bearing_change_deg_left_positive,deg_per_m
+classroom_v0.4_1,classroom v sweep,0.4,0.54,-0.5,-0.9
+classroom_v0.5_1,classroom v sweep,0.5,0.78,10.1,13.0
+classroom_v0.6_1,classroom v sweep,0.6,0.81,8.1,10.1
+classroom_v0.7_1,classroom v sweep,0.7,0.9,29.1,32.1
+classroom_v0.7_2,classroom v sweep,0.7,1.08,20.4,18.9
+classroom_v0.85_1,classroom v sweep,0.85,1.12,9.0,8.0
+classroom_v1_1,classroom v sweep,1.0,1.0,4.1,4.1
+head_centre_v0.6_1,head_* runs,0.6,0.88,-14.1,-16.0
+head_centre_v0.6_2,head_* runs,0.6,0.88,15.5,17.7
+head_left_v0.6_1,head_* runs,0.6,0.68,15.8,23.0
+head_right_v0.6_1,head_* runs,0.6,0.94,-3.3,-3.5
+lowbattery_10.97V_head_centre_v0.6_1,low battery 10.97 V,0.6,0.48,10.4,21.8
+t2_1111_baseline_v0.55_1,today 2026-11-11,0.55,0.54,32.0,59.3

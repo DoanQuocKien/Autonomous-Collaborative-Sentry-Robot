@@ -1,0 +1,248 @@
+{
+ "note": "D2 door clips of 2026-11-11 (3 members, 793 walker-face frames, 43 automatic entries): does averaging the frames of an entry help, and how does the score depend on the face width?",
+ "results": {
+  "frame/-/min_width_24": {
+   "auc": 0.71,
+   "0.3": {
+    "TAR": 0.634,
+    "FAR": 0.393,
+    "n_genuine": 1440,
+    "n_impostor": 793
+   },
+   "0.35": {
+    "TAR": 0.555,
+    "FAR": 0.211,
+    "n_genuine": 1440,
+    "n_impostor": 793
+   },
+   "0.4": {
+    "TAR": 0.451,
+    "FAR": 0.09,
+    "n_genuine": 1440,
+    "n_impostor": 793
+   },
+   "0.45": {
+    "TAR": 0.335,
+    "FAR": 0.026,
+    "n_genuine": 1440,
+    "n_impostor": 793
+   }
+  },
+  "frame/-/min_width_30": {
+   "auc": 0.629,
+   "0.3": {
+    "TAR": 0.489,
+    "FAR": 0.338,
+    "n_genuine": 846,
+    "n_impostor": 450
+   },
+   "0.35": {
+    "TAR": 0.417,
+    "FAR": 0.167,
+    "n_genuine": 846,
+    "n_impostor": 450
+   },
+   "0.4": {
+    "TAR": 0.326,
+    "FAR": 0.062,
+    "n_genuine": 846,
+    "n_impostor": 450
+   },
+   "0.45": {
+    "TAR": 0.248,
+    "FAR": 0.004,
+    "n_genuine": 846,
+    "n_impostor": 450
+   }
+  },
+  "frame/-/min_width_36": {
+   "auc": null,
+   "0.3": {
+    "TAR": null,
+    "FAR": null,
+    "n_genuine": 0,
+    "n_impostor": 0
+   },
+   "0.35": {
+    "TAR": null,
+    "FAR": null,
+    "n_genuine": 0,
+    "n_impostor": 0
+   },
+   "0.4": {
+    "TAR": null,
+    "FAR": null,
+    "n_genuine": 0,
+    "n_impostor": 0
+   },
+   "0.45": {
+    "TAR": null,
+    "FAR": null,
+    "n_genuine": 0,
+    "n_impostor": 0
+   }
+  },
+  "entry/mean/min_width_24": {
+   "auc": 0.735,
+   "0.3": {
+    "TAR": 0.812,
+    "FAR": 0.791,
+    "n_genuine": 80,
+    "n_impostor": 43
+   },
+   "0.35": {
+    "TAR": 0.775,
+    "FAR": 0.651,
+    "n_genuine": 80,
+    "n_impostor": 43
+   },
+   "0.4": {
+    "TAR": 0.713,
+    "FAR": 0.488,
+    "n_genuine": 80,
+    "n_impostor": 43
+   },
+   "0.45": {
+    "TAR": 0.637,
+    "FAR": 0.279,
+    "n_genuine": 80,
+    "n_impostor": 43
+   }
+  },
+  "entry/mean/min_width_30": {
+   "auc": 0.677,
+   "0.3": {
+    "TAR": 0.62,
+    "FAR": 0.429,
+    "n_genuine": 50,
+    "n_impostor": 28
+   },
+   "0.35": {
+    "TAR": 0.56,
+    "FAR": 0.393,
+    "n_genuine": 50,
+    "n_impostor": 28
+   },
+   "0.4": {
+    "TAR": 0.52,
+    "FAR": 0.286,
+    "n_genuine": 50,
+    "n_impostor": 28
+   },
+   "0.45": {
+    "TAR": 0.52,
+    "FAR": 0.214,
+    "n_genuine": 50,
+    "n_impostor": 28
+   }
+  },
+  "entry/mean/min_width_36": {
+   "auc": null,
+   "0.3": {
+    "TAR": null,
+    "FAR": null,
+    "n_genuine": 0,
+    "n_impostor": 0
+   },
+   "0.35": {
+    "TAR": null,
+    "FAR": null,
+    "n_genuine": 0,
+    "n_impostor": 0
+   },
+   "0.4": {
+    "TAR": null,
+    "FAR": null,
+    "n_genuine": 0,
+    "n_impostor": 0
+   },
+   "0.45": {
+    "TAR": null,
+    "FAR": null,
+    "n_genuine": 0,
+    "n_impostor": 0
+   }
+  },
+  "entry/width/min_width_24": {
+   "auc": 0.734,
+   "0.3": {
+    "TAR": 0.8,
+    "FAR": 0.791,
+    "n_genuine": 80,
+    "n_impostor": 43
+   },
+   "0.35": {
+    "TAR": 0.75,
+    "FAR": 0.628,
+    "n_genuine": 80,
+    "n_impostor": 43
+   },
+   "0.4": {
+    "TAR": 0.7,
+    "FAR": 0.465,
+    "n_genuine": 80,
+    "n_impostor": 43
+   },
+   "0.45": {
+    "TAR": 0.625,
+    "FAR": 0.279,
+    "n_genuine": 80,
+    "n_impostor": 43
+   }
+  },
+  "entry/width/min_width_30": {
+   "auc": 0.677,
+   "0.3": {
+    "TAR": 0.62,
+    "FAR": 0.429,
+    "n_genuine": 50,
+    "n_impostor": 28
+   },
+   "0.35": {
+    "TAR": 0.56,
+    "FAR": 0.393,
+    "n_genuine": 50,
+    "n_impostor": 28
+   },
+   "0.4": {
+    "TAR": 0.52,
+    "FAR": 0.321,
+    "n_genuine": 50,
+    "n_impostor": 28
+   },
+   "0.45": {
+    "TAR": 0.52,
+    "FAR": 0.179,
+    "n_genuine": 50,
+    "n_impostor": 28
+   }
+  },
+  "entry/width/min_width_36": {
+   "auc": null,
+   "0.3": {
+    "TAR": null,
+    "FAR": null,
+    "n_genuine": 0,
+    "n_impostor": 0
+   },
+   "0.35": {
+    "TAR": null,
+    "FAR": null,
+    "n_genuine": 0,
+    "n_impostor": 0
+   },
+   "0.4": {
+    "TAR": null,
+    "FAR": null,
+    "n_genuine": 0,
+    "n_impostor": 0
+   },
+   "0.45": {
+    "TAR": null,
+    "FAR": null,
+    "n_genuine": 0,
+    "n_impostor": 0
+   }
+  }
+ }
+}

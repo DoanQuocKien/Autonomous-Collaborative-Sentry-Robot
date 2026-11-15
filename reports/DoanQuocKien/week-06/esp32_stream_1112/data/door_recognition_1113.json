@@ -1,0 +1,83 @@
+{
+ "note": "DQK vs an enrolment built from 8 best frames of the 2026-10-28 cafe clips (22-52 px, other camera); ESP32 opt4 at the door, taped distances, buffalo_s, cosine vs threshold 0.45, every 2nd frame scored. One person, one session. Looking away = head turned about 45 deg.",
+ "runs": [
+  {
+   "run": "1.8_straight",
+   "frames": 97,
+   "fps": 12.1,
+   "scored": 49,
+   "detected": 49,
+   "width_px": 91,
+   "conf": 0.75,
+   "cos_median": 0.419,
+   "cos_min": 0.358,
+   "cos_max": 0.468,
+   "frac_ge_045": 0.06
+  },
+  {
+   "run": "1.8_away",
+   "frames": 94,
+   "fps": 11.8,
+   "scored": 47,
+   "detected": 47,
+   "width_px": 86,
+   "conf": 0.69,
+   "cos_median": 0.368,
+   "cos_min": 0.328,
+   "cos_max": 0.405,
+   "frac_ge_045": 0.0
+  },
+  {
+   "run": "2.4_straight",
+   "frames": 57,
+   "fps": 7.1,
+   "scored": 29,
+   "detected": 29,
+   "width_px": 76,
+   "conf": 0.84,
+   "cos_median": 0.44,
+   "cos_min": 0.409,
+   "cos_max": 0.481,
+   "frac_ge_045": 0.34
+  },
+  {
+   "run": "2.4_away",
+   "frames": 90,
+   "fps": 11.2,
+   "scored": 45,
+   "detected": 45,
+   "width_px": 76,
+   "conf": 0.85,
+   "cos_median": 0.403,
+   "cos_min": 0.343,
+   "cos_max": 0.455,
+   "frac_ge_045": 0.02
+  },
+  {
+   "run": "3.0_straight",
+   "frames": 40,
+   "fps": 5.0,
+   "scored": 20,
+   "detected": 20,
+   "width_px": 68,
+   "conf": 0.84,
+   "cos_median": 0.459,
+   "cos_min": 0.428,
+   "cos_max": 0.499,
+   "frac_ge_045": 0.65
+  },
+  {
+   "run": "3.0_away",
+   "frames": 25,
+   "fps": 3.1,
+   "scored": 13,
+   "detected": 13,
+   "width_px": 67,
+   "conf": 0.86,
+   "cos_median": 0.345,
+   "cos_min": 0.303,
+   "cos_max": 0.391,
+   "frac_ge_045": 0.0
+  }
+ ]
+}

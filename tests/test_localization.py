@@ -284,3 +284,31 @@ def test_marker_correction_gives_the_true_heading_off_axis():
             tracker.update_with_markers(np.zeros((4, 4, 3), np.uint8), alpha=1.0)
             assert math.isclose(tracker.pose.x, x, abs_tol=1e-6) and math.isclose(tracker.pose.y, y, abs_tol=1e-6), (anchor.marker_id, x, y, deg)
             assert math.isclose(math.degrees(tracker.pose.theta), deg, abs_tol=1e-4), (anchor.marker_id, x, y, deg, math.degrees(tracker.pose.theta))
+
+
+def test_heading_gate_recovers_after_drift():
+    """Audit 2026-11-14: after 3 corrections a heading error > 25 deg was rejected forever. One stray view is still rejected;
+    RECOVER_FRAMES agreeing views re-anchor the heading."""
+    from sentry.nav.localization import RECOVER_FRAMES
+    anchor = MarkerAnchor(0, 3.0, 0.0, yaw_rad=math.pi)
+    tracker = LocalizationTracker(camera_calib=None, max_marker_distance_m=1e9)
+    tracker.add_anchor(anchor)
+    tracker.set_pose(1.0, 0.0, 0.0)
+    det = _detection_from_pose(anchor, 1.0, 0.0, 0.0)
+    tracker.detect_markers = lambda frame, d=det: [d]
+    frame = np.zeros((4, 4, 3), np.uint8)
+    for _ in range(3):
+        tracker.update_with_markers(frame, alpha=1.0)
+    assert tracker.corrections_count == 3
+    tracker.set_pose(1.0, 0.0, math.radians(40.0))                      # dead reckoning drifted 40 deg
+    for i in range(3 * RECOVER_FRAMES):                                 # standing robot, one marker: could be a flipped pose
+        tracker.update_with_markers(frame, alpha=1.0)
+        assert math.isclose(math.degrees(tracker.pose.theta), 40.0, abs_tol=1e-6), i   # never re-anchored
+    for i in range(RECOVER_FRAMES):                                     # robot driving 2 cm per view: real drift
+        x = 1.0 + 0.02 * (i + 1)
+        tracker.set_pose(x, 0.0, tracker.pose.theta)
+        tracker.detect_markers = lambda frame, d=_detection_from_pose(anchor, x, 0.0, 0.0): [d]
+        tracker.update_with_markers(frame, alpha=1.0)
+        if i < 2:                                                       # moved < 5 cm across the stored views
+            assert math.isclose(math.degrees(tracker.pose.theta), 40.0, abs_tol=1e-6), i
+    assert math.isclose(tracker.pose.theta, 0.0, abs_tol=1e-6)          # re-anchored

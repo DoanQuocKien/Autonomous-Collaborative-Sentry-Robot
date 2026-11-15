@@ -4,13 +4,13 @@ Author: kouun-rokku (KR). Phase 2 live integration owner: HuynhNguyenHoaiLoc (HN
 Never touches sockets or neural models directly (`Implementation Plan.md` §3).
 Consumes discrete events (`ENTRANCE_FOUND`, `ENTRANCE_LOST`, `VANTAGE_REACHED`,
 `ESP32_VERIFIED`, `ESP32_LOST`, `STANDBY_REACHED`, `INTRUDER_QUEUED`,
-`TARGET_STATIONARY`, `TARGET_MOVING`, `STRIKE`, `EVADE_COMPLETE`,
+`TARGET_STATIONARY`, `TARGET_MOVING`, `TARGET_LOST`, `TRACK_LOST`, `STRIKE`, `EVADE_COMPLETE`,
 `TARGET_EXITED`, `TARGET_FOUND`, `SEARCH_EXHAUSTED`, plus search sub-events)
 and time ticks (`tick(t)`), and emits structured `Command` objects.
 Invalid events for the current state are ignored and logged.
 """
 from collections import deque
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields
 from enum import Enum
 import logging
 import math
@@ -20,6 +20,7 @@ from sentry.config import load
 logger = logging.getLogger("sentry.state_machine")
 
 _TIME_EPS = 1e-9  # float tolerance so decimal steps like 17.0 + 0.4 == 17.4 trigger 0.4 s durations
+HISTORY_LEN = 10000  # about 5.5 min of 30 Hz ticks kept in memory; the live tools write their own logs
 
 
 class Phase(str, Enum):
@@ -80,6 +81,8 @@ KNOWN_EVENTS = frozenset({
     "INTRUDER_QUEUED",
     "TARGET_STATIONARY",
     "TARGET_MOVING",
+    "TARGET_LOST",                 # HoldDetector: observations resumed after a gap while in HOLD (back to PURSUE)
+    "TRACK_LOST",                  # tracker: lock not regained within tracking.lost_timeout_s (TargetLock LOST -> SEARCHING); PURSUE -> SEARCH
     "STRIKE",
     "EVADE_COMPLETE",
     "TARGET_EXITED",
@@ -124,10 +127,16 @@ class StateMachineConfig:
 
     @classmethod
     def from_toml(cls, cfg=None):
-        """Build StateMachineConfig from config.toml [thresholds] plus optional overrides."""
+        """Build StateMachineConfig from config.toml: the spec values in [thresholds], every other field from [state_machine] (same names)."""
         raw = load() if cfg is None else cfg
         t = raw.get("thresholds", {})
+        sm = raw.get("state_machine", {})
+        names = {f.name for f in fields(cls)}
+        unknown = set(sm) - names
+        if unknown:
+            raise ValueError("unknown [state_machine] keys: %s" % ", ".join(sorted(unknown)))
         return cls(
+            **{k: (v if isinstance(v, str) else float(v)) for k, v in sm.items()},
             standoff_m=float(t.get("standoff_m", 1.2)),
             stationary_speed_mps=float(t.get("stationary_speed_mps", 0.1)),
             stationary_time_s=float(t.get("stationary_time_s", 2.0)),
@@ -260,8 +269,9 @@ class StateMachine:
         self.search_step = "PLAN" if self.state == State.SEARCH else None
         self.last_evade_end_t = None
         self._target_seq = len(self.queue)
-        self.history = []
-        self.ignored_events = []
+        self.standby_reached = self.state == State.STANDBY   # once deployed, a camera re-check returns to STANDBY without a second retract
+        self.history = deque(maxlen=HISTORY_LEN)        # one entry per tick (30 Hz): bounded so a long run cannot grow without limit
+        self.ignored_events = deque(maxlen=HISTORY_LEN)
 
     @property
     def phase(self):
@@ -280,6 +290,8 @@ class StateMachine:
     def _enter(self, new_state, now, *, search_step=None):
         self.state = State(new_state)
         self.state_entered_t = float(now)
+        if self.state == State.STANDBY:
+            self.standby_reached = True
         if self.state == State.SEARCH:
             self.search_step = search_step or "PLAN"
         else:
@@ -401,6 +413,11 @@ class StateMachine:
             return self._ignore(name, now, "event %s not valid in APPROACH_VANTAGE" % name)
 
         if self.state == State.WAIT_CAMERA:
+            if name == "ESP32_VERIFIED" and self.standby_reached:
+                # Camera re-checked after ESP32_LOST in STANDBY: the robot is already at its standby position, so no second retract
+                self._enter(State.STANDBY, now)
+                cmd = Command(v=0.0, w=0.0, play=self.cfg.clip_camera_verified, actions=("standby_ready",))
+                return self._record(prev, name, now, cmd)
             if name == "ESP32_VERIFIED":
                 self._enter(State.RETRACT, now)
                 cmd = Command(
@@ -485,10 +502,19 @@ class StateMachine:
                 return self._trigger_evade(prev, name, ev_data, now)
             if name == "TARGET_EXITED":
                 return self._handle_target_exited(prev, name, ev_data, now)
+            if name == "TRACK_LOST":
+                # Tracker lost the active target (lock not regained within tracking.lost_timeout_s): stop and run the
+                # coverage search for the SAME target; SEARCH_EXHAUSTED or the search timeout drops it (Spec section 4.6).
+                # Producer (Phase 3 loop, not wired yet): emit it when TargetLock.update() goes from LOST to SEARCHING.
+                self._enter(State.SEARCH, now, search_step="PLAN")
+                cmd = Command(v=0.0, w=0.0, actions=("target_lost", "plan_search"), target_id=self.active_target)
+                return self._record(prev, name, now, cmd)
             return self._ignore(name, now, "event %s not valid in PURSUE" % name)
 
         if self.state == State.HOLD:
-            if name == "TARGET_MOVING":
+            if name in ("TARGET_MOVING", "TARGET_LOST"):
+                # TARGET_LOST in HOLD: HoldDetector saw a gap in the observations and reset its window; the
+                # InterceptionController resumes PURSUE on the same event, so the machine must follow (no v=0 lock-in)
                 self._enter(State.PURSUE, now)
                 cmd = Command(
                     v=self.cfg.explore_v,
@@ -591,7 +617,8 @@ class StateMachine:
                 explicit_next = ev_data["next_target"]
                 has_next = True
             elif "has_next" in ev_data:
-                has_next = bool(ev_data["has_next"])
+                # the queue is the truth: has_next=False with targets still queued would strand them in STANDBY
+                has_next = bool(ev_data["has_next"]) or bool(self.queue)
 
         if has_next:
             if explicit_next is not None:

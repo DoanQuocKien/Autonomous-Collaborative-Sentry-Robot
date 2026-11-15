@@ -1,7 +1,6 @@
 """T0 unit tests for sentry/app/audio.py and pre-generated WAV assets in assets/audio/."""
 import pytest
 
-from jetson.robot_udp import play_clip
 from sentry.app.audio import (
     AUDIO_DIR,
     PROMPTS,
@@ -33,7 +32,7 @@ def test_synth_backend_generates_valid_pcm16_mono_wavs(tmp_path):
         assert info.duration_s > 0.3 and info.peak > 1000
 
 
-def test_committed_assets_audio_wavs_exist_and_work_with_jetson_play_clip():
+def test_committed_assets_audio_wavs_exist():
     assert AUDIO_DIR.exists(), "assets/audio/ must contain pre-generated WAV prompts"
     for clip in PROMPTS:
         wav_path = AUDIO_DIR / ("%s.wav" % clip)
@@ -41,17 +40,6 @@ def test_committed_assets_audio_wavs_exist_and_work_with_jetson_play_clip():
         assert info.nchannels == 1 and info.sampwidth == 2
         assert 400 < wav_path.stat().st_size < 250_000
 
-    # Verify compatibility with jetson/robot_udp.py play_clip
-    started = []
-
-    class DummyProc:
-        def poll(self):
-            return 0
-
-    players = []
-    err = play_clip(str(AUDIO_DIR), "place_camera", players, popen=lambda cmd: started.append(cmd) or DummyProc())
-    assert err is None
-    assert started == [["aplay", "-q", str(AUDIO_DIR / "place_camera.wav")]]
 
 
 def test_audio_prompt_player_dispatches_to_sender_and_tracks_history(tmp_path):

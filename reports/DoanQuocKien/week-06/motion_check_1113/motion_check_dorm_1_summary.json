@@ -1,0 +1,81 @@
+{
+ "label": "dorm_1",
+ "battery_v": 12.18,
+ "model": "calib defaults",
+ "rows": [
+  {
+   "name": "spin_left_1",
+   "kind": "spin_left",
+   "measurable": true,
+   "measured_forward_m": 0.072,
+   "measured_left_m": 0.538,
+   "measured_turn_deg": 45.5,
+   "predicted_forward_m": 0.0,
+   "predicted_turn_deg": 49.9,
+   "ratio": 0.911
+  },
+  {
+   "name": "spin_right_1",
+   "kind": "spin_right",
+   "measurable": true,
+   "measured_forward_m": 0.409,
+   "measured_left_m": 0.216,
+   "measured_turn_deg": -70.9,
+   "predicted_forward_m": 0.0,
+   "predicted_turn_deg": -49.8,
+   "ratio": 1.424
+  },
+  {
+   "name": "forward_1",
+   "kind": "forward",
+   "measurable": true,
+   "measured_forward_m": 0.412,
+   "measured_left_m": 0.137,
+   "measured_turn_deg": 34.2,
+   "predicted_forward_m": 0.41,
+   "predicted_turn_deg": 0.0,
+   "ratio": 1.005,
+   "drift_rad_per_m": 1.4491
+  },
+  {
+   "name": "spin_left_2",
+   "kind": "spin_left",
+   "measurable": false
+  },
+  {
+   "name": "spin_right_2",
+   "kind": "spin_right",
+   "measurable": false
+  },
+  {
+   "name": "forward_2",
+   "kind": "forward",
+   "measurable": true,
+   "measured_forward_m": 1.098,
+   "measured_left_m": 0.265,
+   "measured_turn_deg": -20.3,
+   "predicted_forward_m": 0.411,
+   "predicted_turn_deg": 0.0,
+   "ratio": 2.672,
+   "drift_rad_per_m": -0.3224
+  }
+ ],
+ "check_passed": false,
+ "check_failures": [
+  "spin_right_1 ratio 1.42",
+  "forward_1 drift +1.449 rad/m",
+  "spin_left_2 has no finite measurement",
+  "spin_right_2 has no finite measurement",
+  "forward_2 ratio 2.67",
+  "forward_2 drift -0.322 rad/m"
+ ],
+ "fit": null,
+ "fit_problems": [
+  "forward ratios scatter: [1.005, 2.672] (limit 0.15)"
+ ],
+ "limits": {
+  "ratio": 0.1,
+  "drift_rad_per_m": 0.05,
+  "scatter": 0.15
+ }
+}

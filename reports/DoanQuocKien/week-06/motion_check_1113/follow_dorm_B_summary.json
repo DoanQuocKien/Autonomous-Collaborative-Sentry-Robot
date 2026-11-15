@@ -1,0 +1,17 @@
+{
+  "label": "dorm_B",
+  "marker": 0,
+  "v": 0.55,
+  "battery_v": 12.104,
+  "stopped": "arrived (0.99 m)",
+  "seconds": 4.877,
+  "start_dist_m": 2.085,
+  "end_dist_m": 1.016,
+  "trim_w": -0.0158,
+  "veer_deg_per_m": 31.3,
+  "observations": 86,
+  "trim0": -0.0115,
+  "mean_abs_bearing_deg": 2.41,
+  "kp": 0.2,
+  "ki": 0.05
+}

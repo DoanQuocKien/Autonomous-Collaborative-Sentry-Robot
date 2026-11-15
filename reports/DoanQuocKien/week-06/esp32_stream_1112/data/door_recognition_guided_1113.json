@@ -1,0 +1,83 @@
+{
+ "note": "DQK vs the guided enrolment (tools/enroll_guided.py, 5 poses on the laptop webcam, taken the same day in the classroom); best cosine of the 5 embeddings per frame; ESP32 opt4 at the door, taped distances, buffalo_s, every 2nd frame of an 8 s clip scored, threshold 0.45. One person, one session, no impostors. Looking away = head turned about 45 deg.",
+ "runs": [
+  {
+   "run": "1.8_straight",
+   "frames": 54,
+   "fps": 6.8,
+   "scored": 27,
+   "detected": 27,
+   "width_px": 89,
+   "conf": 0.71,
+   "cos_median": 0.666,
+   "cos_min": 0.609,
+   "cos_max": 0.703,
+   "frac_ge_045": 1.0
+  },
+  {
+   "run": "1.8_away",
+   "frames": 25,
+   "fps": 3.1,
+   "scored": 13,
+   "detected": 13,
+   "width_px": 84,
+   "conf": 0.73,
+   "cos_median": 0.559,
+   "cos_min": 0.506,
+   "cos_max": 0.634,
+   "frac_ge_045": 1.0
+  },
+  {
+   "run": "2.4_straight",
+   "frames": 61,
+   "fps": 7.6,
+   "scored": 31,
+   "detected": 31,
+   "width_px": 77,
+   "conf": 0.84,
+   "cos_median": 0.668,
+   "cos_min": 0.638,
+   "cos_max": 0.694,
+   "frac_ge_045": 1.0
+  },
+  {
+   "run": "2.4_away",
+   "frames": 38,
+   "fps": 4.8,
+   "scored": 19,
+   "detected": 19,
+   "width_px": 72,
+   "conf": 0.83,
+   "cos_median": 0.48,
+   "cos_min": 0.344,
+   "cos_max": 0.573,
+   "frac_ge_045": 0.89
+  },
+  {
+   "run": "3.0_straight",
+   "frames": 45,
+   "fps": 5.6,
+   "scored": 23,
+   "detected": 23,
+   "width_px": 68,
+   "conf": 0.88,
+   "cos_median": 0.609,
+   "cos_min": 0.538,
+   "cos_max": 0.708,
+   "frac_ge_045": 1.0
+  },
+  {
+   "run": "3.0_away",
+   "frames": 29,
+   "fps": 3.6,
+   "scored": 15,
+   "detected": 15,
+   "width_px": 67,
+   "conf": 0.85,
+   "cos_median": 0.506,
+   "cos_min": 0.402,
+   "cos_max": 0.589,
+   "frac_ge_045": 0.8
+  }
+ ]
+}

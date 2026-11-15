@@ -1,0 +1,49 @@
+{
+  "label": "cl_4_ff",
+  "marker": 0,
+  "battery_v": 12.004,
+  "v": 0.55,
+  "turn_deg": 45.0,
+  "drive_m": 0.3,
+  "min_m": 1.1,
+  "kp": 0.2,
+  "ki": 0.05,
+  "trim0": -0.0085,
+  "q_std": 0.01,
+  "no_ff": false,
+  "rate_deg_s": 140.0,
+  "ended": "board lost",
+  "start_dist_m": 2.0781075549176697,
+  "repeats": [
+    {
+      "repeat": 1,
+      "turn_left": {
+        "target_deg": 45.0,
+        "achieved_deg": 39.5,
+        "error_deg": 5.5,
+        "pulses": 1,
+        "reason": "ok"
+      },
+      "turn_right": {
+        "target_deg": -45.0,
+        "achieved_deg": -49.6,
+        "error_deg": 4.6,
+        "pulses": 2,
+        "reason": "ok"
+      },
+      "drive": {
+        "start_m": 2.097,
+        "end_m": 1.791,
+        "seconds": 1.36,
+        "trim_used": -0.0085,
+        "trim_measured": -0.003,
+        "trim_after": -0.0034,
+        "trim_std_after": 0.0029,
+        "veer_deg_per_m": 6.0,
+        "mean_abs_bearing_deg": 6.22,
+        "max_abs_bearing_deg": 12.96,
+        "entropy_nats": 3.17
+      }
+    }
+  ]
+}

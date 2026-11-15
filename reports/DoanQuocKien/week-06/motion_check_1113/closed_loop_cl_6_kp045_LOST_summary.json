@@ -1,0 +1,18 @@
+{
+  "label": "cl_6_kp045",
+  "marker": 0,
+  "battery_v": 11.936,
+  "v": 0.55,
+  "turn_deg": 45.0,
+  "drive_m": 0.3,
+  "min_m": 1.05,
+  "kp": 0.45,
+  "ki": 0.05,
+  "trim0": -0.0085,
+  "q_std": 0.01,
+  "no_ff": false,
+  "rate_deg_s": 140.0,
+  "ended": "marker lost",
+  "start_dist_m": 1.9563925022380013,
+  "repeats": []
+}

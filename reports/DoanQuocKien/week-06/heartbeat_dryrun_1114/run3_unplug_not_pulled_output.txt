@@ -1,0 +1,35 @@
+allow args: (none)
+services: active active
+sending v=0.5 to 10.169.60.160:5556 for 40 s
+===== estop.log (new lines, host clock)
+08:10:37.348 ARMED (Start held 1.5 s); now hold R1 to move
+08:10:45.831 GO (R1 held and armed); robot may move
+===== robot_udp.log (new lines, container clock)
+16:10:21.140 packets accepted=91 foreign=0 malformed=0 received=91 stale=0
+16:10:31.147 packets accepted=383 foreign=0 malformed=0 received=383 stale=0
+16:10:41.152 packets accepted=675 foreign=0 malformed=0 received=675 stale=0
+16:10:45.846 e-stop released: motor commands accepted
+16:10:45.967 motors +0.15 +0.15
+16:10:51.154 packets accepted=968 foreign=0 malformed=0 received=968 stale=0
+16:10:58.102 motors +0.00 +0.00
+===== js_log_1114.log (host clock)
+08:10:17 button  0 up (init)
+08:10:17 button  1 up (init)
+08:10:17 button  2 up (init)
+08:10:17 button  3 up (init)
+08:10:17 button  4 up (init)
+08:10:17 button  5 up (init)
+08:10:17 button  6 up (init)
+08:10:17 button  7 up (init)
+08:10:17 button  8 up (init)
+08:10:17 button  9 up (init)
+08:10:17 button 10 up (init)
+08:10:17 button 11 up (init)
+08:10:17 button 12 up (init)
+08:10:17 button 13 up (init)
+08:10:17 button 14 up (init)
+08:10:35 button 11 DOWN
+08:10:41 button 11 up
+08:10:45 button  7 DOWN
+
+[exited with code 0]

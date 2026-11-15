@@ -22,7 +22,7 @@ from pathlib import Path
 import numpy as np
 
 SPIN_W = 0.45
-CALIBRATED_SPIN_S = 0.2
+CALIBRATED_SPIN_S = 0.2                           # the pulse length PRIOR_PULSE_RAD was measured for: tools that fall back on the prior must spin exactly this long
 PRIOR_PULSE_RAD = 0.438                           # turn per 0.2 s pulse measured on 2026-10-30 and 2026-11-11 (25 deg); only used until a board gives a measurement
 MAX_VIDEO_AGE_S = 0.5
 ESTOP_LATCH = "/home/jetbot/sentry/ESTOP"
@@ -61,6 +61,18 @@ def camera_to_robot(tvec, pitch):
     return Z * math.cos(pitch) - Y * math.sin(pitch), -X
 
 
+def check_args(a, limits):
+    """Every numeric session argument must be a finite number inside [lo, hi] BEFORE any live setup (HNHL review of #108): NaN slips through a
+    plain `x < limit` guard and infinity through `x > limit`. limits: {dest: (lo, hi)}; a None value (an optional argument not given) is skipped."""
+    bad = []
+    for name, (lo, hi) in limits.items():
+        x = getattr(a, name)
+        if x is not None and (isinstance(x, bool) or not isinstance(x, (int, float)) or not math.isfinite(x) or not lo <= x <= hi):
+            bad.append("--%s %r (allowed %g to %g)" % (name.replace("_", "-"), x, lo, hi))
+    if bad:
+        raise SystemExit("ABORT: argument out of its safe range: " + ", ".join(bad))
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--label", required=True)
@@ -70,7 +82,7 @@ def main():
     ap.add_argument("--user", default="jetbot")
     ap.add_argument("--password", default=os.environ.get("JETBOT_PASSWORD"))
     ap.add_argument("--max-pulses", type=int, default=18)
-    ap.add_argument("--spin-s", type=float, default=CALIBRATED_SPIN_S, help="calibrated pulse duration; only 0.2 s is supported")
+    ap.add_argument("--spin-s", type=float, default=CALIBRATED_SPIN_S, help="fixed at %.1f s: a pulse without a board in common falls back on the turn calibrated for that length" % CALIBRATED_SPIN_S)
     ap.add_argument("--hold", type=float, default=1.0, help="seconds to stay still after a pulse before sampling (video lag < 0.16 s)")
     ap.add_argument("--samples", type=int, default=6)
     ap.add_argument("--wait", type=float, default=90.0, help="seconds to arm the e-stop and hold R1")
@@ -79,10 +91,8 @@ def main():
     ap.add_argument("--heading0", type=float, default=0.0, help="continue a scan: the robot is already turned by this many degrees (left positive) from the start heading; the scan ends at 355 deg")
     ap.add_argument("--out", default="data/scan")
     a = ap.parse_args()
-    if not (0 < a.spin_s <= 0.5 and 0 < a.hold <= 5 and 1 <= a.max_pulses <= 40 and a.samples >= 1):
-        raise SystemExit("ABORT: spin-s must be in (0, 0.5], hold in (0, 5], 1-40 pulses")
-    if a.spin_s != CALIBRATED_SPIN_S:
-        raise SystemExit("ABORT: only the calibrated --spin-s 0.2 is supported; other durations need a new turn calibration")
+    check_args(a, dict(spin_s=(CALIBRATED_SPIN_S, CALIBRATED_SPIN_S), hold=(0.05, 5.0), max_pulses=(1, 40), samples=(1, 30), wait=(1.0, 600.0),
+                       min_battery=(10.5, 13.0), heading0=(-360.0, 360.0)))
 
     from sentry.config import load
     from sentry.nav.localization import LocalizationTracker

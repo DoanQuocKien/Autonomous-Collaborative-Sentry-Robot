@@ -15,6 +15,7 @@ OUTPUT: data/turn_runs/<label>_w<w>_<seconds>s_<n>.csv (t, heading_deg, known_ma
 degrees per wheel second and the turn gain in rad/s per unit of w.
 """
 import argparse
+import atexit
 import csv
 import math
 import os
@@ -181,59 +182,63 @@ def main():
         finally:
             s.close(stop=True)
 
-    th = threading.Thread(target=sender)
+    th = threading.Thread(target=sender, daemon=True)         # daemon: if the main thread dies (Ctrl+C, a video or SSH error) the process can still exit and the command stream ends (the robot's 300 ms watchdog stops it); audit 2026-11-12
     th.start()
-    frames = []
-    with ZMQReceiver() as rx:
-        seen_ids = {}
-        for _ in range(8):
-            f = rx.read(timeout=5)
-            if f is None:
-                continue
-            seen_ids.update(bearings_from_axle(g, S, f.frame_bgr, a.cam_offset))
-            if seen_ids:
-                break
-        if not seen_ids:
-            done.set()
-            th.join()
-            print("ABORT: start check failed (no marker seen)")
-            raise SystemExit(1)
-        print("start: markers seen %s (bearing, deg: left +). One marker = turns under about 80 deg; several markers all around = any angle. The robot will turn %s." % (
-            {k: round(v, 1) for k, v in seen_ids.items()}, "left" if a.w > 0 else "right"), flush=True)
-        t0 = time.time()
-        for _ in range(3):
-            beep(1500, 300)
-        t_end_wait = time.time() + a.wait
-        t_go = t_cmd1 = None
-        held_since, last_poll = None, 0.0
-        while True:
-            now = time.time()
-            if t_go is None and now - last_poll >= 0.25:
-                last_poll = now
-                held = _sh(c, "test -e %s && echo no || echo yes" % ESTOP_LATCH).strip() == "yes"
-                held_since = (held_since or now) if held else None
-                if held_since and now - held_since >= 0.5:
-                    t_go = now
-                    print("R1 held: starting the turn", flush=True)
-                elif now > t_end_wait:
-                    done.set()
-                    th.join()
-                    print("ABORT: R1 was not held (and the e-stop armed) within %.0f s of the beeps" % a.wait)
-                    raise SystemExit(1)
-            if t_go is not None and t_cmd1 is None and cmd["w"] == 0.0 and now >= t_go:
-                cmd["w"] = a.w
-                t_cmd0 = now
-            if t_go is not None and cmd["w"] != 0.0 and now - t_cmd0 >= a.seconds:
-                cmd["w"] = 0.0
-                t_cmd1 = now
-            if t_cmd1 is not None and now - t_cmd1 > 2.0:
-                break
-            f = rx.read(timeout=5)
-            if f is None:
-                break
-            frames.append((time.time() - t0, bearings_from_axle(g, S, f.frame_bgr, a.cam_offset), cmd["w"]))
-    done.set()
-    th.join()
+    atexit.register(lambda: (cmd.update(v=0.0, w=0.0), done.set()))      # zero the command first when the interpreter shuts down
+    try:
+        frames = []
+        with ZMQReceiver() as rx:
+            seen_ids = {}
+            for _ in range(8):
+                f = rx.read(timeout=5)
+                if f is None:
+                    continue
+                seen_ids.update(bearings_from_axle(g, S, f.frame_bgr, a.cam_offset))
+                if seen_ids:
+                    break
+            if not seen_ids:
+                done.set()
+                th.join()
+                print("ABORT: start check failed (no marker seen)")
+                raise SystemExit(1)
+            print("start: markers seen %s (bearing, deg: left +). One marker = turns under about 80 deg; several markers all around = any angle. The robot will turn %s." % (
+                {k: round(v, 1) for k, v in seen_ids.items()}, "left" if a.w > 0 else "right"), flush=True)
+            t0 = time.time()
+            for _ in range(3):
+                beep(1500, 300)
+            t_end_wait = time.time() + a.wait
+            t_go = t_cmd1 = None
+            held_since, last_poll = None, 0.0
+            while True:
+                now = time.time()
+                if t_go is None and now - last_poll >= 0.25:
+                    last_poll = now
+                    held = _sh(c, "test -e %s && echo no || echo yes" % ESTOP_LATCH).strip() == "yes"
+                    held_since = (held_since or now) if held else None
+                    if held_since and now - held_since >= 0.5:
+                        t_go = now
+                        print("R1 held: starting the turn", flush=True)
+                    elif now > t_end_wait:
+                        done.set()
+                        th.join()
+                        print("ABORT: R1 was not held (and the e-stop armed) within %.0f s of the beeps" % a.wait)
+                        raise SystemExit(1)
+                if t_go is not None and t_cmd1 is None and cmd["w"] == 0.0 and now >= t_go:
+                    cmd["w"] = a.w
+                    t_cmd0 = now
+                if t_go is not None and cmd["w"] != 0.0 and now - t_cmd0 >= a.seconds:
+                    cmd["w"] = 0.0
+                    t_cmd1 = now
+                if t_cmd1 is not None and now - t_cmd1 > 2.0:
+                    break
+                f = rx.read(timeout=5)
+                if f is None:
+                    break
+                frames.append((time.time() - t0, bearings_from_axle(g, S, f.frame_bgr, a.cam_offset), cmd["w"]))
+    finally:                                             # stop the sender on ANY exit path (audit 2026-11-12: it used to outlive an error and keep streaming the last command)
+        cmd.update(v=0.0, w=0.0)
+        done.set()
+        th.join(timeout=2.0)
     time.sleep(0.6)
     moving = moving_seconds(_sh(c, "tail -n +%d %s" % (before + 1, LOG)).splitlines())
     volts = ina219_bus_volts(jetbot_ssh.sudo(c, "i2cget -y 1 0x41 0x02 w", password))

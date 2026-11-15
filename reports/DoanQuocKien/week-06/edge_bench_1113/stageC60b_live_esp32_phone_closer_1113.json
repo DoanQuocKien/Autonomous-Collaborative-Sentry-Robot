@@ -1,0 +1,139 @@
+{
+ "note": "Repeat of stageC60 after the operator moved the phone (hotspot) closer to all devices: ESP32 -49 dBm (was -58..-66), robot-to-ESP32 ping 6-26 ms. Everything else unchanged (MAXN, 60 s, 1 person ~2 m in front of both cameras, new jetson/mjpeg_latest.py, motors never driven). CORRECTION: esp_reconnects = 1 is NOT a stream drop: jetson/mjpeg_latest.py increments `reconnects` once more when the receiver is stopped at the end of the run (the loop exit is counted); the ESP32 delivered 12.46 / 12.54 fps, equal to its own 12.5 fps, so the stream had no gaps.",
+ "bench": {
+  "mode": "stageC",
+  "seconds": 60.1,
+  "frames": 1024,
+  "fps": 17.05,
+  "skipped_by_newest_only": 176,
+  "avg_people": 1.53,
+  "door_runs": 301,
+  "avg_faces_per_door_run": 0.98,
+  "door_live": {
+   "esp_frames": 753,
+   "esp_fps": 12.54,
+   "esp_reconnects": 1
+  }
+ },
+ "stage_ms": {
+  "decode": {
+   "n": 1024,
+   "mean": 7.33,
+   "p50": 5.31,
+   "p95": 14.52
+  },
+  "pre": {
+   "n": 1024,
+   "mean": 4.82,
+   "p50": 3.54,
+   "p95": 12.14
+  },
+  "pose": {
+   "n": 1024,
+   "mean": 30.62,
+   "p50": 28.97,
+   "p95": 41.07
+  },
+  "pose_post": {
+   "n": 1024,
+   "mean": 1.97,
+   "p50": 1.7,
+   "p95": 3.46
+  },
+  "det": {
+   "n": 342,
+   "mean": 29.98,
+   "p50": 27.5,
+   "p95": 44.6
+  },
+  "det_post": {
+   "n": 342,
+   "mean": 3.53,
+   "p50": 2.91,
+   "p95": 5.92
+  },
+  "reid": {
+   "n": 69,
+   "mean": 21.42,
+   "p50": 18.69,
+   "p95": 35.2
+  },
+  "door_pre": {
+   "n": 301,
+   "mean": 7.64,
+   "p50": 6.2,
+   "p95": 18.71
+  },
+  "door_scrfd": {
+   "n": 301,
+   "mean": 26.03,
+   "p50": 24.84,
+   "p95": 42.02
+  },
+  "door_post": {
+   "n": 301,
+   "mean": 5.82,
+   "p50": 3.48,
+   "p95": 21.13
+  },
+  "door_mbf": {
+   "n": 296,
+   "mean": 41.78,
+   "p50": 39.51,
+   "p95": 61.65
+  },
+  "door": {
+   "n": 301,
+   "mean": 80.61,
+   "p50": 82.26,
+   "p95": 107.08
+  },
+  "compute": {
+   "n": 1024,
+   "mean": 57.39,
+   "p50": 49.97,
+   "p95": 98.74
+  },
+  "e2e": {
+   "n": 1024,
+   "mean": 84.95,
+   "p50": 83.45,
+   "p95": 123.86
+  }
+ },
+ "tegrastats_last_60": {
+  "ram_used_mb": {
+   "mean": 2121.0,
+   "max": 2126.0,
+   "n": 60
+  },
+  "gpu_load_pct": {
+   "mean": 79.0,
+   "max": 99.0,
+   "n": 60
+  },
+  "gpu_c": {
+   "mean": 35.5,
+   "max": 36.5,
+   "n": 60
+  },
+  "cpu_c": {
+   "mean": 36.2,
+   "max": 37.5,
+   "n": 60
+  },
+  "board_mw": {
+   "mean": 5164.7,
+   "max": 5443.0,
+   "n": 60
+  }
+ },
+ "battery_v_start_to_end": [
+  12.1,
+  12.13,
+  12.06,
+  12.04,
+  12.02,
+  12.06
+ ]
+}

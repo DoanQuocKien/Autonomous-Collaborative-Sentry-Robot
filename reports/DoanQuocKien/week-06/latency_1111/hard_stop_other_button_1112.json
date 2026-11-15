@@ -1,0 +1,72 @@
+[
+ {
+  "trial": 1,
+  "estop": [
+   "21:09:40.772 STOPPED (button 4 pressed); motors CUT in 7 ms"
+  ],
+  "robot_udp": [
+   "05:09:35.493 motors +0.18 +0.18",
+   "05:09:38.374 packets accepted=86 foreign=0 malformed=0 received=86 stale=0",
+   "05:09:39.770 motors +0.00 +0.00",
+   "05:09:39.822 motors +0.18 +0.18",
+   "05:09:40.778 e-stop ENGAGED: refusing motor commands",
+   "05:09:40.816 motors +0.00 +0.00"
+  ]
+ },
+ {
+  "trial": 2,
+  "estop": [
+   "21:09:57.272 STOPPED (button 6 pressed); motors CUT in 7 ms"
+  ],
+  "robot_udp": [
+   "05:09:52.142 motors +0.18 +0.18",
+   "05:09:56.487 motors +0.00 +0.00",
+   "05:09:56.543 motors +0.18 +0.18",
+   "05:09:57.286 e-stop ENGAGED: refusing motor commands",
+   "05:09:57.320 motors +0.00 +0.00",
+   "05:09:58.388 packets accepted=402 foreign=0 malformed=0 received=402 stale=0"
+  ]
+ },
+ {
+  "trial": 3,
+  "estop": [
+   "21:10:15.569 STOPPED (button 3 pressed); motors CUT in 7 ms"
+  ],
+  "robot_udp": [
+   "05:10:08.396 packets accepted=455 foreign=0 malformed=0 received=455 stale=0",
+   "05:10:08.442 motors +0.18 +0.18",
+   "05:10:12.740 motors +0.00 +0.00",
+   "05:10:12.771 motors +0.18 +0.18",
+   "05:10:15.575 e-stop ENGAGED: refusing motor commands",
+   "05:10:15.605 motors +0.00 +0.00"
+  ]
+ },
+ {
+  "trial": 4,
+  "estop": [
+   "21:10:30.706 STOPPED (button 9 pressed); motors CUT in 7 ms"
+  ],
+  "robot_udp": [
+   "05:10:25.700 motors +0.18 +0.18",
+   "05:10:28.417 packets accepted=762 foreign=0 malformed=0 received=762 stale=0",
+   "05:10:30.008 motors +0.00 +0.00",
+   "05:10:30.043 motors +0.18 +0.18",
+   "05:10:30.706 e-stop ENGAGED: refusing motor commands",
+   "05:10:30.728 motors +0.00 +0.00"
+  ]
+ },
+ {
+  "trial": 5,
+  "estop": [
+   "21:10:53.443 STOPPED (button 0 pressed); motors CUT in 8 ms"
+  ],
+  "robot_udp": [
+   "05:10:48.407 motors +0.18 +0.18",
+   "05:10:48.428 packets accepted=911 foreign=0 malformed=0 received=911 stale=0",
+   "05:10:52.717 motors +0.00 +0.00",
+   "05:10:52.755 motors +0.18 +0.18",
+   "05:10:53.446 e-stop ENGAGED: refusing motor commands",
+   "05:10:53.492 motors +0.00 +0.00"
+  ]
+ }
+]

@@ -1,0 +1,102 @@
+{
+  "label": "rs_1",
+  "marker": 0,
+  "battery_start_v": 11.792,
+  "battery_end_v": 11.788,
+  "start_range_m": 2.4896734760709553,
+  "skip_s": 0.5,
+  "ended": "marker lost during rev_4_v-0.45",
+  "runs": [
+    {
+      "name": "fwd_1_v0.55",
+      "kind": "fwd",
+      "v": 0.55,
+      "seconds": 2.04,
+      "start_range_m": 2.468,
+      "end_range_m": 2.09,
+      "speed_m_s": 0.2586,
+      "direction_ok": true,
+      "fit_resid_sd_m": 0.0386,
+      "n_obs": 14,
+      "bearing_change_deg": -31.34
+    },
+    {
+      "name": "rev_1_v-0.45",
+      "kind": "rev",
+      "v": -0.45,
+      "seconds": 3.95,
+      "start_range_m": 2.098,
+      "end_range_m": 2.62,
+      "speed_m_s": 0.1154,
+      "direction_ok": true,
+      "fit_resid_sd_m": 0.047,
+      "n_obs": 56,
+      "bearing_change_deg": 8.68
+    },
+    {
+      "name": "fwd_2_v0.55",
+      "kind": "fwd",
+      "v": 0.55,
+      "seconds": 2.0,
+      "start_range_m": 2.591,
+      "end_range_m": 2.325,
+      "speed_m_s": 0.1469,
+      "direction_ok": true,
+      "fit_resid_sd_m": 0.0271,
+      "n_obs": 25,
+      "bearing_change_deg": -10.59
+    },
+    {
+      "name": "rev_2_v-0.45",
+      "kind": "rev",
+      "v": -0.45,
+      "seconds": 3.1,
+      "start_range_m": 2.23,
+      "end_range_m": 2.679,
+      "speed_m_s": 0.1338,
+      "direction_ok": true,
+      "fit_resid_sd_m": 0.0362,
+      "n_obs": 39,
+      "bearing_change_deg": 6.33
+    },
+    {
+      "name": "fwd_3_v0.55",
+      "kind": "fwd",
+      "v": 0.55,
+      "seconds": 2.01,
+      "start_range_m": 2.602,
+      "end_range_m": 2.379,
+      "speed_m_s": 0.0732,
+      "direction_ok": true,
+      "fit_resid_sd_m": 0.0802,
+      "n_obs": 6,
+      "bearing_change_deg": -10.77
+    },
+    {
+      "name": "rev_3_v-0.45",
+      "kind": "rev",
+      "v": -0.45,
+      "seconds": 2.96,
+      "start_range_m": 2.478,
+      "end_range_m": 2.693,
+      "speed_m_s": 0.1476,
+      "direction_ok": true,
+      "fit_resid_sd_m": 0.0675,
+      "n_obs": 28,
+      "bearing_change_deg": 5.77
+    },
+    {
+      "name": "fwd_4_v0.75",
+      "kind": "fwd",
+      "v": 0.75,
+      "seconds": 2.01,
+      "start_range_m": 2.621,
+      "end_range_m": 2.384,
+      "speed_m_s": 0.1719,
+      "direction_ok": true,
+      "fit_resid_sd_m": 0.0473,
+      "n_obs": 13,
+      "bearing_change_deg": -18.61
+    }
+  ]
+}

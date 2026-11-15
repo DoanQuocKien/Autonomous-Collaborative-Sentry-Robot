@@ -1,7 +1,7 @@
 import pytest
 
-from common.protocol import encode_control, encode_play
-from jetson.robot_udp import Controller, play_clip
+from common.protocol import encode_control
+from jetson.robot_udp import Controller, read_key
 
 
 def test_command_is_mixed_capped_and_deadzoned():
@@ -90,37 +90,6 @@ def test_commands_resume_only_after_estop_is_released_and_a_new_command_arrives(
     assert c.on_packet(encode_control(2, 1.0, 0.0), now=0.3) == ("motors", (0.5, 0.5))
 
 
-def test_estop_does_not_block_audio_clips():
-    c = Controller()
-    assert c.on_packet(encode_play(1, "guard_ready"), 0.0, estop=True) == ("play", "guard_ready")
-
-
-def test_play_passthrough_does_not_move_motors():
-    c = Controller()
-    assert c.on_packet(encode_play(1, "guard_ready"), 0.0) == ("play", "guard_ready")
-    assert c.on_tick(10.0) is None
-
-
-def test_play_clip_never_raises_and_reaps_finished_players(tmp_path):
-    (tmp_path / "guard_ready.wav").write_bytes(b"RIFF")
-
-    def no_aplay(cmd):
-        raise FileNotFoundError("aplay")
-
-    players = []
-    assert "aplay failed" in play_clip(str(tmp_path), "guard_ready", players, popen=no_aplay)   # used to crash the loop
-    assert "missing clip" in play_clip(str(tmp_path), "absent", players)
-
-    class Done(object):
-        def poll(self):
-            return 0
-
-    players.append(Done())
-    started = []
-    assert play_clip(str(tmp_path), "guard_ready", players, popen=lambda cmd: started.append(cmd) or Done()) is None
-    assert started == [["aplay", "-q", str(tmp_path / "guard_ready.wav")]] and len(players) == 1   # the finished one was reaped
-
-
 def test_locks_onto_one_sender_until_it_goes_quiet():
     c = Controller(max_speed=0.5)
     laptop, other = ("10.0.0.2", 40000), ("10.0.0.66", 5000)
@@ -129,18 +98,6 @@ def test_locks_onto_one_sender_until_it_goes_quiet():
     assert c.on_packet(encode_control(2, 1.0, 0.0), 0.2, src=laptop) is not None
     assert c.on_packet(encode_control(0, 0.0, 0.0), 1.5, src=other) is not None   # laptop quiet > 1 s: new sender obeyed
     assert c.stats == {"received": 4, "malformed": 0, "stale": 0, "foreign": 1, "accepted": 3}
-
-
-def test_play_clip_caps_concurrent_players(tmp_path):
-    (tmp_path / "alarm.wav").write_bytes(b"RIFF")
-
-    class Playing(object):
-        def poll(self):
-            return None
-
-    players = [Playing(), Playing()]
-    assert play_clip(str(tmp_path), "alarm", players, popen=lambda cmd: Playing()).startswith("busy")
-    assert len(players) == 2
 
 
 def test_trim_changes_the_wheel_ratio_of_a_straight_command():
@@ -155,3 +112,17 @@ def test_trim_changes_the_wheel_ratio_of_a_straight_command():
         assert False, "a trim of 0.5 must be refused"
     except ValueError:
         pass
+
+
+def test_a_keyed_controller_obeys_only_signed_packets(tmp_path):
+    (tmp_path / "control.key").write_bytes(b"0123456789abcdef0123\n")
+    key = read_key(str(tmp_path / "control.key"))
+    assert key == b"0123456789abcdef0123" and read_key(str(tmp_path / "absent")) is None
+    (tmp_path / "short.key").write_bytes(b"\n")
+    with pytest.raises(ValueError):
+        read_key(str(tmp_path / "short.key"))                                      # an empty key must not look like signing is on
+    c = Controller(max_speed=0.5, key=key)
+    assert c.on_packet(encode_control(1, 1.0, 0.0), 0.0) is None                   # unsigned
+    assert c.on_packet(encode_control(2, 1.0, 0.0, b"wrong key 0123456"), 0.0) is None
+    assert c.on_packet(encode_control(3, 1.0, 0.0, key), 0.0) == ("motors", (0.5, 0.5))
+    assert c.stats["malformed"] == 2

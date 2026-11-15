@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Jetson: UDP (v, w) -> motors, plus audio clips and the clock echo.  Python 3.6.
+"""Jetson: UDP (v, w) -> motors, plus the clock echo.  Python 3.6.
 
 Logic is unit-tested on the laptop (tests/test_controller.py); motors and the e-stop interlock were tested on
-the robot (docs/JetBot Notes.md). `aplay` is NOT yet tested on the real robot.
+the robot (docs/JetBot Notes.md). Signed packets (--key-file) are NOT yet tested on the real robot.
 Try it without touching hardware:   python3 jetson/robot_udp.py --dry-run
 
-Safety: motors stop if no valid command arrives for --watchdog seconds, on exit, on any exception, and whenever
+Safety: motors stop if no valid command arrives for --watchdog seconds, on exit, on SIGTERM (a handler turns it into an exit so the finally runs), on any exception, and whenever
 jetson/estop.py is not running, not armed, or R1 is released. --max-speed caps every wheel value; a wheel value below
 min_pwm after the cap is sent as 0 (common.mixing.deadzone). Out-of-range settings refuse to start.
 """
@@ -13,8 +13,8 @@ import argparse
 import json
 import os
 import select
+import signal
 import socket
-import subprocess
 import sys
 import threading
 import time
@@ -28,11 +28,12 @@ from common.protocol import (PORT_CLOCK, PORT_CONTROL, SeqFilter, decode_clock_r
 class Controller(object):
     """Pure logic (no sockets, no clock): easy to test."""
 
-    def __init__(self, k=1.0, min_pwm=0.0, max_speed=0.5, watchdog_s=0.3, trim=0.0):
+    def __init__(self, k=1.0, min_pwm=0.0, max_speed=0.5, watchdog_s=0.3, trim=0.0, key=None):
         check_drive(max_speed, min_pwm, k, trim)
         if isinstance(watchdog_s, bool) or not isinstance(watchdog_s, (int, float)) or not 0 < watchdog_s <= 1.0:
             raise ValueError("watchdog_s must be in (0, 1] s, got %r" % (watchdog_s,))
         self.k, self.min_pwm, self.max_speed, self.watchdog_s, self.trim = k, min_pwm, max_speed, watchdog_s, trim
+        self.key = key  # bytes: only packets signed with it are obeyed (common.protocol.decode_control); None = unsigned accepted
         self.seq = SeqFilter()
         self.peer = None  # source address of the stream being obeyed; another sender is ignored until it goes quiet
         self.last_cmd = None  # time of the last accepted motor command; None = motors already stopped
@@ -40,13 +41,13 @@ class Controller(object):
         self.stats = {"received": 0, "malformed": 0, "stale": 0, "foreign": 0, "accepted": 0}  # for packet-loss tests
 
     def on_packet(self, data, now, estop=False, src=None):
-        """-> ("motors", (left, right)) | ("play", clip) | None (ignored packet). While estop is engaged, motor commands are ignored.
+        """-> ("motors", (left, right)) | None (ignored packet). While estop is engaged, motor commands are ignored.
 
         src (the sender's address) locks the controller onto one sender: packets from anyone else are ignored until the
         locked sender has been quiet for the SeqFilter's quiet time (a restarted laptop with a new IP is then obeyed)."""
         self.stats["received"] += 1
         try:
-            msg = decode_control(data)
+            msg = decode_control(data, self.key)
         except ValueError:
             self.stats["malformed"] += 1
             return None
@@ -60,8 +61,6 @@ class Controller(object):
         self.stats["accepted"] += 1
         if src is not None:
             self.peer = src
-        if "play" in msg:
-            return ("play", msg["play"])
         if estop:
             return None
         self.last_cmd = now
@@ -85,9 +84,12 @@ class Controller(object):
         return None
 
 
+HEARTBEAT_MAX_AGE_S = 1.0  # estop.py writes every 0.5 s: two missed writes stop the motors (was 2.0 s until the 2026-11-14 audit)
+
+
 def estop_engaged(latch, heartbeat, now):
     """Fail-safe: engaged if the latch exists, or the heartbeat (time.monotonic() written by jetson/estop.py; the host and
-    the container share CLOCK_MONOTONIC) is missing, unreadable, older than 2 s or from the future. A monotonic stamp in the
+    the container share CLOCK_MONOTONIC) is missing, unreadable, older than HEARTBEAT_MAX_AGE_S or from the future. A monotonic stamp in the
     file, not the file's mtime: the Jetson has no RTC, and a wall-clock step back made a dead e-stop look alive."""
     if os.path.exists(latch):
         return True
@@ -96,7 +98,7 @@ def estop_engaged(latch, heartbeat, now):
             age = now - float(f.read())
     except (OSError, ValueError):
         return True
-    return not -0.5 <= age <= 2.0
+    return not -0.5 <= age <= HEARTBEAT_MAX_AGE_S
 
 
 def _clock_echo(port):
@@ -114,21 +116,16 @@ def _clock_echo(port):
             time.sleep(0.1)
 
 
-def play_clip(audio_dir, clip, players, popen=subprocess.Popen, max_players=2):
-    """Start `aplay` for <audio_dir>/<clip>.wav; reap finished players. Never raises: a missing WAV or a missing or
-    broken `aplay` is logged and ignored, so an audio packet can never take down the motor loop. At most max_players
-    clips play at once, so a flood of play packets cannot fork without limit."""
-    players[:] = [p for p in players if p.poll() is None]
-    if len(players) >= max_players:
-        return "busy (%d clips playing)" % len(players)
-    path = os.path.join(audio_dir, clip + ".wav")
+def read_key(path):
+    """-> the key bytes from `path` (surrounding whitespace stripped), or None if there is no file. An empty file is an error:
+    it would look like signing is on while any key would do."""
     if not os.path.exists(path):
-        return "missing clip %s" % path
-    try:
-        players.append(popen(["aplay", "-q", path]))
-    except OSError as e:
-        return "aplay failed: %s" % e
-    return None
+        return None
+    with open(path, "rb") as f:
+        key = f.read().strip()
+    if len(key) < 16:
+        raise ValueError("%s holds fewer than 16 bytes" % path)
+    return key
 
 
 def _make_robot():
@@ -141,10 +138,10 @@ def main():
     ap.add_argument("--port", type=int, default=PORT_CONTROL)
     ap.add_argument("--clock-port", type=int, default=PORT_CLOCK)
     ap.add_argument("--allow-ip", help="only accept control packets from this IP (the laptop)")
-    ap.add_argument("--max-speed", type=float, default=0.5, help="cap on every wheel value, 0-1")
+    ap.add_argument("--max-speed", type=float, default=None, help="cap on every wheel value, 0-1 (default: max_speed in --calib, else 0.3, the cap the laptop controllers assume)")
     ap.add_argument("--watchdog", type=float, default=0.3, help="seconds of silence before stopping")
     ap.add_argument("--calib", default="calib/motion.json", help='JSON {"k": .., "min_pwm": .., "trim": ..} (trim optional, default 0)')
-    ap.add_argument("--audio-dir", default="assets/audio")
+    ap.add_argument("--key-file", default="control.key", help="shared secret; when the file exists, only signed packets are obeyed (docs/Setup.md)")
     ap.add_argument("--dry-run", action="store_true", help="print motor values instead of driving")
     ap.add_argument("--estop-dir", default=".", help="folder with ESTOP and ESTOP_ALIVE written by jetson/estop.py")
     ap.add_argument("--no-estop", action="store_true", help="DANGEROUS: ignore the gamepad e-stop (only for dry-run development)")
@@ -155,13 +152,15 @@ def main():
         with open(args.calib) as f:
             calib = json.load(f)
     try:
-        ctl = Controller(calib.get("k", 1.0), calib.get("min_pwm", 0.0), args.max_speed, args.watchdog, calib.get("trim", 0.0))
+        max_speed = calib.get("max_speed", 0.3) if args.max_speed is None else args.max_speed
+        key = read_key(args.key_file)
+        ctl = Controller(calib.get("k", 1.0), calib.get("min_pwm", 0.0), max_speed, args.watchdog, calib.get("trim", 0.0), key)
     except ValueError as e:
-        raise SystemExit("refusing to start: %s (check --max-speed, --watchdog and %s)" % (e, args.calib))
+        raise SystemExit("refusing to start: %s (check --max-speed, --watchdog, --key-file and %s)" % (e, args.calib))
     robot = None if args.dry_run else _make_robot()
 
+    print("control packets: %s" % ("signed only (key %s)" % args.key_file if key else "UNSIGNED accepted (no %s)" % args.key_file), flush=True)
     printed = [None]
-    players = []
     latch = os.path.join(args.estop_dir, "ESTOP")
     heartbeat = os.path.join(args.estop_dir, "ESTOP_ALIVE")
 
@@ -171,17 +170,12 @@ def main():
         return "%s.%03d" % (time.strftime("%H:%M:%S", time.localtime(t)), int(t * 1000) % 1000)
 
     def apply(action):
-        kind, val = action
-        if kind == "motors":
-            if robot:
-                robot.set_motors(val[0], val[1])
-            if val != printed[0]:  # print changes only
-                printed[0] = val
-                print("%s motors %+.2f %+.2f%s" % (stamp(), val[0], val[1], "" if robot else " (dry-run)"), flush=True)
-        else:
-            problem = play_clip(args.audio_dir, val, players)
-            if problem:
-                print("%s play %s: %s" % (stamp(), val, problem), flush=True)
+        val = action[1]
+        if robot:
+            robot.set_motors(val[0], val[1])
+        if val != printed[0]:  # print changes only
+            printed[0] = val
+            print("%s motors %+.2f %+.2f%s" % (stamp(), val[0], val[1], "" if robot else " (dry-run)"), flush=True)
 
     t = threading.Thread(target=_clock_echo, args=(args.clock_port,))
     t.daemon = True
@@ -189,6 +183,10 @@ def main():
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.bind(("0.0.0.0", args.port))
+
+    def _terminate(signum, frame):
+        raise SystemExit(0)                      # audit 2026-11-12: the default SIGTERM action kills Python WITHOUT running the finally below, and the motor driver keeps its last PWM
+    signal.signal(signal.SIGTERM, _terminate)    # systemd stops this service with `pkill -f jetson/robot_udp.py` (SIGTERM) on every stop and restart
     try:
         apply(("motors", (0.0, 0.0)))
         was = None
@@ -213,7 +211,12 @@ def main():
             if action:
                 apply(action)
     finally:
-        apply(("motors", (0.0, 0.0)))
+        for attempt in (1, 2):                   # a single I2C error must not leave the last PWM on the wheels
+            try:
+                apply(("motors", (0.0, 0.0)))
+                break
+            except Exception as e:               # noqa: BLE001
+                print("%s stop attempt %d failed: %r" % (stamp(), attempt, e), flush=True)
 
 
 if __name__ == "__main__":
