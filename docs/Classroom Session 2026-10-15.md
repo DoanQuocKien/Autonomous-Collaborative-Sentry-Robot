@@ -1,5 +1,7 @@
 # Classroom session Thu 2026-10-15, 08:00-12:00: plan and commands
 
+> **Outcome (note of 2026-11-15):** the session took place; results in `reports/DoanQuocKien/week-02/classroom_1015/README.md`. The plan below is kept as written.
+
 Run everything from the repo root with the `sentry` interpreter. Robot battery above 12 V at the start (charge at 11.8 V or below). The robot's `calib/motion.json` was measured on a smooth floor at v = 1.0 only; the rugged floor on 2026-10-14/15 gave about 0.8 of the speeds and a strong left veer, so today's job is to find out how much of that was the floor (`reports/DoanQuocKien/week-02/rugged_floor/README.md`).
 
 ## Bring

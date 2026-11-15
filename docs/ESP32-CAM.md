@@ -60,13 +60,13 @@ It can be fed from `record.py` like any other stream by saving the frames `lates
 
 `esp32/sentry_cam` is the stock CameraWebServer (HTTP MJPEG) for an OV2640 module, patched to build on Arduino core 2.0.17 (`ledcAttach` guard).
 
-### OV2640 module (ordered 2026-10-11, **firmware not tested on a board yet**)
+### OV2640 module (ordered 2026-10-11; flashed and measured 2026-10-26, results in the section "OV2640 board" below)
 
-`esp32/sentry_cam` is set up for it (builds, 23% flash): JPEG, VGA 640x480, quality 12, two frame buffers, `GRAB_LATEST`, the same Wi-Fi settings as `tile_stream` (channels 1-13, 20 MHz, no power save), and a warning in the boot log if the sensor is not an OV2640 (`PID=0x26`). On arrival:
+`esp32/sentry_cam` is set up for it (builds, 23% flash): JPEG, VGA 640x480, quality 25 (12 until 2026-10-28), two frame buffers, `GRAB_LATEST`, the same Wi-Fi settings as `tile_stream` (channels 1-13, 20 MHz, no power save), and a warning in the boot log if the sensor is not an OV2640 (`PID=0x26`). First use of a new board:
 1. Copy `secrets.example.h` to `secrets.h`, then `cd esp32/sentry_cam && pio run -t upload --upload-port COMx`.
 2. Boot log: expect `SENSOR PID=0x0026` and `Camera Ready! Stream: http://<ip>:81/stream`. A `0x2145` or a `Camera init failed 0x105/0x106` means it is a GC2145 again: send it back (or use `tile_stream`).
 3. Stop `esp_mjpeg_relay` (it also uses port 81 on the laptop) and run `python -m tools.record D1`: with `esp32_ip = "auto"` it finds the board on the LAN by its open port 81. Or put the IP in `config.toml`.
-4. Measure the frame rate (about 25 fps VGA is reported by others, not by us) and write it here and in the plan. `esp32/experiments/` holds the measurement sketches behind the numbers above.
+4. Frame rate, measured: 25.2 fps with the camera alone, about 9 fps over Wi-Fi with the current defaults (sections below). `esp32/experiments/` holds the measurement sketches behind the numbers above.
 
 ## Known limits and things that went wrong
 

@@ -1,5 +1,7 @@
 # Classroom session 2026-11-14 (all three members, 2 hours): task list, decisions, schedule
 
+> **Outcome (2026-11-15):** the session took place. What was done and what stayed open is in `docs/Implementation Plan.md`, Week 6, "Status (Sat 2026-11-14)"; the evidence is in `reports/DoanQuocKien/week-06/t2_1114/`. The table below is the plan as written the night before.
+
 Written 2026-11-13 night by DQK from `docs/Implementation Plan.md` (section 4.3 rows, "Carried over" list), `docs/Classroom Session Deployment Checklist.md` (its own durations: setup 15 min, Part A 15 min, Part B 45 min, Part C 30 min) and the evidence README `reports/DoanQuocKien/week-06/classroom_1111_pm/README.md`. Constraints: **120 minutes**, three people, one robot, **one ESP32 stream client at a time** (impostor test, handshake and deployment cannot overlap), figures frozen Mon 2026-11-16, internal draft Wed 11-18, report Mon 11-23.
 
 ## 1. Every open item that needs the team, the door or the room

@@ -29,8 +29,8 @@ The Open Images model was tried because its label set already contains `Human le
 4. **Wires:** if box recall stays under 80 %, train a segmentation model (YOLOv8n-seg or a small strip-convolution network) on polygon labels plus pasted synthetic wires; a **geometric fallback** (thin dark or bright line on the floor, ground-plane check across frames while driving) gives the keep-clear rule a signal even if the learned model fails.
 5. **Evaluate** per class on the held-out session (recall, precision, distance error) and run the exploration T2 with the whole set in the arena. A class that misses its target is reported as not met, with the speed cap and keep-clear rule as the mitigation.
 
-## 4. Decisions still open for the team (Mon Oct 26)
+## 4. Decisions put to the team (Mon Oct 26; status 2026-11-15)
 
-- The targets in section 4.3 (legs, footwear, backpacks: recall >= 90 %, precision >= 80 %; wires: recall >= 80 %, <= 1 false alarm per 20 empty-floor frames) are the assistant's proposal.
-- Whether human legs count as obstacles in every phase (proposed: yes, for repulsion in exploration and for the pursuit override; they are never targets by themselves).
-- Whether the 15 deg down-tilt wedge of the spec is worth mounting (it improves feet and floor visibility at close range); the camera is currently level and the tilt is measured per session.
+- The targets in section 4.3 (legs, footwear, backpacks: recall >= 90 %, precision >= 80 %; wires: recall >= 80 %, <= 1 false alarm per 20 empty-floor frames) were proposed from the research above. **Confirmed unchanged by the team at the 2026-10-28 session** (plan section 4.3).
+- Whether human legs count as obstacles in every phase (proposed: yes, for repulsion in exploration and for the pursuit override; they are never targets by themselves). No recorded team decision; the plan's required set lists legs and feet as obstacles.
+- Whether the 15 deg down-tilt wedge of the spec is worth mounting (it improves feet and floor visibility at close range); the camera is currently level and the tilt is measured per session. Not mounted and no recorded decision (2026-11-15).
