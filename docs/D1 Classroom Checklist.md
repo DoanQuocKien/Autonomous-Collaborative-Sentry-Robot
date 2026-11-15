@@ -1,5 +1,7 @@
 # D1 classroom session (Mon 2026-10-12): checklist
 
+> **Past session (note of 2026-11-15):** kept as the record of how D1 was collected. Since then the systemd units were seen working after cold boots (2026-10-16, `docs/Setup.md`) and the OV2640 board arrived (2026-10-26). The current session checklist is `docs/Classroom Session Deployment Checklist.md`.
+
 Lessons from the cafe session (2026-10-11): `reports/DoanQuocKien/week-01.md`, `data/D1/README_cafe_glass.txt`. Run everything from the repo root with the `sentry` interpreter.
 
 ## Bring

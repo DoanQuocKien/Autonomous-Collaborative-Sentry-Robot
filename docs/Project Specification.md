@@ -23,10 +23,10 @@ The system operates across three distinct phases:
 * **Stationary Sensor Node:**  
   * ESP32-CAM module: OV2640, or the GC2145 boards the team has (no hardware JPEG, so a UDP changed-tile stream replaces MJPEG; `docs/ESP32-CAM.md`).  
   * 5V power source (lithium cell with 5V boost circuit or compact USB power bank).  
-  * FTDI USB-to-TTL adapter (for initial firmware flashing via Arduino IDE).  
+  * USB programmer for firmware flashing: the ESP32-CAM-MB base the team has (CH340) replaces the FTDI USB-to-TTL adapter first listed; the firmware is built with PlatformIO (`docs/ESP32-CAM.md`).  
   * Minimal enclosure or stand to position the module on the floor or a shelf.  
 * **Audio Feedback:** no speaker on the robot (dropped 2026-10-26 to cut cost). The laptop plays pre-generated WAV prompts (offline TTS) and the alarm sound through its own speakers for setup prompts and deterrent alarms.  
-* **Localization Markers:** Cardstock ArUco markers (150 mm, `aruco_marker_m` in `config.toml`) as position anchors (the kit has no encoders or IMU), plus a printed checkerboard for one-time fisheye camera calibration.
+* **Localization Markers:** Cardstock ArUco markers (150 mm, `aruco_marker_m` in `config.toml`) as position anchors (the kit has no encoders or IMU; an MPU6050 added by the team on 2026-11-01 does not work yet and is not used), plus a printed checkerboard for one-time fisheye camera calibration.
 
 ### **Optional External Hardware**
 
@@ -136,7 +136,7 @@ The core system above keeps every neural model on the laptop (section 5). That s
 ## **5\. Network & Processing Architecture**
 
 * **Network Host:** one 2.4 GHz hotspot shared by the JetBot, the ESP32-CAM and the laptop: a phone hotspot in the classroom, the laptop's Windows hotspot at home (decision 2026-11-14, Implementation Plan risk 16). A single-radio Windows hotspot serves one band at a time and the ESP32 is 2.4 GHz only; the video target p95 < 50 ms is missed by about 3 ms on this network (53 ms measured).  
-  * **ESP32-CAM:** an MJPEG feed (VGA, 15 FPS) with an OV2640 module, or the UDP changed-tile stream (640x480, 14.4 FPS average) with the GC2145 boards we have, which is the frozen interface (2026-10-11).  
+  * **ESP32-CAM:** the HTTP MJPEG feed of an OV2640 module (VGA; target 15 FPS, about 9 FPS measured over Wi-Fi), which is the interface since the team decision of 2026-10-28 (`Implementation Plan.md` section 3); the UDP changed-tile stream (640x480, 14.4 FPS average) stays as the fallback for the GC2145 boards (it was the frozen interface from 2026-10-11 until that decision).  
   * **JetBot (same 2.4 GHz network):** Streams CSI video frames to the laptop via ZeroMQ (JPEG compressed, quality 60\) and receives motor control datagrams (\$v, \\omega\$) via non-blocking UDP packets.  
 * **Compute Allocation:** The RTX 4050 processes both video streams, executes all neural models (YOLOv8, YOLOv8-pose, InsightFace, OSNet), and evaluates state machine transitions. The Jetson Nano is restricted to frame acquisition and low-level motor execution.
 * **Optional on-robot inference (extension, section 4.7; proposed 2026-10-16):** the allocation above is the default. If the extension's gates pass, the Jetson also runs YOLOv8n (obstacles), YOLOv8n-pose and OSNet x0.25 (pursuit) through TensorRT FP16 on live frames, and the laptop keeps the ESP32 door pipeline, mapping, the state machine and the companion application. The control packets and the safety design are unchanged.
