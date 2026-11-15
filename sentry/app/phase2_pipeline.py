@@ -268,10 +268,6 @@ class Phase2Pipeline:
             },
         )
         self.target_queue.push(record, t=decided_at)
-        # TargetQueue treats zero as an omitted historical timestamp. Replay
-        # entries can genuinely start at zero while enqueue happens later.
-        record.timestamp = t0
-
         # 7. Notify StateMachine
         sm_transition = self.state_machine.handle_event(
             "INTRUDER_QUEUED",

@@ -1,5 +1,15 @@
 # Kết quả HNHL để ghép Chương 7
 
+**Hiện hành 15/11 sau merge:** [15 nguồn đã pin và phạm vi đo](update-2026-11-15.md). Dùng các dòng mới khi ghép; các bổ sung theo ngày bên dưới giữ làm lịch sử.
+
+| Thành phần bổ sung | Kết quả | Phạm vi nghiệm thu |
+| :-- | :-- | :-- |
+| Door-camera DQK 14/11 | TAR 822/877=93,73%; FAR 0/1.754 straight, 0/5.254 mọi frame tại 0,45; max impostor 0,3362 | Ba người/một session, CI TAR [0,904;0,970]; chưa population validation, không gộp pilot cafe cũ |
+| Phase 2 live HNHL | 3 authorized, 3 queued; 5 unresolved +1 interrupted; coverage segment 50%; enqueue 9,387–10,245 s | Pilot hai người; chưa full door T1/cross-camera. Sau sửa chỉ đo lại Wi-Fi cảnh trống: 4,963 FPS |
+| RTX4050 combined, DQK | All/XFeat mỗi frame 9,20/10,79 FPS; scheduled 19,23 FPS, door 4,614 Hz, peak NVML 0,890 GiB | Một run/mode, ảnh padding; chưa combined live hoặc precision accuracy |
+| Queue/target handoff | Shared queue/machine, sync sau event/tick, adopt record đúng model/hash, giữ timestamp 0; TRACK_LOST→SEARCH | T0 contract, chưa robot search/coverage/full loop |
+| Deployment DQK | Sáu lượt được tính; hai lượt 14/11 cửa 2,94 m, 0 collisions | `manual_vantage`, không nghiệm thu occupancy map/automatic vantage của HNHL |
+
 **Bổ sung11/11:** #99/#102/#103 đã merge sau review và sửa guard/cleanup; code tests không đồng nghĩa T2. Tile3 có21 HOLD rows trong2 đoạn ngắn;80 rows stopped PURSUE trước đó không phải HOLD. Bảng trunk cần ghi full-series/full-window (bỏ9 warm-up samples) riêng. Experiment B tooling đã merge: D1 configured/ORG-obstacle/ORG-free-space tìm1/24,8/24,6/24 objects; error0,041m chỉ trên8 found, không all-object PASS hoặc model adoption. [Nguồn, controls thiếu và bảng so sánh](update-2026-11-11.md).
 
 **Bổ sung10/11:** retest ghế lớp09/11 cho4/36 frame detection và0/36 distance (giữ error=null). Đây là kết quả failure/coverage mới, không thay8/9 IDs F10 cũ hoặc gộp hai tape origins. Depth/zoom/floor-anchor chưa transfer; trunk một người có per-set bias,0,49m và0,50m là protocol khác. [Bảng nguồn/so sánh](update-2026-11-10.md), [F10 availability](figures/F10_availability_1109.png). Không có T1/T2 PASS mới; không đổi default detector.

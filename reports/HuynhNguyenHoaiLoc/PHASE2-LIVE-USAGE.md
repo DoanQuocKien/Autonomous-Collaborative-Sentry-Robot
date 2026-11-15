@@ -39,7 +39,34 @@ Deadline giữ pha ban đầu để tránh trôi nhịp theo thời điểm fram
 
 Pipeline nhận thêm `face_embeddings`, `minimum_face_votes`, `decision_timestamp`, `decision_clock` và `entry_metadata` dưới dạng keyword. Callers dùng một `face_embedding` vẫn hoạt động. `record.timestamp` giữ lúc bắt đầu entry; `enqueued_at` và thời gian event lấy ngay trước enqueue sau appearance inference. Log tính `latency_s` từ face đầu tiên đến mốc quyết định đó. Với MJPEG, đây là thời gian theo clock nhận của laptop. ESP32 chưa gửi capture timestamp.
 
-CLI có queue/state machine trong process của nó. Ứng dụng tổng cần inject cùng các object để KR nhận active target và gọi tracker `set_target_record`. Phase3Runner từ PR #101 đã merge vào main ngày 15/11 giờ Bangkok. Vòng camera này không kết nối transport điều khiển motor. Tích hợp `sync_with` và `TRACK_LOST` còn chờ #119 được merge.
+CLI có queue/state machine trong process của nó. Ứng dụng tổng cần inject cùng object; không gọi `enqueue_intruder` lần nữa cho record Phase 2 đã enqueue. #108 đã đưa `sync_with(..., t=decided_at)` của #119 vào main. Bản bổ sung HNHL cho runner dùng `sync_with` sau event/tick và nhận `target_tracker` để gọi `set_target_record` khi đổi target, clear reference khi về standby. Model/hash hoặc simulated provenance sai sẽ bị từ chối. Vòng camera này không kết nối transport điều khiển motor.
+
+Ví dụ khởi tạo trong cùng một owner thread, dùng `perf_counter` cho cả hai luồng dữ liệu:
+
+```python
+import time
+from sentry.app.phase2_live import DoorMonitor, DoorSettings
+from sentry.app.phase2_pipeline import Phase2Pipeline
+from sentry.app.phase3_runner import Phase3Runner, Phase3Settings
+from sentry.app.state_machine import State, StateMachine
+from sentry.app.target_queue import TargetQueue
+
+clock = time.perf_counter
+queue = TargetQueue()
+machine = StateMachine(initial_state=State.STANDBY, t0=clock())
+# face_verifier, appearance_extractor và robot_tracker do app nạp từ config.
+pipeline = Phase2Pipeline(face_verifier, appearance_extractor, queue, machine)
+runner = Phase3Runner(sm=machine, queue=queue, target_tracker=robot_tracker,
+    settings=Phase3Settings(target_lost_timeout_s=cfg['tracking']['lost_timeout_s']))
+monitor = DoorMonitor(door_tracker, face_encoder, pipeline, DoorSettings(**cfg['door_live']), emit,
+                      decision_clock=clock)
+```
+
+Các object/model còn lại trong ví dụ là dependency của app, không phải CLI chạy độc lập. Gọi monitor với frame cửa mới và runner với quan sát robot trong cùng owner loop; `target_pos` phải thuộc target hiện đang lock. `step()` trả v/w cho caller kiểm tra, không tự gửi motor. Không chạy hai thread tự cập nhật shared state machine.
+
+Khi PURSUE thiếu quan sát tươi quá `target_lost_timeout_s`, runner dừng và phát `TRACK_LOST` để SEARCH cùng target; không phát lặp mỗi tick. Nếu đã có quan sát tươi đúng ID ngay khi gọi lại thì xử lý reacquisition. `TARGET_LOST` của HOLD giữ ý nghĩa giải phóng HOLD. Tìm kiếm coverage/reacquisition trên robot vẫn thuộc phần tuần 9; caller chỉ phát TARGET_FOUND khi có bằng chứng lock phù hợp.
+
+`IntruderRecord.timestamp/enqueued_at` dùng None cho giá trị chưa cấp; timestamp 0 được giữ nguyên qua enqueue và save/load. Sau `push`, các giá trị thiếu được điền bằng clock enqueue. Tệp queue cũ có số 0 sẽ được đọc như timestamp thực, không còn là sentinel.
 
 ## Replay và chấm kết quả
 
