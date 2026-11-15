@@ -1,6 +1,6 @@
 # Classroom session: deployment (T2) and handshake, DQK alone (checklist)
 
-What is tested: the spec's section 4.3 HCI deployment protocol on the robot (sweet spot, prompt on the laptop, ESP32 handshake, reverse to standby) and the ESP32 handshake at the real door (plan 4.3: 'Sweet-spot selection' 5 of 5 runs; 'ESP32 handshake' 10 of 10 accepts and 10 of 10 rejects). Tools: `tools/deploy_live.py` (PRs #84, #85), `tools/handshake_test.py` (PR #80). **They are merged only after review: check `git log` for them first.** Run everything from the repo root with the `sentry` interpreter. The matte-floor D5 batch was dropped for this week (no matte floor, decision 2026-10-28).
+What is tested: the spec's section 4.3 HCI deployment protocol on the robot (sweet spot, prompt on the laptop, ESP32 handshake, reverse to standby) and the ESP32 handshake at the real door (plan 4.3: 'Sweet-spot selection' 5 of 5 runs; 'ESP32 handshake' 10 of 10 accepts and 10 of 10 rejects). Tools: `tools/deploy_live.py` (PRs #84, #85), `tools/handshake_test.py` (PR #80), all on `main`. Run everything from the repo root with the `sentry` interpreter. The matte-floor D5 batch was dropped for this week (no matte floor, decision 2026-10-28).
 
 ## Bring
 - Robot charged to about 12.4 V (>= 11.3 V to start, the tool refuses below; < 10.5 V stop), gamepad, tape measure (3 m+), masking tape, laptop + charger.
@@ -17,7 +17,7 @@ What is tested: the spec's section 4.3 HCI deployment protocol on the robot (swe
 The mount is tiltable and moves whenever the robot is handled, so NEVER use a pose file from another day (1 degree is about 15 % of the ground distance at 1 m). With the robot on its start spot, stand ONE ArUco marker upright (a T2 board on a chair; the 150 mm print) 1-2 m in front of it, in view, and run
 `python -m tools.self_pose --marker-m 0.15 --bottom-h 0.132` (0.132 m = the lower edge of a 0.150 m marker whose centre is at 0.207 m; measure yours). It reads about 45 frames, refuses to write a file unless 15+ markers were accepted with a pitch spread under 0.4 degrees, and writes `calib/camera_pose_self_<date>_<n>.json`: pass that to `--camera-pose`. Without a marker, run without `--camera-pose` and do not rely on any distance or obstacle stop.
 
-## Step one for any driving run: measure this floor's motion with the boards (2026-10-30, PR pending)
+## Step one for any driving run: measure this floor's motion with the boards (2026-10-30; `tools/motion_check.py`, on `main`)
 The first supervised run went off the line toward the door while dead reckoning said it was on the sweet spot: the classroom floor is not level and the Week 2 gains are from another floor. Put several boards around the robot start (each within 1.5 m at every pause), measure each one with the tape (`marker_id,x_m,y_m,z_m,yaw_deg`), floor clear for 1.5 m, hold R1 the whole time (about 35 s):
 `python -m tools.motion_check --label class_1 --anchors <csv>` writes `calib/motion_session_<date>_<n>.json` (speed scale, left and right turn scales, drift). Then the CHECK: `python -m tools.motion_check --label class_2 --anchors <csv> --motion-session <that file>` must print PASS (every measurable segment within 10 % of prediction, drift under 0.05 rad/m; proposed limits). Drive with `deploy_live --motion-session <file>`. Report the raw ratios as measured, pass or fail.
 

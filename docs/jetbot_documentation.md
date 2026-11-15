@@ -1,5 +1,7 @@
 # JetBot AI Kit Documentation
 
+The kit as listed by the seller. What is actually fitted on our robot, where it differs, is in `JetBot Notes.md` ("Verified on our robot") and noted in the table.
+
 ## Package Overview
 
 * **Product Name:** JetBot AI Kit (Complete Bundle)
@@ -19,7 +21,7 @@
 | **3** | Acrylic piece | 1 | A mounting plate for isolating or securing specific electronics. |
 | **4** | Jetbot expansion board | 1 | The main power and motor control distribution board. |
 | **5** | IMX219-160 Camera | 1 | A 8MP 160-degree camera module for computer vision tasks. |
-| **6** | Wireless-AC8265 | 1 | A dual-band 2.4GHz/5GHz Wi-Fi and Bluetooth 4.2 network interface card with antennas. |
+| **6** | Wireless-AC8265 | 1 | A dual-band 2.4GHz/5GHz Wi-Fi and Bluetooth 4.2 network interface card with antennas. **Our robot has a Realtek RTL8822CE instead, with one of the two antennas missing.** |
 | **7** | Motor (2PCS) | 1 | Two DC gear motors to drive the main wheels. |
 | **8** | Wheel (2PCS) | 1 | Two main drive wheels with rubber tires. |
 | **9** | Castor (2PCS) | 1 | Two metal ball casters to stabilize the chassis. |

@@ -1,3 +1,5 @@
+# Reference links (course material and platform documentation)
+
 Background knowledge — Types of computer vision problems: https://aiclub.uit.edu.vn/itcourses/#CS532/CS532-00
 Jetbot: https://jetbot.org/master/
 https://aiclub.uit.edu.vn/itcourses/#t/Hardware%20&%20IoT/12

@@ -22,9 +22,9 @@ Spec section 2 is the source for the original list; where this file disagrees wi
 | Down-tilt wedge | Folded foam or cardboard, test both ways in W2 | $0 | |
 | Network | **Try the Windows hotspot on 2.4 GHz for both ESP32 and JetBot first.** If it fails, use a phone as a hotspot (check that clients can ping each other). Buy a router only if both fail the 50 ms test | $0 | Single band for everything; video needs only ~5 Mbps so this is fine unless the room is crowded with Wi-Fi |
 | Spare batteries | **Do not buy.** Charge between sessions and plan around the measured runtime | $0 | Shorter test sessions; revisit if runtime is under 60 min |
-| IMU, overhead camera | **Do not buy** | $0 | Same gates as section 2; the IMU costs only $2-3 if the W2 test fails |
+| IMU, overhead camera | **Do not buy** unless a gate in section 2 triggers. The IMU gate did: an MPU6050 was bought (decision 2026-10-28) and is postponed as faulty | $0 ($2-3 for the IMU) | Same gates as section 2 |
 
-**Still worth paying for even on a budget:** the ESP32-CAM + MB base (the project cannot work without it) . Everything else has a free substitute that I judge low risk.
+**Still worth paying for even on a budget:** the ESP32-CAM + MB base (the project cannot work without it). Everything else has a free substitute that I judge low risk.
 
 **Order of upgrades if something fails** (cheapest first): another phone charger or cable, then a second ESP32-CAM ($8-10), then the router ($20-30), then spare batteries ($12-18).
 

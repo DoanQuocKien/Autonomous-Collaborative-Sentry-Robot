@@ -19,35 +19,37 @@ Principles behind the split:
 - Only DQK has the robot (and only KR has the ESP32 kit), so every task must be developable **offline on recorded data** first. HIL time on DQK's setup is for validation, not development.
 - Each member carries roughly equal weekly load (about 3 work items per week).
 
-## 2. Repository Layout (target)
+## 2. Repository Layout (as of 2026-11-15; modules planned for later weeks are marked)
 
 ```
 sentry/                 # laptop package, Python 3.12 in sentry (see Setup.md)
-  net/                  # zmq_rx.py, udp_tx.py, mjpeg_rx.py, clock_sync.py
-  perception/           # obstacle.py, entrance.py (XFeat + DINOv2, written 2026-10-12), face.py, reid.py, tracker.py, pose.py, camera_pose.py (live camera tilt)
-  nav/                  # localization.py, gridmap.py, vantage.py, coverage.py, controllers.py
-  app/                  # state_machine.py, target_queue.py, audio.py (laptop alert/WAV playback), main.py
+  net/                  # zmq_rx.py, udp_tx.py, mjpeg_rx.py, clock_sync.py, frame.py, discover.py, latency.py
+  perception/           # obstacle.py, entrance.py (XFeat + DINOv2, written 2026-10-12), face.py, reid.py, tracker.py, camera.py, camera_pose.py (live camera tilt), floor.py, world.py, sector.py, body_range.py, contact.py, wire_fallback.py; planned: pose.py (W8)
+  nav/                  # localization.py, gridmap.py, vantage.py, controllers.py, explore.py, prescan.py, declared_room.py, hold_detector.py, bearing_servo.py, marker_fix.py, motion_estimator.py, wheel_model.py; planned: coverage.py (W9)
+  app/                  # state_machine.py, target_queue.py, audio.py (laptop alert/WAV playback), phase1_runner.py, deploy_runner.py, phase2_pipeline.py, phase2_live.py, phase3_runner.py; planned: main.py (one app, W8-10)
+  config.py, espcam.py  # config.toml loader; GC2145 tile-stream receiver
 config.toml             # repo-root tunables (thresholds, gains, ports; [entrance] for the entrance detector); stdlib tomllib
 third_party/xfeat/      # vendored XFeat (Apache-2.0, trimmed; LICENSE + NOTICE.md); weights from tools/fetch_models.py
 common/                 # Python 3.6-compatible, stdlib only; used by BOTH laptop and Jetson
   protocol.py           # ports, packet encode/decode with validation, SeqFilter, video header, clock echo
   mixing.py             # (v, w) -> wheel values: rescale-not-clip, dead zone (zero below `min_pwm`), setting checks
 tools/                  # DONE: check_env.py, send_cmd.py, make_markers.py, record.py, replay.py, sim_robot.py,
-                        # calibrate_fisheye.py (calib/camera.json, RMS 0.83 px), calibrate_motion.py (no runs yet),
-                        # plus network/ESP32/D1/GPU helpers
-                        # TODO: enroll_whitelist.py, label_events.py
+                        # calibrate_fisheye.py (calib/camera.json, RMS 0.83 px), calibrate_motion.py, enroll_whitelist.py,
+                        # plus about 130 session, dataset, evaluation and figure tools
+                        # TODO: label_events.py (W8, for D4)
 jetson/                 # Python 3.6, Ubuntu 18.04; own requirements.txt (see docs/Setup.md)
   camera_pub.py         # CSI -> JPEG q60 -> ZeroMQ PUB; `--source synthetic` works without the robot (tested on the robot 2026-10-06)
   robot_udp.py          # UDP (v, omega) -> motors, watchdog, e-stop interlock (motors tested); optional signed packets (`--key-file`, 2026-11-15). The `play`/`aplay` path was removed in the 2026-11-15 audit (no speaker since 2026-10-26)
   estop.py              # gamepad dead-man + e-stop, robot host (tested wheels-off 2026-10-06, first floor drive 2026-10-11)
-  systemd/              # boot units for estop / camera / control (written 2026-10-11, not yet tested on the robot)
+  systemd/              # boot units for estop / camera / control (seen active after cold boots 2026-10-16) and the logrotate rule (2026-11-15, not yet tested on the robot)
 assets/print/           # ArUco markers (ids 0-5, 10 cm and 15 cm sets; the 150 mm set is the one in use) and 9x6 checkerboard PDFs, from tools/make_markers.py
 esp32/tile_stream/      # GC2145 boards: raw Bayer changed-tile UDP stream (the frozen interface, section 3)
 esp32/sentry_cam/       # OV2640 boards only: HTTP MJPEG VGA sketch (tested 2026-10-26 on an OV2640 board: about 10-11 FPS over Wi-Fi, one stream client at a time; see docs/ESP32-CAM.md)
 assets/audio/           # pre-generated WAV prompts (committed, small)
 calib/                  # calibration outputs (camera.json, motion.json); committed
 tests/                  # pytest; markers below
-data/                   # recordings, face photos (GITIGNORED; shared via team Drive)
+data/                   # recordings, face photos: GITIGNORED except data/D5/ (masked frames, section 4.2); shared as in docs/Team Data Sharing.md
+team_data/              # password-protected zips of local datasets (docs/Team Data Sharing.md)
 reports/<handle>/       # weekly reports + test evidence (section 6)
 ```
 
