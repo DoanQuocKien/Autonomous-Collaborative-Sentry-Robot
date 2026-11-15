@@ -459,3 +459,18 @@ def test_detector_gap_release_reconciles_runner_mode(runner):
     runner.step(5, (0, 0, 0), (3, 0))
     assert runner.mode == 'PURSUE'
     assert runner.state == State.PURSUE
+
+
+def test_one_obstacle_frame_does_not_stop_pursuit_forever(runner):
+    """Audit 2026-11-15: the cached obstacle never expired, so one frame at 0.30 m held v = 0 for the rest of the run."""
+    runner.enqueue_intruder("t_block", t=0.0)
+    v, _ = runner.step(t=1.0, robot_pose=(0.0, 0.0, 0.0), target_pos=(3.0, 0.0), obstacle_dist_m=0.30)
+    assert v <= 0.0
+    v, _ = runner.step(t=1.1, robot_pose=(0.0, 0.0, 0.0), target_pos=(3.0, 0.0))
+    assert v <= 0.0                                   # still fresh (0.25 s): a detector that skips one frame does not release it
+    for i in range(2, 8):
+        v, _ = runner.step(t=1.0 + 0.1 * i, robot_pose=(0.0, 0.0, 0.0), target_pos=(3.0, 0.0))
+    assert v > 0.0 and runner._last_obs_dist is None
+    runner.observe_obstacle(0.30)                     # no timestamp: counted from the next step
+    v, _ = runner.step(t=2.0, robot_pose=(0.0, 0.0, 0.0), target_pos=(3.0, 0.0))
+    assert v <= 0.0

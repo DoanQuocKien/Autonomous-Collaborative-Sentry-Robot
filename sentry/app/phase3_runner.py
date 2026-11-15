@@ -146,6 +146,7 @@ class Phase3Runner:
         self._last_ctrl_t: Optional[float] = None
         self._last_obs_dist: Optional[float] = None
         self._last_obs_bearing: float = 0.0
+        self._last_obs_t: Optional[float] = None
         self._evade_w: float = self.sm.cfg.evade_w
 
     def _reset_target_tracking(self) -> None:
@@ -287,9 +288,10 @@ class Phase3Runner:
         self._last_obs_target_id = tid
 
     def observe_obstacle(self, dist_m: Optional[float], bearing_rad: float = 0.0, t: Optional[float] = None) -> None:
-        """Cache nearest obstacle detection."""
+        """Cache the nearest obstacle; step() uses it for obs_freshness_timeout_s after t (no t: from the next step), then forgets it."""
         self._last_obs_dist = dist_m
         self._last_obs_bearing = bearing_rad
+        self._last_obs_t = t
 
     def trigger_strike(self, t: float, obstacle_side: Optional[str] = None, turn_sign: Optional[float] = None) -> TransitionResult:
         """Dispatch preemptive STRIKE event triggering evasive reverse and yaw away from obstacle."""
@@ -343,6 +345,13 @@ class Phase3Runner:
             self.observe_target(target_pos, t)
         if obstacle_dist_m is not None:
             self.observe_obstacle(obstacle_dist_m, obstacle_bearing_rad, t)
+
+        # A cached obstacle expires like a target observation does: one close obstacle frame used to stop pursuit for the rest of the run.
+        if self._last_obs_dist is not None:
+            if self._last_obs_t is None:
+                self._last_obs_t = t
+            if not 0.0 <= t - self._last_obs_t <= self.s.obs_freshness_timeout_s:
+                self._last_obs_dist, self._last_obs_bearing, self._last_obs_t = None, 0.0, None
 
         obs_dist = obstacle_dist_m if obstacle_dist_m is not None else self._last_obs_dist
         obs_bearing = obstacle_bearing_rad if obstacle_dist_m is not None else self._last_obs_bearing
