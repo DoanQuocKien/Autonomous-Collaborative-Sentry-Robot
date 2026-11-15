@@ -4,6 +4,8 @@
 set -e
 D=$(cd "$(dirname "$0")" && pwd)
 cp "$D"/sentry-estop.service "$D"/sentry-camera.service "$D"/sentry-control.service /etc/systemd/system/
+cp "$D"/sentry-logrotate /etc/logrotate.d/sentry   # logrotate runs daily from cron on Ubuntu 18.04
+chmod 644 /etc/logrotate.d/sentry
 systemctl daemon-reload
 systemctl enable sentry-estop.service sentry-camera.service
 systemctl restart sentry-estop.service sentry-camera.service

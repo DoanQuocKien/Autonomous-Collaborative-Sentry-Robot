@@ -53,7 +53,7 @@ You can do everything except GPU speed measurements. The `gpu` tests skip themse
 Ubuntu 18.04 / JetPack 4.5 / **Python 3.6**. Verified device facts and remaining checks are in `reports/DoanQuocKien/week-01/robot_checks.md` and `robot_remote_checks.txt`; use the recorded Docker deployment below for the team's robot.
 
 ```bash
-sudo apt update && sudo apt install -y python3-pip libzmq3-dev alsa-utils
+sudo apt update && sudo apt install -y python3-pip libzmq3-dev
 pip3 install -r jetson/requirements.txt
 
 # OpenCV and numpy must be the JetPack ones; the camera needs GStreamer support:
@@ -89,7 +89,14 @@ ssh jetbot@<ip> "sudo sh /home/jetbot/sentry/jetson/systemd/install.sh --with-co
 - `sentry-estop`: `estop.py --arm-buttons 11 --arm-hold 1.5` (Start alone held 1.5 s arms, the default; `tests/test_systemd_units.py` keeps the unit in line with `estop.py`'s defaults). Restarts itself and always comes back hard-stopped (fail-safe).
 - `sentry-camera`: `camera_pub.py` in the container, restarted if it dies; waits for the container after boot.
 - `sentry-control` (optional): `robot_udp.py --max-speed 0.3`. It still refuses to move unless the e-stop is armed and R1 is held. It has no `--allow-ip` by default because the laptop's hotspot IP changes; to restrict it, put `ALLOW_ARGS="--allow-ip <laptop-ip>"` in `/etc/default/sentry-control` and `sudo systemctl restart sentry-control`.
-- Logs are the same files as before (`/home/jetbot/sentry/estop.log`, `camera_pub.log`, `robot_udp.log`); `systemctl status sentry-camera` and `journalctl -u sentry-camera` show the unit state.
+- **Signed control packets (recommended, added 2026-11-15, not yet tested on the robot):** without a key, any host on the network can send `{"seq", "v", "w"}` to port 5556 (the e-stop still has to be armed and R1 held). With a shared key, `robot_udp.py` obeys only packets carrying the right HMAC-SHA256. Make the key once on a laptop and copy it to the robot and to every laptop that drives it:
+  ```
+  python -c "import secrets; print(secrets.token_hex(32))" > data/control.key      # data/ is gitignored: never commit it
+  scp data/control.key jetbot@<ip>:/home/jetbot/sentry/control.key
+  ssh jetbot@<ip> "chmod 600 /home/jetbot/sentry/control.key && sudo systemctl restart sentry-control"
+  ```
+  `robot_udp.py` reads `control.key` from its working folder (`--key-file`) and prints `control packets: signed only` at start. The laptop reads `net.control_key` (`data/control.key`). A laptop without the key sends unsigned packets, which a keyed robot ignores (it stays stopped). Limit: a captured packet can be replayed after the stream has been quiet for 1 s; the MAC stops strangers, not a recording attacker. Delete the robot's key file to go back to unsigned.
+- Logs are the same files as before (`/home/jetbot/sentry/estop.log`, `camera_pub.log`, `robot_udp.log`), rotated at 5 MB with 3 old copies (`jetson/systemd/sentry-logrotate`, installed by `install.sh` as `/etc/logrotate.d/sentry`); `systemctl status sentry-camera` and `journalctl -u sentry-camera` show the unit state.
 - Stop one for a test: `sudo systemctl stop sentry-camera`. Remove everything (return the robot): see the return checklist in `docs/JetBot Notes.md`.
 - Written 2026-10-11, **not yet tested on the robot** (it was charging).
 

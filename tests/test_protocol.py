@@ -9,8 +9,18 @@ def test_control_roundtrip_and_clamp():
     assert (msg["v"], msg["w"]) == (1.0, -1.0)
 
 
-def test_play_roundtrip():
-    assert p.decode_control(p.encode_play(7, "guard_ready")) == {"seq": 7, "play": "guard_ready"}
+def test_signed_control_needs_the_right_key():
+    key = b"0123456789abcdef"
+    assert p.decode_control(p.encode_control(3, 0.5, -0.25, key), key) == {"seq": 3, "v": 0.5, "w": -0.25}
+    assert p.decode_control(p.encode_control(4, 5, -9, key), key)["v"] == 1.0   # MAC over the sent values, clamp after
+    for bad in (p.encode_control(3, 0.5, -0.25),                               # unsigned
+                p.encode_control(3, 0.5, -0.25, b"another key 0123"),          # wrong key
+                p.encode_control(3, 0.5, -0.25, key).replace(b"0.5", b"0.6"),  # tampered value
+                p.encode_control(3, 0.5, -0.25, key).replace(b'"seq": 3', b'"seq": 4'),
+                b'{"seq": 1, "v": 0, "w": 0, "mac": 5}', '{"seq": 1, "v": 0, "w": 0, "mac": "é"}'.encode()):
+        with pytest.raises(ValueError):
+            p.decode_control(bad, key)
+    assert p.decode_control(p.encode_control(3, 0.5, -0.25, key)) == {"seq": 3, "v": 0.5, "w": -0.25}  # a keyless decoder ignores the MAC
 
 
 @pytest.mark.parametrize("bad", [
@@ -18,8 +28,7 @@ def test_play_roundtrip():
     b'{"seq": true, "v": 0, "w": 0}', b'{"seq": 1.5, "v": 0, "w": 0}',
     b'{"seq": 1, "v": NaN, "w": 0}', b'{"seq": 1, "v": Infinity, "w": 0}',
     b'{"seq": 1, "v": "1", "w": 0}', b'{"seq": 1, "v": 0}',
-    b'{"seq": 1, "play": "../etc/passwd"}', b'{"seq": 1, "play": "a b"}',
-    b'{"seq": 1, "play": "X"}', b'{"seq": 1, "play": 5}',
+    b'{"seq": 1, "play": "guard_ready"}',                          # the robot play packet was removed (no speaker)
 ])
 def test_decode_control_rejects(bad):
     with pytest.raises(ValueError):

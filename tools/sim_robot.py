@@ -38,8 +38,7 @@ class SimRobot:
             return None
         if not self.seq.accept(msg["seq"], now):
             return None
-        if "play" not in msg:
-            self.v, self.w, self.last_cmd = msg["v"], msg["w"], now
+        self.v, self.w, self.last_cmd = msg["v"], msg["w"], now
         return msg
 
     def step(self, now, dt):
@@ -96,8 +95,6 @@ def main():
                 msg = robot.on_packet(data, time.perf_counter())
                 if msg is None:
                     rejected += 1
-                elif "play" in msg:
-                    print(f"[Sim] Audio play command: {msg['play']}")
             now = time.perf_counter()
             if robot.step(now, now - t_prev):
                 print("[Sim] Watchdog timeout. Stopping motors.")

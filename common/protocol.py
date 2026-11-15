@@ -4,16 +4,14 @@ Python 3.6-compatible and stdlib-only: this file is copied to the Jetson as-is.
 Every decoder raises ValueError on bad input, so a malformed or hostile UDP
 packet can never reach the motors.
 """
+import hashlib
+import hmac
 import json
 import math
-import re
 
 PORT_VIDEO = 5555    # ZeroMQ PUB (Jetson) -> SUB (laptop)
 PORT_CONTROL = 5556  # UDP laptop -> Jetson
 PORT_CLOCK = 5557    # UDP echo, laptop <-> Jetson
-
-_CLIP = re.compile(r"^[a-z0-9_]{1,32}$")  # audio clip names; never reaches a shell
-
 
 def _num(x):
     if isinstance(x, bool) or not isinstance(x, (int, float)):
@@ -42,25 +40,31 @@ def _loads(data):
 
 # ---- control (UDP, port 5556) ------------------------------------------------
 
-def encode_control(seq, v, w):
-    return json.dumps({"seq": seq, "v": v, "w": w}).encode("utf-8")
+def _mac(key, seq, v, w):
+    """HMAC-SHA256 (first 32 hex digits) over the values as sent. key: bytes."""
+    return hmac.new(key, json.dumps([seq, v, w]).encode("utf-8"), hashlib.sha256).hexdigest()[:32]
 
 
-def encode_play(seq, clip):
-    return json.dumps({"seq": seq, "play": clip}).encode("utf-8")
+def encode_control(seq, v, w, key=None):
+    msg = {"seq": seq, "v": v, "w": w}
+    if key is not None:
+        msg["mac"] = _mac(key, seq, v, w)
+    return json.dumps(msg).encode("utf-8")
 
 
-def decode_control(data):
-    """-> {"seq", "v", "w"} (v, w clamped to [-1, 1]) or {"seq", "play"}."""
+def decode_control(data, key=None):
+    """-> {"seq", "v", "w"} (v, w clamped to [-1, 1]). With a key, a packet without the right "mac" is refused.
+    The MAC stops other hosts on the network from driving the robot; it does not stop a replay of a captured packet
+    once the SeqFilter has gone quiet (1 s)."""
     msg = _loads(data)
     seq = _int(msg.get("seq"))
-    if "play" in msg:
-        clip = msg["play"]
-        if not isinstance(clip, str) or not _CLIP.match(clip):
-            raise ValueError("bad clip name")
-        return {"seq": seq, "play": clip}
-    v = max(-1.0, min(1.0, _num(msg.get("v"))))
-    w = max(-1.0, min(1.0, _num(msg.get("w"))))
+    raw_v, raw_w = msg.get("v"), msg.get("w")
+    v = max(-1.0, min(1.0, _num(raw_v)))
+    w = max(-1.0, min(1.0, _num(raw_w)))
+    if key is not None:
+        mac = msg.get("mac")
+        if not isinstance(mac, str) or not hmac.compare_digest(mac.encode("utf-8"), _mac(key, seq, raw_v, raw_w).encode("ascii")):
+            raise ValueError("missing or wrong mac")
     return {"seq": seq, "v": v, "w": w}
 
 
