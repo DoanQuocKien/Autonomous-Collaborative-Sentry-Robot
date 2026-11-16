@@ -33,6 +33,10 @@ One valid run of each kind: this is not the 10 accepts / 10 rejects of the plan.
 - 90 frames flagged obstacle-blocked with no measured obstacle distance (glossy floor, unresolved); no obstacle was placed. HOLD events: 0.
 - `pursuit_1116_dry_1`: dry run, 241 frames, nobody tracked.
 
+## Re-enrolment of DQK with varied poses and a D2 re-score (laptop, afterwards)
+`tools.enroll_guided`: 5 poses (straight, a little left, a little right, straight twice) into a separate folder; the enrolment in `data/whitelist` was NOT replaced. The enrolments hold at most 5 embeddings per person (`load_whitelist` accepts 3-5): a first merge into one 10-embedding file made the loader raise, was caught at once and reverted before any use. New against old embeddings of DQK: cosine 0.70-0.85 (mean 0.79).
+Re-score of the same 3-person D2 clips (`door_recognition_seq score`, threshold 0.45, new DQK enrolment, HNHL and KR unchanged): DQK TAR 0.930 -> 0.930 (own score on the 300 straight frames: mean 0.530 -> 0.539, 21 frames below 0.45 both times), HNHL 0.983, KR 0.896 (unchanged), FAR 0 of the impostor scores for all three. So the enrolment poses are not the cause of DQK's misses: the same 21 frames stay below the threshold. The pooled TAR stays 0.937, below the plan's 95 %. One session, three people, one re-enrolment.
+
 ## Not done / not counted
 - `tools.motion_check` (two attempts' worth of boards, `data/motion_check/class_1116_1`): only 2 of 6 segments had a board pose at both rests (boards 2.1-2.54 m away); nothing was fitted and nothing here relies on it. Earlier runs (`dorm_1`, `class_1`, `class_2`) also give no fit. Deferred: DQK will rerun it later in the dorm (3 boards at about 1.5 m: front, 45 deg left, 45 deg right, all facing the robot; default 2.2 m limit). Until then the dead-reckoning gains remain the Week 2 ones (known limit).
 - F3 photos: `../figures/F3_devices_door_1116.png`, `F3_devices_marker_1116.png`.
