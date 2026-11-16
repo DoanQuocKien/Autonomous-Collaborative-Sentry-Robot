@@ -17,19 +17,19 @@ Command: `tools.deploy_live --label t2_1116 --vantage 1.510 -0.301 --centre 2.93
 Door references and negative sweep in `data/handshake/class_door_1116` (local, not committed; frames). The first 90 sweep frames showed the door and were moved out (a door frame among the negatives set the threshold to about 939); recalibrated, threshold 27 with the clean sweep.
 | folder | what | result |
 | :-- | :-- | :-- |
-| `rehearsal_1116_1` | first rehearsal, references from another tower spot | not verified, 12 of 460 answers in view |
-| `rehearsal_1116_2` | laptop only, no handshake frames | time limit, nothing measured |
+| `rehearsal_1116_1` | first rehearsal with the old references (`class_door_1114`, another tower spot) | not verified, 12 of 460 answers in view |
+| `rehearsal_1116_2` | laptop only, no handshake frames (ESP32 `TimeoutError`) | time limit, nothing measured |
 | `rehearsal_1116_p1_1` | Part 1, first try | not verified, 0 of 285 answers in view, time limit (cause not established) |
-| `rehearsal_1116_p1_2` | Part 1: ESP32 aimed at the door | verified 8.6 s after the prompt, 50 of 50 in view |
+| `rehearsal_1116_p1_2` | Part 1: ESP32 aimed at the door | verified 1.3 s after the prompt (8.6 s into the run), 50 of 50 in view |
 | `rehearsal_1116_p2_1` | Part 2 (aimed away) | invalid: the tower was not turned away, so it verified (83 of 83 in view) |
-| `rehearsal_1116_p2b_1` | Part 2 redone, tower aimed away, then turned back by hand | no verification while aimed away; verified at 40.2 s after turning back (67 of 203 answers in view) |
+| `rehearsal_1116_p2b_1` | Part 2 redone, tower aimed away, then turned back by hand | no verification while aimed away; verified at 40.2 s run time (32.9 s after the prompt), after turning back (67 of 203 answers in view) |
 | `dry_1116_1` | dry run, robot connected, no motor commands | STANDBY reached, 111 of 111 in view |
 One valid run of each kind: this is not the 10 accepts / 10 rejects of the plan.
 
 ## First live pursuit run (`pursuit/pursuit_1116_1/`, `--floor glossy`, one person, DQK as target)
 60 s, no HOLD stage tried (not tested this session; the run did not include a deliberate stand-still).
 - Target tracked 99.7 % of the run, 1 re-acquire (about 46 s).
-- Distance within 1.2 +/- 0.2 m: 32 % of the run. Box centre within +/- 10 % of the frame width: 91 %. Plan threshold is 80 % for both: the distance fraction is far below it, so this is NOT a pass; the logged distance ranged about 1.0-3.9 m while the target also moved at will.
+- Distance within 1.2 +/- 0.2 m: 32 % of the run. Box centre within +/- 10 % of the frame width: 91 %. Plan threshold is 80 % for both: the distance fraction is far below it, so this is NOT a pass; the logged distance ranged 0.70-4.10 m (1st-99th percentile 0.74-3.34 m) while the target also moved at will.
 - 90 frames flagged obstacle-blocked with no measured obstacle distance (glossy floor, unresolved); no obstacle was placed. HOLD events: 0.
 - `pursuit_1116_dry_1`: dry run, 241 frames, nobody tracked.
 
@@ -44,7 +44,10 @@ The five audit-fix files (`common/protocol.py`, `jetson/estop.py`, `jetson/robot
 | arm, R1 held | GO 05:39:38.912 | motors +0.15 / +0.15 at +69 ms |
 | R1 released | STOPPED 05:39:43.399, cut in 10 ms | ENGAGED +17 ms, motors 0.00 at +78 ms |
 | re-arm, R1 held, then another button (4) | STOPPED 05:39:52.380, cut in 6 ms | ENGAGED +1 ms, motors 0.00 at +38 ms |
-Packets: 1040 accepted, 0 foreign, 0 malformed, 0 stale. One run of each case. The R1-release stop took 78 ms here against 35 ms on 11-14 (one sample each; both far inside the 0.3 s watchdog). A first attempt (05:37-05:38) logged the button presses but no commands were being sent, so it does not count.
+Packets: the last periodic count while the sender was still running (13:40:05, about 37 s in) was 1040 accepted, 0 foreign, 0 malformed, 0 stale (accepted counts packets received while the e-stop is engaged too). The raw `estop.log` and `robot_udp.log` excerpts are on the robot and the laptop only, not committed. One run of each case. The R1-release stop took 78 ms here against 35 ms on 11-14 (one sample each; both far inside the 0.3 s watchdog). A first attempt (05:37-05:38) logged the button presses but no commands were being sent, so it does not count.
+
+## Video shots (reported by DQK, not on file here)
+The two phone recordings of the day cover the entrance found, the sweet spot reached by the robot, and pursuit with DQK as the target. The prompt, camera placed, handshake verified, STANDBY, Phase 2 and the intruder are to be recorded on Thu 2026-11-19 (`docs/Classroom Session 2026-11-19.md`, PR #127).
 
 ## Not done / not counted
 - `tools.motion_check` (two attempts' worth of boards, `data/motion_check/class_1116_1`): only 2 of 6 segments had a board pose at both rests (boards 2.1-2.54 m away); nothing was fitted and nothing here relies on it. Earlier runs (`dorm_1`, `class_1`, `class_2`) also give no fit. Deferred: DQK will rerun it later in the dorm (3 boards at about 1.5 m: front, 45 deg left, 45 deg right, all facing the robot; default 2.2 m limit). Until then the dead-reckoning gains remain the Week 2 ones (known limit).
