@@ -16,7 +16,7 @@ Khoảng cách tới một điểm trên sàn tính từ hàng ảnh với độ
 
 ## 4.3 Mô hình chuyển động và giới hạn của chuyển động vòng hở (F6, F22)
 
-Robot không có bộ mã hóa vòng quay (MPU6050 đã gắn ngày 1/11 nhưng hỏng, tạm hoãn). Mô hình bánh xe hiệu chỉnh ngày 15/10: tốc độ bánh = 1,64 × (|giá trị động cơ| − 0,038) m/s, khoảng cách hai bánh 0,137 m, vùng chết `min_pwm` 0,12; hệ số v là 0,4135 m/s trên đơn vị lệnh và hệ số ω là 6,48 rad/s trên đơn vị lệnh; độ lệch hướng hiệu chỉnh **−0,19 rad/m** (khoảng −11°/m, ngày 11/10).
+Robot không có bộ mã hóa vòng quay (MPU6050 đã gắn ngày 1/11 nhưng hỏng, vẫn đang sửa ngày 16/11 và chưa dùng được trước hạn nộp 23/11; mã không dùng nó). Mô hình bánh xe hiệu chỉnh ngày 15/10: tốc độ bánh = 1,64 × (|giá trị động cơ| − 0,038) m/s, khoảng cách hai bánh 0,137 m, vùng chết `min_pwm` 0,12; hệ số v là 0,4135 m/s trên đơn vị lệnh và hệ số ω là 6,48 rad/s trên đơn vị lệnh; độ lệch hướng hiệu chỉnh **−0,19 rad/m** (khoảng −11°/m, ngày 11/10).
 
 Sai số hệ thống của truyền động vi sai đã được mô tả trong tài liệu [Borenstein và Feng, 1996]. Trên sàn gạch bóng của phòng học, ngày 11/11–12/11, độ lệch **không ổn định**: tổng hợp 13 lần chạy tiến thẳng có marker trong tầm nhìn, độ lệch hướng trên mỗi mét dao động từ **−16 đến +59°/m**; ở cùng v ≈ 0,6 là −16, −3, +10, +18, +22 và +23°/m (Hình F22). Ba đoạn chạy ở v = 0,55 lệch khoảng 12–15°/s về bên trái, gấp 5–6 lần giá trị hiệu chỉnh tháng 10 và ngược dấu; ở v = 0,85 và 1,0 độ lệch nhỏ hơn (+8 và +4°/m, mỗi mức chỉ một lần). Nguyên nhân chưa chứng minh được (sàn, pin 11,5–12 V, giá trị động cơ gần vùng chết). Tốc độ tiến cũng thay đổi theo pin và sàn: 0,21 m/s ở một lần chạy và 0,34 m/s ở lần khác (v = 0,85).
 
