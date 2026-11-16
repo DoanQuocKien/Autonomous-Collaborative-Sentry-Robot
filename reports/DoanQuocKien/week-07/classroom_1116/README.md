@@ -34,6 +34,6 @@ One valid run of each kind: this is not the 10 accepts / 10 rejects of the plan.
 - `pursuit_1116_dry_1`: dry run, 241 frames, nobody tracked.
 
 ## Not done / not counted
-- `tools.motion_check` (two attempts' worth of boards, `data/motion_check/class_1116_1`): only 2 of 6 segments had a board pose at both rests (boards 2.1-2.54 m away); nothing was fitted and nothing here relies on it. Earlier runs (`dorm_1`, `class_1`, `class_2`) also give no fit. Not planned; the dead-reckoning gains remain the Week 2 ones (known limit).
+- `tools.motion_check` (two attempts' worth of boards, `data/motion_check/class_1116_1`): only 2 of 6 segments had a board pose at both rests (boards 2.1-2.54 m away); nothing was fitted and nothing here relies on it. Earlier runs (`dorm_1`, `class_1`, `class_2`) also give no fit. Deferred: DQK will rerun it later in the dorm (3 boards at about 1.5 m: front, 45 deg left, 45 deg right, all facing the robot; default 2.2 m limit). Until then the dead-reckoning gains remain the Week 2 ones (known limit).
 - F3 photos: `../figures/F3_devices_door_1116.png`, `F3_devices_marker_1116.png`.
 - Local only (faces or frames, git-ignored): `data/handshake/class_door_1116`, `frames/` folders under `data/deploy`.
