@@ -49,8 +49,8 @@ class IntruderRecord:
     appearance_vector: Optional[np.ndarray] = None
     sector: str = DepartureSector.UNKNOWN.value
     snapshot_path: Optional[str] = None
-    timestamp: float = 0.0
-    enqueued_at: float = 0.0
+    timestamp: Optional[float] = None
+    enqueued_at: Optional[float] = None
     dequeued_at: Optional[float] = None
     status: str = "queued"  # "queued", "active", "completed", "dropped"
     metadata: Dict[str, Any] = field(default_factory=dict)
@@ -63,9 +63,9 @@ class IntruderRecord:
             self.face_embedding = _normalize_vector_512(self.face_embedding, "face_embedding")
         if self.appearance_vector is not None:
             self.appearance_vector = _normalize_vector_512(self.appearance_vector, "appearance_vector")
-        if not math.isfinite(self.timestamp):
+        if self.timestamp is not None and not math.isfinite(self.timestamp):
             raise ValueError(f"timestamp must be finite, got {self.timestamp}")
-        if not math.isfinite(self.enqueued_at):
+        if self.enqueued_at is not None and not math.isfinite(self.enqueued_at):
             raise ValueError(f"enqueued_at must be finite, got {self.enqueued_at}")
         if self.dequeued_at is not None and not math.isfinite(self.dequeued_at):
             raise ValueError(f"dequeued_at must be finite, got {self.dequeued_at}")
@@ -78,8 +78,8 @@ class IntruderRecord:
             "appearance_vector": self.appearance_vector.tolist() if self.appearance_vector is not None else None,
             "sector": self.sector,
             "snapshot_path": str(self.snapshot_path) if self.snapshot_path is not None else None,
-            "timestamp": float(self.timestamp),
-            "enqueued_at": float(self.enqueued_at),
+            "timestamp": None if self.timestamp is None else float(self.timestamp),
+            "enqueued_at": None if self.enqueued_at is None else float(self.enqueued_at),
             "dequeued_at": float(self.dequeued_at) if self.dequeued_at is not None else None,
             "status": self.status,
             "metadata": dict(self.metadata),
@@ -96,8 +96,8 @@ class IntruderRecord:
             appearance_vector=app_vec,
             sector=d.get("sector", DepartureSector.UNKNOWN.value),
             snapshot_path=d.get("snapshot_path"),
-            timestamp=float(d.get("timestamp", 0.0)),
-            enqueued_at=float(d.get("enqueued_at", 0.0)),
+            timestamp=None if d.get("timestamp") is None else float(d["timestamp"]),
+            enqueued_at=None if d.get("enqueued_at") is None else float(d["enqueued_at"]),
             dequeued_at=float(d["dequeued_at"]) if d.get("dequeued_at") is not None else None,
             status=str(d.get("status", "queued")),
             metadata=dict(d.get("metadata", {})),
@@ -126,21 +126,20 @@ class TargetQueue:
         """Push a new intruder to the back of the FIFO queue."""
         with self._lock:
             now = float(time.time() if t is None else t)
+            if not math.isfinite(now):
+                raise ValueError("queue timestamp must be finite")
             if isinstance(record, dict):
-                rec_dict = dict(record)
-                if "timestamp" not in rec_dict or rec_dict["timestamp"] == 0.0:
-                    rec_dict["timestamp"] = now
-                if "enqueued_at" not in rec_dict or rec_dict["enqueued_at"] == 0.0:
-                    rec_dict["enqueued_at"] = now
-                rec = IntruderRecord.from_dict(rec_dict)
+                rec = IntruderRecord.from_dict(record)
             elif isinstance(record, IntruderRecord):
                 rec = record
-                if rec.enqueued_at == 0.0:
-                    rec.enqueued_at = now
-                if rec.timestamp == 0.0:
-                    rec.timestamp = now
             else:
                 raise TypeError(f"Expected IntruderRecord or dict, got {type(record)}")
+
+            # Zero is a genuine replay timestamp. Only omitted values use now.
+            if rec.timestamp is None:
+                rec.timestamp = now
+            if rec.enqueued_at is None:
+                rec.enqueued_at = now
 
             rec.status = "queued"
             self._queue.append(rec)

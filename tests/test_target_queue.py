@@ -241,3 +241,31 @@ def test_pop_never_loses_the_active_target():
     tq.pop(t=1.0)
     tq.pop(t=2.0)
     assert [r.id for r in tq.all_dropped()] == ["A"] and tq.active.id == "B"
+
+
+@pytest.mark.parametrize("as_dict", [False, True])
+def test_explicit_zero_timestamps_survive_push_and_reload(tmp_path, as_dict):
+    queue = TargetQueue()
+    fields = dict(id="zero", timestamp=0., enqueued_at=0.)
+    item = fields if as_dict else IntruderRecord(**fields)
+    record = queue.push(item, t=12.)
+    assert record.timestamp == record.enqueued_at == 0.
+    assert queue.to_state_machine_event().t == 0.
+    queue.save(tmp_path / "queue.json")
+    loaded = TargetQueue.load(tmp_path / "queue.json")
+    assert loaded.peek().timestamp == loaded.peek().enqueued_at == 0.
+
+
+@pytest.mark.parametrize("fields", [{}, {"timestamp": None, "enqueued_at": None}])
+def test_only_omitted_timestamps_use_enqueue_clock(fields):
+    record = IntruderRecord.from_dict(dict(id="omitted", **fields))
+    assert record.to_dict()["timestamp"] is None
+    assert TargetQueue().push(record, t=12.).to_dict()["timestamp"] == 12.
+    assert record.enqueued_at == 12.
+
+
+def test_invalid_enqueue_clock_does_not_mutate_queue_or_record():
+    queue, record = TargetQueue(), IntruderRecord(id="new")
+    with pytest.raises(ValueError, match="finite"):
+        queue.push(record, t=float("nan"))
+    assert not queue.all_history() and record.timestamp is None

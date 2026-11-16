@@ -122,6 +122,7 @@ class Phase3Runner:
         speaker: Optional[Any] = None,
         explore_settings: Optional[ExploreSettings] = None,
         settings: Optional[Phase3Settings] = None,
+        target_tracker: Optional[Any] = None,
     ):
         self.sm = sm if sm is not None else StateMachine(initial_state=State.STANDBY)
         self.controller = controller if controller is not None else InterceptionController()
@@ -129,6 +130,7 @@ class Phase3Runner:
         self.speaker = speaker
         self.explore_settings = explore_settings if explore_settings is not None else ExploreSettings()
         self.s = settings if settings is not None else Phase3Settings()
+        self.target_tracker = target_tracker
 
         # Telemetry and logging
         self.prompts: List[str] = []
@@ -136,7 +138,8 @@ class Phase3Runner:
         self.events: List[Tuple[float, str, Any]] = []
 
         # Internal tracking caches & identity management
-        self._active_target_id: Optional[str] = self.sm.active_target
+        self._active_target_id: Optional[str] = None
+        self._target_started_t = self.sm.t
         self._last_target_obs: Optional[Tuple[float, float]] = None
         self._last_target_t: Optional[float] = None
         self._last_obs_target_id: Optional[str] = None
@@ -148,6 +151,9 @@ class Phase3Runner:
         self._last_obs_bearing: float = 0.0
         self._last_obs_t: Optional[float] = None
         self._evade_w: float = self.sm.cfg.evade_w
+        if self.target_tracker is not None:
+            self.target_tracker.clear_target()
+        self._sync_active_target()
 
     def _reset_target_tracking(self) -> None:
         """Reset observation caches, dwell timer, filter history, and controllers on target identity change."""
@@ -158,12 +164,24 @@ class Phase3Runner:
         self._last_ctrl_v = 0.0
         self._last_ctrl_w = 0.0
         self._last_ctrl_t = None
+        self._target_started_t = self.sm.t
         self.controller.reset()
 
     def _sync_active_target(self) -> None:
-        """Check if active target identity has changed; if so, clear caches and require a fresh observation."""
+        """Follow the shared machine's queue, then adopt the matching target record.
+
+        Call from one application-owner thread, on the same clock as Phase 2.
+        """
+        self.queue.sync_with(self.sm, t=self.sm.t)
         curr_id = self.sm.active_target
         if curr_id != self._active_target_id:
+            if self.target_tracker is not None:
+                self.target_tracker.clear_target()
+                record = self.queue.active_target
+                if curr_id is not None:
+                    if record is None or record.id != curr_id:
+                        raise ValueError("active target requires a matching queue record")
+                    self.target_tracker.set_target_record(record)
             logger.info("Target identity handoff: %r -> %r. Clearing tracking caches.", self._active_target_id, curr_id)
             self._active_target_id = curr_id
             self._reset_target_tracking()
@@ -239,14 +257,7 @@ class Phase3Runner:
             self.queue.push(record, t=now)
             data = {"id": rec_id}
 
-        prev = self.sm.state
         res = self._dispatch_event("INTRUDER_QUEUED", now, data=data)
-
-        # If StateMachine transitioned from STANDBY to PURSUE, pop intruder from queue to activate
-        if prev == State.STANDBY and res.state == State.PURSUE:
-            self.queue.pop(t=now)
-
-        self._sync_active_target()
         return res
 
     def observe_target(self, target_obs: Union[Tuple[float, float], Any], t: float, target_id: Optional[str] = None) -> None:
@@ -310,13 +321,6 @@ class Phase3Runner:
         data = {"id": target_id or self.sm.active_target}
         res = self._dispatch_event("TARGET_EXITED", t, data=data)
 
-        # Synchronize TargetQueue
-        self.queue.complete_active(reason="target_exited", t=t)
-        if self.sm.active_target and len(self.queue) > 0:
-            if self.queue.active_target is None or self.queue.active_target.id != self.sm.active_target:
-                self.queue.pop(t=t)
-
-        self._sync_active_target()
         return res
 
     def step(
@@ -386,7 +390,12 @@ class Phase3Runner:
                 and (self._consumed_target_t is None or self._last_target_t > self._consumed_target_t)
             )
             # Check the previous consumed sample before the new one can hide a gap.
-            previous_age = t - self._consumed_target_t if self._consumed_target_t is not None else float("inf")
+            previous_age = t - (self._consumed_target_t if self._consumed_target_t is not None else self._target_started_t)
+            if (curr_state == State.PURSUE and not target_is_fresh
+                    and previous_age > self.s.target_lost_timeout_s):
+                self._dispatch_event("TRACK_LOST", t)
+                self.controller.reset()
+                return 0.0, 0.0
             if curr_state == State.HOLD and previous_age > self.s.target_lost_timeout_s:
                 logger.info(
                     "Target %r lost while in HOLD (age=%.2fs > %.2fs); releasing HOLD -> PURSUE",

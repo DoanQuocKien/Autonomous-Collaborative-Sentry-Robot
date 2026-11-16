@@ -474,3 +474,38 @@ def test_one_obstacle_frame_does_not_stop_pursuit_forever(runner):
     runner.observe_obstacle(0.30)                     # no timestamp: counted from the next step
     v, _ = runner.step(t=2.0, robot_pose=(0.0, 0.0, 0.0), target_pos=(3.0, 0.0))
     assert v <= 0.0
+
+
+@pytest.mark.parametrize("has_observation", [True, False])
+def test_lost_pursuit_dispatches_search_once_and_preserves_active_record(runner, has_observation):
+    runner.enqueue_intruder("A", t=0.)
+    if has_observation:
+        assert runner.step(.1, (0, 0, 0), (3, 0))[0] > 0
+    assert runner.step(.4, (0, 0, 0)) == (0, 0)
+    assert runner.state == State.PURSUE
+    assert runner.step(1.2, (0, 0, 0)) == (0, 0)
+    assert runner.state == State.SEARCH and runner.queue.active.id == "A"
+    assert runner.sm.history[-1].command.actions == ("target_lost", "plan_search")
+    runner.step(1.3, (0, 0, 0))
+    assert [e[1] for e in runner.events].count("TRACK_LOST") == 1
+
+
+def test_fresh_late_reacquisition_does_not_trigger_search(runner):
+    runner.enqueue_intruder("A", t=0.)
+    runner.step(.1, (0, 0, 0), (3, 0))
+    assert runner.step(3., (0, 0, 0), (4, 0))[0] > 0
+    assert runner.state == State.PURSUE
+
+
+def test_search_timeout_tick_advances_record_queue_and_clears_target_cache(runner):
+    from dataclasses import replace
+    runner.sm.cfg = replace(runner.sm.cfg, search_timeout_s=.5)
+    runner.enqueue_intruder("A", t=0.)
+    runner.enqueue_intruder("B", t=.1)
+    runner.step(.2, (0, 0, 0), (3, 0))
+    runner.step(1.3, (0, 0, 0))
+    assert runner.state == State.SEARCH and runner.queue.active.id == "A"
+    assert runner.step(1.9, (0, 0, 0)) == (0, 0)
+    assert runner.active_target == runner.queue.active.id == "B"
+    assert [r.id for r in runner.queue.all_dropped()] == ["A"]
+    assert runner._last_target_obs is None and len(runner.queue.all_history()) == 2

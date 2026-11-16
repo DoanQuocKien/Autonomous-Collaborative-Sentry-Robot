@@ -1,8 +1,10 @@
 # Hồ sơ giữa kỳ HNHL
 
-**Cập nhật 14/11:** [issue #111/#114 và số đo RTX 4050 mới của DQK](../issues-111-114-2026-11-14.md), [pilot Phase 2 live và đính chính góc camera lượt 2](../week-07.md), [cách chạy và bàn giao KR](../PHASE2-LIVE-USAGE.md). Đã enrol P01, ghi nhận 3 authorized và 3 enqueue ở hai lượt riêng, giữ các segment thiếu bằng chứng. PR #115 chờ review, T1 còn mở. Các mục có ngày dưới đây là snapshot lịch sử.
+**Hiện hành 15/11 sau merge:** [Chương 5/7, appendix và 15 nguồn đã pin](update-2026-11-15.md). #115 đã merge; #108 đưa #116/#119/#121 vào main; #122/#123 cũng đã merge. Bổ sung shared queue/target-tracker handoff, TRACK_LOST và timestamp 0; chưa có T1/T2 PASS mới. Gói #113 còn cần sửa trước khi merge.
 
-**Bổ sung 15/11:** [quyết định #118 và ROC](../week-07/threshold-118-2026-11-15/README.md) giữ ngưỡng face 0,45, top-3 và 2 phiếu cùng ID; thêm counter confirmed-unresolved. [Review PR và đối chiếu issue](../reviews/2026-11-15.md) ghi #101/#117/#120 đã merge, các lỗi và phụ thuộc còn chờ.
+**Snapshot 14/11:** [issue #111/#114 và số đo RTX4050 của DQK](../issues-111-114-2026-11-14.md), [pilot và đính chính góc camera lượt 2](../week-07.md), [cách bàn giao KR](../PHASE2-LIVE-USAGE.md). Đã enrol P01, ghi nhận 3 authorized/3 enqueue ở hai lượt riêng và giữ segment thiếu bằng chứng. PR #115 lúc đó còn chờ review. Các mục theo ngày bên dưới là snapshot lịch sử.
+
+**Snapshot đầu ngày 15/11:** [quyết định #118 và ROC](../week-07/threshold-118-2026-11-15/README.md) giữ ngưỡng face 0,45, top-3 và 2 phiếu cùng ID; thêm counter confirmed-unresolved. [Review/issue lần trước](../reviews/2026-11-15.md) ghi trạng thái tại lúc kiểm tra.
 
 **Phân tích runtime tiếp theo:** [sửa deadline bị trôi, warm-up và diagnostics](../week-07/analysis-2026-11-14/README.md). Nguồn localhost 12 Hz với CUDA thật đạt 4,995 FPS sau sửa, so với 3,495 FPS ở baseline. ESP32 Wi-Fi sau kết nối lại đạt 4,963 FPS trong 30,024 giây, 0 reconnect, cảnh trống. Các phép nhận diện pilot và kiểm chứng runtime có phạm vi dữ liệu riêng.
 

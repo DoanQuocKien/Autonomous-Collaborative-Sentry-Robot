@@ -1,0 +1,222 @@
+{
+  "schema_version": 1,
+  "date": "2026-11-15",
+  "timezone": "Asia/Bangkok",
+  "source_commit": "1a20ba5d439b13b359d7a66301418209b0381b7d",
+  "current_markdown_sha256_lf": {
+    "chapter-05-current.md": "16c7c7dc21315e162d505e24f2f8ae6379a2086096f5b5314f800223cb96daa3",
+    "chapter-07-rows.md": "0edc0c01309f393b61429ab258afdb4d4b642b6507fa7620657811bc56270525",
+    "code-appendix.md": "64c963f459d926b801ff141e9ceed9a24a3497587d0387963bba9741b41b496d",
+    "update-2026-11-15.md": "d75caaee9480355f2526272b394e029b876ada48c3330131f49b8660e05fdede"
+  },
+  "sources": [
+    {
+      "path": "reports/DoanQuocKien/week-06/gpu_rtx4050_1113/pipeline_both.json",
+      "sha256": "c3a1d465e29b3c6471aec1299efcce3d3465dbc461fa3974eb65255dbb5ef2b7"
+    },
+    {
+      "path": "reports/DoanQuocKien/week-06/gpu_rtx4050_1113/pipeline_xfeat.json",
+      "sha256": "fedf8ef213cf7d411b3e28f166f4ccd720b04b60ea0dce5b85a7e02091345e47"
+    },
+    {
+      "path": "reports/DoanQuocKien/week-06/gpu_rtx4050_1113/pipeline_both_5hz.json",
+      "sha256": "a1195fd8d14a1237a6840906103fd9c71897cb88a42761e0cb4e17db4ddaba46"
+    },
+    {
+      "path": "reports/DoanQuocKien/week-06/t2_1114/frames_DQK.csv",
+      "sha256": "c9f779d4288c1d9f58171da2997f9d9d0debb2e182ec089d3ee42cfb39c15dee"
+    },
+    {
+      "path": "reports/DoanQuocKien/week-06/t2_1114/frames_HNHL.csv",
+      "sha256": "b86b304a20a4fb64eb42c927ed6801c952357606ca10f171e61beebdff8b1148"
+    },
+    {
+      "path": "reports/DoanQuocKien/week-06/t2_1114/frames_KR.csv",
+      "sha256": "fbaea69a37cfdf8c931d9677d673b2c058eec1b4623b33694e1d9e7fd89ba6c2"
+    },
+    {
+      "path": "reports/HuynhNguyenHoaiLoc/week-07/threshold-118-2026-11-15/summary.json",
+      "sha256": "785746c346342763967c1c5327a3c8111eee99318fb64f8c66e91ffdd5d2a094"
+    },
+    {
+      "path": "reports/HuynhNguyenHoaiLoc/week-07/live_adjusted_2026-11-14.json",
+      "sha256": "09ed453f074fc8fbf0d4b8502e325f71989a7b0d347889cc77bee0cd8069711e"
+    },
+    {
+      "path": "reports/HuynhNguyenHoaiLoc/week-07/analysis-2026-11-14/wifi-reconnected.json",
+      "sha256": "40b48908aad08a83cc1103353fd6e3ba64b02c4d6146cbbd6ce4207c857efbf0"
+    },
+    {
+      "path": "reports/DoanQuocKien/week-06/t2_1114/summary_run8.json",
+      "sha256": "9bc92efd3661f522cd81be77021332c161f1624716942e3be126cc71f30fae61"
+    },
+    {
+      "path": "reports/DoanQuocKien/week-06/t2_1114/summary_run9.json",
+      "sha256": "fd7f4663388d4eeb7aecf1dae432acf5a5b821bbb02396471507d37f35668266"
+    },
+    {
+      "path": "reports/DoanQuocKien/week-06/t2_1114/README.md",
+      "sha256": "856a340079aea7ff85add4c5c9833b80130fe18191f899c2062fd043e39c41cc"
+    },
+    {
+      "path": "reports/DoanQuocKien/week-06/heartbeat_dryrun_1114/README.md",
+      "sha256": "d53e1e5f833705866f8be8975068ac89a13f20bfe2225d801e7df21311cbd88b"
+    },
+    {
+      "path": "reports/DoanQuocKien/week-06/classroom_1111_pm/README.md",
+      "sha256": "a0e0499367ab1351613aba16aa8244612ad3fd65ae56b30034a4ccbb952e516b"
+    },
+    {
+      "path": "docs/Implementation Plan.md",
+      "sha256": "de6d2f99ef6c687b8bb79637b637c64f7aceee1b7faa4bef20dba3af89a5c310"
+    }
+  ],
+  "rtx4050": {
+    "owner": "DQK",
+    "runs": {
+      "both": {
+        "fps": 9.2040056531939,
+        "p95_ms": 138.05232500235434,
+        "device_used_peak_gib": 0.89373779296875,
+        "actual_door_hz": 9.2040056531939,
+        "t1_accepted": false
+      },
+      "xfeat": {
+        "fps": 10.79085845524832,
+        "p95_ms": 120.59275999927195,
+        "device_used_peak_gib": 0.56365966796875,
+        "actual_door_hz": 10.79085845524832,
+        "t1_accepted": false
+      },
+      "both_5hz": {
+        "fps": 19.2250678889357,
+        "p95_ms": 121.36431000362789,
+        "device_used_peak_gib": 0.88983154296875,
+        "actual_door_hz": 4.6140162933445685,
+        "t1_accepted": false
+      }
+    },
+    "combined_live_accepted": false
+  },
+  "door": {
+    "genuine_hits": 822,
+    "genuine_n": 877,
+    "impostor_accepts": 0,
+    "impostor_n": 5254,
+    "straight_impostor_accepts": 0,
+    "straight_impostor_n": 1754,
+    "impostor_max": 0.3362,
+    "threshold": 0.45,
+    "top_k": 3,
+    "minimum_votes": 2,
+    "clip_bootstrap_95_interval": [
+      0.9038885029339937,
+      0.9700054410080182
+    ],
+    "t1_passed": false
+  },
+  "pilot": {
+    "code_commit": "058c97883ee7152dfb6cbb9c88426756e078105a",
+    "t1_passed": false,
+    "count_unit": "automatic segments, including incomplete segments; no physical-attempt alignment asserted",
+    "runs": {
+      "genuine": {
+        "status": "completed",
+        "processed_frames": 336,
+        "skipped_schedule_frames": 656,
+        "source": {
+          "duration_s": 90.18173959999694,
+          "consumed_frames": 992,
+          "decoded_frames": 1074,
+          "reconnects": 0
+        },
+        "evidence_counts": {
+          "person_observations": 43,
+          "detected_faces": 194,
+          "associated_faces": 43,
+          "accepted_face_samples": 42
+        },
+        "decisions": {
+          "authorized": 3,
+          "queued": 0,
+          "unresolved": 2,
+          "interrupted": 1
+        },
+        "t1_passed": false,
+        "motor_commands_sent": 0
+      },
+      "impostor": {
+        "status": "completed",
+        "processed_frames": 359,
+        "skipped_schedule_frames": 723,
+        "source": {
+          "duration_s": 90.12729299999774,
+          "consumed_frames": 1082,
+          "decoded_frames": 1104,
+          "reconnects": 0
+        },
+        "evidence_counts": {
+          "person_observations": 158,
+          "detected_faces": 178,
+          "associated_faces": 139,
+          "accepted_face_samples": 95
+        },
+        "decisions": {
+          "authorized": 0,
+          "queued": 3,
+          "unresolved": 3,
+          "interrupted": 0
+        },
+        "t1_passed": false,
+        "motor_commands_sent": 0
+      }
+    }
+  },
+  "wifi_empty_scene": {
+    "status": "completed",
+    "processed_frames": 149,
+    "skipped_schedule_frames": 226,
+    "source": {
+      "duration_s": 30.023587400006363,
+      "consumed_frames": 375,
+      "decoded_frames": 375,
+      "reconnects": 0
+    },
+    "evidence_counts": {
+      "person_observations": 0,
+      "detected_faces": 0,
+      "associated_faces": 0,
+      "accepted_face_samples": 0
+    },
+    "decisions": {
+      "authorized": 0,
+      "queued": 0,
+      "unresolved": 0,
+      "interrupted": 0
+    },
+    "t1_passed": false,
+    "motor_commands_sent": 0
+  },
+  "deployment_manual_vantage": {
+    "8": {
+      "mode": "manual_vantage",
+      "success": true,
+      "chosen_vantage": null,
+      "end_reason": "STANDBY reached"
+    },
+    "9": {
+      "mode": "manual_vantage",
+      "success": true,
+      "chosen_vantage": null,
+      "end_reason": "STANDBY reached"
+    }
+  },
+  "acceptance": {
+    "door_t1": false,
+    "d3_identity_accuracy": false,
+    "independent_d5": false,
+    "automatic_map_vantage": false,
+    "rtx4050_precision_accuracy": false,
+    "full_loop": false
+  }
+}

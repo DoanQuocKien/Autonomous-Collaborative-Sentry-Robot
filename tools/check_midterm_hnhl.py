@@ -131,7 +131,14 @@ def check():
         assert not proxy['limit_350ms_proven'] and not proxy['violation_proven']
         assert not proxy['mechanical_stop_measured']
         assert proxy['r1_not_held_at_end_trials'] == [4]
-        assert (OUT/'chapter-05-current.md').read_text(encoding='utf-8') == chapter_text(nov09), 'current chapter drift'
+        if (OUT/'update-2026-11-15.json').exists():
+            # Preserve the older generator check against its pinned snapshot;
+            # the 15-Nov document hashes are checked separately below.
+            ref = read_json(OUT/'update-2026-11-15.json')['source_commit']
+            old_chapter = subprocess.check_output(['git', 'show', ref + ':reports/HuynhNguyenHoaiLoc/midterm/chapter-05-current.md'], cwd=ROOT).decode('utf-8')
+            assert old_chapter == chapter_text(nov09), 'historical chapter drift'
+        else:
+            assert (OUT/'chapter-05-current.md').read_text(encoding='utf-8') == chapter_text(nov09), 'current chapter drift'
     kr_followup_sources = 0
     if (OUT/'followup-pr101-2026-11-09.json').exists():
         from tools.build_midterm_hnhl_pr101_followup import collect_followup, NAME
@@ -176,6 +183,14 @@ def check():
         assert nov11['experiment_B']['code_merged'] and not nov11['experiment_B']['model_adopted']
         assert not nov11['experiment_B']['true_empty_floor_control_available']
     word = OUT/'HNHL-Chuong-5.docx'
+    nov15_sources = 0
+    nov15_path = OUT/'update-2026-11-15.json'
+    if nov15_path.exists():
+        from tools.build_midterm_hnhl_nov15 import collect as collect_nov15
+        nov15 = read_json(nov15_path)
+        assert nov15 == collect_nov15(nov15['source_commit']), '15-Nov evidence/metrics differ from pinned sources'
+        assert not any(nov15['acceptance'].values())
+        nov15_sources = len(nov15['sources'])
     verification = read_json(OUT/'verification.json')
     word_sha = hashlib.sha256(word.read_bytes()).hexdigest()
     assert word_sha == verification['word']['sha256'], 'Word changed since visual review; render again'
@@ -210,7 +225,7 @@ def check():
             target = path.parent/unquote(url.split('#')[0])
             assert target.exists(), f'broken link: {path}: {url}'
             count += 1
-    snapshot_date = next(date for path,date in ((nov11_path,'2026-11-11'),(nov10_path,'2026-11-10'),
+    snapshot_date = next(date for path,date in ((nov15_path,'2026-11-15'),(nov11_path,'2026-11-11'),(nov10_path,'2026-11-10'),
         (nov09_path,'2026-11-09'),(team_path,'2026-11-07'),(recovery_path,'2026-11-06'),
         (latest_path,'2026-11-05'),(OUT/'update-2026-11-03.json','2026-11-03')) if path.exists())
     return dict(checked_snapshot_date=snapshot_date, evidence_sources_checked=len(update['evidence']),
@@ -222,6 +237,7 @@ def check():
                 kr_followup_sources_checked=kr_followup_sources,
                 nov10_sources_checked=nov10_sources,
                 nov11_sources_checked=nov11_sources,
+                nov15_sources_checked=nov15_sources,
                 source_hashes_match=True, both_saved_snapshots_match=True,
                 missing_acceptance_preserved=True, local_links_checked=count,
                 original_word_sha256=word_sha, original_word_visual_review_preserved=True,
