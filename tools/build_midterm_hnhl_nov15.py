@@ -17,7 +17,7 @@ OUT = ROOT / "reports/HuynhNguyenHoaiLoc/midterm/update-2026-11-15.json"
 SOURCE = "1a20ba5d439b13b359d7a66301418209b0381b7d"
 
 
-def collect(ref=SOURCE):
+def collect(ref=SOURCE, markdown_ref=None):
     sources = []
     def read(path):
         data = subprocess.check_output(["git", "show", ref + ":" + path], cwd=ROOT)
@@ -61,7 +61,11 @@ def collect(ref=SOURCE):
     read("docs/Implementation Plan.md")
     markdown = {}
     for name in ("chapter-05-current.md", "chapter-07-rows.md", "code-appendix.md", "update-2026-11-15.md"):
-        data = (OUT.parent / name).read_bytes().replace(b"\r\n", b"\n")
+        if markdown_ref is None:
+            data = (OUT.parent / name).read_bytes().replace(b"\r\n", b"\n")
+        else:
+            path = "reports/HuynhNguyenHoaiLoc/midterm/" + name
+            data = subprocess.check_output(["git", "show", markdown_ref + ":" + path], cwd=ROOT)
         markdown[name] = hashlib.sha256(data).hexdigest()
     return dict(schema_version=1, date="2026-11-15", timezone="Asia/Bangkok", source_commit=ref,
                 current_markdown_sha256_lf=markdown,
@@ -74,7 +78,11 @@ def collect(ref=SOURCE):
 
 
 def main():
-    result = collect()
+    later_snapshot = OUT.parent / "update-2026-11-16.json"
+    markdown_ref = None
+    if later_snapshot.exists():
+        markdown_ref = json.loads(later_snapshot.read_text(encoding="utf-8"))["base_commit"]
+    result = collect(markdown_ref=markdown_ref)
     OUT.write_text(json.dumps(result, indent=2, allow_nan=False) + "\n", encoding="utf-8")
     print(json.dumps(dict(source=result["source_commit"], sources=len(result["sources"]), door=result["door"])))
 

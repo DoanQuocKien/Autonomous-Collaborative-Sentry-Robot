@@ -43,7 +43,11 @@ def _normalize_vector_512(vec: Any, name: str) -> Optional[np.ndarray]:
 
 @dataclass
 class IntruderRecord:
-    """Structured record of an unauthorized individual detected at the entrance doorway."""
+    """Structured record of an unauthorized individual detected at the entrance doorway.
+
+    Timestamp None means omitted until push fills it from the enqueue clock.
+    Numeric zero, including values read from saved records, is a real timestamp.
+    """
     id: str
     face_embedding: Optional[np.ndarray] = None
     appearance_vector: Optional[np.ndarray] = None

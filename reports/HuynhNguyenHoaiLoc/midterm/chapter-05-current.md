@@ -1,8 +1,10 @@
-# Chương 5 — Phần HNHL cập nhật 15/11/2026
+# Chương 5 — Phần HNHL cập nhật 16/11/2026
 
 Bản thảo Markdown hiện hành để KR ghép; Word 01/11 là snapshot lịch sử. Chương 5 chung có ngân sách 3,5 trang, gồm thêm phần cửa của KR và deployment của DQK; editor chọn hình/rút gọn khi dàn trang. Nguồn E01–E20: [evidence gốc](evidence.md), [bổ sung 03/11](update-2026-11-03.md); N01–N11: [bổ sung 05/11](update-2026-11-05.md).
 
 [Bổ sung15/11 và15 nguồn đã pin](update-2026-11-15.md) cập nhật door-camera ROC, Phase2 live, workload RTX4050 và phạm vi T2 của DQK.
+
+[Cập nhật 16/11](update-2026-11-16.md) bổ sung pose −8,00°/roll −2,16°, lượt pursuit 32,2% thời gian trong dải cự ly và 91,1% căn tâm, ảnh F3/F17b và lịch video 19/11.
 
 ## Vật cản, khoảng cách và bản đồ
 
@@ -42,6 +44,8 @@ D5 custom export ONNX opset11: 90/90 ảnh cùng bbox count, 294 reference boxes
 
 PR99/102/103 đã merge11/11; #100/#101/#108/#115 cũng đã merge sau review. Tile_3_1 có902 rows:21 HOLD rows trong hai đoạn ngắn,80 rows3,4–7,4s là stopped PURSUE; smooth-score bỏ9 warm-up nên full-series/full-window ghi riêng. Experiment B tooling đã merge: ORG/D1 coverage8/24 obstacle-route,6/24 free-space so với configured1/24; error0,041m chỉ trên8 found, false components≈1,87/ảnh, empty-floor control còn thiếu. Không đổi detector mặc định. Retest ghế cũ0/36 distances và khác gốc tape giữ nguyên. [Nguồn11/11](update-2026-11-11.md).
 
-Code handoff queue/tracker và TRACK_LOST bổ sung ở PR #124 đang chờ review, đã kiểm tra T0; search coverage vẫn kế hoạch W9. DQK có6 lượt deployment được tính; hai lượt mới dùng manual_vantage nên không thay nghiệm thu map/automatic vantage/F11. D3/gallery/D5 độc lập, full door T1, raw latency và pursuit/hold đủ protocol vẫn thiếu. [Trạng thái15/11](update-2026-11-15.md). Chốt hình16/11, draft18/11, nộp23/11.
+Code handoff queue/tracker và TRACK_LOST từ PR #124 đã được DQK approve và merge. Search coverage thuộc kế hoạch W9. Nhóm ghi nhận 7 lượt deployment, gồm lượt 16/11 đạt STANDBY sau 30,7 s và tape cửa 2,93 m. Nghiệm thu map/automatic vantage/F11 còn chờ sweep/world truth. Lượt pursuit mới có 32,2% thời gian trong dải 1,2 ±0,2 m và 91,1% căn tâm, với cự ly foot-row và 0 HOLD events. Yêu cầu khoảng cách 80% còn chưa đạt. DQK báo TAR 0,930 sau lần đăng ký lại 5 pose trên cùng clip. [Nguồn và phạm vi đo 16/11](update-2026-11-16.md).
+
+D3/gallery/D5 độc lập, full door T1, body visibility/cross-camera, raw latency và precision accuracy RTX4050 còn chờ dữ liệu. Draft báo cáo ngày 18/11, các cảnh video còn lại ngày 19/11 theo quyết định nhóm và hạn nộp ngày 23/11.
 
 [Dòng Chương 7](chapter-07-rows.md), [appendix code](code-appendix.md), [checklist dữ liệu và bàn giao](update-checklist.md).

@@ -1,0 +1,88 @@
+{
+  "125": [
+    {
+      "number": 125,
+      "head_sha": "ddfc31e112e6fd858505e8326ad561bdbe37c9fc",
+      "action": "APPROVE",
+      "review_url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/pull/125#pullrequestreview-5923547647",
+      "state": "APPROVED",
+      "submitted_at": "2026-11-16T16:30:21Z"
+    },
+    {
+      "number": 125,
+      "head_sha": "ddfc31e112e6fd858505e8326ad561bdbe37c9fc",
+      "action": "merge",
+      "result": {
+        "sha": "fbcff543d51e005631754173a5154824e514936d",
+        "merged": true,
+        "message": "Pull Request successfully merged"
+      },
+      "merged": true,
+      "merge_commit_sha": "fbcff543d51e005631754173a5154824e514936d",
+      "merged_at": "2026-11-16T16:30:41Z"
+    }
+  ],
+  "126": [
+    {
+      "number": 126,
+      "head_sha": "adc6184327c56337a659441c5337a88918e4ab11",
+      "action": "APPROVE",
+      "review_url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/pull/126#pullrequestreview-5923549123",
+      "state": "APPROVED",
+      "submitted_at": "2026-11-16T16:30:27Z"
+    },
+    {
+      "number": 126,
+      "head_sha": "adc6184327c56337a659441c5337a88918e4ab11",
+      "action": "inspect",
+      "mergeable": null,
+      "mergeable_state": "unknown",
+      "statuses": [],
+      "checks": []
+    },
+    {
+      "number": 126,
+      "head_sha": "adc6184327c56337a659441c5337a88918e4ab11",
+      "action": "merge",
+      "result": {
+        "sha": "c22fc09fda911a25b406f99fa8467a095dcd719f",
+        "merged": true,
+        "message": "Pull Request successfully merged"
+      },
+      "merged": true,
+      "merge_commit_sha": "c22fc09fda911a25b406f99fa8467a095dcd719f",
+      "merged_at": "2026-11-16T16:32:32Z"
+    }
+  ],
+  "127": [
+    {
+      "number": 127,
+      "head_sha": "b8e1f9f216a93360d71e759e15ec5faf723e8748",
+      "action": "APPROVE",
+      "review_url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/pull/127#pullrequestreview-5923550567",
+      "state": "APPROVED",
+      "submitted_at": "2026-11-16T16:30:32Z"
+    },
+    {
+      "number": 127,
+      "head_sha": "b8e1f9f216a93360d71e759e15ec5faf723e8748",
+      "action": "merge",
+      "result": {
+        "sha": "0ffc75d57756c2e5a80ee9272a8a1f0db2bd6897",
+        "merged": true,
+        "message": "Pull Request successfully merged"
+      },
+      "merged": true,
+      "merge_commit_sha": "0ffc75d57756c2e5a80ee9272a8a1f0db2bd6897",
+      "merged_at": "2026-11-16T16:31:19Z"
+    },
+    {
+      "number": 127,
+      "head": "b8e1f9f216a93360d71e759e15ec5faf723e8748",
+      "base": "main",
+      "url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/pull/127"
+    }
+  ],
+  "main_after_merges": "c22fc09fda911a25b406f99fa8467a095dcd719f",
+  "f17b_reproduction_identical": true
+}

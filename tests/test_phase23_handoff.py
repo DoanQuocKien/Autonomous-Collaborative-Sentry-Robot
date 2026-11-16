@@ -69,3 +69,11 @@ def test_invalid_target_provenance_cannot_install_a_tracker_reference(metadata):
     with pytest.raises(ValueError):
         Phase3Runner(sm=sm, queue=queue, target_tracker=target_tracker)
     assert target_tracker.lock.reference is None
+
+
+def test_active_machine_without_matching_record_rejects_tracker_handoff():
+    sm, target_tracker = StateMachine(initial_state=State.STANDBY), tracker()
+    sm.handle_event("INTRUDER_QUEUED", {"id": "missing"}, t=0.)
+    with pytest.raises(ValueError, match="matching queue record"):
+        Phase3Runner(sm=sm, queue=TargetQueue(), target_tracker=target_tracker)
+    assert target_tracker.lock.reference is None

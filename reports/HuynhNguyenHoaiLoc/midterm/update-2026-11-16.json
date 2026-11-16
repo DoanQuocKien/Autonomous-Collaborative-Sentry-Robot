@@ -1,0 +1,252 @@
+{
+  "schema_version": 1,
+  "date": "2026-11-16",
+  "timezone": "Asia/Bangkok",
+  "base_commit": "4d3eff1743f0d185886473a94d77b5490c5f9b7c",
+  "evidence_commit": "ddfc31e112e6fd858505e8326ad561bdbe37c9fc",
+  "report_commit": "b8e1f9f216a93360d71e759e15ec5faf723e8748",
+  "sources": [
+    {
+      "commit": "ddfc31e112e6fd858505e8326ad561bdbe37c9fc",
+      "path": "reports/DoanQuocKien/week-07/classroom_1116/deploy/t2_1116_1/summary.json",
+      "sha256": "0d2161cea7d0760f48cb77b11c046694467ea50ce01c6310f2b694a2b9c6ad9d"
+    },
+    {
+      "commit": "ddfc31e112e6fd858505e8326ad561bdbe37c9fc",
+      "path": "reports/DoanQuocKien/week-07/classroom_1116/deploy/t2_1116_1/log.csv",
+      "sha256": "2e24b5b9141e08015705ea7fdeef5c507cfa139c466711b02c7f49895639334b"
+    },
+    {
+      "commit": "ddfc31e112e6fd858505e8326ad561bdbe37c9fc",
+      "path": "reports/DoanQuocKien/week-07/classroom_1116/deploy/t2_1116_1/handshake.csv",
+      "sha256": "77ae072cb3d20d4514bc4da7c3f7fb1bc4636038a70c75ee4019bd2cb366a03f"
+    },
+    {
+      "commit": "ddfc31e112e6fd858505e8326ad561bdbe37c9fc",
+      "path": "reports/DoanQuocKien/week-07/classroom_1116/pursuit/pursuit_1116_1/summary.json",
+      "sha256": "32f5adf5d11651200a06f0e3fd07ffdc45ba4fb2da43e46ff422e33bb849cbeb"
+    },
+    {
+      "commit": "ddfc31e112e6fd858505e8326ad561bdbe37c9fc",
+      "path": "reports/DoanQuocKien/week-07/classroom_1116/pursuit/pursuit_1116_1/log.csv",
+      "sha256": "8a66c31bb93fa56119d6c9a12b699b3942982504e8cd0109e72ff3d7c23e54ba"
+    },
+    {
+      "commit": "ddfc31e112e6fd858505e8326ad561bdbe37c9fc",
+      "path": "reports/DoanQuocKien/week-07/classroom_1116/deploy/rehearsal_1116_1/summary.json",
+      "sha256": "aaf5e3491dd29d0e160e44b79bf0e7a64902183020b95639ee30b83ed0e8cd3e"
+    },
+    {
+      "commit": "ddfc31e112e6fd858505e8326ad561bdbe37c9fc",
+      "path": "reports/DoanQuocKien/week-07/classroom_1116/deploy/rehearsal_1116_2/summary.json",
+      "sha256": "a0d44b52fb44c089237e0e41b18be5ec685c1c7e9edf58e1490fa7d74dec2e31"
+    },
+    {
+      "commit": "ddfc31e112e6fd858505e8326ad561bdbe37c9fc",
+      "path": "reports/DoanQuocKien/week-07/classroom_1116/deploy/rehearsal_1116_p1_1/summary.json",
+      "sha256": "c064c94c19252ecf8c876dae4b56794683673b404537459c7c30e26af4c84a66"
+    },
+    {
+      "commit": "ddfc31e112e6fd858505e8326ad561bdbe37c9fc",
+      "path": "reports/DoanQuocKien/week-07/classroom_1116/deploy/rehearsal_1116_p1_2/summary.json",
+      "sha256": "3539439af74f3d1559208b04fbeee570302ea6ed9d74a6e7a56354e46ad0cc01"
+    },
+    {
+      "commit": "ddfc31e112e6fd858505e8326ad561bdbe37c9fc",
+      "path": "reports/DoanQuocKien/week-07/classroom_1116/deploy/rehearsal_1116_p2_1/summary.json",
+      "sha256": "a6de57f941d0d1333dd9cd5c96cf4d7e11304dfe172a2721c709cd4320f04fc6"
+    },
+    {
+      "commit": "ddfc31e112e6fd858505e8326ad561bdbe37c9fc",
+      "path": "reports/DoanQuocKien/week-07/classroom_1116/deploy/rehearsal_1116_p2b_1/summary.json",
+      "sha256": "390dbbbb67d10bb82155952c35f872fcf0329a3981427803fd42f06c03fa05ed"
+    },
+    {
+      "commit": "ddfc31e112e6fd858505e8326ad561bdbe37c9fc",
+      "path": "reports/DoanQuocKien/week-07/classroom_1116/deploy/dry_1116_1/summary.json",
+      "sha256": "5633fea1da75d15a6338dad9a0fae5157ccdb8281e138c34462f7149ca979771"
+    },
+    {
+      "commit": "ddfc31e112e6fd858505e8326ad561bdbe37c9fc",
+      "path": "reports/DoanQuocKien/week-07/classroom_1116/calib/camera_pose_self_1116_3.json",
+      "sha256": "78a125bc85a6fe8c03e0813628de9f724edd9cc4448a7a8c00cb1b3d7698be51"
+    },
+    {
+      "commit": "ddfc31e112e6fd858505e8326ad561bdbe37c9fc",
+      "path": "calib/camera_pose_self_1116_3.json",
+      "sha256": "78a125bc85a6fe8c03e0813628de9f724edd9cc4448a7a8c00cb1b3d7698be51"
+    },
+    {
+      "commit": "ddfc31e112e6fd858505e8326ad561bdbe37c9fc",
+      "path": "reports/DoanQuocKien/week-07/figures/F3_devices_door_1116.png",
+      "sha256": "b9995bd39f6dd16b28c69bfaac0e87b15a8ca6ff4df5c3799ec431f82ac65bf5"
+    },
+    {
+      "commit": "ddfc31e112e6fd858505e8326ad561bdbe37c9fc",
+      "path": "reports/DoanQuocKien/week-07/figures/F3_devices_marker_1116.png",
+      "sha256": "db9c1e49df7e39de4ae539d8b76aaf64051ad464754e467dc993d4b5f8b159ff"
+    },
+    {
+      "commit": "ddfc31e112e6fd858505e8326ad561bdbe37c9fc",
+      "path": "reports/DoanQuocKien/week-07/classroom_1116/README.md",
+      "sha256": "2c06dcd81c9ac624c3dad62b4196ec2f5e11dd341d2a7f92f17c3077d3c3390e"
+    },
+    {
+      "commit": "b8e1f9f216a93360d71e759e15ec5faf723e8748",
+      "path": "reports/DoanQuocKien/midterm-chapter-03.md",
+      "sha256": "8118f576fbc3bfce2367237bb7751cda8b8c73d94c2a35f86a163036907382df"
+    },
+    {
+      "commit": "b8e1f9f216a93360d71e759e15ec5faf723e8748",
+      "path": "reports/DoanQuocKien/midterm-chapter-04.md",
+      "sha256": "90ffb3e40298bee55feacecae7f5dc7d379a3d60004145740c9dd2a4ccd971a6"
+    },
+    {
+      "commit": "b8e1f9f216a93360d71e759e15ec5faf723e8748",
+      "path": "reports/DoanQuocKien/midterm-chapter-08.md",
+      "sha256": "5f9d675008ef239dc625b63de26f9fb61a45bb3d5e184c7e7317952da4489083"
+    },
+    {
+      "commit": "b8e1f9f216a93360d71e759e15ec5faf723e8748",
+      "path": "docs/Mid-Term Report Plan.md",
+      "sha256": "3b2981d35390bb5e96b80b7ac2b53496d74524900062042813f72598f2812e76"
+    },
+    {
+      "commit": "b8e1f9f216a93360d71e759e15ec5faf723e8748",
+      "path": "docs/Classroom Session 2026-11-19.md",
+      "sha256": "b92b82706669c6cbec684aa8210b1d23890f91621c0f2ef613ab2743ef0f82c9"
+    },
+    {
+      "commit": "b8e1f9f216a93360d71e759e15ec5faf723e8748",
+      "path": "tools/plot_dqk_report_figures.py",
+      "sha256": "8092a5d9ce3b2ddcc96230762f07cddc2e9fb49034d2c63dd3403f59b0583944"
+    },
+    {
+      "commit": "b8e1f9f216a93360d71e759e15ec5faf723e8748",
+      "path": "reports/DoanQuocKien/week-07/figures/F17b_pursuit_1116.png",
+      "sha256": "642178edd39906fac7a8a724435d6f6d3aa287bf8a4e26d445d405b4027a6593"
+    }
+  ],
+  "deployment": {
+    "mode": "manual_vantage",
+    "chosen_vantage": null,
+    "success": true,
+    "standby_s": 30.698710441589355,
+    "handshake": {
+      "mode": "data/handshake/class_door_1116",
+      "rule": {
+        "span_s": 5.0,
+        "min_frames": 6,
+        "fraction": 0.7
+      },
+      "frames": 110,
+      "in_view_frames": 110,
+      "last_inliers": 289,
+      "error": null
+    },
+    "tape_answers": {
+      "door_distance_m_tape": 2.93,
+      "line_of_sight_clear": "y",
+      "near_boundary_or_furniture": "y",
+      "furniture_distance_m_tape": 0.35,
+      "collisions": 0
+    },
+    "log_rows": 907,
+    "counted_team_runs_reported": 7
+  },
+  "pursuit": {
+    "metrics": {
+      "frames": 1181,
+      "frames_with_distance": 1176,
+      "run_span_s": 60.08,
+      "observed_time_s": 60.08,
+      "tracked_time_s": 59.91,
+      "coverage_tracked_fraction": 0.997,
+      "time_fraction_distance_in_band_of_run": 0.322,
+      "time_fraction_centred_of_run": 0.911,
+      "frames_obstacle_blocked": 90,
+      "reacquires": 1,
+      "hold_frames": 0
+    },
+    "hold_events": [],
+    "distance_fraction_meets_08": false,
+    "centred_fraction_meets_08": true,
+    "range_source": "foot",
+    "tape_accuracy_verified": false
+  },
+  "rehearsals": {
+    "rehearsal_1116_1": {
+      "success": false,
+      "frames": 460,
+      "in_view_frames": 12
+    },
+    "rehearsal_1116_2": {
+      "success": false,
+      "frames": 0,
+      "in_view_frames": 0
+    },
+    "rehearsal_1116_p1_1": {
+      "success": false,
+      "frames": 285,
+      "in_view_frames": 0
+    },
+    "rehearsal_1116_p1_2": {
+      "success": true,
+      "frames": 50,
+      "in_view_frames": 50
+    },
+    "rehearsal_1116_p2_1": {
+      "success": true,
+      "frames": 83,
+      "in_view_frames": 83
+    },
+    "rehearsal_1116_p2b_1": {
+      "success": true,
+      "frames": 203,
+      "in_view_frames": 67
+    },
+    "dry_1116_1": {
+      "success": true,
+      "frames": 111,
+      "in_view_frames": 111
+    }
+  },
+  "camera_pose": {
+    "tag": "self_1116",
+    "H_cam_m": 0.1,
+    "H_tape_m": 0.1,
+    "pitch_down_deg": -8.0,
+    "camera_roll_deg": -2.16,
+    "passed": true,
+    "pitch_spread_deg": 0.018,
+    "marker_frames": 45,
+    "method": "self-calibration from one ArUco marker on a vertical surface (tools/self_pose.py): H fixed at the mechanical 0.100 m, pitch = median of the marker position estimates"
+  },
+  "owner_reported": {
+    "power_mode": "5 W read at session end",
+    "reenrolment_dqk_tar": 0.93,
+    "reenrolment_misses": 21,
+    "reenrolment_raw_scores_committed": false,
+    "estop_r1_cut_ms": 10,
+    "estop_r1_motors_zero_after_log_ms": 78,
+    "estop_other_cut_ms": 6,
+    "estop_other_motors_zero_after_log_ms": 38,
+    "estop_raw_logs_committed": false,
+    "remaining_video_shots": "2026-11-19"
+  },
+  "acceptance": {
+    "door_t1": false,
+    "automatic_map_vantage": false,
+    "pursuit_pd": false,
+    "hold_protocol": false,
+    "independent_d5": false,
+    "d3_identity_accuracy": false,
+    "full_loop": false
+  },
+  "current_markdown_sha256_lf": {
+    "chapter-05-current.md": "b2ded1e4bbd291ce2e5efc0f151a6d534d15a763d96714b0516fb950429d2a48",
+    "chapter-07-rows.md": "a4e43a46cfd25b7eb7a4294d0ff0d08fb37e7bfad5000942b8bc070b4d36c5a3",
+    "code-appendix.md": "f45a0b4c721ba595ac3e8d6ee590b620c179e10bba55b1283a406d984a227181",
+    "update-2026-11-16.md": "adaf7b733495ece22169d1ec933911b703c76b7eaf5155ea659dbaccbee5e655"
+  }
+}

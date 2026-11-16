@@ -1,5 +1,16 @@
 # Kết quả HNHL để ghép Chương 7
 
+**Cập nhật 16/11** đã tính lại log pursuit và đối chiếu deployment. Các bảng theo ngày bên dưới lưu trạng thái từng phiên. [Nguồn/hash và điều kiện đo](update-2026-11-16.md).
+
+| Thành phần | Kết quả mới | Việc còn chờ |
+| :-- | :-- | :-- |
+| Deployment DQK 16/11 | Lượt thứ 7, STANDBY 30,699 s, handshake 110/110, tape cửa 2,93 m, 0 collisions | Map/vantage tự động cần sweep và world truth |
+| Pursuit một người | 1.181 frame, 60,08 s, tracked 99,7%, cự ly trong dải 32,2%, căn tâm 91,1%, 0 HOLD | Yêu cầu cự ly 80% chưa đạt, tape truth còn thiếu |
+| Handshake rehearsal | Một accept hợp lệ và một reject hợp lệ | Đủ protocol 10/10 và 10/10 |
+| Đăng ký lại DQK | Chủ dữ liệu báo TAR 0,930, 21 misses như lần trước | Raw scores của rerun, người ngoài nhóm và session độc lập |
+| E-stop sau triển khai audit | DQK báo R1 cut 10 ms, motors-zero +78 ms từ log STOPPED | Raw logs của lượt tối còn ở local |
+| Handoff HNHL | PR #124 đã merge sau review DQK | Nghiệm thu cửa/cross-camera và combined app với robot |
+
 **Hiện hành 15/11 sau merge:** [15 nguồn đã pin và phạm vi đo](update-2026-11-15.md). Dùng các dòng mới khi ghép; các bổ sung theo ngày bên dưới giữ làm lịch sử.
 
 | Thành phần bổ sung | Kết quả | Phạm vi nghiệm thu |
