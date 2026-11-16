@@ -1,0 +1,83 @@
+{
+ "mode": "manual_vantage",
+ "door": null,
+ "box": null,
+ "walls": [],
+ "entrance_mode": null,
+ "chosen_vantage": null,
+ "phase1_notes": [],
+ "door_bearing_error_deg": null,
+ "label": "rehearsal_1116",
+ "dry_run": true,
+ "no_robot": true,
+ "end_reason": "time limit",
+ "success": false,
+ "vantage_target": [
+  1.611,
+  -0.244
+ ],
+ "room_centre": [
+  3.116,
+  -2.239
+ ],
+ "dr_pose_at_vantage_reached": [
+  1.4957586973592722,
+  -0.22621321591899185,
+  -0.15313546167250702
+ ],
+ "dr_error_at_vantage_m": 0.117,
+ "state_changes": [
+  [
+   0.0,
+   "APPROACH_VANTAGE"
+  ],
+  [
+   7.264081001281738,
+   "WAIT_CAMERA"
+  ]
+ ],
+ "events": [
+  [
+   0.0,
+   "ENTRANCE_FOUND"
+  ],
+  [
+   7.26,
+   "VANTAGE_REACHED"
+  ]
+ ],
+ "prompts": [
+  "place_camera",
+  "place_camera",
+  "place_camera"
+ ],
+ "handshake": {
+  "mode": "data/handshake/class_door_1114",
+  "rule": {
+   "span_s": 5.0,
+   "min_frames": 6,
+   "fraction": 0.7
+  },
+  "frames": 0,
+  "in_view_frames": 0,
+  "last_inliers": 0,
+  "error": "TimeoutError('timed out')"
+ },
+ "marker_fixes": 0,
+ "marker_fix_calls": 0,
+ "marker_fix_results": 0,
+ "servo_sightings": 0,
+ "anchors": null,
+ "dr_path_m": 1.51,
+ "dr_final_pose": [
+  1.496,
+  -0.226,
+  -0.781
+ ],
+ "battery_v_start": null,
+ "battery_v_end": null,
+ "camera_pose_file": null,
+ "obstacle_check": false,
+ "tape_answers": {},
+ "date": "2026-11-16 15:45"
+}
