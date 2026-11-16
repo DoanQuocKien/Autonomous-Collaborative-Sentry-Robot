@@ -37,6 +37,15 @@ One valid run of each kind: this is not the 10 accepts / 10 rejects of the plan.
 `tools.enroll_guided`: 5 poses (straight, a little left, a little right, straight twice) into a separate folder; the enrolment in `data/whitelist` was NOT replaced. The enrolments hold at most 5 embeddings per person (`load_whitelist` accepts 3-5): a first merge into one 10-embedding file made the loader raise, was caught at once and reverted before any use. New against old embeddings of DQK: cosine 0.70-0.85 (mean 0.79).
 Re-score of the same 3-person D2 clips (`door_recognition_seq score`, threshold 0.45, new DQK enrolment, HNHL and KR unchanged): DQK TAR 0.930 -> 0.930 (own score on the 300 straight frames: mean 0.530 -> 0.539, 21 frames below 0.45 both times), HNHL 0.983, KR 0.896 (unchanged), FAR 0 of the impostor scores for all three. So the enrolment poses are not the cause of DQK's misses: the same 21 frames stay below the threshold. The pooled TAR stays 0.937, below the plan's 95 %. One session, three people, one re-enrolment.
 
+## Robot code redeployed and e-stop check (wheels off the ground, evening of 11-16)
+The five audit-fix files (`common/protocol.py`, `jetson/estop.py`, `jetson/robot_udp.py`, `jetson/systemd/install.sh`, `jetson/systemd/sentry-logrotate`) were copied to the robot (old versions in `/home/jetbot/sentry/backup_1116/`) and `install.sh --with-control` was rerun: `sentry-estop`, `sentry-camera`, `sentry-control` active and enabled; `/etc/logrotate.d/sentry` installed and `logrotate -d` reads it. Battery 12.32 V at the start. Check: `tools.send_cmd --v 0.5 --seconds 60` (cap 0.3, so +0.15 per wheel), unsigned packets (no control key). Robot clock is 8 h behind the laptop's and `robot_udp.log` is 8 h ahead of `estop.log`; times below are matched by time of day.
+| Step | estop.py | robot_udp |
+| :-- | :-- | :-- |
+| arm, R1 held | GO 05:39:38.912 | motors +0.15 / +0.15 at +69 ms |
+| R1 released | STOPPED 05:39:43.399, cut in 10 ms | ENGAGED +17 ms, motors 0.00 at +78 ms |
+| re-arm, R1 held, then another button (4) | STOPPED 05:39:52.380, cut in 6 ms | ENGAGED +1 ms, motors 0.00 at +38 ms |
+Packets: 1040 accepted, 0 foreign, 0 malformed, 0 stale. One run of each case. The R1-release stop took 78 ms here against 35 ms on 11-14 (one sample each; both far inside the 0.3 s watchdog). A first attempt (05:37-05:38) logged the button presses but no commands were being sent, so it does not count.
+
 ## Not done / not counted
 - `tools.motion_check` (two attempts' worth of boards, `data/motion_check/class_1116_1`): only 2 of 6 segments had a board pose at both rests (boards 2.1-2.54 m away); nothing was fitted and nothing here relies on it. Earlier runs (`dorm_1`, `class_1`, `class_2`) also give no fit. Deferred: DQK will rerun it later in the dorm (3 boards at about 1.5 m: front, 45 deg left, 45 deg right, all facing the robot; default 2.2 m limit). Until then the dead-reckoning gains remain the Week 2 ones (known limit).
 - F3 photos: `../figures/F3_devices_door_1116.png`, `F3_devices_marker_1116.png`.
