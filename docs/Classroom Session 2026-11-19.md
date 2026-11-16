@@ -1,6 +1,6 @@
 # Classroom session Thu 2026-11-19 (all three members): what only the classroom can do
 
-Decision 2026-11-16 (DQK, team leader): the remaining video shots are recorded here, in the classroom, with all three members (the only day all three are free); the video cut moves to Fri 11-20 - Sat 11-21, final Sun 11-22. The report's numbers and figures stay frozen on 11-16: anything measured on 11-19 is added only if marked "added after the freeze", otherwise the item is reported as in progress. This file lists everything left that cannot be done off-session. Everything that could be done on 11-16 evening is done (see `reports/DoanQuocKien/week-07/classroom_1116/README.md`, PR #125, plan entry PR #126).
+Decision 2026-11-16 (DQK, team leader): the remaining video shots are recorded here, in the classroom, with all three members (the only day all three are free); the video cut moves to Fri 11-20 - Sat 11-21, final Sun 11-22. The report's numbers and figures stay frozen on 11-16: anything measured on 11-19 is added only if marked "added after the freeze", otherwise the item is reported as in progress. This file lists everything left that cannot be done off-session. Everything planned for the 11-16 evening is done (see `reports/DoanQuocKien/week-07/classroom_1116/README.md`, PR #125, plan entry PR #126).
 
 ## Before anyone films (DQK, 15 min)
 1. `python -m tools.jetbot_status auto`: battery >= 11.1 V (stop < 10.5 V). Decide the power mode and write it on the shot list: the 11-16 runs were in 5 W mode; `sudo nvpmodel -m 0` (MAXN) is what the benchmarks used.
