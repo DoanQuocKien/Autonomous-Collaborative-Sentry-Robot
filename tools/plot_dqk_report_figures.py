@@ -7,6 +7,7 @@ Not here (they need data that does not exist yet): F3 (photo), F7 (raw latency s
 import csv
 import glob
 import json
+import textwrap
 from pathlib import Path
 
 import matplotlib
@@ -228,6 +229,7 @@ def f19():
 
 
 PM = R / "week-06" / "classroom_1111_pm" / "data"
+OUT7 = R / "week-07" / "figures"
 OUT6 = R / "week-06" / "figures"
 
 
@@ -409,10 +411,34 @@ def f17():
     plt.close(fig)
 
 
+def f17_1116():
+    """Pursuit, first live run of 2026-11-16 (one person, glossy floor): distance (foot-row range, not tape-verified) and bbox-centre error vs time, from the committed log.csv and summary.json."""
+    base = R / "week-07" / "classroom_1116" / "pursuit" / "pursuit_1116_1"
+    rows = list(csv.DictReader(open(base / "log.csv")))
+    sm = json.load(open(base / "summary.json"))
+    t = [float(r["t"]) for r in rows]
+    fig, ax = plt.subplots(2, 1, figsize=(9, 5.5), sharex=True)
+    ax[0].plot(t, [float(r["dist_m"]) if r["dist_m"] else float("nan") for r in rows], color=BLUE, lw=1)
+    ax[0].axhspan(1.0, 1.4, color=GREEN, alpha=0.15, label="1.2 +/- 0.2 m")
+    ax[0].set_ylabel("distance (m, foot-row range)")
+    ax[0].legend(fontsize=7)
+    ax[1].plot(t, [float(r["yaw_err"]) / 2 if r["yaw_err"] else float("nan") for r in rows], color=RED, lw=1)  # yaw_err is relative to HALF the width
+    ax[1].axhspan(-0.1, 0.1, color=GREEN, alpha=0.15, label="+/- 10 % of the frame width")
+    ax[1].set_ylabel("bbox centre error / frame width")
+    ax[1].set_xlabel("time (s)")
+    ax[1].legend(fontsize=7)
+    title = ("F17b Pursuit, classroom 2026-11-16, first live run, one person (NOT the plan's 80 %% acceptance): tracked %.1f %%, in band %.0f %%, centred %.0f %% of the run, %d HOLD events.\nDistances are foot-row ranges, not tape-verified; the target also moved at will; 5 W mode (read at session end), glossy floor." % (100 * sm["coverage_tracked_fraction"], 100 * sm["time_fraction_distance_in_band_of_run"], 100 * sm["time_fraction_centred_of_run"], len(sm["hold_events"])))
+    fig.suptitle("\n".join(textwrap.fill(p, 125) for p in title.splitlines()), fontsize=8)
+    fig.tight_layout()
+    OUT7.mkdir(parents=True, exist_ok=True)
+    fig.savefig(OUT7 / "F17b_pursuit_1116.png")
+    plt.close(fig)
+
+
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     OUT6.mkdir(parents=True, exist_ok=True)
-    for fn in (f1, f2, f4, f5, f6, f17, f19, f20, f21, f7, f8, f22, f23, f24, f25):
+    for fn in (f1, f2, f4, f5, f6, f17, f17_1116, f19, f20, f21, f7, f8, f22, f23, f24, f25):
         fn()
         print("made", fn.__name__)
 
