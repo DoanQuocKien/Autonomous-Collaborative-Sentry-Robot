@@ -1,5 +1,7 @@
 # Checklist tiếp tục hoàn thiện giữa kỳ HNHL
 
+**Cập nhật 16/11** đã có nguồn deployment thứ 7, pursuit và F3/F17b. Draft vẫn 18/11. Cảnh Phase 2 cùng nhóm và các cảnh còn lại chuyển sang 19/11, dựng video 20–21/11 theo quyết định DQK. HNHL chuẩn bị overlay/whitelist theo fold cho cảnh cửa. Dữ liệu sau freeze ghi ngày bổ sung. [Nguồn và lịch chi tiết](update-2026-11-16.md).
+
 **Hiện hành 15/11:** [đối chiếu sau merge và 15 nguồn pin](update-2026-11-15.md). #100/#101/#108/#115 đã merge; DQK đã đo workload kết hợp RTX4050. HNHL bổ sung queue/tracker handoff, TRACK_LOST và timestamp 0. Chờ nghiệm thu door T1/cross-camera, D3/gallery, independent D5, F11/world truth, raw latency và accuracy FP16/FP32 RTX4050. Sáu lượt deployment của DQK không thay kiểm chứng map/vantage tự động. Gói #113 chưa sửa việc xóa dữ liệu nên chưa merge. Các phần theo ngày bên dưới là snapshot lịch sử.
 
 **Hiện hành11/11:** [99/102/103 đã merge; nguồn mới và Experiment B](update-2026-11-11.md). Không yêu cầu DQK làm lại cleanup/coverage/provenance đã có. HNHL đã tích hợp tooling và bổ sung tile3, full-window trunk score, ORG/D1 comparison. B tooling đã approve, còn model adoption cần PR riêng với model/data/config hashes, real empty-floor/table controls, glare/longer-range và own-view held-out evaluation. D3/gallery/D5 độc lập/F11/F7 raw/combined4050/T2 vẫn pending; #101 chưa sửa, #100 chờ DQK.

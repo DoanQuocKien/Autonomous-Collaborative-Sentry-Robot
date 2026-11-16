@@ -13,6 +13,7 @@
 | `sentry/app/phase2_live.py`, `tools/monitor_door.py`, `enroll_door.py`, `analyse_door_run.py` | ESP32 entries, top-K, OSNet, private diagnostics/overlay và enrolment | #115 đã merge; W7 pilot/runtime/ROC, chưa full T1 |
 | `sentry/app/phase3_runner.py`, `target_queue.py` | HNHL bổ sung queue sync, tracker record handoff, TRACK_LOST và timestamp 0 | `test_phase23_handoff.py`, runner/queue regressions; chưa motor/search-coverage acceptance |
 | `tools/build_midterm_hnhl_nov15.py` | Snapshot door/GPU/T2 ngày 15/11 với 15 nguồn Git đã pin | `check_midterm_hnhl` tính lại số/hash; Word cũ giữ nguyên |
+| `tools/build_midterm_hnhl_nov16.py` | Tính lại pursuit CSV, đối chiếu deployment/rehearsal và pin nguồn 16/11 | Checker đối chiếu số liệu/hash, lưu mốc số liệu DQK báo trong README |
 | `tools/track_live.py`, `track_replay.py`, `evaluate_tracking.py` | Receive-only video/replay và D3 metrics | E04; evaluator synthetic tests, real D3 còn chờ |
 | `tools/prepare_d3_recording.py` | JSONL JetBot→replay epochs/timestamps thật, image hash/dimensions, template chưa review; private data only | R07/R08; T0 adapter và tracker/evaluator, không phải D3 accuracy |
 | `tools/profile_pipeline.py` | Resident model workload, NVML memory và actual door Hz | E05–E07, profiler unit tests |

@@ -185,12 +185,26 @@ def check():
     word = OUT/'HNHL-Chuong-5.docx'
     nov15_sources = 0
     nov15_path = OUT/'update-2026-11-15.json'
+    nov16_path = OUT/'update-2026-11-16.json'
     if nov15_path.exists():
         from tools.build_midterm_hnhl_nov15 import collect as collect_nov15
         nov15 = read_json(nov15_path)
-        assert nov15 == collect_nov15(nov15['source_commit']), '15-Nov evidence/metrics differ from pinned sources'
+        markdown_ref = read_json(nov16_path)['base_commit'] if nov16_path.exists() else None
+        assert nov15 == collect_nov15(nov15['source_commit'], markdown_ref=markdown_ref), '15-Nov evidence/metrics differ from pinned sources'
         assert not any(nov15['acceptance'].values())
         nov15_sources = len(nov15['sources'])
+    nov16_sources = 0
+    if nov16_path.exists():
+        from tools.build_midterm_hnhl_nov16 import collect as collect_nov16
+        nov16 = read_json(nov16_path)
+        saved = dict(nov16)
+        document_hashes = saved.pop('current_markdown_sha256_lf')
+        assert saved == collect_nov16(), '16-Nov evidence/metrics differ from pinned sources'
+        for name, expected in document_hashes.items():
+            data = (OUT/name).read_bytes().replace(b'\r\n', b'\n')
+            assert hashlib.sha256(data).hexdigest() == expected, '16-Nov Markdown drift'
+        assert not any(nov16['acceptance'].values())
+        nov16_sources = len(nov16['sources'])
     verification = read_json(OUT/'verification.json')
     word_sha = hashlib.sha256(word.read_bytes()).hexdigest()
     assert word_sha == verification['word']['sha256'], 'Word changed since visual review; render again'
@@ -225,7 +239,7 @@ def check():
             target = path.parent/unquote(url.split('#')[0])
             assert target.exists(), f'broken link: {path}: {url}'
             count += 1
-    snapshot_date = next(date for path,date in ((nov15_path,'2026-11-15'),(nov11_path,'2026-11-11'),(nov10_path,'2026-11-10'),
+    snapshot_date = next(date for path,date in ((nov16_path,'2026-11-16'),(nov15_path,'2026-11-15'),(nov11_path,'2026-11-11'),(nov10_path,'2026-11-10'),
         (nov09_path,'2026-11-09'),(team_path,'2026-11-07'),(recovery_path,'2026-11-06'),
         (latest_path,'2026-11-05'),(OUT/'update-2026-11-03.json','2026-11-03')) if path.exists())
     return dict(checked_snapshot_date=snapshot_date, evidence_sources_checked=len(update['evidence']),
@@ -238,6 +252,7 @@ def check():
                 nov10_sources_checked=nov10_sources,
                 nov11_sources_checked=nov11_sources,
                 nov15_sources_checked=nov15_sources,
+                nov16_sources_checked=nov16_sources,
                 source_hashes_match=True, both_saved_snapshots_match=True,
                 missing_acceptance_preserved=True, local_links_checked=count,
                 original_word_sha256=word_sha, original_word_visual_review_preserved=True,

@@ -1,5 +1,7 @@
 # HNHL — Phase 2 live và cập nhật perception
 
+**Cập nhật 16/11** ghi PR #124 đã merge sau review DQK. HNHL đã review/merge #125/#126/#127 và tính lại log pursuit của DQK với 32,2% thời gian trong dải cự ly, 91,1% căn tâm và 0 HOLD. Đã bổ sung deployment thứ 7, pose mới, F3/F17b và lịch video 19/11 vào phần giữa kỳ. [Nguồn và phạm vi đo](midterm/update-2026-11-16.md), [review](reviews/2026-11-16.md).
+
 **Cập nhật tiếp 15/11:** #115 đã được DQK approve/merge; phiên này đã review và merge #108/#122/#123, đưa #116/#119/#121 vào main. HNHL bổ sung shared queue/target-tracker handoff, TRACK_LOST và giữ timestamp 0. Full regression **881 passed,2 skipped,4 GPU deselected,60,06 s**; [log](week-07/integration-2026-11-15/tests_cpu.txt), [review/issue](reviews/followup-2026-11-15.md), [Chương 5/7 mới](midterm/update-2026-11-15.md). Chưa có phép đo recognition hoặc robot mới; #114 vẫn chờ nghiệm thu đầy đủ.
 
 **Bổ sung 15/11:** [quyết định issue #118 và ROC từ dữ liệu DQK](week-07/threshold-118-2026-11-15/README.md): giữ ngưỡng 0,45 và 2/3 mẫu cùng ID ở trạng thái tạm thời. Bổ sung `confirmed_unresolved` để audit person được xác nhận nhưng thiếu bằng chứng nhận diện. Đã review chín PR, merge #101/#117/#120; kết quả và phần còn chờ ở [audit ngày 15/11](reviews/2026-11-15.md).

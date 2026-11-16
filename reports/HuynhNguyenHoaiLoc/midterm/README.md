@@ -1,6 +1,8 @@
 # Hồ sơ giữa kỳ HNHL
 
-**Hiện hành 15/11 sau merge:** [Chương 5/7, appendix và 15 nguồn đã pin](update-2026-11-15.md). #115 đã merge; #108 đưa #116/#119/#121 vào main; #122/#123 cũng đã merge. Bổ sung shared queue/target-tracker handoff, TRACK_LOST và timestamp 0; chưa có T1/T2 PASS mới. Gói #113 còn cần sửa trước khi merge.
+**Hiện hành 16/11** đã bổ sung kết quả deployment thứ 7, pursuit, pose camera, F3/F17b và lịch video mới. PR #124 đã được DQK approve/merge. Bản Chương 5/7 hiện hành dùng các nguồn mới cùng lịch sử đo trước đó. [Bổ sung 16/11](update-2026-11-16.md).
+
+**Snapshot 15/11 sau merge:** [Chương 5/7, appendix và 15 nguồn đã pin](update-2026-11-15.md). #115 đã merge; #108 đưa #116/#119/#121 vào main; #122/#123 cũng đã merge. Bổ sung shared queue/target-tracker handoff, TRACK_LOST và timestamp 0; chưa có T1/T2 PASS mới. Gói #113 còn cần sửa trước khi merge.
 
 **Snapshot 14/11:** [issue #111/#114 và số đo RTX4050 của DQK](../issues-111-114-2026-11-14.md), [pilot và đính chính góc camera lượt 2](../week-07.md), [cách bàn giao KR](../PHASE2-LIVE-USAGE.md). Đã enrol P01, ghi nhận 3 authorized/3 enqueue ở hai lượt riêng và giữ segment thiếu bằng chứng. PR #115 lúc đó còn chờ review. Các mục theo ngày bên dưới là snapshot lịch sử.
 
