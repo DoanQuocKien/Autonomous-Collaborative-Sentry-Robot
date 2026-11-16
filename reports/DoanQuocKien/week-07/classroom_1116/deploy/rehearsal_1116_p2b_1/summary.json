@@ -1,0 +1,94 @@
+{
+ "mode": "manual_vantage",
+ "door": null,
+ "box": null,
+ "walls": [],
+ "entrance_mode": null,
+ "chosen_vantage": null,
+ "phase1_notes": [],
+ "door_bearing_error_deg": null,
+ "label": "rehearsal_1116_p2b",
+ "dry_run": true,
+ "no_robot": true,
+ "end_reason": "STANDBY reached",
+ "success": true,
+ "vantage_target": [
+  1.611,
+  -0.244
+ ],
+ "room_centre": [
+  3.116,
+  -2.239
+ ],
+ "dr_pose_at_vantage_reached": [
+  1.4993199743342744,
+  -0.22676215041032613,
+  -0.15314181670795135
+ ],
+ "dr_error_at_vantage_m": 0.113,
+ "state_changes": [
+  [
+   0.0,
+   "APPROACH_VANTAGE"
+  ],
+  [
+   7.281393766403198,
+   "WAIT_CAMERA"
+  ],
+  [
+   40.19260001182556,
+   "RETRACT"
+  ],
+  [
+   42.219237327575684,
+   "STANDBY"
+  ]
+ ],
+ "events": [
+  [
+   0.0,
+   "ENTRANCE_FOUND"
+  ],
+  [
+   7.28,
+   "VANTAGE_REACHED"
+  ],
+  [
+   40.19,
+   "ESP32_VERIFIED"
+  ]
+ ],
+ "prompts": [
+  "place_camera",
+  "camera_verified"
+ ],
+ "handshake": {
+  "mode": "data/handshake/class_door_1116",
+  "rule": {
+   "span_s": 5.0,
+   "min_frames": 6,
+   "fraction": 0.7
+  },
+  "frames": 203,
+  "in_view_frames": 67,
+  "last_inliers": 320,
+  "error": null
+ },
+ "marker_fixes": 0,
+ "marker_fix_calls": 0,
+ "marker_fix_results": 0,
+ "servo_sightings": 0,
+ "anchors": null,
+ "dr_path_m": 1.84,
+ "dr_final_pose": [
+  1.271,
+  0.001,
+  -0.782
+ ],
+ "battery_v_start": null,
+ "battery_v_end": null,
+ "camera_pose_file": null,
+ "obstacle_check": false,
+ "tape_answers": {},
+ "date": "2026-11-16 15:58"
+}
