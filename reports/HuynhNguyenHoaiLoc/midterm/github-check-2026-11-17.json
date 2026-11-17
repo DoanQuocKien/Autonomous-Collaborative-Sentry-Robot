@@ -1,0 +1,69 @@
+{
+  "date": "2026-11-17",
+  "timezone": "Asia/Bangkok",
+  "repository": "DoanQuocKien/Autonomous-Collaborative-Sentry-Robot",
+  "main_commit": "46dc0e42ea4442b0ff8f423d32cf6edc32832141",
+  "pull_requests": [
+    {
+      "number": 128,
+      "url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/pull/128",
+      "state": "closed",
+      "merged": true,
+      "head_sha": "4970a745158ae6d648ac07c9dbb0f51c811b5248",
+      "base": "main",
+      "merge_commit_sha": "46dc0e42ea4442b0ff8f423d32cf6edc32832141"
+    },
+    {
+      "number": 113,
+      "url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/pull/113",
+      "state": "open",
+      "merged": false,
+      "head_sha": "63a866d426637b60c3e0433294f1b6ea60066e57",
+      "base": "main",
+      "merge_commit_sha": null
+    }
+  ],
+  "approval_128": [
+    {
+      "url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/pull/128#pullrequestreview-5923811429",
+      "user": "DoanQuocKien",
+      "review": "APPROVED"
+    }
+  ],
+  "blocking_reviews_113": [
+    {
+      "url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/pull/113#pullrequestreview-5905880546",
+      "user": "DoanQuocKien",
+      "review": "CHANGES_REQUESTED"
+    },
+    {
+      "url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/pull/113#pullrequestreview-5906264941",
+      "user": "HuynhNguyenHoaiLoc",
+      "review": "CHANGES_REQUESTED"
+    },
+    {
+      "url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/pull/113#issuecomment-6917959250",
+      "user": "DoanQuocKien",
+      "review": null
+    }
+  ],
+  "git_checks": {
+    "pr113_merge_base": "fca0ea21c0cf0edd8cdd8f287085cdb7ad13b1d5",
+    "pr113_deleted_d5_files": 797,
+    "pr113_deletes_d2_archive": true,
+    "main_tracked_d5_files": 797,
+    "main_d2_archive_exists": true,
+    "files_changed_between_previous_tested_head_and_main": []
+  },
+  "measurements": {
+    "new_live_measurements": false,
+    "latest_numeric_snapshot": "2026-11-16",
+    "previous_cpu_validation": {
+      "passed": 882,
+      "skipped": 2,
+      "deselected": 4,
+      "seconds": 62.85,
+      "commit": "4970a745158ae6d648ac07c9dbb0f51c811b5248"
+    }
+  }
+}

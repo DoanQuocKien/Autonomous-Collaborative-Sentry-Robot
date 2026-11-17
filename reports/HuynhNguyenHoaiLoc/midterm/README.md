@@ -1,5 +1,7 @@
 # Hồ sơ giữa kỳ HNHL
 
+**Kiểm tra 17/11** xác nhận PR #128 đã được DQK approve và merge vào main. Bản bàn giao cho draft 18/11 cùng checklist Phase 2 ngày 19/11 đã bổ sung đường dẫn, lệnh ghi overlay và cách chấm entry. [Bàn giao 17/11](update-2026-11-17.md).
+
 **Hiện hành 16/11** đã bổ sung kết quả deployment thứ 7, pursuit, pose camera, F3/F17b và lịch video mới. PR #124 đã được DQK approve/merge. Bản Chương 5/7 hiện hành dùng các nguồn mới cùng lịch sử đo trước đó. [Bổ sung 16/11](update-2026-11-16.md).
 
 **Snapshot 15/11 sau merge:** [Chương 5/7, appendix và 15 nguồn đã pin](update-2026-11-15.md). #115 đã merge; #108 đưa #116/#119/#121 vào main; #122/#123 cũng đã merge. Bổ sung shared queue/target-tracker handoff, TRACK_LOST và timestamp 0; chưa có T1/T2 PASS mới. Gói #113 còn cần sửa trước khi merge.
@@ -32,7 +34,7 @@ Snapshot **01/11/2026**, dựa trên code/evidence hiện có. Hồ sơ này là
 
 ## Tài liệu để ghép báo cáo
 
-- [Chương5 hiện hành, Markdown11/11](chapter-05-current.md): hợp nhất kết quả HNHL, source mới và giới hạn; editor đọc cùng bảng11/11 về Experiment B và missing gates.
+- [Chương 5 hiện hành, Markdown 16/11](chapter-05-current.md) hợp nhất kết quả HNHL, dữ liệu lớp học mới và giới hạn nghiệm thu.
 - [Chương 5 dạng Word](HNHL-Chuong-5.docx): bản ngắn, có F9/F10/F13 và nguồn E01–E12, chỉnh sửa được.
 - [Chương 5 dạng Markdown](chapter-05.md): cùng nội dung, dễ review trong Git.
 - [Các dòng kết quả cho Chương 7](chapter-07-rows.md): có trạng thái và giới hạn nghiệm thu.
