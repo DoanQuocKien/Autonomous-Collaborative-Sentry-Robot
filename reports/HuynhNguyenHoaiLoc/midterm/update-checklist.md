@@ -1,5 +1,7 @@
 # Checklist tiếp tục hoàn thiện giữa kỳ HNHL
 
+**Kiểm tra 17/11** PR #128 đã merge sau review DQK. KR có thể ghép Chương 5/7 từ bản 16/11 cho draft 18/11. Các bước ghi overlay, fold whitelist và nhãn entry cho 19/11 nằm trong [bàn giao hiện hành](update-2026-11-17.md).
+
 **Cập nhật 16/11** đã có nguồn deployment thứ 7, pursuit và F3/F17b. Draft vẫn 18/11. Cảnh Phase 2 cùng nhóm và các cảnh còn lại chuyển sang 19/11, dựng video 20–21/11 theo quyết định DQK. HNHL chuẩn bị overlay/whitelist theo fold cho cảnh cửa. Dữ liệu sau freeze ghi ngày bổ sung. [Nguồn và lịch chi tiết](update-2026-11-16.md).
 
 **Hiện hành 15/11:** [đối chiếu sau merge và 15 nguồn pin](update-2026-11-15.md). #100/#101/#108/#115 đã merge; DQK đã đo workload kết hợp RTX4050. HNHL bổ sung queue/tracker handoff, TRACK_LOST và timestamp 0. Chờ nghiệm thu door T1/cross-camera, D3/gallery, independent D5, F11/world truth, raw latency và accuracy FP16/FP32 RTX4050. Sáu lượt deployment của DQK không thay kiểm chứng map/vantage tự động. Gói #113 chưa sửa việc xóa dữ liệu nên chưa merge. Các phần theo ngày bên dưới là snapshot lịch sử.
@@ -58,9 +60,11 @@ Khi camera sửa xong: DQK đo lại mount/self-pose; nếu thay module thì c�
 
 - Trước09/11: bổ sung các hình khả thi và bản thảo cho editor.
 - 16/11: đóng thí nghiệm, freeze hình; phần chưa chạy chuyển thành đang thực hiện/kế hoạch.
-- 18/11: full report draft nhóm và video cut nếu làm video.
-- 19–20/11: kiểm tra mọi số với evidence, freeze PR ngày20/11.
+- 18/11: full report draft nhóm.
+- 19/11: các cảnh video còn lại tại lớp, gồm Phase 2 theo fold whitelist. Dữ liệu đo thêm ghi ngày bổ sung sau freeze.
+- 20–21/11: dựng video theo quyết định nhóm ngày 16/11, kiểm tra mọi số với evidence. Freeze PR ngày 20/11.
 - 21/11: clean checkout và tag midterm sau review nhóm.
+- 22/11: chốt video nếu nhóm làm video.
 - 23/11: nộp báo cáo10–15 trang kèm code; video là tùy chọn.
 
 Nếu nhóm làm video, HNHL chuẩn bị screen recording overlay laptop: whitelist/intruder, khóa/mất/khóa lại target và FPS/VRAM. Chỉ quay thao tác đã hoạt động, xin phối hợp DQK/KR cho cảnh robot/cửa; chưa có clip hoàn chỉnh hoặc link demo trong snapshot này.

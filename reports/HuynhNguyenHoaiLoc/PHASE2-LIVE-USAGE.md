@@ -17,7 +17,7 @@ Enrol qua chính camera cửa bằng công cụ dưới đây. Chuẩn bị mộ
 ```powershell
 $env:YOLO_CONFIG_DIR = Join-Path (Get-Location) 'data/ultralytics'
 $env:YOLO_AUTOINSTALL = 'false'
-.venv/Scripts/python.exe -m tools.monitor_door --url http://ESP32_IP:81/stream --whitelist data/whitelist --out-dir data/phase2/session-001 --seconds 60 --display
+.venv/Scripts/python.exe -m tools.monitor_door --url http://ESP32_IP:81/stream --whitelist data/door-whitelist --out-dir data/phase2/session-001 --seconds 60 --display
 ```
 
 Mỗi lần chạy dùng thư mục output mới. Mặc định chỉ lưu log và provenance. `--save-snapshots` lưu crop của intruder; `--save-overlay` lưu AVI cùng `overlay_frames.jsonl`. AVI phát ở nhịp danh nghĩa 5 Hz. Index giữ thời gian nhận từng frame để kiểm tra khoảng trống. Tất cả log riêng, ảnh, embeddings và video nằm dưới `data/` được Git ignore. Chỉ đưa số liệu tổng hợp đã kiểm tra vào reports.
@@ -73,7 +73,7 @@ Khi PURSUE thiếu quan sát tươi quá `target_lost_timeout_s`, runner dừng 
 Replay nhận JSON riêng dưới `data/` với `camera="esp32"`, `timestamp_source` và danh sách `frames`. Mỗi frame có `t`, `seq`, `image`, `image_sha256`. Timestamp/sequence phải tăng. Split thành manifest riêng khi stream restart. Mọi ảnh và hash được kiểm tra trước khi tạo output.
 
 ```powershell
-.venv/Scripts/python.exe -m tools.monitor_door --replay-manifest data/door-session/frames.json --whitelist data/whitelist --out-dir data/phase2/replay-001
+.venv/Scripts/python.exe -m tools.monitor_door --replay-manifest data/door-session/frames.json --whitelist data/door-whitelist --out-dir data/phase2/replay-001
 .venv/Scripts/python.exe -m tools.evaluate_door_entries --entries data/phase2/session-001/entries.jsonl --truth data/phase2/session-001/truth.json --out reports/HuynhNguyenHoaiLoc/week-07/door-session-001.json
 ```
 
