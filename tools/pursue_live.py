@@ -52,6 +52,7 @@ CENTRE_TOL_WIDTH = 0.10                       # plan: bbox centre within +/- 10 
 MAX_PROCESS_S = 0.5                           # longer than this for one frame: stop instead of driving on it
 FEET_MARGIN_PX = 3
 YAW_DEADBAND = 0.10                           # |yaw_err| inside the +/-10 % centre band: no yaw-only command (the smallest legal turn, 0.45, is about 125 deg/s)
+SEARCH_AFTER_S = 0.6                          # --search: no target this long -> spin to find a person
 YAW_PULSE_PERIOD = 3                          # yaw-only commands: one frame on, two frames off (about 6 deg per pulse instead of 14+ deg bursts)
 REACQ_YAW_GATE = 0.6                          # re-lock gate: the only person in view within this yaw_err (normalised, 0.6 = about 48 deg) and 1.0 m of the last position
 REACQ_DIST_GATE_M = 1.0
@@ -61,11 +62,11 @@ REACQ_MAX_LOST_S = 3.0
 COLS = ["t", "track_id", "dist_m", "forward_m", "left_m", "yaw_err", "feet_cut", "range_src", "foot_forward_m", "v_req", "w_req", "v", "w", "suppressed", "mode", "event", "obstacle_m", "obstacle_blocked", "tracks"]
 
 
-def obstacle_input(obs, size):
+def obstacle_input(obs, size, unresolved_bottom=None):
     """ObstacleResult -> (nearest distance m or None, its bearing rad (+ = left), blocked). blocked: an obstacle WITHOUT a distance is near by the
     Explorer's rule (box bottom below 55 % of the image height, or cut off by the border); stop_m = 0 keeps resolved obstacles for the controller."""
     near = min(obs.ground_points, key=lambda g: g.distance_m, default=None)
-    blocked = Explorer(ExploreSettings(stop_m=0.0), size).blocking(obs)[0]
+    blocked = Explorer(ExploreSettings(stop_m=0.0, **({} if unresolved_bottom is None else {"unresolved_bottom": unresolved_bottom})), size).blocking(obs)[0]
     return (None, 0.0, blocked) if near is None else (near.distance_m, math.atan2(near.left_m, near.forward_m), blocked)
 
 
@@ -147,6 +148,7 @@ class Pursuit(object):
         self.rows = []
         self.hold_events = []
         self.last_seen = None                      # (yaw_err, distance or None) of the target when last seen
+        self.search_w, self._search_dir = 0.0, 1.0   # search_w > 0: spin to find the person again (--search)
         self._yaw_phase = 0
         self._dist_hist = []                       # recent ranges of the target (m), for the dead band
 
@@ -252,6 +254,8 @@ class Pursuit(object):
             if ob_blocked and v > 0.0:
                 v = 0.0                                              # an obstacle without a distance is near: no forward motion (yaw and backing away stay allowed)
             self.last_seen = (ye, gp.distance_m if gp is not None else None)
+            if abs(ye) > 0.05:
+                self._search_dir = 1.0 if ye > 0 else -1.0           # + yaw_err = the person is on the left
             if abs(v) < 1e-9 and w != 0.0:                           # yaw-only: dead band, then short pulses
                 self._yaw_phase = (self._yaw_phase + 1) % YAW_PULSE_PERIOD
                 if abs(ye) <= YAW_DEADBAND or self._yaw_phase != 1:
@@ -260,7 +264,13 @@ class Pursuit(object):
                 self._yaw_phase = 0
         else:
             v = w = 0.0                                              # no target this frame: stop now (the sender also stops a stale command)
-            if self.target_id is not None and self.t_seen is not None and t - self.t_seen >= self.lost_end_s:
+            if self.search_w and (self.t_seen is None or t - self.t_seen >= SEARCH_AFTER_S):
+                self.target_id = None                                # lost for a while: any person within the lock range is the new target
+                self._yaw_phase = (self._yaw_phase + 1) % YAW_PULSE_PERIOD
+                if self._yaw_phase == 1:                             # spin on the spot in short pulses towards the side the person was last seen (left when unknown)
+                    w = math.copysign(self.search_w, self._search_dir)
+                row.update(mode="SEARCH")
+            if self.t_seen is not None and t - self.t_seen >= self.lost_end_s:
                 self.end_reason = "target lost for %.1f s" % self.lost_end_s
         self.cmd = (v, w)
         row.update(v=round(v, 3), w=round(w, 3))
@@ -366,6 +376,9 @@ def main():
     ap.add_argument("--range-source", choices=("foot", "trunk"), default="foot", help="foot: floor distance of the box bottom (default); trunk: range from the shoulder-to-hip length with a population prior, foot-row fallback when the keypoints are not confident (a lead, see sentry/perception/body_range.py)")
     ap.add_argument("--pose-weights", default=None, help="YOLOv8-pose weights for --range-source trunk (default [reid] pose_weights, else yolov8n-pose.pt in the repo root)")
     ap.add_argument("--floor", choices=("glossy", "matte", "unknown"), default="unknown", help="floor type for the obstacle detector; unknown -> every obstacle is unresolved (then low boxes only stop forward motion)")
+    ap.add_argument("--search", action="store_true", help="target lost for 0.6 s: spin on the spot (pulses, towards the side it was last seen) until a person within the lock range is found; --lost-end-s then counts the whole search (set 30)")
+    ap.add_argument("--no-obstacles", action="store_true", help="no obstacle detector at all (2026-11-18: unresolved on the glossy floor, it blocks forward motion for far chairs); keep the floor clear, R1 is the only stop")
+    ap.add_argument("--unresolved-bottom", type=float, default=None, help="an obstacle without a floor distance blocks forward motion when its box reaches below this fraction of the image height (default 0.55 of the Explorer; with the camera pitched up the horizon is near 0.58, so far chairs block: 0.75 keeps only what is within about 1 m)")
     ap.add_argument("--tower-avoid", action="store_true", help="the ESP32 tower (50 mm ArUco ids 10-13 on its faces, [tower] in config.toml): inside trigger_m turn 90 deg away, 0.8 m sideways, turn back, straight on until clear, then re-lock the target (sentry/nav/tower_avoid.py; the manoeuvre is open loop and UNTESTED with a person)")
     ap.add_argument("--out", default="data/pursuit")
     a = ap.parse_args()
@@ -386,6 +399,7 @@ def main():
     model = WheelModel.from_session(a.motion_session) if a.motion_session else WheelModel()
     pursuit = Pursuit(ctl, model, ground_point, geom.undistort_points, geom.size, a.lock_range, lost_end_s=a.lost_end_s, feet_row_offset_px=a.feet_row_offset_px if a.feet_row_offset_px is not None else float(load()["pursuit"].get("feet_row_offset_px", 0.0)),
                       integrate=not a.dry_run)
+    pursuit.search_w = 0.5 if a.search else 0.0
     trunk_m = float(load()["pursuit"].get("trunk_length_m", 0.50))
     trunk_conf = float(load()["pursuit"].get("trunk_conf_min", 0.8))
     validate_session_params(a, a.feet_row_offset_px if a.feet_row_offset_px is not None else float(load()["pursuit"].get("feet_row_offset_px", 0.0)), trunk_m, trunk_conf, pcfg.target_distance_m)
@@ -415,10 +429,10 @@ def main():
     def process(frame, t):
         t0 = time.time()
         tracks = perceive(frame)
-        obstacles = obstacle_input(detect_obstacles(frame, t, mode="pursuit"), detect_obstacles.geometry.size)
+        obstacles = None if a.no_obstacles else obstacle_input(detect_obstacles(frame, t, mode="pursuit"), detect_obstacles.geometry.size, a.unresolved_bottom)
         if tower_ta is not None:
             tw = look(geom, tower_obj, frame)
-            out = tower_ta.step(t, (tw[1], tw[2]) if tw else None, obstacles[0])
+            out = tower_ta.step(t, (tw[1], tw[2]) if tw else None, None if obstacles is None else obstacles[0])
             if out is not None:
                 v, w = out[0], out[1]
                 if time.time() - t0 > MAX_PROCESS_S:
@@ -491,7 +505,8 @@ def main():
         print("warming up the person detector (first frame is slow, done before R1 is needed)...", flush=True)
         for _ in range(3):
             perceive(first.frame_bgr)
-            detect_obstacles(first.frame_bgr, 0.0, mode="pursuit")
+            if not a.no_obstacles:
+                detect_obstacles(first.frame_bgr, 0.0, mode="pursuit")
         print("start checks passed: battery, video", flush=True)
         r1 = {"held": True, "fail": 0}
         if not a.dry_run:
