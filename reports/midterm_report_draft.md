@@ -171,7 +171,7 @@ Khi kẻ xâm nhập bị từ chối tại cửa, một vector đặc trưng to
 
 ## 5.6 Tối ưu hóa và kiểm thử hiệu năng GPU (Workload Profiling)
 
-Đo đạc workload tổng hợp trên GPU laptop **RTX 5060** (trên RTX 4050 hiện mới chỉ có bằng chứng đo từng mô hình đơn lẻ; chưa đo đồng thời trên RTX 4050) [E05-E07]:
+Đo đạc workload tổng hợp trên GPU laptop **RTX 5060** (RTX 4050 đo đủ bộ mô hình ngày 13/11: 19,23 FPS, p95 121 ms) [E05-E07]:
 - Khi nạp đồng thời toàn bộ các mô hình (YOLOv8n + OSNet-AIN + YOLOv8n-pose + SCRFD/MobileFaceNet + XFeat + DINOv2-B FP16): bộ nhớ VRAM chiếm dụng ở mức **0,939 GiB** (thấp hơn trần 5,5 GB decimal tức 5,12 GiB; đo qua NVML device-used 20 ms, chưa tính transport và điều khiển).
 - Thử nghiệm có chèn ít nhất 2 crop tổng hợp (synthetic padding) cho body/face khi thiếu detection (đây là bài đo workload, không phải đo accuracy).
 - Lập lịch tuần tự (scheduled): khi điều phối luồng cửa định kỳ đạt throughput **19,65 FPS** (độ trễ p95 là 87,62 ms), tần số cập nhật cửa thực tế đạt **4,52 Hz** (kế hoạch yêu cầu 5 Hz). Hai chế độ nạp full model mỗi frame chỉ đạt 12,72 và 14,25 FPS (< 15 FPS). Do đó chưa thể coi là hoàn tất nghiệm thu thời gian thực trên mọi cấu hình.
@@ -250,24 +250,24 @@ Nguyên tắc của báo cáo: **mọi con số đều trích dẫn file bằng 
 
 | Hạng mục chức năng | Trạng thái kỹ thuật | Kết quả định lượng hiện có | File bằng chứng |
 | :-- | :--: | :-- | :-- |
-| **Độ trễ truyền video & điều khiển** | **CHƯA ĐẠT độ trễ video** | 20 FPS, p95 53 ms (mục tiêu < 50 ms), mất gói 0,0% | `reports/DoanQuocKien/week-01/` |
-| **An toàn E-Stop & Watchdog** | **ĐẠT (T2)** | Watchdog ngắt motor sau 305–315 ms khi mất gói; thả R1 cắt động cơ trung vị 7 ms (16 lần, 12/11), 10 ms (16/11, sau khi triển khai lại mã đã sửa); gói điều khiển chưa ký | `tests/test_estop.py`, `reports/DoanQuocKien/week-07/classroom_1116/README.md` |
+| **Độ trễ truyền video & điều khiển** | **CHƯA ĐẠT độ trễ video** | 12/11 (hotspot 2,4 GHz): p95 128 ms, 19,4–19,6 fps (ngưỡng p95 ≤ 50 ms, ≥ 20 fps); tuần 1: p95 53 ms ở điều kiện khác; mất gói điều khiển 0,0% | `reports/DoanQuocKien/week-06/latency_1111/`, `week-01/` |
+| **An toàn E-Stop & Watchdog** | **ĐẠT (T2, dead-man R1); watchdog mới đo chạy khô** | Watchdog 305–315 ms chỉ đo chạy khô (giới hạn 350 ms với motor chạy chưa kiểm chứng); thả R1 cắt động cơ trung vị 7 ms (16 lần, 12/11), 10 ms (16/11, sau khi triển khai lại mã đã sửa); gói điều khiển chưa ký | `tests/test_estop.py`, `reports/DoanQuocKien/week-07/classroom_1116/README.md` |
 | **Triển khai camera cửa (T2)** | **ĐẠT (một cửa, một phòng)** | 7 lượt tính điểm; 14/11 hai lượt đạt (bắt tay 109/109 và 163/163, STANDBY sau 18 và 26,6 s, 0 va chạm); 16/11 một lượt đạt (110/110, 30,7 s, cửa cách 2,93 m, nội thất 0,35 m, 0 va chạm). Chưa thử dừng khi gặp vật cản và né tháp | `reports/DoanQuocKien/week-07/classroom_1116/` |
 | **Truy bám PD (live)** | **CHƯA ĐẠT** | 16/11, một lượt 60 s, một người: theo dấu 99,7%, trong dải 1,2 ± 0,2 m chỉ 32% (yêu cầu 80%), căn tâm 91%, 0 sự kiện HOLD; chưa kiểm cự ly bằng thước, chế độ 5 W đọc cuối buổi (Hình F17b) | `reports/DoanQuocKien/week-07/classroom_1116/pursuit/` |
 | **Hiệu chuẩn thấu kính fisheye** | **ĐẠT (T1)** | 52/58 góc nhìn, sai số chiếu lại RMS **0,83 px** | `calib/camera.json` |
-| **Bù góc camera động LiveTilt** | **ĐẠT (T1/T2)**| Sai số khoảng cách 0,5%–6,0% tĩnh, 3,0%–20,0% động | `calib/camera_pose_classroom.json` |
+| **Bù góc camera động LiveTilt** | **MỘT PHẦN (T1/T2)**| Sai số khoảng cách 0,5%–6,0% tĩnh, 3,0%–20,0% động; đạt ở 1 m, pitch đổi theo buổi | `reports/DoanQuocKien/week-02/live_tilt/` |
 | **Mô hình di chuyển & ArUco** | **PENDING (1/5 lượt T2)** | Sai số sau 3 m: 98,3 cm thuần DR (FAIL ngưỡng 40 cm); 14,5 cm có ArUco, mới 1/5 lượt cần thiết | `reports/DoanQuocKien/week-05/f15/` |
 | **Nhận diện cửa vào (Bake-off)** | **ĐẠT (T1)** | XFeat đạt AUC **0,99–1,00**, vượt trội so với ORB (0,91) | `reports/kouun-rokku/week-05/F12_*.png` |
 | **Khoảng cách vật cản mặt sàn** | **CHƯA ĐẠT / PENDING T1** | Median 5,34%; p90 20,91% vượt giới hạn 20%; 8/9 IDs, thiếu ID21, chưa đủ ≥20 IDs và điều kiện độc lập | `reports/HuynhNguyenHoaiLoc/midterm/` |
 | **Fine-tune YOLOv8n vật cản D5** | **DEV-VAL (T1)** | mAP50 đạt 0,810 (input 640); recall chân ghế 96,0%; 307/90 cùng session | `reports/HuynhNguyenHoaiLoc/midterm/` |
 | **Phát hiện dây cáp sàn nhà** | *CHƯA ĐẠT* | Recall 0,000 (0,0%) tại điểm vận hành; chuyển sang fallback hình học | `reports/HuynhNguyenHoaiLoc/midterm/` |
 | **Xác thực khuôn mặt cửa D2** | *PILOT (T1)* | Clip cafe, ngưỡng 0,45: TAR 82,99%, FAR 46,40%. Tại cửa với camera ESP32 (14/11, ba người): TAR gộp 0,937, FAR 0/1754; chưa đạt TAR 95% và chưa có người lạ ngoài nhóm | `reports/HuynhNguyenHoaiLoc/midterm/` |
-| **Phân loại Sector lối vào** | **ĐẠT (T0)** | Độ chính xác phân loại hướng đi Trái/Giữa/Phải đạt **96,7%** | `reports/kouun-rokku/week-04/` |
+| **Phân loại Sector lối vào** | **ĐẠT (T0)** | Độ chính xác phân loại hướng đi Trái/Giữa/Phải **99,7%** (299/300 quỹ đạo); chưa chạy T1 trên D2 | `reports/kouun-rokku/week-04/sector_accuracy.json` |
 | **ByteTrack Parity Python 3.6** | **ĐẠT (T0)** | 100,0% parity backend với Ultralytics (chưa có rank-1 / D3 tracking accuracy người thật) | `reports/kouun-rokku/week-05/bytetrack_*.json` |
-| **Bộ phát hiện dừng bước (Hold)** | **ĐẠT (T0)** | Kích hoạt dwell time 2,05 s; 0 lần báo giả khi robot tự quay | `reports/kouun-rokku/week-05/hold_*.json` |
-| **Điều khiển Standoff Hold** | **ĐẠT (T0)** | Vận tốc tịnh tiến $v=0,0$ tuyệt đối; xoay canh giữa trong $\le 0,26\text{ s}$ | `reports/kouun-rokku/week-06/phase3_*.json` |
+| **Bộ phát hiện dừng bước (Hold)** | **ĐẠT (T0)** | Dwell time cấu hình 2,0 s (đạt); 0 lần báo giả khi robot tự quay | `reports/kouun-rokku/week-05/hold_*.json` |
+| **Điều khiển Standoff Hold** | **ĐẠT (T0)** | Vận tốc tịnh tiến $v=0,0$ tuyệt đối; thời gian canh giữa tối đa 0,0 s trong mô phỏng và phát lại | `reports/kouun-rokku/week-06/phase3_*.json` |
 | **Chuỗi Phase 2 $\rightarrow$ Phase 3** | **ĐẠT (T0)** | 100% lệnh hợp lệ vùng chết; chuyển giao hàng đợi đa mục tiêu trơn tru | `tests/test_phase3_runner.py` |
-| **Tải GPU Laptop (Workload)** | **ĐẠT (T1 / RTX 5060)** | 19,65 FPS scheduled (door 4,52 Hz, synthetic padding); VRAM 0,939 GiB (RTX 4050 chỉ có single-model) | `reports/HuynhNguyenHoaiLoc/midterm/` |
+| **Tải GPU Laptop (Workload)** | *PILOT (T1)* | RTX 5060: 19,65 FPS, VRAM 0,939 GiB; RTX 4050 (13/11): 19,23 FPS, door 4,61 Hz (mục tiêu 5 Hz), 0,89 GiB; chưa nhận T1 | `reports/HuynhNguyenHoaiLoc/midterm/`, `reports/DoanQuocKien/week-06/gpu_rtx4050_1113/` |
 
 ---
 
@@ -293,7 +293,7 @@ Các số liệu đầy đủ nằm ở mục 7.2; chương này nêu những g�
 ## 8.3 Rủi ro đã đo (rủi ro khuôn mặt, khoảng cách cửa và chuyển động vòng hở: xem 8.1)
 
 1. **Lần chạy T2 tính điểm:** ba lần thử đầu ngày 16/11 không tính (thả R1 sớm hai lần, xuất phát cách bảng 3,54 m một lần); bài học: giữ R1 tới hai tiếng bíp và xuất phát cách bảng không quá khoảng 3,35 m.
-2. **Pin, sạc và chế độ nguồn:** 12,4 V đầu buổi, 11,4–11,6 V sau vài lần chạy; chế độ 5 W được đọc ở cuối buổi 16/11, các phép đo benchmark dùng MAXN.
+2. **Pin, sạc và chế độ nguồn:** 11,91 V đầu lần chạy T2, 11,63 V cuối lần chạy bám; chế độ 5 W được đọc ở cuối buổi 16/11, các phép đo benchmark dùng MAXN.
 3. **Dữ liệu cá nhân trong lịch sử git:** gói D2_1028.zip chứa khuôn mặt ba thành viên, mật khẩu nằm trong kho nên không được bảo vệ; nhóm quyết định ngày 13/11 (cả ba đồng ý) giữ gói trong kho và chấp nhận rủi ro này.
 
 **Nguyên tắc:** hạng mục nào chưa chạy ổn đến ngày đóng băng thì ghi là "đang thực hiện" kèm kế hoạch.
