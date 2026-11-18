@@ -1,1 +1,50 @@
-{"status": "superseded; validation for rebased candidate recorded in follow-up evidence commit"}
+{
+  "candidate_commit": "021181588d23c3ac830a5fb4194b8550806d8f3c",
+  "candidate_tree": "f14c2f6815d94a1ba541e5f52c012ce171e90c9a",
+  "base_commit": "692982665b65c3b573cb0be076a69e7d6c812bb5",
+  "package": {
+    "commit": "021181588d23c3ac830a5fb4194b8550806d8f3c",
+    "archive": "/tmp/pr113-final-a.zip",
+    "sha256": "6299f4e820af27eec2b1921a32d0087e1f4322cb73181d2a17ba3c21c25f0f5a",
+    "file_count": 1434,
+    "history_included": false
+  },
+  "identical_second_build": true,
+  "all_manifest_hashes_verified": true,
+  "source_registry": {
+    "status": "PASS",
+    "source_files": 52,
+    "errors": []
+  },
+  "d5_tracked_files": 797,
+  "d2_archive_tracked": true,
+  "pdf_committed": false,
+  "gpu_hardware_acceptance": false,
+  "cpu_tests": {
+    "passed": 896,
+    "skipped": 3,
+    "deselected": 6,
+    "exit_code": 0,
+    "selection": "not gpu and not hil and not replay",
+    "command": "PYTHONPATH=/tmp/pr113-report-deps <workspace>/.venv/bin/python -m tools.run_cpu_tests -m 'not gpu and not hil and not replay'",
+    "clean_status_at_start": true
+  },
+  "report": {
+    "rendered_pages": 14,
+    "chapters": 9,
+    "images": 11,
+    "byte_identical_reproduction": true,
+    "pdf_sha256": "8bd6f5ef745d4b812c82e2b99ff6e983d3f7e9b84ab16599741697e9a508da63",
+    "source_sha256": "dd0e95db0799916b718beba16561fdd08539d0ae88ae4f55827937185eaa01c0",
+    "visual_review": "All 14 pages inspected at contact-sheet scale before final footer/ownership edits; final source/page/hash check passed."
+  },
+  "environment": {
+    "check_env_exit_code": 1,
+    "missing_model_packages": [
+      "insightface",
+      "torchreid"
+    ],
+    "report_packages_target": "/tmp/pr113-report-deps"
+  },
+  "scope": "Evidence applies to candidate commit. Follow-up commit changes validation artifacts only; final submission/freeze needs its own validation."
+}
