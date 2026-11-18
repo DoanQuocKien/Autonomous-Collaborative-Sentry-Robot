@@ -50,9 +50,9 @@ def look(g, obj, raw):
     return found[0][0], mr[0], mr[1], float(np.mean([np.linalg.norm(c[i] - c[(i + 1) % 4]) for i in range(4)]))
 
 
-def drive_seconds(travel_m, v, gain):
-    """Longest drive time (s) that keeps the robot inside `travel_m`, with the modelled speed 15 % too low."""
-    return max(0.0, travel_m) / (gain * abs(v) * 1.15)
+def drive_seconds(travel_m, v, gain, margin=1.15):
+    """Longest drive time (s) that keeps the robot inside `travel_m`, with the modelled speed `margin` times too low (the robot was 20 % SLOWER than the model on 11-18, so 1.0 is still a cap, not a target)."""
+    return max(0.0, travel_m) / (gain * abs(v) * margin)
 
 
 def main():
@@ -85,7 +85,7 @@ def main():
         ap.error("%s needs start_m > floor_m + 0.1" % a.mode)
     gain = json.load(open("calib/motion.json"))["v_gain_m_per_s"]
     travel = a.start_m - a.floor_m if fwd else a.back_m
-    max_s = drive_seconds(travel, a.v, gain)
+    max_s = drive_seconds(travel, a.v, gain, 1.0 if a.mode == "avoid" else 1.15)
     sign = 1.0 if fwd else -1.0
     cfg = TowerAvoidConfig.from_toml()
     cfg = dataclasses.replace(cfg, **{k: v for k, v in (("turn_scale", a.turn_scale), ("drive_scale", a.drive_scale), ("drive_v", a.v)) if v is not None})
