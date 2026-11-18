@@ -54,13 +54,13 @@ def test_package_uses_commit_not_dirty_workspace_and_has_verified_manifest(tmp_p
 
 def test_untracking_does_not_make_committed_tree_pass(tmp_path):
     git = repo(tmp_path)
-    (tmp_path/'data').mkdir()
-    (tmp_path/'data/private.txt').write_text('fixture data')
+    (tmp_path/'config').mkdir()
+    (tmp_path/'config/secrets.h').write_text('fixture data')
     git('add', '.')
     git('commit', '-qm', 'private fixture')
-    git('rm', '--cached', 'data/private.txt')
+    git('rm', '--cached', 'config/secrets.h')
     assert audit(index=True, cwd=tmp_path)['violations'] == []
-    assert audit(cwd=tmp_path)['violations'] == ['data/private.txt']
+    assert audit(cwd=tmp_path)['violations'] == ['config/secrets.h']
     with pytest.raises(ValueError):
         build('HEAD', tmp_path/'bad.zip', cwd=tmp_path)
     assert not (tmp_path/'bad.zip').exists()
@@ -73,3 +73,21 @@ def test_same_commit_produces_same_zip_independent_of_wall_clock(tmp_path, monke
     monkeypatch.setattr(zipfile.time, 'localtime', lambda *_: (2000, 1, 1, 0, 0, 0, 1, 1, 0))
     second = build('HEAD', tmp_path/'second.zip', cwd=tmp_path)
     assert first['sha256'] == second['sha256']
+
+
+def test_export_excludes_tracked_datasets_without_removing_them(tmp_path):
+    git = repo(tmp_path)
+    for path in ('data/D5/image.jpg', 'team_data/D2_1028.zip', 'recordings/run/log.csv', 'weights/model.pt'):
+        file = tmp_path / path
+        file.parent.mkdir(parents=True, exist_ok=True)
+        file.write_bytes(b'tracked fixture')
+    git('add', '.')
+    git('commit', '-qm', 'team datasets')
+    before = git('ls-files')
+    assert audit(cwd=tmp_path)['violations'] == []
+    build('HEAD', tmp_path / 'submission.zip', cwd=tmp_path)
+    with zipfile.ZipFile(tmp_path / 'submission.zip') as archive:
+        assert archive.namelist() == ['README.md', 'SUBMISSION-MANIFEST.json']
+    assert git('ls-files') == before
+    assert (tmp_path / 'data/D5/image.jpg').read_bytes() == b'tracked fixture'
+    assert (tmp_path / 'team_data/D2_1028.zip').read_bytes() == b'tracked fixture'

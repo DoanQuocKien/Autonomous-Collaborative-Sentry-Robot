@@ -6,6 +6,7 @@ import hashlib
 import json
 from pathlib import Path
 import re
+import subprocess
 from urllib.parse import unquote, urlsplit
 
 
@@ -13,9 +14,13 @@ def check(root: Path, registry: Path, report: Path) -> dict:
     doc = json.loads(registry.read_text(encoding='utf-8'))
     errors = []
     for entry in doc['files']:
-        source = root / entry['path']
-        if not source.is_file() or hashlib.sha256(source.read_bytes()).hexdigest() != entry['sha256']:
-            errors.append('source missing or changed: ' + entry['path'])
+        try:
+            data = subprocess.check_output(['git', 'show', entry['source_commit'] + ':' + entry['path']], cwd=root, stderr=subprocess.PIPE)
+        except subprocess.CalledProcessError:
+            errors.append('pinned source unavailable: ' + entry['path'])
+            continue
+        if hashlib.sha256(data).hexdigest() != entry['sha256']:
+            errors.append('source hash mismatch: ' + entry['path'])
     for link in re.findall(r'!?\[[^]]*\]\(([^)]+)\)', report.read_text(encoding='utf-8')):
         parsed = urlsplit(link)
         if parsed.scheme or parsed.netloc or not parsed.path:

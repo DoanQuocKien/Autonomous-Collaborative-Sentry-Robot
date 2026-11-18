@@ -49,8 +49,8 @@ một tag khác để giả nhận bước chốt của nhóm đã hoàn tất.
 
 ZIP xuất từ commit được ghi trong `SUBMISSION-MANIFEST.json`; checksum từng
 file không phụ thuộc uncommitted workspace. `.git`, dữ liệu trong `data/`, raw
-recordings, weights và archive D2 không nằm trong cây/gói hiện tại. Xóa khỏi
-cây không xóa bản cũ: lịch sử vẫn có archive/password theo protocol cũ.
+recordings, weights và archive D2 bị loại khỏi ZIP bằng pathspec. D5 và ZIP D2
+vẫn tracked trong repo theo quyết định nhóm; default password được giữ.
 Checker chỉ kiểm path, không tuyên bố đã audit mọi byte hoặc làm sạch lịch sử.
 
 ## Video — shot list và người phụ trách
@@ -59,7 +59,7 @@ Checker chỉ kiểm path, không tuyên bố đã audit mọi byte hoặc làm 
 | :-- | :-- | :-- |
 | Phần cứng JetBot/gamepad/ESP32 | DQK / KR | Chờ cut cuối và URL do DQK bàn giao |
 | Phase 1: cửa, sweet spot, prompt, handshake | DQK / KR | Chỉ dùng clip thật có nguồn; ghi rõ pilot |
-| Phase 2: whitelist, intruder queue | HNHL / KR | Replay được nếu chưa có live, caption REPLAY |
+| Phase 2: whitelist, intruder queue | HNHL / KR | HNHL chủ trì live pilot #115; replay ghi REPLAY |
 | Phase 3: pursuit, HOLD, queue handoff | DQK / KR | Tách clip robot có giám sát với SIMULATION |
 | Edge/FP16 | DQK / HNHL | Ghi thiết bị, có/không người, scope timing |
 

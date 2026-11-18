@@ -2,7 +2,7 @@
 
 **Autonomous Collaborative Sentry Robot — CS532**
 
-Báo cáo giữa kỳ • DQK / HNHL / KR • Bản tổng hợp ngày 14/11/2026
+Báo cáo giữa kỳ • DQK / HNHL / KR • Bản tổng hợp ngày 18/11/2026
 
 **Mục tiêu:** phối hợp một robot di động và một camera cố định tại cửa để phát hiện người chưa được cho phép, tiếp cận họ ở cự ly an toàn và giữ cảnh giới khi họ đứng yên. Ứng dụng hướng tới phòng học hoặc phòng làm việc có một cửa vào, với người vận hành giám sát và quyền dừng robot bằng tay cầm.
 
@@ -18,11 +18,11 @@ Báo cáo giữa kỳ • DQK / HNHL / KR • Bản tổng hợp ngày 14/11/202
 
 ## 1.2 Phạm vi đã triển khai
 
-Đã có các module truyền hình/điều khiển, định vị dead reckoning–ArUco, nhận diện cửa, face/re-ID/tracking, hàng đợi, máy trạng thái và bộ điều khiển bám/giữ vị trí. KR đã nối chuỗi Phase 2 → Phase 3 và kiểm thử CPU/mô phỏng; các lượt robot hiện có là thử có giám sát, chưa chứng minh vòng đầy đủ không can thiệp. Né tấn công và coverage search trên robot là mục tiêu sau giữa kỳ.
+Đã có các module truyền hình/điều khiển, định vị dead reckoning–ArUco, nhận diện cửa, face/re-ID/tracking, hàng đợi, máy trạng thái và bộ điều khiển bám/giữ vị trí. HNHL chủ trì Phase 2 live (#114/#115); KR nối queue với Phase3Runner và kiểm thử CPU/mô phỏng; các lượt robot hiện có là thử có giám sát, chưa chứng minh vòng đầy đủ không can thiệp. Né tấn công và coverage search trên robot là mục tiêu sau giữa kỳ.
 
-**Phạm vi số liệu:** kết quả laptop RTX 5060, laptop RTX 4050 và Jetson được ghi riêng. Dữ liệu pilot, dev-val, mô phỏng và thử robot không được dùng thay nhau để nghiệm thu. Số liệu nguồn PR #108 được lưu kèm commit và SHA256, ghi là owner-reported/unmerged; không đưa code PR #108 vào gói này. [S0, D13]
+**Phạm vi số liệu:** kết quả laptop RTX 5060, laptop RTX 4050 và Jetson được ghi riêng. Dữ liệu pilot, dev-val, mô phỏng và thử robot không được dùng thay nhau để nghiệm thu. PR #108 đã merge vào main; mã và số liệu được kế thừa qua rebase. Registry ghim commit:path và SHA256, giữ ngày/thiết bị của từng phép đo. [S0, D13]
 
-**Tình trạng bàn giao:** đây là bản editor có PDF để review; chốt nội dung theo lịch 18–22/11 và nộp 23/11. Các phép đo còn thiếu được giữ là pending trong chương 7–8.
+**Tình trạng bàn giao:** đây là bản editor; PDF được render để review và chỉ commit tại freeze tag; chốt nội dung theo lịch 18–22/11 và nộp 23/11. Các phép đo còn thiếu được giữ là pending trong chương 7–8.
 
 <!-- pagebreak -->
 
@@ -75,7 +75,7 @@ Perception trả detection, embedding, tọa độ tương đối và timestamp.
 
 Mô hình phân tách cho phép replay bằng cùng API logic mà không có motor. Kiểm thử đó chứng minh contract và chuỗi sự kiện, không chứng minh độ trễ hai camera thật, độ chính xác identity hay độ an toàn vật lý.
 
-**Nguồn:** cấu trúc mã đã tích hợp PR #101; DQK chương 3 ngày 13/11 [D13]. Những tool mới trong PR #108 chỉ được mô tả như bằng chứng nhánh tác giả, chưa là mã được bàn giao ở nhánh tuần 7.
+**Nguồn:** cấu trúc mã đã tích hợp PR #101; DQK chương 3 ngày 13/11 [D13]. Các tool PR #108 đã được nhận qua main; bằng chứng vẫn giữ ngày và điều kiện đo gốc.
 
 <!-- pagebreak -->
 
@@ -90,11 +90,11 @@ Mô hình phân tách cho phép replay bằng cùng API logic mà không có mot
 
 Thiết kế ưu tiên 5 GHz cho JetBot nhưng DQK ghi các lượt gần đây dùng hotspot điện thoại 2,4 GHz. Hai lượt video 120 s ngày 12/11, robot cạnh laptop: median decode latency 46 ms, p95 128 ms, p99 192–199 ms; nhận 19,6/19,4 FPS. Cả FPS và p95 chưa đạt ngưỡng ≥20 FPS/p95≤50 ms. Đây là kết quả khác phép đo 53 ms của tuần 1. [D13]
 
-![F7 — Độ trễ video ngày 12/11; bằng chứng DQK từ PR #108, chưa nghiệm thu.](kouun-rokku/week-07/sources/reports/DoanQuocKien/week-06/figures/F7_video_latency.png)
+![F7 — Độ trễ video ngày 12/11; bằng chứng DQK từ PR #108, chưa nghiệm thu.](DoanQuocKien/week-06/figures/F7_video_latency.png)
 
 Dead-man/e-stop yêu cầu vũ trang bằng Start và giữ R1; thả R1 hoặc nút khác thì dừng. Watchdog danh định 300 ms. DQK đo wheels-up ngày 12/11: 16 lần thả R1 cắt điện motor median 7 ms (5–11 ms); năm lần nút khác 7–8 ms. Đó là timestamp điện trên Jetson, chưa gồm độ trễ không dây tay cầm hay thời gian dừng cơ học. [D13]
 
-Các sửa SIGTERM, rate limiter và tool tiếp cận mới thuộc PR #108 chưa được nhận vào gói mã này. Quy trình chạy thật vẫn cần pin, khoảng sàn trống, R1 và e-stop; bản báo cáo không suy từ kiểm thử CPU sang chứng nhận phần cứng.
+Các sửa SIGTERM, rate limiter và tool tiếp cận PR #108 đã có trong main. Ngày 14/11: R1 release, robot_udp ENGAGED sau estop.py 17 ms, motors 0 sau 35 ms (dry-run). Rút dongle: estop.py STOPPED sau phát hiện 48 ms (motor cut riêng 6 ms), robot_udp motors 0 sau 97 ms; tắt pad khi giữ R1: motor cut riêng 6 ms. Các ca motor thật kê bánh; không đo từ lúc rút vật lý hoặc thời gian dừng cơ học. [D14] Quy trình chạy thật vẫn cần pin, khoảng sàn trống, R1 và e-stop; bản báo cáo không suy từ kiểm thử CPU sang chứng nhận phần cứng.
 
 <!-- pagebreak -->
 
@@ -106,11 +106,11 @@ Camera fisheye 160° có lens cao 0,100 m. Intrinsics OpenCV được khớp t�
 
 Khoảng cách sàn dựa vào ray sau undistort và pose theo session. Sai số một pixel xấp xỉ d²×0,0033/H: khoảng 0,11 m ở 1,8 m và 0,19 m ở 2,4 m với H=0,100 m. Bbox bottom nằm thấp hơn chân 3–7 px; thiếu contact hoặc phản chiếu phải trả unknown thay vì dùng khoảng cách giả. Camera đổi pitch sau khi nhấc robot, nên `self_pose` trước mỗi lượt là yêu cầu vận hành. [D13, H1]
 
-Robot không encoder; IMU đã lắp nhưng hỏng/tạm hoãn. Dead reckoning tích phân mô hình vi sai có vùng chết; ArUco sửa pose khi marker hợp lệ. Độ lệch chạy thẳng thay đổi theo sàn, pin và mức lệnh, không thể dùng một drift cố định cho mọi buổi. DQK báo 13 lượt trong 11–12/11 dao động −16 đến +59°/m; đây là nguồn nhánh #108, không được dùng thay phép hiệu chuẩn trong `calib/motion.json`. [D13]
+Robot không encoder; IMU đã lắp nhưng hỏng, đang sửa và chưa dự kiến có trước 23/11. Gains dead reckoning vẫn là tuần 2; fit theo sàn còn hoãn. [D16] Dead reckoning tích phân mô hình vi sai có vùng chết; ArUco sửa pose khi marker hợp lệ. Độ lệch chạy thẳng thay đổi theo sàn, pin và mức lệnh, không thể dùng một drift cố định cho mọi buổi. DQK báo 13 lượt trong 11–12/11 dao động −16 đến +59°/m; đây là bằng chứng #108 đã merge, không được dùng thay phép hiệu chuẩn trong `calib/motion.json`. [D13]
 
 ![F15 — Các endpoint đo được của lượt thật; không vẽ quỹ đạo ArUco giả lập.](DoanQuocKien/week-05/f15/F15_dead_reckoning.png)
 
-Một lượt có sửa ArUco đạt 14,5 cm sau khoảng 3 m, thuần DR lệch 98,3 cm. Chưa đủ năm lượt T2; thuần DR chưa đạt ngưỡng 40 cm. Kết quả tiếp cận cửa mới của DQK là một cửa/ngày và còn phụ thuộc đo thước, không chứng minh tự định vị toàn phòng. [C2, D13]
+Một lượt có sửa ArUco đạt 14,5 cm sau khoảng 3 m, thuần DR lệch 98,3 cm. Đây là thử định vị riêng; thuần DR chưa đạt ngưỡng 40 cm. T2 tiếp cận cửa có 7 lượt được tính: 4 ngày 30/10, 2 ngày 14/11 và 1 ngày 16/11. Lượt 16/11 STANDBY sau 30,7 s, tape door 2,93 m, 0 va chạm; DR tại vantage lệch 0,593 m nên pass dựa tape, không chứng nhận DR. Handshake rehearsal chỉ 1 accept và 1 reject hợp lệ, chưa 10/10. [D14, D16] Kết quả tiếp cận cửa mới của DQK là một cửa/ngày và còn phụ thuộc đo thước, không chứng minh tự định vị toàn phòng. [C2, D13]
 
 <!-- pagebreak -->
 
@@ -140,7 +140,9 @@ SCRFD/MobileFaceNet tạo face embedding 512D chuẩn hóa; so maximum cosine v�
 
 ![F13 — ROC pilot D2; không dùng chính pilot để chỉnh ngưỡng rồi tuyên bố PASS.](HuynhNguyenHoaiLoc/midterm/figures/F13_face_roc.png)
 
-Camera opt4 và guided enrollment trong thử DQK ngày 13/11 cho mặt rộng 68–91 px ở 3,0–1,8 m. Một người nhìn thẳng có 100% frame vượt 0,45, nhưng chưa có impostor scores để tính FAR; không gọi đây là TAR/FAR của hệ thống. Firmware và tool enrollment nguồn còn ở nhánh riêng. [D13]
+Camera opt4 và guided enrollment trong thử DQK ngày 13/11 cho mặt rộng 68–91 px ở 3,0–1,8 m. Ngày 14/11, ngưỡng cố định 0,45: TAR 822/877 = 0,937 (clip bootstrap [0,904; 0,970]); FAR 0/1754 straight-frame impostor scores. FAR gate đạt trên bộ này, TAR≥95% chưa được thiết lập. Chỉ ba người cùng một session, mỗi người so với hai enrolments còn lại; không suy ra population FAR. Ngưỡng 0,45 vẫn provisional (#118). [D14] [D13]
+
+HNHL chủ trì Phase 2 live (#115). Pilot 14/11 trên RTX 5060: 3 authorized/3 queued, coverage segment 50% mỗi cohort, 5 unresolved và 1 interrupted; median enqueue 9,387 s, hai người cùng session, chưa T1. Ngưỡng 0,45 provisional (#118). [H7]
 
 OSNet-AIN x1.0 và x0.25 đều chạy, nhưng 23 body crops hiện chưa tạo được gallery/query hợp lệ; thiếu gallery ở 2/3 người. Gate vẫn là ≥5 identities, rank-1≥85%; chưa có F14 đủ điều kiện. [H1]
 
@@ -161,7 +163,7 @@ Profiler nạp detector, OSNet, pose, face và cửa; có synthetic body/face pa
 | RTX 4050, all mỗi frame | 9,20 | 138,05 | 0,894 / không schedule |
 | RTX 4050, door scheduled | 19,23 | 121,36 | 0,890 / 4,61 |
 
-Dòng RTX 4050 lấy từ JSON tại commit 054d2adc, PR #108, không còn ghi là chưa đo combined workload. Cờ `t1_accepted`/`target_rtx4050_verified` trong nguồn vẫn false. Hai GPU có điều kiện/power khác nhau, chưa phải so sánh có kiểm soát. Scheduled FPS vượt 15 nhưng door thực chưa 5 Hz; không tự coi toàn pipeline realtime đã đạt. [D13]
+Dòng RTX 4050 lấy từ JSON DQK đã merge trong main; commit:path và SHA256 trong registry. Cờ `t1_accepted`/`target_rtx4050_verified` trong nguồn vẫn false. Hai GPU có điều kiện/power khác nhau, chưa phải so sánh có kiểm soát. Scheduled FPS vượt 15 nhưng door thực chưa 5 Hz; không tự coi toàn pipeline realtime đã đạt. [D13]
 
 ![F18 — Native PyTorch D5-640 trên RTX 5060; FP16 chưa tăng throughput.](HuynhNguyenHoaiLoc/midterm/figures/F18_d5_precision.png)
 
@@ -184,7 +186,7 @@ SCRFD Resize opset 11 tạo sai khác trên TensorRT 7.1; DQK thay nearest-neigh
 | 13/11, cửa ESP32 thật, 60 s | 17,7 / 17,1 | 118,5 / 123,9 ms |
 | 13/11, cửa thật, người ngồi 600 s | 14,45 | 153,0 ms |
 
-Lượt dài 600 s có RAM khoảng 2,13 GB, GPU tối đa 38,5°C, pin khoảng 11,96→11,72 V; vẫn chưa đủ 15 phút. Edge gate ≥20 FPS/p95≤100 ms chưa đạt với người và ESP32 thật. Lượt 16/10 không người/ảnh cửa tĩnh không thay kết quả mới. Các số 13/11 là owner evidence nhánh #108, không có motor/e-stop trong vòng benchmark. [D13]
+Lượt dài 600 s có RAM khoảng 2,13 GB, GPU tối đa 38,5°C, pin khoảng 11,96→11,72 V; vẫn chưa đủ 15 phút. Edge gate ≥20 FPS/p95≤100 ms chưa đạt với người và ESP32 thật. Lượt 16/10 không người/ảnh cửa tĩnh không thay kết quả mới. Các số 13/11 là bằng chứng DQK từ #108 đã merge, không có motor/e-stop trong vòng benchmark. [D13]
 
 <!-- pagebreak -->
 
@@ -197,6 +199,8 @@ StateMachine nhận event có timestamp và trả Command(v, w, play, actions, t
 TargetQueue giữ FIFO và vector đã chuẩn hóa; target đang bám không bị người mới thay thế. TARGET_EXITED hoàn tất mục tiêu hiện tại; nếu còn người chờ thì SEARCH/reacquire, nếu hết thì STANDBY. Handoff reset observation, dwell/filter và controller, yêu cầu mẫu mới thuộc identity kế tiếp.
 
 HoldDetector chiếu target local sang world theo pose robot, ước lượng vận tốc trên cửa sổ ngắn: vào HOLD khi speed<0,1 m/s đủ 2 s; thoát khi >0,2 m/s. Bù pose nhằm tránh báo đứng yên/di chuyển sai chỉ do robot xoay; drift odometry thực vẫn làm giới hạn kết quả.
+
+Live 16/11: tracked 99,7%, cự ly 1,2±0,2 m chỉ 32% (gate 80%, chưa đạt), centred 91%, 0 HOLD event. Điều kiện: glossy, 5 W giả định từ lần đọc cuối buổi, mã robot trước audit, gói điều khiển unsigned. Tower camera chưa được né như vật cản. [D16]
 
 Trong HOLD, v=0 và chỉ yaw recenter; PURSUE điều khiển cự ly mục tiêu 1,2 m và tránh vật cản khi có estimate hợp lệ. Lệnh tuân vùng chết bánh (dead=0,40), projector recheck miền hợp lệ; NaN/±Inf dừng trước saturation. STRIKE có logic preemption/xung 400 ms, còn thử tấn công robot ở sau giữa kỳ.
 
@@ -216,15 +220,15 @@ Mô phỏng closed-loop ghi HOLD tại 6,32 s, resume 8,26 s, zero translation t
 | T1 | Replay có nhãn/truth và protocol định trước | Accuracy/latency theo bộ dữ liệu và thiết bị ghi rõ |
 | T2 | Robot/ESP32 thật, pin và điều kiện có kiểm soát | Hành vi vật lý đủ số lượt, không suy từ T0 |
 
-PR #101 đã được sửa và kiểm tra: nhóm runner/controller/hold/state-machine/queue có 71 test PASS; toàn bộ CPU/replay trước đóng gói có 754 passed, 5 skipped, 4 deselected. Đó là kết quả commit fca0ea2, không mặc định là số test sau khi thêm tooling tuần 7. [K2]
+Kiểm thử checkout sạch sau rebase được ghi trong log K3 cùng commit/tree, command và dependency versions. Số test chỉ áp dụng commit được log, không chứng nhận model/GPU hoặc phần cứng. Kết quả cũ 754/773 không dùng để chứng nhận bản sửa này. [K3]
 
-Checkout sạch tuần 7 clone từ commit candidate được ghi riêng cùng tree SHA, Python/dependency versions, command, exit code và pytest output. Chỉ dùng môi trường package đã cài của máy; không copy raw datasets, weights hoặc `.venv` vào clone. Model/GPU environment được ghi riêng nếu thiếu; CPU/replay không chứng nhận full inference setup. [K3]
+Checkout sạch tuần 7 clone từ commit candidate được ghi riêng cùng tree SHA, Python/dependency versions, command, exit code và pytest output. Chỉ dùng môi trường package đã cài của máy; D5 và ZIP D2 vẫn tracked theo quyết định nhóm; không copy dữ liệu local bổ sung, weights hoặc `.venv` vào clone. Model/GPU environment được ghi riêng nếu thiếu; CPU/replay không chứng nhận full inference setup. [K3]
 
 ![F19 — Lịch sử test tại các snapshot đã công bố; số mới nhất xem log checkout sạch tuần 7.](DoanQuocKien/week-05/figures/F19_test_growth.png)
 
-Checker gói nộp đọc **committed tree** bằng `git ls-tree`, không lấy index làm bằng chứng cho commit. `--index` chỉ hỗ trợ pre-commit. Các path data/recordings/weights, secret filenames và model binaries bị từ chối. Checker theo tên file không phải kiểm toán nội dung hoặc lịch sử Git.
+Checker gói nộp đọc **committed export** qua index tạm từ `git read-tree`, cùng pathspec với `git archive`. Dữ liệu phát triển vẫn tracked; data/team_data/recordings/weights chỉ bị loại khỏi ZIP. `--index` chỉ hỗ trợ pre-commit. Các path data/recordings/weights, secret filenames và model binaries bị từ chối. Checker theo tên file không phải kiểm toán nội dung hoặc lịch sử Git.
 
-Gói ZIP lấy từ `git archive` của đúng commit, không chứa `.git`; manifest lưu SHA256 từng file. Test xác nhận workspace bẩn không lọt vào ZIP, dữ liệu chỉ untrack ở index vẫn làm HEAD fail, file output cũ không bị ghi đè. [K3]
+Gói ZIP lấy từ `git archive` của đúng commit, không chứa `.git`; manifest lưu SHA256 từng file. Test xác nhận workspace bẩn không lọt vào ZIP, dữ liệu tracked không bị xóa khi tạo ZIP, secret ngoài vùng loại vẫn làm HEAD fail, file output cũ không bị ghi đè. [K3]
 
 <!-- pagebreak -->
 
@@ -233,19 +237,21 @@ Gói ZIP lấy từ `git archive` của đúng commit, không chứa `.git`; man
 | Hạng mục | Bằng chứng hiện có | Trạng thái so với gate |
 | :-- | :-- | :-- |
 | Video JetBot | 12/11: 19,4–19,6 FPS, p95 128 ms | Chưa đạt ≥20 FPS/≤50 ms; DQK #108 |
-| E-stop | Wheels-up: cắt điện median 7 ms | Chưa có thời gian dừng cơ học; không suy ra full T2 |
+| E-stop | 14/11: R1 dry-run motors 0 sau 35 ms; dongle 97 ms sau detection | Chưa có thời gian dừng cơ học; không suy ra full T2 |
 | Fisheye | RMS 0,83 px, 52 ảnh | Đạt ngưỡng fit; không chứng nhận toàn bộ ranging |
-| DR + ArUco | Một lượt 14,5 cm / khoảng 3 m | Pending ≥5 lượt; thuần DR 98,3 cm chưa đạt |
+| DR + ArUco / T2 cửa | 7 lượt T2 cửa được tính; handshake 1 accept/1 reject | DR 98,3 cm chưa đạt; handshake chưa 10/10 |
 | Khoảng cách ghế | 8/9 IDs, p90 20,91%; bộ mới 0/36 distance | Chưa p90≤20%/≥20 IDs/độc lập |
 | D5/Wire | 307/90 cùng session; wire recall 0 | Dev-val, chưa independent T1/class gates |
-| Face whitelist | Cafe: TAR82,99/FAR46,40%; mới: một người | Chưa TAR95%@FAR1%, thiếu impostors |
+| Face whitelist | Door 14/11: 822/877 genuine; 0/1754 impostor | 3 người/1 session; FAR gate đạt, TAR95% chưa đạt |
 | Re-ID/tracking | Backend parity/runtime replay | Chưa gallery≥5/D3≥60 s/body-ID truth |
-| Pursuit/HOLD | Mô phỏng PASS, live pilot có range bias | Chưa đủ physical step response/dwell/80% |
+| Pursuit/HOLD | 16/11: tracked 99,7%, distance 32%, centred 91%, 0 HOLD | Không PASS: distance dưới 80%; HOLD chưa thử |
 | GPU laptop | Scheduled 5060 19,65; 4050 19,23 FPS | Workload; door Hz<5, chưa dual-stream T1 |
 | Edge live | 14,45 FPS/p95 153 ms ở 600 s | Chưa ≥20 FPS/≤100 ms/15 phút |
 | Vòng đầy đủ | Các module và event chain có test | Chưa ≥4/5 không can thiệp |
 
 ![F10 bổ sung — Availability theo tập ghế 09/11; thiếu khoảng cách không phải error bằng 0.](HuynhNguyenHoaiLoc/midterm/figures/F10_availability_1109.png)
+
+Lượt 16/11: sàn glossy, robot được ghi 5 W theo nvpmodel đọc cuối buổi (giả định không đổi), code trước audit và control packets unsigned. Pursuit chưa có tower avoidance: tháp camera không được nhận như vật cản; gains DR vẫn tuần 2, fit theo sàn hoãn. Phase 2 live do HNHL chủ trì; pilot #115 gồm 3 authorized và 3 queued, segment coverage 50%, không đủ T1. [D16, H7]
 
 Không cộng các frame liên tiếp thành số lượt độc lập; không lấy error chỉ trên estimates tốt để bỏ missed objects. Kết luận hiện tại: các khối đã có mã và bằng chứng phát triển, nhưng các gate hệ thống quan trọng vẫn pending. Nguồn từng hàng: [registry](kouun-rokku/week-07/editor-sources.md), H1/H2/D13/C1/C2/K2.
 
@@ -273,7 +279,7 @@ Kỳ vọng vòng đầy đủ ≥4/5 không can thiệp, tìm T2 ≥4/5, search
 - **Face/re-ID:** guided enrollment cải thiện genuine scores nhưng còn impostors, gallery/body-ID truth; quyết định ngưỡng/model thuộc perception owner.
 - **Video/edge:** latency và FPS chưa đạt trong điều kiện mới; cần đo đủ protocol, không lấy benchmark không người để thay thế.
 - **Tích hợp:** Phase 2 live và graded T2 chưa đủ; dùng replay có nhãn trong video khi thiếu cảnh thật, không trình bày như robot đã chạy.
-- **Bàn giao mã:** cây hiện tại bỏ dữ liệu riêng/default password, nhưng lịch sử cũ còn archive/credential. ZIP không chứa lịch sử; publish/rewrite history và tag `midterm` trên main cần quy trình chốt của nhóm.
+- **Bàn giao mã:** D5, ZIP D2 và default password được giữ theo quyết định nhóm. Chỉ ZIP nộp bài loại data/team_data/recordings/weights; không chứa lịch sử. Tag `midterm` trên main chờ freeze/review.
 
 Bản tuần 7 hoàn thiện công việc editor và gói review từ những nguồn hiện có. Nó không tạo thay thí nghiệm vật lý, chữ ký owner hay lịch sử đã được làm sạch. PDF hiện tại là snapshot review, video cuối được cập nhật khi DQK bàn giao. [D13, K3]
 
@@ -311,4 +317,4 @@ Repo: https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot . Nh
 
 ## A.3 Chỉ mục bằng chứng
 
-S0: `docs/Implementation Plan.md`, `docs/Mid-Term Report Plan.md`. C1/C2: `calib/camera.json`, báo cáo dead-reckoning 24/10. K1/K2: KR tuần 4–6, parity/hold/replay/review #101. K3: `reports/kouun-rokku/week-07/` (checkout sạch và package). H1/H2: HNHL `midterm/chapter-05-current.md`, addenda 05/11 và 11/11. E1: `docs/Edge Deployment.md`. D13: snapshot DQK commit 054d2adc (PR #108 còn mở), gồm chapters/README/GPU/edge JSON và hình. Registry kèm SHA256: `reports/kouun-rokku/week-07/editor-sources.md` / `sources/provenance.json`.
+S0: `docs/Implementation Plan.md`, `docs/Mid-Term Report Plan.md`. C1/C2: `calib/camera.json`, báo cáo dead-reckoning 24/10. K1/K2: KR tuần 4–6, parity/hold/replay/review #101. K3: `reports/kouun-rokku/week-07/` (checkout sạch và package). H1/H2: HNHL `midterm/chapter-05-current.md`, addenda 05/11 và 11/11. E1: `docs/Edge Deployment.md`. D13: bằng chứng DQK #108 đã merge, gồm chapters/README/GPU/edge JSON và hình. D14: t2_1114 và heartbeat_dryrun_1114; D16: classroom_1116; H7: pilot Phase 2 HNHL. Registry kèm SHA256: `reports/kouun-rokku/week-07/editor-sources.md` (commit:path + SHA256).

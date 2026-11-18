@@ -50,8 +50,7 @@ def test_unpack_refuses_a_path_that_leaves_the_destination(tmp_path):
 
 def test_password_resolution_precedence(monkeypatch):
     monkeypatch.setenv('TEAM_DATA_PASSWORD', 'environment-fixture')
-    monkeypatch.setattr(team_data.getpass, 'getpass', lambda *_: 'prompt-fixture')
     assert team_data.resolve_password('argument-fixture') == 'argument-fixture'
     assert team_data.resolve_password(None) == 'environment-fixture'
     monkeypatch.delenv('TEAM_DATA_PASSWORD')
-    assert team_data.resolve_password(None) == 'prompt-fixture'
+    assert team_data.resolve_password(None) == team_data.PASSWORD

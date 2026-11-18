@@ -2,7 +2,7 @@
 
 **Autonomous Collaborative Sentry Robot — CS532**
 
-Báo cáo giữa kỳ • DQK / HNHL / KR • Bản tổng hợp ngày 14/11/2026
+Báo cáo giữa kỳ • DQK / HNHL / KR • Bản tổng hợp ngày 18/11/2026
 
 **Mục tiêu:** phối hợp một robot di động và một camera cố định tại cửa để phát hiện người chưa được cho phép, tiếp cận họ ở cự ly an toàn và giữ cảnh giới khi họ đứng yên. Ứng dụng hướng tới phòng học hoặc phòng làm việc có một cửa vào, với người vận hành giám sát và quyền dừng robot bằng tay cầm.
 
@@ -18,8 +18,8 @@ Báo cáo giữa kỳ • DQK / HNHL / KR • Bản tổng hợp ngày 14/11/202
 
 ## 1.2 Phạm vi đã triển khai
 
-Đã có các module truyền hình/điều khiển, định vị dead reckoning–ArUco, nhận diện cửa, face/re-ID/tracking, hàng đợi, máy trạng thái và bộ điều khiển bám/giữ vị trí. KR đã nối chuỗi Phase 2 → Phase 3 và kiểm thử CPU/mô phỏng; các lượt robot hiện có là thử có giám sát, chưa chứng minh vòng đầy đủ không can thiệp. Né tấn công và coverage search trên robot là mục tiêu sau giữa kỳ.
+Đã có các module truyền hình/điều khiển, định vị dead reckoning–ArUco, nhận diện cửa, face/re-ID/tracking, hàng đợi, máy trạng thái và bộ điều khiển bám/giữ vị trí. HNHL chủ trì Phase 2 live (#114/#115); KR nối queue với Phase3Runner và kiểm thử CPU/mô phỏng; các lượt robot hiện có là thử có giám sát, chưa chứng minh vòng đầy đủ không can thiệp. Né tấn công và coverage search trên robot là mục tiêu sau giữa kỳ.
 
-**Phạm vi số liệu:** kết quả laptop RTX 5060, laptop RTX 4050 và Jetson được ghi riêng. Dữ liệu pilot, dev-val, mô phỏng và thử robot không được dùng thay nhau để nghiệm thu. Số liệu nguồn PR #108 được lưu kèm commit và SHA256, ghi là owner-reported/unmerged; không đưa code PR #108 vào gói này. [S0, D13]
+**Phạm vi số liệu:** kết quả laptop RTX 5060, laptop RTX 4050 và Jetson được ghi riêng. Dữ liệu pilot, dev-val, mô phỏng và thử robot không được dùng thay nhau để nghiệm thu. PR #108 đã merge vào main; mã và số liệu được kế thừa qua rebase. Registry ghim commit:path và SHA256, giữ ngày/thiết bị của từng phép đo. [S0, D13]
 
-**Tình trạng bàn giao:** đây là bản editor có PDF để review; chốt nội dung theo lịch 18–22/11 và nộp 23/11. Các phép đo còn thiếu được giữ là pending trong chương 7–8.
+**Tình trạng bàn giao:** đây là bản editor; PDF được render để review và chỉ commit tại freeze tag; chốt nội dung theo lịch 18–22/11 và nộp 23/11. Các phép đo còn thiếu được giữ là pending trong chương 7–8.

@@ -3,8 +3,13 @@ from __future__ import annotations
 
 import argparse
 import json
-from pathlib import PurePosixPath
+from pathlib import Path, PurePosixPath
 import subprocess
+import os
+import tempfile
+
+EXPORT_PATHS = ('.', ':(exclude)data', ':(exclude)team_data',
+                ':(exclude)recordings', ':(exclude)weights')
 
 FORBIDDEN_PREFIXES = ('data/', 'recordings/', 'weights/')
 FORBIDDEN_NAMES = ('.env', 'secrets.h', 'jetbot_host_key', 'id_rsa', 'id_ed25519')
@@ -21,17 +26,22 @@ def forbidden(path: str) -> bool:
 
 
 def tracked_paths(ref: str = 'HEAD', *, index: bool = False, cwd=None) -> list[str]:
-    command = ['git', 'ls-files', '-z'] if index else ['git', 'ls-tree', '-rz', '--name-only', ref]
-    result = subprocess.run(command, cwd=cwd, check=True, stdout=subprocess.PIPE)
-    return [path for path in result.stdout.decode().split('\0') if path]
+    if index:
+        raw = subprocess.check_output(['git', 'ls-files', '-z', '--', *EXPORT_PATHS], cwd=cwd)
+    else:
+        with tempfile.TemporaryDirectory() as directory:
+            env = dict(os.environ, GIT_INDEX_FILE=str(Path(directory) / 'index'))
+            subprocess.run(['git', 'read-tree', ref], cwd=cwd, env=env, check=True)
+            raw = subprocess.check_output(['git', 'ls-files', '-z', '--', *EXPORT_PATHS], cwd=cwd, env=env)
+    return [path for path in raw.decode().split('\0') if path]
 
 
 def audit(ref: str = 'HEAD', *, index: bool = False, cwd=None) -> dict:
     paths = tracked_paths(ref, index=index, cwd=cwd)
-    return dict(scope='index' if index else 'committed tree', ref=None if index else ref,
+    return dict(scope='export index' if index else 'committed export', ref=None if index else ref,
                 tracked_files=len(paths), violations=[p for p in paths if forbidden(p)],
                 history_verified=False,
-                note='Path check only. Deleting tracked files does not remove historical data or credentials.')
+                note='Path check only. Data stays tracked; export pathspecs omit datasets. History is not audited.')
 
 
 def main() -> int:
