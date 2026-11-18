@@ -196,19 +196,19 @@ StateMachine nhận event có timestamp và trả Command(v, w, play, actions, t
 
 ![F16 — Máy trạng thái; nhánh evasion/search có logic thiết kế, chưa nghiệm thu vòng robot.](kouun-rokku/week-05/F16_state_machine.png)
 
-TargetQueue giữ FIFO và vector đã chuẩn hóa; target đang bám không bị người mới thay thế. TARGET_EXITED hoàn tất mục tiêu hiện tại; nếu còn người chờ thì SEARCH/reacquire, nếu hết thì STANDBY. Handoff reset observation, dwell/filter và controller, yêu cầu mẫu mới thuộc identity kế tiếp.
+TargetQueue giữ FIFO và vector chuẩn hóa. TARGET_EXITED hoàn tất người hiện tại, chuyển SEARCH cho người tiếp theo hoặc STANDBY khi hết queue. Handoff reset observation, dwell/filter/controller và yêu cầu mẫu mới đúng identity.
 
-HoldDetector chiếu target local sang world theo pose robot, ước lượng vận tốc trên cửa sổ ngắn: vào HOLD khi speed<0,1 m/s đủ 2 s; thoát khi >0,2 m/s. Bù pose nhằm tránh báo đứng yên/di chuyển sai chỉ do robot xoay; drift odometry thực vẫn làm giới hạn kết quả.
+HoldDetector chiếu target sang world theo pose robot, vào HOLD khi speed<0,1 m/s đủ 2 s và thoát khi >0,2 m/s. Bù pose giảm sai lệch do robot xoay, còn chịu drift odometry.
 
 Live 16/11: tracked 99,7%, cự ly 1,2±0,2 m chỉ 32% (gate 80%, chưa đạt), centred 91%, 0 HOLD event. Điều kiện: glossy, 5 W giả định từ lần đọc cuối buổi, mã robot trước audit, gói điều khiển unsigned. Tower camera chưa được né như vật cản. [D16]
 
 ![F17b — Pursuit 16/11, khoảng cách dưới yêu cầu 80%, chưa nghiệm thu.](DoanQuocKien/week-07/figures/F17b_pursuit_1116.png)
 
-Trong HOLD, v=0 và chỉ yaw recenter; PURSUE điều khiển cự ly mục tiêu 1,2 m và tránh vật cản khi có estimate hợp lệ. Lệnh tuân vùng chết bánh (dead=0,40), projector recheck miền hợp lệ; NaN/±Inf dừng trước saturation. STRIKE có logic preemption/xung 400 ms, còn thử tấn công robot ở sau giữa kỳ.
+HOLD giữ v=0, chỉ yaw recenter. PURSUE nhắm 1,2 m và dùng estimate vật cản. Projector kiểm tra vùng chết 0,40, NaN/±Inf dừng trước saturation. STRIKE có xung 400 ms, thử robot thuộc sau giữa kỳ.
 
-**Sửa review #101:** `observe_target()` và `step(target_pos=...)` cùng xử lý mỗi timestamp đúng một lần; mẫu stale/wrong-ID không tiến dwell. Motor dừng khi observation quá 0,25 s; gap>1 s hoặc detector TARGET_LOST giải phóng HOLD và đồng bộ mode, kể cả không có tick trong khoảng mất hình. [K2]
+**Sửa #101** xử lý mỗi timestamp một lần ở cả hai API, stale/wrong-ID không tiến dwell. Observation quá 0,25 s dừng motor, gap>1 s hoặc TARGET_LOST giải phóng HOLD và đồng bộ mode. [K2]
 
-Mô phỏng closed-loop ghi HOLD tại 6,32 s, resume 8,26 s, zero translation trong HOLD, hai targets hoàn tất và không lệnh bất hợp lệ. Các thời điểm này thuộc kịch bản scripted, không phải thời gian đo trên JetBot. [K2]
+Mô phỏng scripted ghi HOLD 6,32 s, resume 8,26 s, v=0 trong HOLD, hai targets hoàn tất và lệnh hợp lệ. [K2]
 
 <!-- pagebreak -->
 
