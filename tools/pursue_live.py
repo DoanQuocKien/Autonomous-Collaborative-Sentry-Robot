@@ -169,6 +169,21 @@ class Pursuit(object):
                 self.pose = [x, y, yaw]
         self.t_prev = t
 
+    def avoid_step(self, t, v, w, phase):
+        """A tower manoeuvre (sentry.nav.tower_avoid) drives instead of the pursuit this frame: the pose follows what was sent, the log row says TOWER_<phase>."""
+        self._advance(t)
+        self.cmd = (v, w)
+        self.rows.append(dict(t=round(t, 3), track_id=None, dist_m=None, forward_m=None, left_m=None, yaw_err=None, feet_cut=None, range_src=None, foot_forward_m=None, v_req=round(v, 3), w_req=round(w, 3),
+                              v=round(v, 3), w=round(w, 3), suppressed=0, mode="TOWER_" + phase, event=None, obstacle_m=None, obstacle_blocked=0, tracks=""))
+
+    def resume_after_avoid(self, t):
+        """The manoeuvre is over (seconds of blind driving): forget the target and the controller state, so the largest person within the lock range is locked again (the tracker may have given the person a new id)."""
+        self.target_id, self.t_seen, self.last_seen = None, None, None
+        self._dist_hist, self._trunk_hist, self._yaw_phase = [], {}, 0
+        self.ctl.reset()
+        if self.rows:
+            self.rows[-1]["event"] = "TOWER_RESUME"
+
     def override_command(self, v, w):
         """The caller did not send the command computed by update() (a slow frame): the pose and the log must describe what was really sent."""
         self.cmd = (v, w)
@@ -284,6 +299,7 @@ class Pursuit(object):
                 "time_fraction_centred_of_tracked": frac(centred_s, tracked_s), "time_fraction_centred_of_run": frac(centred_s, run_s),
                 "diag_frame_fraction_distance_in_band": frac(len(near_f), len(pursue)), "diag_frame_fraction_centred": frac(len(centred_f), len(tracked)),
                 "centre_unit": "|bbox centre - image centre| / full frame width <= %.2f (yaw_err in the log is relative to HALF the width: divided by 2 here)" % CENTRE_TOL_WIDTH,
+                "frames_tower_avoid": sum(1 for r in rows if str(r["mode"]).startswith("TOWER_")),
                 "frames_obstacle_blocked": sum(1 for r in rows if r["obstacle_blocked"]),
                 "min_obstacle_m": min((r["obstacle_m"] for r in rows if r["obstacle_m"] is not None), default=None),
                 "hold_events": self.hold_events, "reacquires": sum(1 for r in rows if r["event"] == "REACQUIRE"), "target_id": self.target_id,
@@ -350,6 +366,7 @@ def main():
     ap.add_argument("--range-source", choices=("foot", "trunk"), default="foot", help="foot: floor distance of the box bottom (default); trunk: range from the shoulder-to-hip length with a population prior, foot-row fallback when the keypoints are not confident (a lead, see sentry/perception/body_range.py)")
     ap.add_argument("--pose-weights", default=None, help="YOLOv8-pose weights for --range-source trunk (default [reid] pose_weights, else yolov8n-pose.pt in the repo root)")
     ap.add_argument("--floor", choices=("glossy", "matte", "unknown"), default="unknown", help="floor type for the obstacle detector; unknown -> every obstacle is unresolved (then low boxes only stop forward motion)")
+    ap.add_argument("--tower-avoid", action="store_true", help="the ESP32 tower (50 mm ArUco ids 10-13 on its faces, [tower] in config.toml): inside trigger_m turn 90 deg away, 0.8 m sideways, turn back, straight on until clear, then re-lock the target (sentry/nav/tower_avoid.py; the manoeuvre is open loop and UNTESTED with a person)")
     ap.add_argument("--out", default="data/pursuit")
     a = ap.parse_args()
     a.dry_run = a.dry_run or a.replay is not None
@@ -372,6 +389,15 @@ def main():
     trunk_m = float(load()["pursuit"].get("trunk_length_m", 0.50))
     trunk_conf = float(load()["pursuit"].get("trunk_conf_min", 0.8))
     validate_session_params(a, a.feet_row_offset_px if a.feet_row_offset_px is not None else float(load()["pursuit"].get("feet_row_offset_px", 0.0)), trunk_m, trunk_conf, pcfg.target_distance_m)
+    tower_ta = tower_obj = look = None
+    tower_state = {"pending": False}
+    if a.tower_avoid:
+        from sentry.nav.tower_avoid import TowerAvoid, TowerAvoidConfig
+        from tools.tower_marker_trial import look
+        tower_ta = TowerAvoid(TowerAvoidConfig.from_toml(), model)
+        tm = float(load()["tower"]["marker_m"]) / 2
+        tower_obj = np.array([[-tm, tm, 0], [tm, tm, 0], [tm, -tm, 0], [-tm, -tm, 0]], np.float64)
+        print("tower avoidance ON: %s" % (tower_ta.cfg,), flush=True)
     perceive = make_perception()
     from sentry.perception.obstacle import ObstacleDetector
     detect_obstacles = ObstacleDetector.from_config(camera_pose_path=a.camera_pose, camera_path=a.camera, floor_type=a.floor)
@@ -390,6 +416,20 @@ def main():
         t0 = time.time()
         tracks = perceive(frame)
         obstacles = obstacle_input(detect_obstacles(frame, t, mode="pursuit"), detect_obstacles.geometry.size)
+        if tower_ta is not None:
+            tw = look(geom, tower_obj, frame)
+            out = tower_ta.step(t, (tw[1], tw[2]) if tw else None, obstacles[0])
+            if out is not None:
+                v, w = out[0], out[1]
+                if time.time() - t0 > MAX_PROCESS_S:
+                    v = w = 0.0
+                pursuit.avoid_step(t, v, w, out[2])
+                cmd.update(v=v, w=w, t=time.time())
+                tower_state["pending"] = True
+                return
+            if tower_state["pending"]:                                         # the manoeuvre ended (done or aborted): pursue again from this frame
+                tower_state["pending"] = False
+                pursuit.resume_after_avoid(t)
         v, w = pursuit.update(t, tracks, pose_fn(frame) if pose_fn is not None else None, obstacles)
         if time.time() - t0 > MAX_PROCESS_S:                    # a slow frame is an old view of the world: never drive on it
             v, w = 0.0, 0.0
@@ -407,7 +447,8 @@ def main():
             return
         written["done"] = True
         summary = dict(pursuit.summary(), label=a.label, dry_run=a.dry_run, replay=a.replay, end_reason=end["reason"], camera_pose_file=a.camera_pose, pitch_down_deg=round(math.degrees(geom.pitch), 2),
-                       feet_row_offset_px=pursuit.feet_row_offset_px, range_source=a.range_source, trunk_length_m=trunk_m, trunk_conf_min=trunk_conf, trunk_frames=sum(1 for r in pursuit.rows if r.get("range_src") == "trunk"), config=effective_config, battery_v_start=volts0, battery_v_end=volts1, seconds=round(time.time() - t_wall, 1), date=time.strftime("%Y-%m-%d %H:%M"), obstacle_avoidance=True, floor=a.floor)
+                       feet_row_offset_px=pursuit.feet_row_offset_px, range_source=a.range_source, trunk_length_m=trunk_m, trunk_conf_min=trunk_conf, trunk_frames=sum(1 for r in pursuit.rows if r.get("range_src") == "trunk"), config=effective_config, battery_v_start=volts0, battery_v_end=volts1, seconds=round(time.time() - t_wall, 1), date=time.strftime("%Y-%m-%d %H:%M"), obstacle_avoidance=True, floor=a.floor,
+                       tower_avoid=None if tower_ta is None else dict(count=tower_ta.count, aborted=tower_ta.aborted, events=tower_ta.events, config=dataclasses.asdict(tower_ta.cfg)))
         run_dir = save_run(a.out, a.label, pursuit.rows, summary, saved)
         print("ENDED: %s | %s" % (end["reason"], json.dumps({k: summary[k] for k in ("frames", "run_span_s", "unobserved_time_s", "coverage_tracked_fraction", "time_fraction_distance_in_band_of_run", "time_fraction_centred_of_run", "hold_events")})), flush=True)
         print("saved", run_dir, flush=True)
