@@ -54,11 +54,11 @@ Hệ thống kết hợp các nghiên cứu tiên tiến trong thị giác máy 
 3. **Garrido-Jurado et al. (Pattern Recognition 2014) — Occlusion-Reliable Fiducial Markers:** Sử dụng từ điển `DICT_4X4_50` kích thước 150 mm làm mốc neo tọa độ thực địa (`sentry/nav/localization.py`) và mốc ước lượng góc pitch trực tiếp thời gian thực (`sentry/perception/camera_pose.py`).
 4. **Collins & Bartoli (IJCV 2014) — Infinitesimal Plane-Based Pose Estimation (IPPE):** Giải thuật PnP giải tích phẳng `cv2.SOLVEPNP_IPPE_SQUARE` dùng khử nhập nhằng hai nghiệm pháp tuyến khi tính tư thế robot từ ảnh mốc ArUco.
 5. **Siegwart et al. (MIT Press 2011) — Autonomous Mobile Robots:** Cơ sở động học vi sai unicycle forward kinematics, tích phân cung tròn chính xác và mô hình lan truyền sai số dead-reckoning triển khai trong `sentry/nav/wheel_model.py` và `sentry/nav/controllers.py`.
-6. **Potdar et al. (CVPRW 2024) — XFeat:** Mạng nơ-ron trích xuất keypoints và local descriptors nhẹ tối ưu cho thiết bị edge, được nhóm chọn làm phương pháp nhận diện cửa chính thức trong `sentry/perception/entrance.py` (bắt cặp homography RANSAC, AUC 0,99–1,00 trên tập dữ liệu D1).
+6. **Potdar et al. (CVPRW 2024) — XFeat:** Mạng nơ-ron trích xuất keypoints và local descriptors nhẹ tối ưu cho thiết bị edge, là phương pháp nhận diện cửa chính thức trong `sentry/perception/entrance.py` (bắt cặp homography RANSAC, AUC 0,99–1,00 trên tập dữ liệu D1).
 7. **Oquab et al. (TMLR 2024) — DINOv2:** Foundation model tự giám sát trích xuất đặc trưng toàn cục, đóng vai trò fallback khi cửa bị khuất cục bộ hoặc góc quan sát xiên lớn.
 8. **Deng et al. (CVPR 2020) — ArcFace:** Hàm mất mát góc phụ gia tối ưu hóa khoảng cách không gian biểu diễn khuôn mặt, nền tảng cho mô hình MobileFaceNet trong `sentry/perception/face.py` phục vụ đối soát danh sách whitelist tại trạm ESP32-CAM.
 9. **Zhou et al. (ICCV 2019) — OSNet:** Mạng nơ-ron đa quy mô phát hiện tương quan ngoại hình người phục vụ re-ID, sử dụng weights `osnet_ain_x1_0` và `osnet_x0_25` để trích xuất vector ngoại hình 512D độc lập với góc nhìn khuôn mặt (`sentry/perception/reid.py`).
-10. **Zhang et al. (ECCV 2022) — ByteTrack:** Giải thuật liên kết dữ liệu đa mục tiêu giữ lại cả các detection có độ tin cậy thấp. Nhóm đã tự vendor mã nguồn thuần NumPy/SciPy tương thích Python 3.6 (`third_party/bytetrack/`), đạt độ khớp ID 100,0% so với bản gốc trên tập kiểm thử phân nhánh.
+10. **Zhang et al. (ECCV 2022) — ByteTrack:** Giải thuật liên kết dữ liệu đa mục tiêu giữ lại cả các detection có độ tin cậy thấp. Mã nguồn thuần NumPy/SciPy tương thích Python 3.6 (`third_party/bytetrack/`) đạt độ khớp ID 100,0% so với bản gốc trên tập kiểm thử phân nhánh.
 11. **Galceran & Carreras (RAS 2013) — Coverage Path Planning:** Cơ sở quy hoạch đường đi phủ kín không gian dựa trên phân rã tế bào ứng dụng trong tìm kiếm mục tiêu lẩn khuất (`sentry/nav/declared_room.py`).
 12. **Fischler & Bolles (CACM 1981) — RANSAC:** Ước lượng homography mặt phẳng cửa và luật số lượng inliers phục vụ xác nhận bắt tay thị giác giữa JetBot và ESP32-CAM.
 13. **Jocher et al. (Ultralytics 2023) — YOLOv8:** Bộ phát hiện đối tượng thời gian thực chạy ở tần số cao (>50 FPS trên GPU) nhận diện người, đồ đạc và các vật cản sát mặt sàn (`sentry/perception/obstacle.py`).
@@ -104,7 +104,7 @@ An toàn là yêu cầu bắt buộc và không thương lượng trong quá tr�
 
 ## 4.1 Hiệu chuẩn thấu kính fisheye góc rộng
 
-Ống kính fisheye 160° của JetBot méo thùng rất mạnh nên ảnh phải được nắn thẳng trước khi tính khoảng cách. Nhóm dùng mô hình Kannala-Brandt (`cv2.fisheye`), thu nhận 58 ảnh chụp bàn cờ 9×6 ô vuông (cạnh 25 mm). Sau khi loại trừ 6 góc nhìn biên vi phạm sai số chiếu lại, bộ tham số camera nội (`calib/camera.json`) đạt sai số RMS cực nhỏ **0,83 px**, cho phép nắn thẳng hình ảnh chính xác trước khi đưa vào các thuật toán chiếu tia mặt sàn.
+Ống kính fisheye 160° của JetBot méo thùng rất mạnh nên ảnh phải được nắn thẳng trước khi tính khoảng cách. Mô hình Kannala-Brandt (`cv2.fisheye`) được hiệu chỉnh từ 58 ảnh chụp bàn cờ 9×6 ô vuông (cạnh 25 mm). Sau khi loại trừ 6 góc nhìn biên vi phạm sai số chiếu lại, bộ tham số camera nội (`calib/camera.json`) đạt sai số RMS cực nhỏ **0,83 px**, cho phép nắn thẳng hình ảnh chính xác trước khi đưa vào các thuật toán chiếu tia mặt sàn.
 
 ## 4.2 Tư thế camera và mô hình chiếu tia mặt sàn
 
@@ -144,7 +144,7 @@ Tập dữ liệu D5 gồm 397 ảnh chụp thực tế trong một phòng và m
 
 ## 5.3 Nhận diện lối vào (Entrance Matching Bake-off)
 
-Trong Giai đoạn 1, robot phải nhận diện đúng cửa vào phòng từ khoảng cách 1,5–3,0 m. Nhóm đã thực hiện bake-off thực nghiệm giữa 3 thuật toán trên tập ảnh cửa D1 (`reports/kouun-rokku/week-05/F12_entrance_bakeoff.png`):
+Trong Giai đoạn 1, robot phải nhận diện đúng cửa vào phòng từ khoảng cách 1,5–3,0 m. Bake-off giữa 3 thuật toán trên tập ảnh cửa D1 (`reports/kouun-rokku/week-05/F12_entrance_bakeoff.png`):
 - **ORB (Binary baseline):** Đạt AUC 0,91, trượt khi góc nhìn nghiêng quá 30°.
 - **DINOv2 (Global descriptor):** Đạt AUC 0,98, nhận diện tốt toàn cảnh nhưng không xác định được ma trận biến đổi affine/homography của khung cửa.
 - **XFeat (Local feature matching):** Đạt **AUC 0,99–1,00**, số lượng inliers homography RANSAC vượt trội, xác định chính xác góc phương vị cửa để robot căn chỉnh sweet-spot. XFeat được chọn làm phương pháp mặc định.
@@ -280,7 +280,7 @@ Nguyên tắc của báo cáo: **mọi con số đều trích dẫn file bằng 
 ## 8.1 Trạng thái so với ngưỡng nghiệm thu (tới 16/11) và các hạng mục chưa đạt
 
 Các số liệu đầy đủ nằm ở mục 7.2; chương này nêu những gì chưa đạt hoặc chưa đo, đều từ một buổi đo (chưa phải nghiệm thu):
-- **Truy bám PD:** lần chạy thật 16/11 chỉ 32% thời gian trong dải 1,2 ± 0,2 m (yêu cầu 80%), căn tâm 91%; HOLD chưa thử trên robot (Đoàn Quốc Kiên quyết định không dùng thêm thời gian buổi lớp cho HOLD).
+- **Truy bám PD:** lần chạy thật 16/11 chỉ 32% thời gian trong dải 1,2 ± 0,2 m (yêu cầu 80%), căn tâm 91%; HOLD chưa thử trên robot.
 - **Né vật cản trên sàn gạch bóng:** khoảng cách tới ghế không giải được vì phản chiếu (`reflection_unresolved`); công cụ `explore_live` từ chối xuất phát; chưa có lần chạy né vật cản trên robot, và chưa có né tháp ESP32 trong truy bám.
 - **Khuôn mặt (D2):** TAR gộp 0,937 tại FAR 0/1754 ở ngưỡng 0,45, thấp hơn 95%; điểm người đúng và người lạ tách nhau (ngưỡng 0,40 cho TAR 0,990 tại FAR 0/5254) nhưng chỉ ba người, một buổi, một camera, nên chưa đổi ngưỡng; quyết định thuộc Huỳnh Nguyễn Hoài Lộc.
 - **Độ trễ và tải trên robot (phần mở rộng):** 13/11, có người và luồng ESP32 thật: 14,5–17,7 fps, p95 tới 153 ms (không đạt ≥ 20 fps, p95 ≤ 100 ms); RAM 2,13 GB, GPU tối đa 38,5 °C, pin tối thiểu 11,71 V (đạt).
@@ -296,7 +296,7 @@ Các số liệu đầy đủ nằm ở mục 7.2; chương này nêu những g�
 
 1. **Lần chạy T2 tính điểm:** ba lần thử đầu ngày 16/11 không tính (thả R1 sớm hai lần, xuất phát cách bảng 3,54 m một lần); bài học: giữ R1 tới hai tiếng bíp và xuất phát cách bảng không quá khoảng 3,35 m.
 2. **Pin, sạc và chế độ nguồn:** 11,91 V đầu lần chạy T2, 11,63 V cuối lần chạy bám; chế độ 5 W được đọc ở cuối buổi 16/11, các phép đo benchmark dùng MAXN.
-3. **Dữ liệu cá nhân trong lịch sử git:** gói D2_1028.zip chứa khuôn mặt ba thành viên, mật khẩu nằm trong kho nên không được bảo vệ; nhóm quyết định ngày 13/11 (cả ba đồng ý) giữ gói trong kho và chấp nhận rủi ro này.
+3. **Dữ liệu cá nhân trong lịch sử git:** gói D2_1028.zip chứa khuôn mặt ba thành viên, mật khẩu nằm trong kho nên không được bảo vệ; gói được giữ trong kho theo quyết định ngày 13/11 (ba thành viên đồng ý), rủi ro được chấp nhận.
 
 **Nguyên tắc:** hạng mục nào chưa chạy ổn đến ngày đóng băng thì ghi là "đang thực hiện" kèm kế hoạch.
 
@@ -356,4 +356,4 @@ python -m tools.replay_phase3
 
 ## A.3 Kịch bản và danh mục cảnh quay Video minh chứng (Demo Video Shot List)
 
-Video minh chứng giữa kỳ (tùy chọn) dài 2–4 phút, chia thành 9 phân cảnh. Đến 16/11 đã quay cảnh tìm thấy cửa, sweet-spot và truy bám (theo Đoàn Quốc Kiên báo); các cảnh nhắc, đặt camera, bắt tay, lùi về STANDBY, Phase 2 và kẻ xâm nhập quay ngày 19/11 tại lớp, bản cắt 20–21/11, chốt 22/11.
+Video minh chứng giữa kỳ (tùy chọn) dài 2–4 phút, chia thành 9 phân cảnh. Đến 16/11 đã quay cảnh tìm thấy cửa, sweet-spot và truy bám; các cảnh nhắc, đặt camera, bắt tay, lùi về STANDBY, Phase 2 và kẻ xâm nhập quay ngày 19/11 tại lớp, bản cắt 20–21/11, chốt 22/11.
