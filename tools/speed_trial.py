@@ -47,9 +47,9 @@ def beep(freq, ms):
         sys.stdout.write("\a"); sys.stdout.flush()
 
 
-def marker_range(geometry, obj, raw):
-    """(floor-plane distance in m from the camera to the marker, bearing in deg with left +), or None without a marker. Detection in the RAW frame, only the corners are undistorted."""
-    found = detect_corners(raw)
+def marker_range(geometry, obj, raw, found=None):
+    """(floor-plane distance in m from the camera to the marker, bearing in deg with left +), or None without a marker. Detection in the RAW frame, only the corners are undistorted. `found`: [(id, corners)] already detected (the first one is used)."""
+    found = detect_corners(raw) if found is None else found
     if not found:
         return None
     K = geometry.K
