@@ -381,6 +381,13 @@
       "source_commit": "692982665b65c3b573cb0be076a69e7d6c812bb5",
       "sha256": "d1cacce89aced731d1d30fba39df21bbdd4180451d739d9e01d25a1e80ca45cd",
       "scope": "merged main evidence; retain session limits"
+    },
+    {
+      "label": "D16",
+      "path": "reports/DoanQuocKien/week-07/figures/F17b_pursuit_1116.png",
+      "source_commit": "692982665b65c3b573cb0be076a69e7d6c812bb5",
+      "sha256": "642178edd39906fac7a8a724435d6f6d3aa287bf8a4e26d445d405b4027a6593",
+      "scope": "merged 16-Nov pursuit figure; distance criterion not met"
     }
   ]
 }

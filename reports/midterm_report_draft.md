@@ -88,13 +88,13 @@ Mô hình phân tách cho phép replay bằng cùng API logic mà không có mot
 | Đồng bộ đồng hồ | UDP echo 5557 | Lọc RTT nhỏ nhất; độ trễ video cần hiệu chỉnh đồng hồ |
 | ESP32 → laptop | MJPEG hoặc tile UDP | Luồng cửa riêng, không coi timing profiler là live dual-stream |
 
-Thiết kế ưu tiên 5 GHz cho JetBot nhưng DQK ghi các lượt gần đây dùng hotspot điện thoại 2,4 GHz. Hai lượt video 120 s ngày 12/11, robot cạnh laptop: median decode latency 46 ms, p95 128 ms, p99 192–199 ms; nhận 19,6/19,4 FPS. Cả FPS và p95 chưa đạt ngưỡng ≥20 FPS/p95≤50 ms. Đây là kết quả khác phép đo 53 ms của tuần 1. [D13]
+Ba thiết bị dùng cùng hotspot điện thoại 2,4 GHz theo quyết định 14/11. Hai lượt video 120 s ngày 12/11, robot cạnh laptop: median decode latency 46 ms, p95 128 ms, p99 192–199 ms; nhận 19,6/19,4 FPS. Cả FPS và p95 chưa đạt ngưỡng ≥20 FPS/p95≤50 ms. Đây là kết quả khác phép đo 53 ms của tuần 1. [S0, D13]
 
 ![F7 — Độ trễ video ngày 12/11; bằng chứng DQK từ PR #108, chưa nghiệm thu.](DoanQuocKien/week-06/figures/F7_video_latency.png)
 
 Dead-man/e-stop yêu cầu vũ trang bằng Start và giữ R1; thả R1 hoặc nút khác thì dừng. Watchdog danh định 300 ms. DQK đo wheels-up ngày 12/11: 16 lần thả R1 cắt điện motor median 7 ms (5–11 ms); năm lần nút khác 7–8 ms. Đó là timestamp điện trên Jetson, chưa gồm độ trễ không dây tay cầm hay thời gian dừng cơ học. [D13]
 
-Các sửa SIGTERM, rate limiter và tool tiếp cận PR #108 đã có trong main. Ngày 14/11: R1 release, robot_udp ENGAGED sau estop.py 17 ms, motors 0 sau 35 ms (dry-run). Rút dongle: estop.py STOPPED sau phát hiện 48 ms (motor cut riêng 6 ms), robot_udp motors 0 sau 97 ms; tắt pad khi giữ R1: motor cut riêng 6 ms. Các ca motor thật kê bánh; không đo từ lúc rút vật lý hoặc thời gian dừng cơ học. [D14] Quy trình chạy thật vẫn cần pin, khoảng sàn trống, R1 và e-stop; bản báo cáo không suy từ kiểm thử CPU sang chứng nhận phần cứng.
+Các sửa SIGTERM, rate limiter và tool tiếp cận PR #108 đã có trong main. Ngày 14/11: R1 release, robot_udp ENGAGED sau estop.py 17 ms, motors 0 sau 35 ms (dry-run). Rút dongle: estop.py STOPPED sau phát hiện 48 ms (motor cut riêng 6 ms), robot_udp motors 0 sau 97 ms; tắt pad khi giữ R1: motor cut riêng 6 ms. Các ca motor thật kê bánh; không đo từ lúc rút vật lý hoặc thời gian dừng cơ học. [D14] Ngày 16/11 sau triển khai audit, DQK báo R1 cut 10 ms, motors-zero sau log STOPPED 78 ms; nút khác 6 ms/38 ms, raw log còn local. [D16]
 
 <!-- pagebreak -->
 
@@ -142,7 +142,7 @@ SCRFD/MobileFaceNet tạo face embedding 512D chuẩn hóa; so maximum cosine v�
 
 Camera opt4 và guided enrollment trong thử DQK ngày 13/11 cho mặt rộng 68–91 px ở 3,0–1,8 m. Ngày 14/11, ngưỡng cố định 0,45: TAR 822/877 = 0,937 (clip bootstrap [0,904; 0,970]); FAR 0/1754 straight-frame impostor scores. FAR gate đạt trên bộ này, TAR≥95% chưa được thiết lập. Chỉ ba người cùng một session, mỗi người so với hai enrolments còn lại; không suy ra population FAR. Ngưỡng 0,45 vẫn provisional (#118). [D14] [D13]
 
-HNHL chủ trì Phase 2 live (#115). Pilot 14/11 trên RTX 5060: 3 authorized/3 queued, coverage segment 50% mỗi cohort, 5 unresolved và 1 interrupted; median enqueue 9,387 s, hai người cùng session, chưa T1. Ngưỡng 0,45 provisional (#118). [H7]
+HNHL chủ trì Phase 2 live (#115). Pilot 14/11 trên RTX 5060: 3 authorized/3 queued, coverage segment 50% mỗi cohort, 5 unresolved và 1 interrupted; median enqueue 9,387 s, hai người cùng session, chưa T1. Ngưỡng 0,45 provisional (#118). [H7] Ngày 16/11 DQK đăng ký lại năm pose rồi chấm cùng clip, báo TAR vẫn 0,930 với cùng 21 frame dưới 0,45; CSV lần chấm lại còn local. [D16]
 
 OSNet-AIN x1.0 và x0.25 đều chạy, nhưng 23 body crops hiện chưa tạo được gallery/query hợp lệ; thiếu gallery ở 2/3 người. Gate vẫn là ≥5 identities, rank-1≥85%; chưa có F14 đủ điều kiện. [H1]
 
@@ -202,6 +202,8 @@ HoldDetector chiếu target local sang world theo pose robot, ước lượng v�
 
 Live 16/11: tracked 99,7%, cự ly 1,2±0,2 m chỉ 32% (gate 80%, chưa đạt), centred 91%, 0 HOLD event. Điều kiện: glossy, 5 W giả định từ lần đọc cuối buổi, mã robot trước audit, gói điều khiển unsigned. Tower camera chưa được né như vật cản. [D16]
 
+![F17b — Pursuit 16/11, khoảng cách dưới yêu cầu 80%, chưa nghiệm thu.](DoanQuocKien/week-07/figures/F17b_pursuit_1116.png)
+
 Trong HOLD, v=0 và chỉ yaw recenter; PURSUE điều khiển cự ly mục tiêu 1,2 m và tránh vật cản khi có estimate hợp lệ. Lệnh tuân vùng chết bánh (dead=0,40), projector recheck miền hợp lệ; NaN/±Inf dừng trước saturation. STRIKE có logic preemption/xung 400 ms, còn thử tấn công robot ở sau giữa kỳ.
 
 **Sửa review #101:** `observe_target()` và `step(target_pos=...)` cùng xử lý mỗi timestamp đúng một lần; mẫu stale/wrong-ID không tiến dwell. Motor dừng khi observation quá 0,25 s; gap>1 s hoặc detector TARGET_LOST giải phóng HOLD và đồng bộ mode, kể cả không có tick trong khoảng mất hình. [K2]
@@ -220,7 +222,7 @@ Mô phỏng closed-loop ghi HOLD tại 6,32 s, resume 8,26 s, zero translation t
 | T1 | Replay có nhãn/truth và protocol định trước | Accuracy/latency theo bộ dữ liệu và thiết bị ghi rõ |
 | T2 | Robot/ESP32 thật, pin và điều kiện có kiểm soát | Hành vi vật lý đủ số lượt, không suy từ T0 |
 
-Checkout sạch sau rebase tại code commit `61bc6b1`: 896 passed, 3 skipped, 6 deselected (CPU, không GPU/HIL/replay). K3 ghi commit/tree, command và dependency versions. Số test chỉ áp dụng commit được log, không chứng nhận model/GPU hoặc phần cứng. Kết quả cũ 754/773 không dùng để chứng nhận bản sửa này. [K3]
+Checkout sạch sau rebase tại code commit `0211815`: 896 passed, 3 skipped, 6 deselected (CPU, không GPU/HIL/replay). K3 ghi commit/tree, command và dependency versions. Số test chỉ áp dụng commit được log, không chứng nhận model/GPU hoặc phần cứng. Kết quả cũ 754/773 không dùng để chứng nhận bản sửa này. [K3]
 
 Checkout sạch tuần 7 clone từ commit candidate được ghi riêng cùng tree SHA, Python/dependency versions, command, exit code và pytest output. Chỉ dùng môi trường package đã cài của máy; D5 và ZIP D2 vẫn tracked theo quyết định nhóm; không copy dữ liệu local bổ sung, weights hoặc `.venv` vào clone. Model/GPU environment được ghi riêng nếu thiếu; CPU/replay không chứng nhận full inference setup. [K3]
 
@@ -264,8 +266,9 @@ Không cộng các frame liên tiếp thành số lượt độc lập; không l
 | Mốc | Kết quả cần có | Chủ trì |
 | :-- | :-- | :-- |
 | 16/11 | Đóng thí nghiệm giữa kỳ, chốt hình/nhãn nguồn | Cả nhóm |
-| 18/11 | Bản draft chung và video cut theo kế hoạch | KR editor; DQK video |
-| 19–20/11 | Owner kiểm số liệu, review nội bộ, PR freeze | Cả nhóm |
+| 18/11 | Bản draft chung | KR editor |
+| 19/11 | Quay các cảnh còn lại tại lớp, gồm Phase 2 | Cả nhóm |
+| 20–22/11 | Review/PR freeze 20/11; dựng 20–21/11, chốt video 22/11 | Cả nhóm |
 | 21–23/11 | Tag main sau review, PDF/video final, nộp 23/11 | Cả nhóm |
 | Tuần 8–9 | Evasion, reaction-time, coverage path theo gate | Chủ sở hữu từng module |
 | Tuần 10–13 | Search trên robot, loop nhiều người, stress và buffer | Cả nhóm |

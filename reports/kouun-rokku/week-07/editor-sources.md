@@ -56,3 +56,5 @@ Run `python -m tools.check_midterm_sources` from a full Git checkout. Source che
 | D14 | [`69298266:reports/DoanQuocKien/week-06/t2_1114/scores_KR.json`](https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/blob/692982665b65c3b573cb0be076a69e7d6c812bb5/reports/DoanQuocKien/week-06/t2_1114/scores_KR.json) |
 | D14 | [`69298266:reports/DoanQuocKien/week-06/t2_1114/scores_HNHL.json`](https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/blob/692982665b65c3b573cb0be076a69e7d6c812bb5/reports/DoanQuocKien/week-06/t2_1114/scores_HNHL.json) |
 | D14 | [`69298266:reports/DoanQuocKien/week-06/t2_1114/scores_DQK.json`](https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/blob/692982665b65c3b573cb0be076a69e7d6c812bb5/reports/DoanQuocKien/week-06/t2_1114/scores_DQK.json) |
+
+| D16 | [`69298266:reports/DoanQuocKien/week-07/figures/F17b_pursuit_1116.png`](https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/blob/692982665b65c3b573cb0be076a69e7d6c812bb5/reports/DoanQuocKien/week-07/figures/F17b_pursuit_1116.png) |
