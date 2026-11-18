@@ -36,6 +36,7 @@ from tools import jetbot_ssh
 from tools.calibrate_motion import LOG, _sh, moving_seconds
 from tools.jetbot_status import ina219_bus_volts
 from tools.speed_trial import ESTOP_LATCH, beep, marker_range
+from tools.pursue_live import command_to_send
 
 TOWER_IDS = (10, 11, 12, 13)
 
@@ -55,6 +56,17 @@ def drive_seconds(travel_m, v, gain, margin=1.15):
     return max(0.0, travel_m) / (gain * abs(v) * margin)
 
 
+def send_commands(cmd, done, ip, port, clock=time.time):
+    """Expire frame commands while video or processing is stalled."""
+    sender = UDPSender(ip, port, 30)
+    try:
+        while not done.is_set():
+            sender.send(*command_to_send(cmd, clock()))
+            done.wait(sender.period_s)
+    finally:
+        sender.close(stop=True)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("mode", choices=("approach", "reverse", "avoid"))
@@ -72,6 +84,7 @@ def main():
     ap.add_argument("--strategy", choices=("steer", "turn"), default=None, help="avoid: closed-loop steering on the marker bearing or the timed manoeuvre (default [tower] strategy)")
     ap.add_argument("--max-total-s", type=float, default=30.0, help="avoid: the whole run, manoeuvre included")
     ap.add_argument("--wait", type=float, default=20.0)
+    ap.add_argument("--min-battery", type=float, default=11.1)
     ap.add_argument("--ip", default="auto")
     ap.add_argument("--user", default="jetbot")
     ap.add_argument("--password", default=os.environ.get("JETBOT_PASSWORD"))
@@ -98,20 +111,14 @@ def main():
     obj = np.array([[-S, S, 0], [S, S, 0], [S, -S, 0], [-S, -S, 0]], np.float64)
     g = CameraGeometry.from_files(a.camera, a.pose)
     c = jetbot_ssh.connect(a.ip, a.user, password)
+    battery_start = ina219_bus_volts(jetbot_ssh.sudo(c, "i2cget -y 1 0x41 0x02 w", password))
+    if not math.isfinite(battery_start) or battery_start < a.min_battery:
+        raise SystemExit("ABORT: battery %.2f V < %.1f V: charge first" % (battery_start, a.min_battery))
     before = int(_sh(c, "wc -l < %s" % LOG).strip() or 0)
-    cmd = {"v": 0.0, "w": 0.0}
+    cmd = {"v": 0.0, "w": 0.0, "t": 0.0}
     done = threading.Event()
 
-    def sender():
-        s = UDPSender(a.ip, load()["net"]["control_port"], 30)
-        try:
-            while not done.is_set():
-                s.send(cmd["v"], cmd["w"])
-                time.sleep(s.period_s)
-        finally:
-            s.close(stop=True)
-
-    th = threading.Thread(target=sender, daemon=True)
+    th = threading.Thread(target=send_commands, args=(cmd, done, a.ip, load()["net"]["control_port"]), daemon=True)
     th.start()
     atexit.register(lambda: (cmd.update(v=0.0, w=0.0), done.set()))
     rows, why, event, t_cmd0, t_cmd1, streak, last_seen = [], "time cap", None, None, None, [], None
@@ -122,7 +129,7 @@ def main():
             t_cmd1 = t_cmd1 or time.time()
             why = reason
 
-        with ZMQReceiver() as rx:
+        with ZMQReceiver(ip=a.ip) as rx:
             first, start_img = None, None
             for _ in range(30):
                 f = rx.read(timeout=5)
@@ -174,8 +181,10 @@ def main():
                 if f is None:
                     stop("no frames")
                     break
+                received_at = time.time()
                 r = look(g, obj, f.frame_bgr)
                 now = time.time()
+                cmd["t"] = received_at
                 rows.append((now - t0, int(r is not None), r[0] if r else "", "%.4f" % r[1] if r else "", "%.2f" % r[2] if r else "", "%.1f" % r[3] if r else "", cmd["v"], cmd["w"], ta.phase))
                 if t_cmd0 is None or t_cmd1 is not None:
                     continue

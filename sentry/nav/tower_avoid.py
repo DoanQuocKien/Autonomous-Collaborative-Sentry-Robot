@@ -121,6 +121,9 @@ class TowerAvoid:
             self._hits.clear()
             self.aborted = False
             self._go(TURN_AWAY, t, range_m=round(tower[0], 3), bearing_deg=round(b, 1), turn_deg=round(math.degrees(self._angle), 1))
+            if obstacle_m is not None and obstacle_m < c.abort_obstacle_m:
+                self._finish(t, "obstacle %.2f m" % obstacle_m)
+                return 0.0, 0.0, "ABORT"
             self.cmd = (0.0, math.copysign(c.turn_w, self._angle))
             return self.cmd + (self.phase,)
         if gap is not None and gap > c.max_gap_s:
@@ -234,6 +237,9 @@ class TowerSteer:
             self._to_go = max(0.0, r * math.cos(math.radians(b))) + c.pass_clear_m
             self.events.append(dict(t=round(t, 3), event="TRIGGER", range_m=round(r, 3), bearing_deg=round(b, 1), tower_side="left" if self._sigma > 0 else "right"))
             self.phase = "STEER"
+            if obstacle_m is not None and obstacle_m < c.abort_obstacle_m:
+                self._end(t, "obstacle %.2f m" % obstacle_m)
+                return 0.0, 0.0, "ABORT"
             self.cmd = self._steer(r, b)
             return self.cmd + (self.phase,)
         if gap is not None and gap > c.max_gap_s:

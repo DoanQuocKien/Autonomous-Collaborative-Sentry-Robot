@@ -2,7 +2,7 @@ import math
 
 import pytest
 
-from sentry.nav.tower_avoid import TowerAvoidConfig, TowerSteer
+from sentry.nav.tower_avoid import TowerAvoid, TowerAvoidConfig, TowerSteer
 from sentry.nav.wheel_model import WheelModel
 
 
@@ -62,3 +62,11 @@ def test_side_follows_the_tower_side():
 def test_obstacle_aborts():
     ts, _, _ = run((1.4, 0.1), obstacle=0.2)
     assert ts.aborted and not ts.count
+
+
+@pytest.mark.parametrize('strategy', [TowerAvoid, TowerSteer])
+def test_critical_obstacle_stops_the_trigger_frame(strategy):
+    avoid = strategy()
+    assert avoid.step(0.0, (0.8, 0.0), 0.2) is None
+    assert avoid.step(0.1, (0.8, 0.0), 0.2) == (0.0, 0.0, 'ABORT')
+    assert avoid.aborted and avoid.count == 0
