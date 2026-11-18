@@ -14,6 +14,7 @@ Decision 2026-11-16 (DQK, team leader): the remaining video shots are recorded h
 | 5 | Prompt -> camera placed -> handshake verified -> reverse to STANDBY (a real T2 run, filmed from the start) | robot, ESP32, tower, 1 operator | `deploy_live` command of the 11-16 run (`reports/.../classroom_1116/README.md`); the tower goes in front of the stop point after the robot stops; R1 held to the two beeps |
 | 6 | ESP32 view: an enrolled member walks in -> whitelisted; a member NOT enrolled in that fold -> intruder -> queued | the three members, HNHL's Phase 2 live (#114, #115) | Dry run first (never run end to end on the robot); leave-one-out as in the plan D2 |
 | 7 | Pursuit then hold and re-centre when the target stops | robot, one person, R1 | DQK decided on 11-16 that HOLD needs no more session time; film it only if time is left (the 11-16 run reached 32 % in band, not an acceptance run) |
+| 7b | Pursuit with tower avoidance and spin-and-find (tower between robot and person; the person walks round it, jumps, moves fast) | robot, tower, one person, R1 | `python -m tools.pursue_live --label <x> --camera-pose <today's self_pose> --tower-avoid --search --no-obstacles --lost-end-s 30 --seconds 120`; dorm run 11-18: 12 avoids, 0 aborted, 67 % tracked. KNOWN BUG (DQK, 11-18): when the person stands next to the tower the robot ping-pongs (pursue, avoid, pursue); it still works and is kept as it is, to be fixed only if time remains before the final presentation (short memory of the tower in pursuit) |
 | - | The intruder sequence and the full loop | all of the above | only if shots 5 and 6 are done; whatever does not work is cut or captioned, not rushed |
 | 2, 3, 4, 8 | boot / R1 stop, live stream overlay, exploration with obstacle boxes, GPU and Jetson bench | - | not confirmed on file: check which of these exist before Thursday, record the rest or use the captioned replay/`sim_robot` fallback |
 
@@ -23,7 +24,7 @@ Decision 2026-11-16 (DQK, team leader): the remaining video shots are recorded h
 
 ## Not classroom, but not done yet (no rush before the freeze; record outcomes)
 - Motion check: deferred to the dorm by DQK (3 boards at about 1.5 m, front, 45 deg left, 45 deg right, all facing the robot, default 2.2 m limit). Not a graded item; until then the Week 2 gains are used and named as a known limit.
-- Tower avoidance in pursuit (markers on the tower faces, keep-out disc, adapter into `observe_obstacle`): needs robot tests; stated as a known limit in the report.
+- Tower avoidance in pursuit: DONE in the dorm on 11-18 (`reports/DoanQuocKien/week-07/tower_avoid_1118/`, report section 6.4); open: the ping-pong near the tower (shot 7b), the obstacle detector on the glossy floor (far chairs block forward motion, `--no-obstacles` used), and the video shot in the classroom.
 - Reviews: #125 and #126 (mine, need one review each from HNHL or KR), #113 (KR, blocked by the D5/D2 deletions and stale report lines; two reviews of changes requested + a follow-up comment).
 - Report: chapters 3, 4 and 8 carry the 11-16 numbers (this PR); the internal draft is Wed 11-18; PR freeze Fri 11-20; tag `midterm` Sat 11-21.
 
