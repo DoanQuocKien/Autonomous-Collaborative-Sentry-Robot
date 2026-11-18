@@ -229,6 +229,16 @@ Module `Phase3Runner` (`sentry/app/phase3_runner.py`) kết nối máy trạng t
 
 ---
 
+## 6.4 Tránh tháp ESP32 trong lúc bám (đo ngày 18/11, ký túc xá; bổ sung sau mốc chốt 16/11)
+
+Tháp ESP32 (5 × 8 cm) mang bốn marker ArUco 50 mm (id 10–13). Khi robot lùi với $v=-0,5$, marker mất ở **1,64 m** (nhìn thẳng), **1,23 m** (xoay 30°) và **1,07 m** (xoay 45°, trường hợp xấu nhất); đến 0,5–0,6 m vẫn đạt 100 % khung hình. Vì khoảng cách PnP chỉ đáng tin trong 1 m, `sentry/nav/tower_avoid.py` chỉ dùng góc phương vị và khoảng cách của khung hình hiện tại. Sàn ký túc xá làm robot lệch trái 40–70° trên khoảng 1,3 m ở 3/4 lượt đầu (đường ron giữa gạch). Mỗi điều kiện chạy một lần:
+- **Thao tác định thời:** quay 90° tránh tháp, đi ngang 0,8 m, quay lại, chạy thẳng qua tháp. Lần `avoid_e` hoàn tất nhưng lệch **1,2 m** khỏi đường xuất phát (mục tiêu 0,8 m) và **30°** về hướng; 10,6 s.
+- **Lái kín theo góc phương vị (`steer`, mặc định):** giữ tháp ngoài hình nón cách ly bán kính 0,35 m (+10°), chỉ chạy mù 0,25 m sau khi qua tháp. Lần `steer_a`: kích hoạt ở 0,89 m, sát nhất khoảng **0,4 m** (thước), không chạm tháp, 5,95 s; robot kết thúc lệch 54° (không có gyro để quay về hướng cũ, bám đuổi tự khóa lại người).
+
+Bám đuổi kết hợp tránh tháp và quay tại chỗ tìm người (bộ phát hiện vật cản tắt), 120 s: **12 lần tránh hoàn tất, 0 hủy**, bám mục tiêu 67,2 %, 4 lần quay tìm (1–2 s), cả 4 lần tìm lại được người. Khi người đứng sát tháp, robot lặp chu kỳ tiến–tránh vì chưa có bộ nhớ vị trí tháp. Giới hạn: 9/12 lần kích hoạt muộn (0,43–0,68 m, tháp ở mép khung nhìn); bộ phát hiện vật cản chưa dùng được trên sàn bóng (ghế xa 3 m bị coi là gần); mô hình chuyển động Tuần 2 chưa khớp sàn này (3 bảng, 4/6 đoạn đo được: tỉ lệ góc quay 0,57–0,68, quãng đường 0,56–0,87, trôi 0,17–0,83 rad/m so với ngưỡng 0,05; không đạt). Bằng chứng: `reports/DoanQuocKien/week-07/tower_avoid_1118/`.
+
+---
+
 # Chương 7 — Kiểm thử thực nghiệm và kết quả hiện thời
 
 **Chủ trì:** kouun-rokku (KR) tổng hợp cùng nhóm • **Ngân sách:** 1,5 trang
@@ -261,6 +271,7 @@ Nguyên tắc bất di bất dịch của báo cáo: **Mọi con số đều ph�
 | **Bộ phát hiện dừng bước (Hold)** | **ĐẠT (T0)** | Kích hoạt dwell time 2,05 s; 0 lần báo giả khi robot tự quay | `reports/kouun-rokku/week-05/hold_*.json` |
 | **Điều khiển Standoff Hold** | **ĐẠT (T0)** | Vận tốc tịnh tiến $v=0,0$ tuyệt đối; xoay canh giữa trong $\le 0,26\text{ s}$ | `reports/kouun-rokku/week-06/phase3_*.json` |
 | **Chuỗi Phase 2 $\rightarrow$ Phase 3** | **ĐẠT (T0)** | 100% lệnh hợp lệ vùng chết; chuyển giao hàng đợi đa mục tiêu trơn tru | `tests/test_phase3_runner.py` |
+| **Né tháp ESP32 trong lúc bám** | *THỰC NGHIỆM (T2, ký túc xá)* | `steer`: sát nhất ~0,4 m, không chạm; bám 120 s: 12 lần tránh, 0 hủy, bám 67,2 %; bộ phát hiện vật cản tắt | `reports/DoanQuocKien/week-07/tower_avoid_1118/` |
 | **Tải GPU Laptop (Workload)** | **ĐẠT (T1 / RTX 5060)** | 19,65 FPS scheduled (door 4,52 Hz, synthetic padding); VRAM 0,939 GiB (RTX 4050 chỉ có single-model) | `reports/HuynhNguyenHoaiLoc/midterm/` |
 
 ---
