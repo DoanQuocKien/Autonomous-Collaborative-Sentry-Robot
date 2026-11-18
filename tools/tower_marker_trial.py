@@ -133,7 +133,7 @@ def main():
             if a.mode == "reverse" and first is None:
                 done.set(); th.join()
                 raise SystemExit("ABORT: reverse needs a tower marker in view at the start")
-            if fwd and first is not None:
+            if fwd and first is not None and not (a.mode == "avoid" and first[1] > cfg.trigger_m + 0.1):
                 done.set(); th.join()
                 raise SystemExit("ABORT: a tower marker is already seen at %.2f m (PnP); start further away" % first[1])
             os.makedirs(a.out, exist_ok=True)

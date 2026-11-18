@@ -64,7 +64,17 @@ def test_obstacle_aborts_with_a_stop():
 
 def test_one_noisy_frame_does_not_start():
     ta = TowerAvoid()
-    assert ta.step(0.0, (0.5, 5.0)) is None and ta.step(0.03, None) is None and ta.step(0.06, (0.5, 5.0)) is None
+    assert ta.step(0.0, (0.5, 5.0)) is None
+    for i in range(1, 8):                                 # the first hit leaves the 6-frame window
+        assert ta.step(0.03 * i, None) is None
+    assert ta.step(0.3, (0.5, 5.0)) is None
+
+
+def test_two_hits_in_the_window_start_it():                   # a marker at the image edge is seen every other frame
+    ta = TowerAvoid()
+    assert ta.step(0.0, (0.8, -60.0)) is None and ta.step(0.03, None) is None
+    out = ta.step(0.06, (0.8, -60.0))
+    assert out is not None and out[2] == "TURN_AWAY" and out[1] > 0          # tower on the right -> turn left
 
 
 def test_dead_zone_command_refused():

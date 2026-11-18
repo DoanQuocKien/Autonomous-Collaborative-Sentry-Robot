@@ -13,6 +13,7 @@ video frame does not change the angle turned. `turn_scale` / `drive_scale` are t
 Safety: an obstacle closer than `abort_obstacle_m` while driving forward, or no frame for `max_gap_s`, ends the manoeuvre with a stop (`aborted`, `done` set).
 """
 import math
+from collections import deque
 from dataclasses import dataclass
 
 from sentry.config import load
@@ -24,7 +25,8 @@ IDLE, TURN_AWAY, SIDESTEP, TURN_BACK, CLEAR = "IDLE", "TURN_AWAY", "SIDESTEP", "
 @dataclass(frozen=True)
 class TowerAvoidConfig:
     trigger_m: float = 0.9              # marker range that starts the manoeuvre (reliably seen out to about 1 m, 0.4 m above the 0.5 m pursuit keep-out)
-    confirm_frames: int = 2             # consecutive frames inside trigger_m (one noisy PnP range must not start it)
+    confirm_frames: int = 2             # frames inside trigger_m, within the last `window` frames (one noisy PnP range must not start it; a marker at the image edge is only seen every few frames)
+    window: int = 6
     side_m: float = 0.8                 # sideways distance
     clear_m: float = 0.4                # driven after the last frame with a tower marker
     max_clear_s: float = 10.0
@@ -60,7 +62,7 @@ class TowerAvoid:
 
     def reset(self):
         self.phase, self.prog, self.t_prev, self.cmd = IDLE, 0.0, None, (0.0, 0.0)
-        self._seen, self._since_seen = 0, 0.0
+        self._hits, self._since_seen = deque(maxlen=self.cfg.window), 0.0
         self._angle, self._ahead = 0.0, 0.0
 
     @property
@@ -96,15 +98,15 @@ class TowerAvoid:
         self.t_prev = t
         if self.phase == IDLE:
             ok = tower is not None and tower[0] <= c.trigger_m
-            self._seen = self._seen + 1 if ok else 0
-            if self._seen < c.confirm_frames:
+            self._hits.append(ok)
+            if sum(self._hits) < c.confirm_frames or not ok:
                 return None
             b = tower[1]
             side = (-1 if b > 0 else 1) if abs(b) >= c.ahead_deg else c.default_side      # turn away from the tower
             turn = (90.0 - abs(b)) if abs(b) >= c.ahead_deg else 90.0                         # heading change that makes the heading 90 deg to the line of sight
             self._angle = side * math.radians(turn)
             self._ahead = max(0.0, tower[0] * math.cos(math.radians(b)))        # how far ahead of the robot the tower is, along the original heading
-            self._seen = 0
+            self._hits.clear()
             self.aborted = False
             self._go(TURN_AWAY, t, range_m=round(tower[0], 3), bearing_deg=round(b, 1), turn_deg=round(math.degrees(self._angle), 1))
             self.cmd = (0.0, math.copysign(c.turn_w, self._angle))
