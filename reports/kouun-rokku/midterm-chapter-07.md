@@ -8,7 +8,7 @@
 | T1 | Replay có nhãn/truth và protocol định trước | Accuracy/latency theo bộ dữ liệu và thiết bị ghi rõ |
 | T2 | Robot/ESP32 thật, pin và điều kiện có kiểm soát | Hành vi vật lý đủ số lượt, không suy từ T0 |
 
-Kiểm thử checkout sạch sau rebase được ghi trong log K3 cùng commit/tree, command và dependency versions. Số test chỉ áp dụng commit được log, không chứng nhận model/GPU hoặc phần cứng. Kết quả cũ 754/773 không dùng để chứng nhận bản sửa này. [K3]
+Checkout sạch sau rebase tại code commit `61bc6b1`: 896 passed, 3 skipped, 6 deselected (CPU, không GPU/HIL/replay). K3 ghi commit/tree, command và dependency versions. Số test chỉ áp dụng commit được log, không chứng nhận model/GPU hoặc phần cứng. Kết quả cũ 754/773 không dùng để chứng nhận bản sửa này. [K3]
 
 Checkout sạch tuần 7 clone từ commit candidate được ghi riêng cùng tree SHA, Python/dependency versions, command, exit code và pytest output. Chỉ dùng môi trường package đã cài của máy; D5 và ZIP D2 vẫn tracked theo quyết định nhóm; không copy dữ liệu local bổ sung, weights hoặc `.venv` vào clone. Model/GPU environment được ghi riêng nếu thiếu; CPU/replay không chứng nhận full inference setup. [K3]
 

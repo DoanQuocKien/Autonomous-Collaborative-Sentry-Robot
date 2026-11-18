@@ -1,6 +1,6 @@
-# Phụ lục A — Bàn giao mã nguồn (KR, 14/11/2026)
+# Phụ lục A — Bàn giao mã nguồn (KR, 18/11/2026)
 
-Bản ghép có phụ lục gọn trong [PDF 14 trang](../midterm_report.pdf).
+Render `python -m tools.render_midterm_report` để tạo PDF 14 trang; chỉ commit PDF tại freeze tag.
 Bảng dưới là chỉ mục chi tiết cho reviewer, không cộng thêm vào số trang PDF.
 
 | Module | Owner | Tests / bằng chứng |
@@ -11,6 +11,7 @@ Bảng dưới là chỉ mục chi tiết cho reviewer, không cộng thêm vào
 | `sentry/nav/localization.py` | KR / DQK | `tests/test_localization.py`; real T2 chưa đủ lượt |
 | `sentry/perception/entrance.py`, `sector.py` | KR / DQK | `tests/test_entrance.py`, `tests/test_sector.py` |
 | `sentry/perception/{obstacle,face,reid,tracker}.py` | HNHL | các test module tương ứng; T1/T2 theo protocol riêng |
+| Phase 2 live / door monitor | HNHL; KR nối queue/Phase3 | phase2_live, phase2_reid, phase2_replay |
 | `sentry/net/`, ESP32 receivers | HNHL / KR | camera/clock/mjpeg/espcam tests |
 | `jetson/`, `esp32/` | DQK / KR | compatibility, e-stop và HIL theo điều kiện thật |
 | `tools/{check_midterm_package,build_midterm_package}.py` | KR | `tests/test_midterm_package.py`; committed-tree/ZIP/hash guards |

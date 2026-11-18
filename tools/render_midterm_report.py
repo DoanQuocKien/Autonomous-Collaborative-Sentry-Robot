@@ -117,7 +117,7 @@ def render(source: Path, out: Path, font_dir: Path) -> None:
         canvas.saveState()
         canvas.setFont('VN', 7.4); canvas.setFillColor(navy)
         canvas.drawString(43, A4[1]-28, 'CS532  /  AUTONOMOUS COLLABORATIVE SENTRY ROBOT')
-        canvas.drawRightString(A4[0]-43, 23, f'KR editor • snapshot 14/11/2026  |  {doc.page}')
+        canvas.drawRightString(A4[0]-43, 23, f'KR editor • source hash in metadata  |  {doc.page}')
         canvas.restoreState()
     doc.build(story, onFirstPage=page, onLaterPages=page)
     from pypdf import PdfReader

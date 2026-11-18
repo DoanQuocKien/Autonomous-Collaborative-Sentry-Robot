@@ -220,7 +220,7 @@ Mô phỏng closed-loop ghi HOLD tại 6,32 s, resume 8,26 s, zero translation t
 | T1 | Replay có nhãn/truth và protocol định trước | Accuracy/latency theo bộ dữ liệu và thiết bị ghi rõ |
 | T2 | Robot/ESP32 thật, pin và điều kiện có kiểm soát | Hành vi vật lý đủ số lượt, không suy từ T0 |
 
-Kiểm thử checkout sạch sau rebase được ghi trong log K3 cùng commit/tree, command và dependency versions. Số test chỉ áp dụng commit được log, không chứng nhận model/GPU hoặc phần cứng. Kết quả cũ 754/773 không dùng để chứng nhận bản sửa này. [K3]
+Checkout sạch sau rebase tại code commit `61bc6b1`: 896 passed, 3 skipped, 6 deselected (CPU, không GPU/HIL/replay). K3 ghi commit/tree, command và dependency versions. Số test chỉ áp dụng commit được log, không chứng nhận model/GPU hoặc phần cứng. Kết quả cũ 754/773 không dùng để chứng nhận bản sửa này. [K3]
 
 Checkout sạch tuần 7 clone từ commit candidate được ghi riêng cùng tree SHA, Python/dependency versions, command, exit code và pytest output. Chỉ dùng môi trường package đã cài của máy; D5 và ZIP D2 vẫn tracked theo quyết định nhóm; không copy dữ liệu local bổ sung, weights hoặc `.venv` vào clone. Model/GPU environment được ghi riêng nếu thiếu; CPU/replay không chứng nhận full inference setup. [K3]
 
@@ -295,6 +295,7 @@ Bản tuần 7 hoàn thiện công việc editor và gói review từ những ng
 | HoldDetector, controllers | KR / DQK | hold_detector, controllers; T0 |
 | Localization, wheel model | KR / DQK | localization, wheel_model; T2 chưa đủ |
 | Entrance / sector / audio | KR / DQK | entrance, sector, audio |
+| Phase 2 live / door monitor | HNHL; KR nối queue/Phase3 | phase2_live, phase2_reid, phase2_replay |
 | Obstacle, face, re-ID, tracker | HNHL | obstacle, face, reid, tracker; gates T1 riêng |
 | Net / clock / streams | HNHL / KR | camera_pub, clock_sync, mjpeg_rx |
 | Jetson / ESP32 / motor interlocks | DQK / KR | estop, jetson_espcam; HIL riêng |
