@@ -47,9 +47,9 @@ Hệ thống vận hành trong môi trường phòng đơn trong nhà với mộ
 
 **Chủ trì:** Huỳnh Hữu Lộc tổng hợp cùng nhóm • **Ngân sách:** 1,5 trang
 
-Hệ thống kết hợp các nghiên cứu tiên tiến trong thị giác máy tính, nhận dạng người, theo dõi đa mục tiêu và điều khiển robot tự hành. Toàn bộ 15 công trình trích dẫn dưới đây đã được nhóm đọc, triển khai và kiểm chứng thực nghiệm trên mã nguồn:
+Hệ thống kết hợp các nghiên cứu tiên tiến trong thị giác máy tính, nhận dạng người, theo dõi đa mục tiêu và điều khiển robot tự hành. Toàn bộ 15 công trình trích dẫn dưới đây đã được đọc, triển khai và kiểm chứng thực nghiệm trên mã nguồn:
 
-1. **Rublee et al. (ICCV 2011) — ORB Descriptor:** Thuật toán binary descriptor được nhóm sử dụng làm đường cơ sở (baseline) đối sánh trong bake-off nhận diện cửa tại Giai đoạn 1 (`sentry/perception/entrance.py`), đạt AUC 0,91 so với 0,99–1,00 của mô hình học sâu.
+1. **Rublee et al. (ICCV 2011) — ORB Descriptor:** Thuật toán binary descriptor được dùng làm đường cơ sở (baseline) đối sánh trong bake-off nhận diện cửa tại Giai đoạn 1 (`sentry/perception/entrance.py`), đạt AUC 0,91 so với 0,99–1,00 của mô hình học sâu.
 2. **Kannala & Brandt (TPAMI 2006) — Generic Camera Model for Fish-eye Lenses:** Mô hình chiếu fisheye phi tuyến tính được áp dụng qua `cv2.fisheye` trong `tools/calibrate_fisheye.py` với bàn cờ chuẩn, đạt sai số chiếu lại RMS 0,83 px trên 52 góc nhìn thực tế (`calib/camera.json`).
 3. **Garrido-Jurado et al. (Pattern Recognition 2014) — Occlusion-Reliable Fiducial Markers:** Sử dụng từ điển `DICT_4X4_50` kích thước 150 mm làm mốc neo tọa độ thực địa (`sentry/nav/localization.py`) và mốc ước lượng góc pitch trực tiếp thời gian thực (`sentry/perception/camera_pose.py`).
 4. **Collins & Bartoli (IJCV 2014) — Infinitesimal Plane-Based Pose Estimation (IPPE):** Giải thuật PnP giải tích phẳng `cv2.SOLVEPNP_IPPE_SQUARE` dùng khử nhập nhằng hai nghiệm pháp tuyến khi tính tư thế robot từ ảnh mốc ArUco.
@@ -110,7 +110,7 @@ An toàn là yêu cầu bắt buộc và không thương lượng trong quá tr�
 
 Khoảng cách tới điểm chạm sàn của vật thể được tính bằng mô hình chiếu tia đơn mắt (không dùng cảm biến chiều sâu):
 $$Z = \frac{H}{\tan(\text{pitch} + \arctan((v - c_y)/f_y))}$$
-Trong đó $H = 0,100\text{ m}$ là chiều cao tâm thấu kính so với sàn (đo bằng thước, cố định, không "khớp" từ dữ liệu); góc nghiêng thay đổi theo từng lần robot bị cầm (từ −0,6° đến −13,9° trong các buổi đã đo, −8,0° ngày 16/11) nên mỗi buổi chạy bắt đầu bằng `tools.self_pose`. Để đối phó với hiện tượng sàn nhà bị lún hoặc camera bị rung lắc khi di chuyển, nhóm phát triển thuật toán `LiveTilt` (`sentry/perception/camera_pose.py`), tính toán lại góc pitch động từ việc quan sát các vạch mốc ArUco gắn trên tường, khống chế sai số ước lượng khoảng cách mặt sàn trong khoảng 0,5%–6,0% khi đứng yên và 3,0%–20,0% khi chuyển động.
+Trong đó $H = 0,100\text{ m}$ là chiều cao tâm thấu kính so với sàn (đo bằng thước, cố định, không "khớp" từ dữ liệu); góc nghiêng thay đổi theo từng lần robot bị cầm (từ −0,6° đến −13,9° trong các buổi đã đo, −8,0° ngày 16/11) nên mỗi buổi chạy bắt đầu bằng `tools.self_pose`. Để đối phó với hiện tượng sàn nhà bị lún hoặc camera bị rung lắc khi di chuyển, thuật toán `LiveTilt` (`sentry/perception/camera_pose.py`), tính toán lại góc pitch động từ việc quan sát các vạch mốc ArUco gắn trên tường, khống chế sai số ước lượng khoảng cách mặt sàn trong khoảng 0,5%–6,0% khi đứng yên và 3,0%–20,0% khi chuyển động.
 
 ## 4.3 Mô hình di chuyển vi sai và vùng chết động cơ (Motor Dead Zone)
 
@@ -156,7 +156,7 @@ Trong Giai đoạn 1, robot phải nhận diện đúng cửa vào phòng từ k
 - Thử nghiệm pilot cùng session trên 125 frame mặt người (tập D2 cafe, 21 lượt vào của 3 thành viên Đoàn Quốc Kiên, Huỳnh Nguyễn Hoài Lộc, Huỳnh Hữu Lộc) theo phương pháp leave-one-member-out, enrollment từ lượt vào đầu tiên [E03]:
   * Tại ngưỡng cosine 0,45, hệ thống đạt tỷ lệ chấp thuận thực TAR **82,99%** nhưng tỷ lệ chấp thuận sai FAR lên tới **46,40%**, chưa đạt tiêu chuẩn nghiệm thu TAR 95% @ FAR 1% (Hình F13).
   * Ngưỡng 0,45 chỉ là ngưỡng tạm thời (provisional), không dùng chính pilot để chọn lại threshold và tự báo PASS.
-- **Đo lại tại cửa bằng camera ESP32 (14/11, ba thành viên, đăng ký có hướng dẫn, đứng ở 1,8 / 2,4 / 3,0 m):** khuôn mặt rộng 59–97 px (clip D2 cũ 22–53 px); TAR gộp **0,937** tại ngưỡng 0,45 (822/877 khung nhìn thẳng; Đoàn Quốc Kiên 0,930, Huỳnh Nguyễn Hoài Lộc 0,983, Huỳnh Hữu Lộc 0,896), FAR **0 trên 1754 điểm** của người lạ; vẫn dưới mức 95%. Ngày 16/11 Đoàn Quốc Kiên đăng ký lại 5 tư thế và chấm lại cùng clip: TAR của Đoàn Quốc Kiên vẫn 0,930 (cùng 21 khung dưới 0,45), nên tư thế đăng ký không giải thích được các khung trượt (một lần đăng ký lại, một buổi). Còn thiếu người lạ ngoài nhóm và đăng ký lại cho Huỳnh Hữu Lộc; số liệu này chưa thay thế pilot cafe trong bảng đối soát cho tới khi có kiểm chứng độc lập.
+- **Đo lại tại cửa bằng camera ESP32 (14/11, ba thành viên, đăng ký có hướng dẫn, đứng ở 1,8 / 2,4 / 3,0 m):** khuôn mặt rộng 59–97 px (clip D2 cũ 22–53 px); TAR gộp **0,937** tại ngưỡng 0,45 (822/877 khung nhìn thẳng; Đoàn Quốc Kiên 0,930, Huỳnh Nguyễn Hoài Lộc 0,983, Huỳnh Hữu Lộc 0,896), FAR **0 trên 1754 điểm** của người lạ; vẫn dưới mức 95%. Ngày 16/11, đăng ký lại 5 tư thế và chấm lại cùng clip: TAR của Đoàn Quốc Kiên vẫn 0,930 (cùng 21 khung dưới 0,45), nên tư thế đăng ký không giải thích được các khung trượt (một lần đăng ký lại, một buổi). Còn thiếu người lạ ngoài nhóm và đăng ký lại cho Huỳnh Hữu Lộc; số liệu này chưa thay thế pilot cafe trong bảng đối soát cho tới khi có kiểm chứng độc lập.
 
 ![F13_face_roc](HuynhNguyenHoaiLoc/midterm/figures/F13_face_roc.png)
 *Hình F13: Đường cong ROC kiểm định Face Verification trên tập dữ liệu lối vào D2.*
@@ -183,7 +183,7 @@ Khi kẻ xâm nhập bị từ chối tại cửa, một vector đặc trưng to
 ![F18](HuynhNguyenHoaiLoc/midterm/figures/F18_d5_precision.png)
 *F18 — Native PyTorch CUDA trên RTX 5060, YOLOv8n D5-640, cùng 90 ảnh dev-val: FP32/FP16 đạt 123,59/107,38 FPS, p95 12,01/16,35 ms, peak allocated 32,41/17,53 MiB và mAP50 81,071%/81,072%. FP16 chậm hơn ở lần đo này; chưa phải TensorRT, T1 độc lập hoặc kết quả trên RTX 4050. Protocol và nguồn: [bổ sung Huỳnh Nguyễn Hoài Lộc 05/11](HuynhNguyenHoaiLoc/midterm/update-2026-11-05.md).*
 
-Các lượt chạy Đoàn Quốc Kiên 06–08/11 cho thấy giới hạn của cự ly chiếu tia xuống sàn: camera cao 0,100 m, ở 2,4 m một pixel hàng chân đổi kết quả khoảng 0,19 m, và pitch thay đổi theo gá nên cần `self_pose` trước mỗi lượt. Đây là thử nghiệm có giám sát, chưa có nghiệm thu step response hoặc thời gian HOLD. Nguồn: [home_1107](DoanQuocKien/week-05/home_1107/README.md).
+Các lượt chạy 06–08/11 cho thấy giới hạn của cự ly chiếu tia xuống sàn: camera cao 0,100 m, ở 2,4 m một pixel hàng chân đổi kết quả khoảng 0,19 m, và pitch thay đổi theo gá nên cần `self_pose` trước mỗi lượt. Đây là thử nghiệm có giám sát, chưa có nghiệm thu step response hoặc thời gian HOLD. Nguồn: [home_1107](DoanQuocKien/week-05/home_1107/README.md).
 
 ---
 
@@ -282,7 +282,7 @@ Nguyên tắc của báo cáo: **mọi con số đều trích dẫn file bằng 
 Các số liệu đầy đủ nằm ở mục 7.2; chương này nêu những gì chưa đạt hoặc chưa đo, đều từ một buổi đo (chưa phải nghiệm thu):
 - **Truy bám PD:** lần chạy thật 16/11 chỉ 32% thời gian trong dải 1,2 ± 0,2 m (yêu cầu 80%), căn tâm 91%; HOLD chưa thử trên robot.
 - **Né vật cản trên sàn gạch bóng:** khoảng cách tới ghế không giải được vì phản chiếu (`reflection_unresolved`); công cụ `explore_live` từ chối xuất phát; chưa có lần chạy né vật cản trên robot, và chưa có né tháp ESP32 trong truy bám.
-- **Khuôn mặt (D2):** TAR gộp 0,937 tại FAR 0/1754 ở ngưỡng 0,45, thấp hơn 95%; điểm người đúng và người lạ tách nhau (ngưỡng 0,40 cho TAR 0,990 tại FAR 0/5254) nhưng chỉ ba người, một buổi, một camera, nên chưa đổi ngưỡng; quyết định thuộc Huỳnh Nguyễn Hoài Lộc.
+- **Khuôn mặt (D2):** TAR gộp 0,937 tại FAR 0/1754 ở ngưỡng 0,45, thấp hơn 95%; điểm người đúng và người lạ tách nhau (ngưỡng 0,40 cho TAR 0,990 tại FAR 0/5254) nhưng chỉ ba người, một buổi, một camera, nên chưa đổi ngưỡng.
 - **Độ trễ và tải trên robot (phần mở rộng):** 13/11, có người và luồng ESP32 thật: 14,5–17,7 fps, p95 tới 153 ms (không đạt ≥ 20 fps, p95 ≤ 100 ms); RAM 2,13 GB, GPU tối đa 38,5 °C, pin tối thiểu 11,71 V (đạt).
 - **Chuyển động vòng hở:** lần đo hệ số bằng ba bảng marker (16/11) chỉ có 2 trong 6 đoạn có marker ở cả hai lần dừng nên không khớp được; hoãn, không chấm điểm, hệ số tuần 2 vẫn dùng.
 
