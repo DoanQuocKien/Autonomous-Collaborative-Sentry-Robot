@@ -1,6 +1,6 @@
 """Tower keep-out manoeuvre (2026-11-18, DQK's design): the ESP32 tower carries one 50 mm ArUco marker (ids 10-13) on each face; when one is seen closer than `trigger_m`, the robot
 turns until its heading is 90 deg to the line of sight to the tower (away from it), drives `side_m` sideways, turns back to the original heading, drives straight until the tower has been out
-of view for `clear_m` of driving, and hands control back to the caller (pursuit). It is open loop between the turns: at 90 deg off the axis the tower is outside the 160 deg view.
+of view for `clear_m` of driving AND it has driven past the tower (the distance ahead of it at the trigger plus `clear_m`; the markers are only seen out to about 1 m, so "not seen" alone does not mean "passed"), and hands control back to the caller (pursuit). It is open loop between the turns: at 90 deg off the axis the tower is outside the 160 deg view.
 
     ta = TowerAvoid()
     out = ta.step(t, (range_m, bearing_deg) or None, obstacle_m)       # every frame
@@ -27,7 +27,7 @@ class TowerAvoidConfig:
     confirm_frames: int = 2             # consecutive frames inside trigger_m (one noisy PnP range must not start it)
     side_m: float = 0.8                 # sideways distance
     clear_m: float = 0.4                # driven after the last frame with a tower marker
-    max_clear_s: float = 8.0
+    max_clear_s: float = 10.0
     turn_w: float = 0.5                 # |w| of the turns (0.45 is the smallest legal turn)
     drive_v: float = 0.5                # v of the sidestep and the clearing run
     turn_scale: float = 1.0
@@ -61,7 +61,7 @@ class TowerAvoid:
     def reset(self):
         self.phase, self.prog, self.t_prev, self.cmd = IDLE, 0.0, None, (0.0, 0.0)
         self._seen, self._since_seen = 0, 0.0
-        self._angle, self._first = 0.0, None
+        self._angle, self._ahead = 0.0, 0.0
 
     @property
     def active(self):
@@ -103,6 +103,7 @@ class TowerAvoid:
             side = (-1 if b > 0 else 1) if abs(b) >= c.ahead_deg else c.default_side      # turn away from the tower
             turn = (90.0 - abs(b)) if abs(b) >= c.ahead_deg else 90.0                         # heading change that makes the heading 90 deg to the line of sight
             self._angle = side * math.radians(turn)
+            self._ahead = max(0.0, tower[0] * math.cos(math.radians(b)))        # how far ahead of the robot the tower is, along the original heading
             self._seen = 0
             self.aborted = False
             self._go(TURN_AWAY, t, range_m=round(tower[0], 3), bearing_deg=round(b, 1), turn_deg=round(math.degrees(self._angle), 1))
@@ -122,7 +123,8 @@ class TowerAvoid:
             self._since_seen = 0.0
         elif self.phase == CLEAR:
             self._since_seen = 0.0 if tower is not None else self._since_seen + dt
-            if self._since_seen >= c.clear_m / (self.v_m * c.drive_scale) or self.prog >= c.max_clear_s:
+            passed = self.prog * self.v_m * c.drive_scale >= self._ahead + c.clear_m
+            if (passed and self._since_seen >= c.clear_m / (self.v_m * c.drive_scale)) or self.prog >= c.max_clear_s:
                 self.cmd = (0.0, 0.0)
                 self._finish(t, None)
                 return None                                    # caller takes over this very frame

@@ -46,6 +46,7 @@ def test_passes_and_returns_to_heading(period, y_tower):
     assert ta.count == 1 and not ta.aborted
     assert abs(yaw) < 8.0                                  # back on the original heading
     assert closest > 0.6                                   # never nearer than the pursuit keep-out plus margin
+    assert x > 1.2 + 0.3                                   # ended past the tower, not beside it
     assert [e["event"] for e in ta.events] == ["TURN_AWAY", "SIDESTEP", "TURN_BACK", "CLEAR", "DONE"]
 
 
