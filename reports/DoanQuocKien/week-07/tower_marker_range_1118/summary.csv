@@ -1,0 +1,4 @@
+label,mode,yaw_deg,v,marker_m,start_tape_m,end_tape_m,event_id,event_range_m,event_side_px,why,wheel_s,battery_v,csv
+tower_a,reverse,0.0,0.5,0.05,0.35,1.64,10,1.325,9,marker lost for 0.3 s,6.18,12.31,data/tower_runs\tower_a_reverse_2.csv
+tower_b,reverse,30.0,0.5,0.05,0.35,1.23,10,1.236,11,marker lost for 0.3 s,4.48,12.26,data/tower_runs\tower_b_reverse_2.csv
+tower_c,reverse,45.0,0.5,0.05,0.35,1.07,12,1.028,13,marker lost for 0.3 s,3.84,12.22,data/tower_runs\tower_c_reverse_2.csv

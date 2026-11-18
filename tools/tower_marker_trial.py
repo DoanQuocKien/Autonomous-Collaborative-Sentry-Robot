@@ -19,6 +19,7 @@ import os
 import threading
 import time
 
+import cv2
 import numpy as np
 
 from sentry.config import load
@@ -109,10 +110,12 @@ def main():
             why = reason
 
         with ZMQReceiver() as rx:
-            first = None
+            first, start_img = None, None
             for _ in range(30):
                 f = rx.read(timeout=5)
                 first = look(g, obj, f.frame_bgr) if f is not None else None
+                if f is not None:
+                    start_img = f.frame_bgr
                 if first or a.mode == "approach" and _ >= 10:
                     break
             if a.mode == "reverse" and first is None:
@@ -121,6 +124,10 @@ def main():
             if a.mode == "approach" and first is not None:
                 done.set(); th.join()
                 raise SystemExit("ABORT: a tower marker is already seen at %.2f m (PnP); start further away" % first[1])
+            os.makedirs(a.out, exist_ok=True)
+            snap = os.path.join(a.out, "%s_%s_%s_start.jpg" % (a.label, a.mode, time.strftime("%H%M%S")))
+            cv2.imwrite(snap, start_img)                         # what the camera saw at the start: check that the tower is in it
+            print("start picture:", snap, flush=True)
             print("%s: tape %.2f m, drive time cap %.1f s (model %.3f m/s per unit x %.2f). HOLD R1 at the beeps." % (a.mode, a.start_m, max_s, gain, a.v), flush=True)
             for _ in range(3):
                 beep(1500, 300)
@@ -179,7 +186,10 @@ def main():
         print("EVENT: tower id %d at PnP range %.3f m, bearing %+.1f deg, side %.0f px (%s)" % (event[0], event[1], event[2], event[3], "first detection" if a.mode == "approach" else "last detection"))
     else:
         print("NO EVENT (no tower marker confirmed / lost): the marker was not detected in range, or the time cap ended the run")
-    tape_end = input("Tape lens -> tower now, m (Enter to skip): ").strip()
+    try:
+        tape_end = input("Tape lens -> tower now, m (Enter to skip): ").strip()
+    except EOFError:                                     # no console (launched from a script): fill the summary row by hand
+        tape_end = ""
     os.makedirs(a.out, exist_ok=True)
     n = 1 + len([x for x in os.listdir(a.out) if x.startswith("%s_%s_" % (a.label, a.mode))])
     path = os.path.join(a.out, "%s_%s_%d.csv" % (a.label, a.mode, n))
