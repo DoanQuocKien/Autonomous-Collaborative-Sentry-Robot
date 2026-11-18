@@ -461,7 +461,7 @@ def main():
             return
         written["done"] = True
         summary = dict(pursuit.summary(), label=a.label, dry_run=a.dry_run, replay=a.replay, end_reason=end["reason"], camera_pose_file=a.camera_pose, pitch_down_deg=round(math.degrees(geom.pitch), 2),
-                       feet_row_offset_px=pursuit.feet_row_offset_px, range_source=a.range_source, trunk_length_m=trunk_m, trunk_conf_min=trunk_conf, trunk_frames=sum(1 for r in pursuit.rows if r.get("range_src") == "trunk"), config=effective_config, battery_v_start=volts0, battery_v_end=volts1, seconds=round(time.time() - t_wall, 1), date=time.strftime("%Y-%m-%d %H:%M"), obstacle_avoidance=True, floor=a.floor,
+                       feet_row_offset_px=pursuit.feet_row_offset_px, range_source=a.range_source, trunk_length_m=trunk_m, trunk_conf_min=trunk_conf, trunk_frames=sum(1 for r in pursuit.rows if r.get("range_src") == "trunk"), config=effective_config, battery_v_start=volts0, battery_v_end=volts1, seconds=round(time.time() - t_wall, 1), date=time.strftime("%Y-%m-%d %H:%M"), obstacle_avoidance=not a.no_obstacles, floor=a.floor,
                        tower_avoid=None if tower_ta is None else dict(count=tower_ta.count, aborted=tower_ta.aborted, events=tower_ta.events, config=dataclasses.asdict(tower_ta.cfg)))
         run_dir = save_run(a.out, a.label, pursuit.rows, summary, saved)
         print("ENDED: %s | %s" % (end["reason"], json.dumps({k: summary[k] for k in ("frames", "run_span_s", "unobserved_time_s", "coverage_tracked_fraction", "time_fraction_distance_in_band_of_run", "time_fraction_centred_of_run", "hold_events")})), flush=True)
