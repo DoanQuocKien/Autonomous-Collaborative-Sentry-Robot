@@ -232,6 +232,8 @@ Module `Phase3Runner` (`sentry/app/phase3_runner.py`) kết nối máy trạng t
 
 ---
 
+---
+
 # Chương 7 — Kiểm thử thực nghiệm và kết quả hiện thời
 
 **Chủ trì:** Huỳnh Hữu Lộc tổng hợp cùng nhóm • **Ngân sách:** 1,5 trang
@@ -266,6 +268,7 @@ Nguyên tắc của báo cáo: **mọi con số đều trích dẫn file bằng 
 | **Bộ phát hiện dừng bước (Hold)** | **ĐẠT (T0)** | Dwell time cấu hình 2,0 s (đạt); 0 lần báo giả khi robot tự quay | `reports/kouun-rokku/week-05/hold_*.json` |
 | **Điều khiển Standoff Hold** | **ĐẠT (T0)** | Vận tốc tịnh tiến $v=0,0$ tuyệt đối; thời gian canh giữa tối đa 0,0 s trong mô phỏng và phát lại | `reports/kouun-rokku/week-06/phase3_*.json` |
 | **Chuỗi Phase 2 $\rightarrow$ Phase 3** | **ĐẠT (T0)** | 100% lệnh hợp lệ vùng chết; chuyển giao hàng đợi đa mục tiêu trơn tru | `tests/test_phase3_runner.py` |
+| **Né tháp ESP32 trong lúc bám** | *BỔ SUNG 18/11 SAU FREEZE* | Steer riêng sát nhất ~0,4 m theo tape, không chạm. Bám 120 s: 13 triggers, 12 hoàn tất, một còn active; tracked 67,2%, trong dải 9,2%, căn tâm 40%; detector vật cản tắt | `reports/DoanQuocKien/week-07/tower_avoid_1118/` |
 | **Tải GPU Laptop (Workload)** | *PILOT (T1)* | RTX 5060: 19,65 FPS, VRAM 0,939 GiB; RTX 4050 (13/11): 19,23 FPS, door 4,61 Hz (mục tiêu 5 Hz), 0,89 GiB; chưa nhận T1 | `reports/HuynhNguyenHoaiLoc/midterm/`, `reports/DoanQuocKien/week-06/gpu_rtx4050_1113/` |
 
 ---
@@ -278,7 +281,7 @@ Nguyên tắc của báo cáo: **mọi con số đều trích dẫn file bằng 
 
 Các số liệu đầy đủ nằm ở mục 7.2; chương này nêu những gì chưa đạt hoặc chưa đo, đều từ một buổi đo (chưa phải nghiệm thu):
 - **Truy bám PD:** lần chạy thật 16/11 chỉ 32% thời gian trong dải 1,2 ± 0,2 m (yêu cầu 80%), căn tâm 91%; HOLD chưa thử trên robot.
-- **Né vật cản trên sàn gạch bóng:** khoảng cách tới ghế không giải được vì phản chiếu (`reflection_unresolved`); công cụ `explore_live` từ chối xuất phát; chưa có lần chạy né vật cản trên robot, và chưa có né tháp ESP32 trong truy bám.
+- **Né vật cản trên sàn gạch bóng:** contact ghế còn unresolved. Bổ sung 18/11 có thử né tháp bằng marker, detector vật cản tổng quát tắt. Chưa đủ nghiệm thu tránh vật cản.
 - **Khuôn mặt (D2):** TAR gộp 0,937 tại FAR 0/1754 ở ngưỡng 0,45, thấp hơn 95%; điểm người đúng và người lạ tách nhau (ngưỡng 0,40 cho TAR 0,990 tại FAR 0/5254) nhưng chỉ ba người, một buổi, một camera, nên chưa đổi ngưỡng.
 - **Độ trễ và tải trên robot (phần mở rộng):** 13/11, có người và luồng ESP32 thật: 14,5–17,7 fps, p95 tới 153 ms (không đạt ≥ 20 fps, p95 ≤ 100 ms); RAM 2,13 GB, GPU tối đa 38,5 °C, pin tối thiểu 11,71 V (đạt).
 - **Chuyển động vòng hở:** lần đo hệ số bằng ba bảng marker (16/11) chỉ có 2 trong 6 đoạn có marker ở cả hai lần dừng nên không khớp được; hoãn, không chấm điểm, hệ số tuần 2 vẫn dùng.
@@ -286,7 +289,7 @@ Các số liệu đầy đủ nằm ở mục 7.2; chương này nêu những g�
 ## 8.2 Kế hoạch tới hết kỳ
 
 - **Tuần 7 (16–22/11):** đóng thí nghiệm và đóng băng hình (16/11); bản nháp nội bộ 18/11; buổi lớp 19/11 quay các cảnh còn lại (nhắc, đặt camera, bắt tay, lùi về STANDBY, Phase 2, kẻ xâm nhập); nộp **23/11**. Không làm tính năng mới.
-- **Tuần 8–10 (23/11–13/12):** né khi bị tấn công (v = −1,0, ω = ±0,8 trong 400 ms, đo thời gian phản ứng bằng camera tốc độ cao), tránh tháp trong truy bám, đo `r_det` (tạm 3,0 m), tìm kiếm trên robot (kế hoạch → đi → quét → nhận lại) và vòng đầy đủ với hai kẻ xâm nhập; ngưỡng: tìm thấy T2 ≥ 4/5, vòng đầy đủ ≥ 4/5 lần không can thiệp.
+- **Tuần 8–10 (23/11–13/12):** né khi bị tấn công (v = −1,0, ω = ±0,8 trong 400 ms), sửa lỗi lặp tiến–tránh quanh tháp, đo `r_det` (tạm 3,0 m), tìm kiếm trên robot và vòng đầy đủ với hai kẻ xâm nhập; ngưỡng: tìm thấy T2 ≥ 4/5, vòng đầy đủ ≥ 4/5 lần không can thiệp.
 - **Tuần 11–13:** tuần đệm cho hạng mục chưa đạt, kiểm tra căng (pin thấp, mất Wi-Fi, ánh sáng), đóng băng; nộp **28/12** (cửa sổ bảo vệ tới 2/1).
 
 ## 8.3 Rủi ro đã đo (rủi ro khuôn mặt, khoảng cách cửa và chuyển động vòng hở: xem 8.1)
