@@ -1,0 +1,171 @@
+{
+  "frames": 731,
+  "frames_with_distance": 363,
+  "pursue_frames": 281,
+  "run_span_s": 36.72,
+  "observed_time_s": 36.72,
+  "unobserved_time_s": 0.0,
+  "tracked_time_s": 18.19,
+  "coverage_tracked_fraction": 0.495,
+  "time_fraction_distance_in_band_of_tracked": 0.565,
+  "time_fraction_distance_in_band_of_run": 0.28,
+  "time_fraction_centred_of_tracked": 0.795,
+  "time_fraction_centred_of_run": 0.394,
+  "diag_frame_fraction_distance_in_band": 0.445,
+  "diag_frame_fraction_centred": 0.796,
+  "centre_unit": "|bbox centre - image centre| / full frame width <= 0.10 (yaw_err in the log is relative to HALF the width: divided by 2 here)",
+  "frames_tower_avoid": 178,
+  "frames_obstacle_blocked": 0,
+  "min_obstacle_m": null,
+  "hold_events": [
+    [
+      18.18,
+      "TARGET_STATIONARY"
+    ],
+    [
+      22.36,
+      "TARGET_MOVING"
+    ]
+  ],
+  "reacquires": 5,
+  "target_id": 35,
+  "acceptance": "NOT EVALUATED: first supervised trials; the 'of_run' fractions use the FULL elapsed span (no-target and unobserved time count against them), the 'of_tracked' fractions use observed tracked time only; diagnostics, not the plan's 80 % acceptance",
+  "plan_thresholds": "distance 1.2 +/- 0.2 m and bbox centre within +/- 10 % of the frame width for 80 % of the time (plan 4.3 'Pursuit PD')",
+  "label": "tower_pursuit_d",
+  "dry_run": false,
+  "replay": null,
+  "end_reason": "target lost for 5.0 s",
+  "camera_pose_file": "calib/camera_pose_self_1118_1.json",
+  "pitch_down_deg": -6.9,
+  "feet_row_offset_px": 0.0,
+  "range_source": "foot",
+  "trunk_length_m": 0.5,
+  "trunk_conf_min": 0.8,
+  "trunk_frames": 0,
+  "config": {
+    "pursuit": {
+      "target_distance_m": 1.2,
+      "distance_tolerance_m": 0.2,
+      "kp_distance": 0.8,
+      "kd_distance": 0.1,
+      "kp_yaw": 1.5,
+      "kd_yaw": 0.2,
+      "v_max": 0.55,
+      "v_min_forward": 0.45,
+      "spin_first_yaw": 0.5,
+      "spin_first_exit_yaw": 0.35,
+      "v_min_reverse": -0.45,
+      "w_max": 1.0,
+      "w_spin": 0.45,
+      "min_pwm": 0.12,
+      "max_speed_cap": 0.3,
+      "obstacle_threshold_m": 0.5,
+      "obstacle_critical_m": 0.35,
+      "obstacle_avoid_w": 0.45,
+      "center_tolerance_norm": 0.1
+    },
+    "hold_behavior": {
+      "kp_yaw": 1.5,
+      "kd_yaw": 0.2,
+      "w_max": 0.8,
+      "w_spin": 0.45,
+      "min_pwm": 0.12,
+      "max_speed_cap": 0.3,
+      "center_tolerance_norm": 0.1,
+      "max_recenter_time_s": 1.5
+    },
+    "hold_detector": {
+      "speed_threshold_mps": 0.1,
+      "dwell_time_s": 2.0,
+      "exit_speed_mps": 0.2,
+      "window_s": 0.5,
+      "min_samples": 5,
+      "min_window_span_s": 0.2,
+      "max_observation_gap_s": 1.0
+    }
+  },
+  "battery_v_start": 11.708,
+  "battery_v_end": 11.692,
+  "seconds": 37.3,
+  "date": "2026-11-18 09:38",
+  "obstacle_avoidance": false,
+  "floor": "unknown",
+  "tower_avoid": {
+    "count": 3,
+    "aborted": false,
+    "events": [
+      {
+        "t": 2.11,
+        "event": "TRIGGER",
+        "range_m": 0.866,
+        "bearing_deg": -35.3,
+        "tower_side": "right"
+      },
+      {
+        "t": 6.065,
+        "event": "DONE",
+        "why": null,
+        "seconds": 3.95,
+        "min_range_m": 0.654
+      },
+      {
+        "t": 12.671,
+        "event": "TRIGGER",
+        "range_m": 0.671,
+        "bearing_deg": -66.7,
+        "tower_side": "right"
+      },
+      {
+        "t": 15.312,
+        "event": "DONE",
+        "why": null,
+        "seconds": 2.64,
+        "min_range_m": 0.663
+      },
+      {
+        "t": 28.054,
+        "event": "TRIGGER",
+        "range_m": 0.495,
+        "bearing_deg": -65.5,
+        "tower_side": "right"
+      },
+      {
+        "t": 30.462,
+        "event": "DONE",
+        "why": null,
+        "seconds": 2.41,
+        "min_range_m": 0.422
+      }
+    ],
+    "config": {
+      "trigger_m": 0.9,
+      "confirm_frames": 2,
+      "window": 6,
+      "side_m": 0.8,
+      "clear_m": 0.4,
+      "max_clear_s": 10.0,
+      "turn_w": 0.5,
+      "drive_v": 0.5,
+      "turn_scale": 1.0,
+      "drive_scale": 1.0,
+      "abort_obstacle_m": 0.35,
+      "default_side": -1,
+      "ahead_deg": 3.0,
+      "fresh_s": 0.25,
+      "yaw_pulse_s": 0.08,
+      "max_gap_s": 1.0,
+      "strategy": "steer",
+      "clearance_m": 0.35,
+      "margin_deg": 10.0,
+      "steer_v": 0.6,
+      "steer_w_max": 0.18,
+      "steer_gain": 0.6,
+      "stop_m": 0.3,
+      "pivot_w": 0.5,
+      "lost_s": 0.5,
+      "pass_clear_m": 0.25,
+      "max_total_s": 12.0
+    }
+  },
+  "obstacle_avoidance_note": "corrected by hand 2026-11-18: run with --no-obstacles (the tool wrote true)"
+}

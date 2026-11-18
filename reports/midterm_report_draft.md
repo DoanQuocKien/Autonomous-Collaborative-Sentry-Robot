@@ -277,6 +277,8 @@ Kỳ vọng vòng đầy đủ ≥4/5 không can thiệp, tìm T2 ≥4/5, search
 
 ## 8.2 Rủi ro và việc tiếp tục
 
+**Bổ sung sau đóng băng, 18/11.** DQK thử tower ở ký túc xá. Pursuit 120 s có 13 triggers, 12 hoàn tất, một còn active, tracked 67,2%, trong dải 9,2%, căn tâm 40%. Detector vật cản tổng quát tắt. Có ba HOLD rows trong khoảng 0,14 s. Motion fit bị từ chối vì tỷ lệ forward phân tán. Các lượt này còn thiếu protocol nghiệm thu và được ghi riêng với kết quả 16/11. [D18]
+
 - **Sàn bóng:** contact ghế không giải được; cần held-out floor/chair/empty-floor controls và rule fallback đã freeze. ORG hoặc width cue chưa là model mặc định.
 - **Pose/motion:** camera gá xê dịch, drift đổi theo sàn/pin/lệnh; mỗi lượt đo lại pose, giữ phạm vi thử có giám sát và kiểm pin.
 - **Face/re-ID:** guided enrollment cải thiện genuine scores nhưng còn impostors, gallery/body-ID truth; quyết định ngưỡng/model thuộc perception owner.

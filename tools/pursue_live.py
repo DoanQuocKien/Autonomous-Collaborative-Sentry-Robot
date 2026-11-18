@@ -11,7 +11,7 @@ image blocks forward motion (the Explorer's rule). On the glossy classroom floor
 SAFETY (all of them apply, none can be turned off):
   * the robot moves only while R1 is held with the e-stop armed (latch file polled over SSH every 0.2 s; two failed polls stop the run); `--no-estop` does not exist here;
   * every command is legal for the motors (controllers.py) and the sender repeats a command only while it is fresh (0.25 s), then sends a stop; the robot's own watchdog is 0.3 s;
-  * no person tracked for 0.6 s, or no fresh frame for 0.5 s: stop. A lost target for --lost-end-s (5 s) ends the run (no searching, no switching to another person);
+  * no person tracked for 0.6 s, or no fresh frame for 0.5 s: stop. A lost target for --lost-end-s (5 s) ends the run (no switching to another person; with --search the robot spins to find one first);
   * feet cut off by the image bottom or no floor intersection: no translation, yaw centring only;
   * an obstacle without a distance low in the image: no forward motion; a resolved obstacle nearer than 0.35 m: no forward motion either (controller override);
   * a start battery below --min-battery (11.4 V) refuses to start; run `python -m tools.self_pose` on today's floor first and pass its file as --camera-pose (a stale pitch gives wrong distances).
@@ -52,6 +52,7 @@ CENTRE_TOL_WIDTH = 0.10                       # plan: bbox centre within +/- 10 
 MAX_PROCESS_S = 0.5                           # longer than this for one frame: stop instead of driving on it
 FEET_MARGIN_PX = 3
 YAW_DEADBAND = 0.10                           # |yaw_err| inside the +/-10 % centre band: no yaw-only command (the smallest legal turn, 0.45, is about 125 deg/s)
+SEARCH_AFTER_S = 0.6                          # --search: no target this long -> spin to find a person
 YAW_PULSE_PERIOD = 3                          # yaw-only commands: one frame on, two frames off (about 6 deg per pulse instead of 14+ deg bursts)
 REACQ_YAW_GATE = 0.6                          # re-lock gate: the only person in view within this yaw_err (normalised, 0.6 = about 48 deg) and 1.0 m of the last position
 REACQ_DIST_GATE_M = 1.0
@@ -61,11 +62,11 @@ REACQ_MAX_LOST_S = 3.0
 COLS = ["t", "track_id", "dist_m", "forward_m", "left_m", "yaw_err", "feet_cut", "range_src", "foot_forward_m", "v_req", "w_req", "v", "w", "suppressed", "mode", "event", "obstacle_m", "obstacle_blocked", "tracks"]
 
 
-def obstacle_input(obs, size):
+def obstacle_input(obs, size, unresolved_bottom=None):
     """ObstacleResult -> (nearest distance m or None, its bearing rad (+ = left), blocked). blocked: an obstacle WITHOUT a distance is near by the
     Explorer's rule (box bottom below 55 % of the image height, or cut off by the border); stop_m = 0 keeps resolved obstacles for the controller."""
     near = min(obs.ground_points, key=lambda g: g.distance_m, default=None)
-    blocked = Explorer(ExploreSettings(stop_m=0.0), size).blocking(obs)[0]
+    blocked = Explorer(ExploreSettings(stop_m=0.0, **({} if unresolved_bottom is None else {"unresolved_bottom": unresolved_bottom})), size).blocking(obs)[0]
     return (None, 0.0, blocked) if near is None else (near.distance_m, math.atan2(near.left_m, near.forward_m), blocked)
 
 
@@ -147,6 +148,8 @@ class Pursuit(object):
         self.rows = []
         self.hold_events = []
         self.last_seen = None                      # (yaw_err, distance or None) of the target when last seen
+        self._lost_ref = None
+        self.search_w, self._search_dir = 0.0, 1.0   # search_w > 0: spin to find the person again (--search)
         self._yaw_phase = 0
         self._dist_hist = []                       # recent ranges of the target (m), for the dead band
 
@@ -168,6 +171,22 @@ class Pursuit(object):
                     yaw = math.atan2(math.sin(yaw + w_r * h), math.cos(yaw + w_r * h))
                 self.pose = [x, y, yaw]
         self.t_prev = t
+
+    def avoid_step(self, t, v, w, phase):
+        """A tower manoeuvre (sentry.nav.tower_avoid) drives instead of the pursuit this frame: the pose follows what was sent, the log row says TOWER_<phase>."""
+        self._advance(t)
+        self.cmd = (v, w)
+        self.rows.append(dict(t=round(t, 3), track_id=None, dist_m=None, forward_m=None, left_m=None, yaw_err=None, feet_cut=None, range_src=None, foot_forward_m=None, v_req=round(v, 3), w_req=round(w, 3),
+                              v=round(v, 3), w=round(w, 3), suppressed=0, mode="TOWER_" + phase, event=None, obstacle_m=None, obstacle_blocked=0, tracks=""))
+
+    def resume_after_avoid(self, t):
+        """The manoeuvre is over (seconds of blind driving): forget the target and the controller state, so the largest person within the lock range is locked again (the tracker may have given the person a new id)."""
+        self.target_id, self.t_seen, self.last_seen = None, None, None
+        self._lost_ref = t                         # no person seen since the handover: --lost-end-s counts from here
+        self._dist_hist, self._trunk_hist, self._yaw_phase = [], {}, 0
+        self.ctl.reset()
+        if self.rows:
+            self.rows[-1]["event"] = "TOWER_RESUME"
 
     def override_command(self, v, w):
         """The caller did not send the command computed by update() (a slow frame): the pose and the log must describe what was really sent."""
@@ -237,6 +256,8 @@ class Pursuit(object):
             if ob_blocked and v > 0.0:
                 v = 0.0                                              # an obstacle without a distance is near: no forward motion (yaw and backing away stay allowed)
             self.last_seen = (ye, gp.distance_m if gp is not None else None)
+            if abs(ye) > 0.05:
+                self._search_dir = 1.0 if ye > 0 else -1.0           # + yaw_err = the person is on the left
             if abs(v) < 1e-9 and w != 0.0:                           # yaw-only: dead band, then short pulses
                 self._yaw_phase = (self._yaw_phase + 1) % YAW_PULSE_PERIOD
                 if abs(ye) <= YAW_DEADBAND or self._yaw_phase != 1:
@@ -245,7 +266,14 @@ class Pursuit(object):
                 self._yaw_phase = 0
         else:
             v = w = 0.0                                              # no target this frame: stop now (the sender also stops a stale command)
-            if self.target_id is not None and self.t_seen is not None and t - self.t_seen >= self.lost_end_s:
+            if self.search_w and (self.t_seen is None or t - self.t_seen >= SEARCH_AFTER_S):
+                self.target_id = None                                # lost for a while: any person within the lock range is the new target
+                self._yaw_phase = (self._yaw_phase + 1) % YAW_PULSE_PERIOD
+                if self._yaw_phase == 1:                             # spin on the spot in short pulses towards the side the person was last seen (left when unknown)
+                    w = math.copysign(self.search_w, self._search_dir)
+                row.update(mode="SEARCH")
+            ref = self.t_seen if self.t_seen is not None else self._lost_ref
+            if ref is not None and t - ref >= self.lost_end_s:
                 self.end_reason = "target lost for %.1f s" % self.lost_end_s
         self.cmd = (v, w)
         row.update(v=round(v, 3), w=round(w, 3))
@@ -284,6 +312,7 @@ class Pursuit(object):
                 "time_fraction_centred_of_tracked": frac(centred_s, tracked_s), "time_fraction_centred_of_run": frac(centred_s, run_s),
                 "diag_frame_fraction_distance_in_band": frac(len(near_f), len(pursue)), "diag_frame_fraction_centred": frac(len(centred_f), len(tracked)),
                 "centre_unit": "|bbox centre - image centre| / full frame width <= %.2f (yaw_err in the log is relative to HALF the width: divided by 2 here)" % CENTRE_TOL_WIDTH,
+                "frames_tower_avoid": sum(1 for r in rows if str(r["mode"]).startswith("TOWER_")),
                 "frames_obstacle_blocked": sum(1 for r in rows if r["obstacle_blocked"]),
                 "min_obstacle_m": min((r["obstacle_m"] for r in rows if r["obstacle_m"] is not None), default=None),
                 "hold_events": self.hold_events, "reacquires": sum(1 for r in rows if r["event"] == "REACQUIRE"), "target_id": self.target_id,
@@ -350,6 +379,10 @@ def main():
     ap.add_argument("--range-source", choices=("foot", "trunk"), default="foot", help="foot: floor distance of the box bottom (default); trunk: range from the shoulder-to-hip length with a population prior, foot-row fallback when the keypoints are not confident (a lead, see sentry/perception/body_range.py)")
     ap.add_argument("--pose-weights", default=None, help="YOLOv8-pose weights for --range-source trunk (default [reid] pose_weights, else yolov8n-pose.pt in the repo root)")
     ap.add_argument("--floor", choices=("glossy", "matte", "unknown"), default="unknown", help="floor type for the obstacle detector; unknown -> every obstacle is unresolved (then low boxes only stop forward motion)")
+    ap.add_argument("--search", action="store_true", help="target lost for 0.6 s: spin on the spot (pulses, towards the side it was last seen) until a person within the lock range is found; --lost-end-s then counts the whole search (set 30). It also spins from the start and after a tower avoid until a person is found")
+    ap.add_argument("--no-obstacles", action="store_true", help="no obstacle detector at all (2026-11-18: unresolved on the glossy floor, it blocks forward motion for far chairs); keep the floor clear, R1 is the only stop")
+    ap.add_argument("--unresolved-bottom", type=float, default=None, help="an obstacle without a floor distance blocks forward motion when its box reaches below this fraction of the image height (default 0.55 of the Explorer; with the camera pitched up the horizon is near 0.58, so far chairs block: 0.75 keeps only what is within about 1 m)")
+    ap.add_argument("--tower-avoid", action="store_true", help="the ESP32 tower (50 mm ArUco ids 10-13 on its faces, [tower] in config.toml): inside trigger_m turn 90 deg away, 0.8 m sideways, turn back, straight on until clear, then re-lock the target (sentry/nav/tower_avoid.py; the manoeuvre is open loop and UNTESTED with a person)")
     ap.add_argument("--out", default="data/pursuit")
     a = ap.parse_args()
     a.dry_run = a.dry_run or a.replay is not None
@@ -369,9 +402,19 @@ def main():
     model = WheelModel.from_session(a.motion_session) if a.motion_session else WheelModel()
     pursuit = Pursuit(ctl, model, ground_point, geom.undistort_points, geom.size, a.lock_range, lost_end_s=a.lost_end_s, feet_row_offset_px=a.feet_row_offset_px if a.feet_row_offset_px is not None else float(load()["pursuit"].get("feet_row_offset_px", 0.0)),
                       integrate=not a.dry_run)
+    pursuit.search_w = 0.5 if a.search else 0.0
     trunk_m = float(load()["pursuit"].get("trunk_length_m", 0.50))
     trunk_conf = float(load()["pursuit"].get("trunk_conf_min", 0.8))
     validate_session_params(a, a.feet_row_offset_px if a.feet_row_offset_px is not None else float(load()["pursuit"].get("feet_row_offset_px", 0.0)), trunk_m, trunk_conf, pcfg.target_distance_m)
+    tower_ta = tower_obj = look = None
+    tower_state = {"pending": False}
+    if a.tower_avoid:
+        from sentry.nav.tower_avoid import make_tower_avoid
+        from tools.tower_marker_trial import look
+        tower_ta = make_tower_avoid(model=model)
+        tm = float(load()["tower"]["marker_m"]) / 2
+        tower_obj = np.array([[-tm, tm, 0], [tm, tm, 0], [tm, -tm, 0], [-tm, -tm, 0]], np.float64)
+        print("tower avoidance ON: %s" % (tower_ta.cfg,), flush=True)
     perceive = make_perception()
     from sentry.perception.obstacle import ObstacleDetector
     detect_obstacles = ObstacleDetector.from_config(camera_pose_path=a.camera_pose, camera_path=a.camera, floor_type=a.floor)
@@ -379,6 +422,8 @@ def main():
     if a.range_source == "trunk":
         pose_fn = make_pose(a.pose_weights, load())
         pursuit.trunk_fn = lambda kxy, kconf: trunk_range(kxy, kconf, geom.undistort_points, geom.K, geom.pitch, trunk_m, trunk_conf)
+    if a.no_obstacles:
+        print("WARNING --no-obstacles: NO obstacle stop of any kind (pursuit override, forward lock, tower-avoid abort). R1 is the only stop: keep the floor clear.", flush=True)
     print("camera pose %s: pitch %.2f deg, lens %.3f m. Obstacle avoidance is UNTESTED on the robot (floor %s): keep the floor clear, hold R1, release at any problem." % (a.camera_pose, math.degrees(geom.pitch), geom.height_m, a.floor), flush=True)
 
     cmd, end, done = {"v": 0.0, "w": 0.0, "t": 0.0}, {"reason": None}, threading.Event()
@@ -389,7 +434,22 @@ def main():
     def process(frame, t):
         t0 = time.time()
         tracks = perceive(frame)
-        obstacles = obstacle_input(detect_obstacles(frame, t, mode="pursuit"), detect_obstacles.geometry.size)
+        obstacles = None if a.no_obstacles else obstacle_input(detect_obstacles(frame, t, mode="pursuit"), detect_obstacles.geometry.size, a.unresolved_bottom)
+        if tower_ta is not None:
+            tw = look(geom, tower_obj, frame)
+            out = tower_ta.step(t, (tw[1], tw[2]) if tw else None, None if obstacles is None else obstacles[0])
+            if out is not None:
+                v, w = out[0], out[1]
+                if time.time() - t0 > MAX_PROCESS_S:
+                    v = w = 0.0
+                    tower_ta.cmd = (0.0, 0.0)                                  # the manoeuvre must not count wire time of a command that was not sent
+                pursuit.avoid_step(t, v, w, out[2])
+                cmd.update(v=v, w=w, t=time.time())
+                tower_state["pending"] = True
+                return
+            if tower_state["pending"]:                                         # the manoeuvre ended (done or aborted): pursue again from this frame
+                tower_state["pending"] = False
+                pursuit.resume_after_avoid(t)
         v, w = pursuit.update(t, tracks, pose_fn(frame) if pose_fn is not None else None, obstacles)
         if time.time() - t0 > MAX_PROCESS_S:                    # a slow frame is an old view of the world: never drive on it
             v, w = 0.0, 0.0
@@ -407,7 +467,8 @@ def main():
             return
         written["done"] = True
         summary = dict(pursuit.summary(), label=a.label, dry_run=a.dry_run, replay=a.replay, end_reason=end["reason"], camera_pose_file=a.camera_pose, pitch_down_deg=round(math.degrees(geom.pitch), 2),
-                       feet_row_offset_px=pursuit.feet_row_offset_px, range_source=a.range_source, trunk_length_m=trunk_m, trunk_conf_min=trunk_conf, trunk_frames=sum(1 for r in pursuit.rows if r.get("range_src") == "trunk"), config=effective_config, battery_v_start=volts0, battery_v_end=volts1, seconds=round(time.time() - t_wall, 1), date=time.strftime("%Y-%m-%d %H:%M"), obstacle_avoidance=True, floor=a.floor)
+                       feet_row_offset_px=pursuit.feet_row_offset_px, range_source=a.range_source, trunk_length_m=trunk_m, trunk_conf_min=trunk_conf, trunk_frames=sum(1 for r in pursuit.rows if r.get("range_src") == "trunk"), config=effective_config, battery_v_start=volts0, battery_v_end=volts1, seconds=round(time.time() - t_wall, 1), date=time.strftime("%Y-%m-%d %H:%M"), obstacle_avoidance=not a.no_obstacles, floor=a.floor,
+                       tower_avoid=None if tower_ta is None else dict(count=tower_ta.count, aborted=tower_ta.aborted, events=tower_ta.events, config=dataclasses.asdict(tower_ta.cfg)))
         run_dir = save_run(a.out, a.label, pursuit.rows, summary, saved)
         print("ENDED: %s | %s" % (end["reason"], json.dumps({k: summary[k] for k in ("frames", "run_span_s", "unobserved_time_s", "coverage_tracked_fraction", "time_fraction_distance_in_band_of_run", "time_fraction_centred_of_run", "hold_events")})), flush=True)
         print("saved", run_dir, flush=True)
@@ -450,7 +511,8 @@ def main():
         print("warming up the person detector (first frame is slow, done before R1 is needed)...", flush=True)
         for _ in range(3):
             perceive(first.frame_bgr)
-            detect_obstacles(first.frame_bgr, 0.0, mode="pursuit")
+            if not a.no_obstacles:
+                detect_obstacles(first.frame_bgr, 0.0, mode="pursuit")
         print("start checks passed: battery, video", flush=True)
         r1 = {"held": True, "fail": 0}
         if not a.dry_run:

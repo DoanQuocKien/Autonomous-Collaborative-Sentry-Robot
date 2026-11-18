@@ -1,0 +1,19 @@
+battery 11.49 V
+no control key at D:\CS532\Autonomous Collaborative Sentry Robot\data\control.key: sending UNSIGNED control packets
+JetBot found at 10.169.60.160
+R1 held: sequence starts (hold it until the two beeps)
+  spin_left_1 done
+  spin_right_1 done
+  forward_1 done
+  spin_left_2 done
+  spin_right_2 done
+  forward_2 done
+sequence ended: done
+  spin_left_1    measured turn  +28.2 deg fwd +0.05 m | predicted turn  +49.9 deg fwd +0.00 m | ratio 0.565
+  spin_right_1   measured turn  -34.1 deg fwd -0.06 m | predicted turn  -49.8 deg fwd +0.00 m | ratio 0.684
+  forward_1      measured turn   +2.2 deg fwd +0.23 m | predicted turn   +0.0 deg fwd +0.41 m | ratio 0.556  drift +0.166 rad/m
+  spin_left_2    no marker pose before or after (no board within 2.2 m at a rest)
+  spin_right_2   no marker pose before or after (no board within 2.2 m at a rest)
+  forward_2      measured turn  +17.2 deg fwd +0.36 m | predicted turn   +0.0 deg fwd +0.41 m | ratio 0.872  drift +0.834 rad/m
+CHECK against the model (calib defaults): FAIL - spin_left_1 ratio 0.56; spin_right_1 ratio 0.68; forward_1 ratio 0.56; forward_1 drift +0.166 rad/m; spin_left_2 has no finite measurement; spin_right_2 has no finite measurement; forward_2 ratio 0.87; forward_2 drift +0.834 rad/m
+NOT WRITTEN: forward ratios scatter: [0.556, 0.872] (limit 0.15)

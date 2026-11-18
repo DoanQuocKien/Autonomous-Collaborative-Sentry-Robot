@@ -26,11 +26,12 @@ def main():
     ap.add_argument("tape_m", type=float, help="tape distance from the point under the lens to the board (m)")
     ap.add_argument("--yaw", type=float, default=0.0, help="how far the board is turned away from facing the robot (deg), for the record")
     ap.add_argument("--seconds", type=float, default=3.0)
+    ap.add_argument("--marker-m", type=float, help="printed marker side (m); default aruco_marker_m of the config (0.15). Tower markers: 0.05")
     ap.add_argument("--camera", default="calib/camera.json")
     ap.add_argument("--pose", default="calib/camera_pose_nowedge.json", help="only K and D are used here")
     ap.add_argument("--out", default="data/marker_range_test.csv")
     a = ap.parse_args()
-    S = load()["calibration"]["aruco_marker_m"] / 2
+    S = (a.marker_m or load()["calibration"]["aruco_marker_m"]) / 2
     g = CameraGeometry.from_files(a.camera, a.pose)
     obj = np.array([[-S, S, 0], [S, S, 0], [S, -S, 0], [-S, -S, 0]], np.float64)
     n = hit = 0
