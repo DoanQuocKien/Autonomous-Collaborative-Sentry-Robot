@@ -27,7 +27,7 @@ import dataclasses
 import numpy as np
 
 from sentry.config import load
-from sentry.nav.tower_avoid import TowerAvoid, TowerAvoidConfig
+from sentry.nav.tower_avoid import TowerAvoidConfig, make_tower_avoid
 from sentry.net.udp_tx import UDPSender
 from sentry.net.zmq_rx import ZMQReceiver
 from sentry.perception.camera import CameraGeometry
@@ -69,6 +69,7 @@ def main():
     ap.add_argument("--back-m", type=float, default=1.5, help="reverse: furthest the robot may travel")
     ap.add_argument("--turn-scale", type=float, default=None, help="avoid: angle turned / angle asked (default [tower] turn_scale)")
     ap.add_argument("--drive-scale", type=float, default=None, help="avoid: distance driven / distance asked (default [tower] drive_scale)")
+    ap.add_argument("--strategy", choices=("steer", "turn"), default=None, help="avoid: closed-loop steering on the marker bearing or the timed manoeuvre (default [tower] strategy)")
     ap.add_argument("--max-total-s", type=float, default=30.0, help="avoid: the whole run, manoeuvre included")
     ap.add_argument("--wait", type=float, default=20.0)
     ap.add_argument("--ip", default="auto")
@@ -88,8 +89,8 @@ def main():
     max_s = drive_seconds(travel, a.v, gain, 1.0 if a.mode == "avoid" else 1.15)
     sign = 1.0 if fwd else -1.0
     cfg = TowerAvoidConfig.from_toml()
-    cfg = dataclasses.replace(cfg, **{k: v for k, v in (("turn_scale", a.turn_scale), ("drive_scale", a.drive_scale), ("drive_v", a.v)) if v is not None})
-    ta = TowerAvoid(cfg)
+    cfg = dataclasses.replace(cfg, **{k: v for k, v in (("turn_scale", a.turn_scale), ("drive_scale", a.drive_scale), ("drive_v", a.v), ("strategy", a.strategy)) if v is not None})
+    ta = make_tower_avoid(cfg)
     from sentry.net.discover import resolve
     a.ip = resolve(a.ip)
     password = jetbot_ssh.password(a.password)

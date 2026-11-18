@@ -392,9 +392,9 @@ def main():
     tower_ta = tower_obj = look = None
     tower_state = {"pending": False}
     if a.tower_avoid:
-        from sentry.nav.tower_avoid import TowerAvoid, TowerAvoidConfig
+        from sentry.nav.tower_avoid import make_tower_avoid
         from tools.tower_marker_trial import look
-        tower_ta = TowerAvoid(TowerAvoidConfig.from_toml(), model)
+        tower_ta = make_tower_avoid(model=model)
         tm = float(load()["tower"]["marker_m"]) / 2
         tower_obj = np.array([[-tm, tm, 0], [tm, tm, 0], [tm, -tm, 0], [-tm, -tm, 0]], np.float64)
         print("tower avoidance ON: %s" % (tower_ta.cfg,), flush=True)
