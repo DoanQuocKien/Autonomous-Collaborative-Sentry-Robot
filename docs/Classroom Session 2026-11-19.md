@@ -24,7 +24,7 @@ Decision 2026-11-16 (DQK, team leader): the remaining video shots are recorded h
 
 ## Not classroom, but not done yet (no rush before the freeze; record outcomes)
 - Motion check: deferred to the dorm by DQK (3 boards at about 1.5 m, front, 45 deg left, 45 deg right, all facing the robot, default 2.2 m limit). Not a graded item; until then the Week 2 gains are used and named as a known limit.
-- Tower avoidance in pursuit: DONE in the dorm on 11-18 (`reports/DoanQuocKien/week-07/tower_avoid_1118/`, report section 6.4); open: the ping-pong near the tower (shot 7b), the obstacle detector on the glossy floor (far chairs block forward motion, `--no-obstacles` used), and the video shot in the classroom.
+- Tower avoidance in pursuit: DONE in the dorm on 11-18 (`reports/DoanQuocKien/week-07/tower_avoid_1118/`, report section 7.2 table row); open: the ping-pong near the tower (shot 7b), the obstacle detector on the glossy floor (far chairs block forward motion, `--no-obstacles` used), and the video shot in the classroom.
 - Reviews: #125 and #126 (mine, need one review each from HNHL or KR), #113 (KR, blocked by the D5/D2 deletions and stale report lines; two reviews of changes requested + a follow-up comment).
 - Report: chapters 3, 4 and 8 carry the 11-16 numbers (this PR); the internal draft is Wed 11-18; PR freeze Fri 11-20; tag `midterm` Sat 11-21.
 
