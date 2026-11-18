@@ -5,7 +5,7 @@ from tools.check_midterm_page_budget import audit_midterm_report
 
 def test_estimate_does_not_hide_missing_chapters_or_images(tmp_path):
     report = tmp_path/'draft.md'
-    report.write_text('# Chương 1 — Intro\n' + 'word '*5000 + '\n![F1](missing.png)')
+    report.write_text('# Chương 1 — Intro\n' + 'word '*5000 + '\n![F1](missing.png)', encoding='utf-8')
     result = audit_midterm_report(report)
     assert result['budget_estimate_met']
     assert result['status'] == 'WARN'
@@ -26,14 +26,14 @@ def test_rendered_budget_requires_pdf_matching_current_source(tmp_path):
     pages = ['# Chương %d — Test\nNội dung.' % i for i in range(1, 9)]
     pages += ['# Phụ lục A — Code\nCác module.']
     pages += ['## Tiếp\nNội dung.']*5
-    report.write_text('\n<!-- pagebreak -->\n'.join(pages))
+    report.write_text('\n<!-- pagebreak -->\n'.join(pages), encoding='utf-8')
     pdf = tmp_path/'draft.pdf'
     render(report, pdf, font_dir)
     result = audit_midterm_report(report, pdf)
     assert result['rendered_pages'] == 14
     assert result['rendered_page_budget_met']
     assert result['status'] == 'PASS'  # short word count does not override actual pages
-    report.write_text(report.read_text() + '\nChanged after rendering.')
+    report.write_text(report.read_text(encoding='utf-8') + '\nChanged after rendering.', encoding='utf-8')
     result = audit_midterm_report(report, pdf)
     assert not result['rendered_layout_verified']
     assert result['status'] == 'WARN'

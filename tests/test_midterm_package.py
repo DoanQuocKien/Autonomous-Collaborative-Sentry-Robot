@@ -29,7 +29,8 @@ def repo(tmp_path):
     git('init', '-q')
     git('config', 'user.name', 'Package test')
     git('config', 'user.email', 'test@example.invalid')
-    (tmp_path/'README.md').write_text('reproduce\n')
+    git('config', 'core.autocrlf', 'false')
+    (tmp_path/'README.md').write_text('reproduce\n', encoding='utf-8', newline='\n')
     git('add', '.')
     git('commit', '-qm', 'test fixture')
     return git

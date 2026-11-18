@@ -17,7 +17,7 @@ def build(ref: str, out: Path, *, cwd=None) -> dict:
     result = audit(commit, cwd=cwd)
     if result['violations']:
         raise ValueError('Forbidden paths in committed package: ' + ', '.join(result['violations']))
-    raw = subprocess.check_output(['git', 'archive', '--format=zip', commit, '--', *EXPORT_PATHS], cwd=cwd)
+    raw = subprocess.check_output(['git', '-c', 'core.autocrlf=false', 'archive', '--format=zip', commit, '--', *EXPORT_PATHS], cwd=cwd)
     with zipfile.ZipFile(io.BytesIO(raw)) as archive:
         timestamp = archive.infolist()[0].date_time
         files = {item.filename: hashlib.sha256(archive.read(item)).hexdigest()
