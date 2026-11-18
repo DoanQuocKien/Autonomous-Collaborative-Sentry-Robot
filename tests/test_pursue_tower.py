@@ -33,3 +33,21 @@ def test_search_spins_towards_the_last_side_and_only_when_enabled():
     p.t_seen = 0.0
     p.update(6.0, [])
     assert p.end_reason
+
+
+def test_run_ends_after_a_handover_when_nobody_is_found():
+    p = make()
+    p.lost_end_s = 5.0
+    p.resume_after_avoid(10.0)
+    p.update(12.0, [])
+    assert not p.end_reason
+    p.update(15.5, [])
+    assert p.end_reason                                      # counted from the handover, not never
+
+
+def test_unknown_strategy_is_refused():
+    import dataclasses
+    import pytest
+    from sentry.nav.tower_avoid import TowerAvoidConfig, make_tower_avoid
+    with pytest.raises(ValueError):
+        make_tower_avoid(dataclasses.replace(TowerAvoidConfig(), strategy="Steer"))

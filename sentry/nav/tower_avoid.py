@@ -270,4 +270,6 @@ class TowerSteer:
 def make_tower_avoid(cfg=None, model=None):
     """'steer' (closed loop on the marker bearing, default) or 'turn' (the timed open-loop manoeuvre)."""
     cfg = cfg or TowerAvoidConfig.from_toml()
+    if cfg.strategy not in ("steer", "turn"):
+        raise ValueError("[tower] strategy must be 'steer' or 'turn', not %r" % (cfg.strategy,))
     return (TowerSteer if cfg.strategy == "steer" else TowerAvoid)(cfg, model)

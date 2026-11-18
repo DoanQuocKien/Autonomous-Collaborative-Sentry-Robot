@@ -11,7 +11,7 @@ image blocks forward motion (the Explorer's rule). On the glossy classroom floor
 SAFETY (all of them apply, none can be turned off):
   * the robot moves only while R1 is held with the e-stop armed (latch file polled over SSH every 0.2 s; two failed polls stop the run); `--no-estop` does not exist here;
   * every command is legal for the motors (controllers.py) and the sender repeats a command only while it is fresh (0.25 s), then sends a stop; the robot's own watchdog is 0.3 s;
-  * no person tracked for 0.6 s, or no fresh frame for 0.5 s: stop. A lost target for --lost-end-s (5 s) ends the run (no searching, no switching to another person);
+  * no person tracked for 0.6 s, or no fresh frame for 0.5 s: stop. A lost target for --lost-end-s (5 s) ends the run (no switching to another person; with --search the robot spins to find one first);
   * feet cut off by the image bottom or no floor intersection: no translation, yaw centring only;
   * an obstacle without a distance low in the image: no forward motion; a resolved obstacle nearer than 0.35 m: no forward motion either (controller override);
   * a start battery below --min-battery (11.4 V) refuses to start; run `python -m tools.self_pose` on today's floor first and pass its file as --camera-pose (a stale pitch gives wrong distances).
@@ -148,6 +148,7 @@ class Pursuit(object):
         self.rows = []
         self.hold_events = []
         self.last_seen = None                      # (yaw_err, distance or None) of the target when last seen
+        self._lost_ref = None
         self.search_w, self._search_dir = 0.0, 1.0   # search_w > 0: spin to find the person again (--search)
         self._yaw_phase = 0
         self._dist_hist = []                       # recent ranges of the target (m), for the dead band
@@ -181,6 +182,7 @@ class Pursuit(object):
     def resume_after_avoid(self, t):
         """The manoeuvre is over (seconds of blind driving): forget the target and the controller state, so the largest person within the lock range is locked again (the tracker may have given the person a new id)."""
         self.target_id, self.t_seen, self.last_seen = None, None, None
+        self._lost_ref = t                         # no person seen since the handover: --lost-end-s counts from here
         self._dist_hist, self._trunk_hist, self._yaw_phase = [], {}, 0
         self.ctl.reset()
         if self.rows:
@@ -270,7 +272,8 @@ class Pursuit(object):
                 if self._yaw_phase == 1:                             # spin on the spot in short pulses towards the side the person was last seen (left when unknown)
                     w = math.copysign(self.search_w, self._search_dir)
                 row.update(mode="SEARCH")
-            if self.t_seen is not None and t - self.t_seen >= self.lost_end_s:
+            ref = self.t_seen if self.t_seen is not None else self._lost_ref
+            if ref is not None and t - ref >= self.lost_end_s:
                 self.end_reason = "target lost for %.1f s" % self.lost_end_s
         self.cmd = (v, w)
         row.update(v=round(v, 3), w=round(w, 3))
@@ -376,7 +379,7 @@ def main():
     ap.add_argument("--range-source", choices=("foot", "trunk"), default="foot", help="foot: floor distance of the box bottom (default); trunk: range from the shoulder-to-hip length with a population prior, foot-row fallback when the keypoints are not confident (a lead, see sentry/perception/body_range.py)")
     ap.add_argument("--pose-weights", default=None, help="YOLOv8-pose weights for --range-source trunk (default [reid] pose_weights, else yolov8n-pose.pt in the repo root)")
     ap.add_argument("--floor", choices=("glossy", "matte", "unknown"), default="unknown", help="floor type for the obstacle detector; unknown -> every obstacle is unresolved (then low boxes only stop forward motion)")
-    ap.add_argument("--search", action="store_true", help="target lost for 0.6 s: spin on the spot (pulses, towards the side it was last seen) until a person within the lock range is found; --lost-end-s then counts the whole search (set 30)")
+    ap.add_argument("--search", action="store_true", help="target lost for 0.6 s: spin on the spot (pulses, towards the side it was last seen) until a person within the lock range is found; --lost-end-s then counts the whole search (set 30). It also spins from the start and after a tower avoid until a person is found")
     ap.add_argument("--no-obstacles", action="store_true", help="no obstacle detector at all (2026-11-18: unresolved on the glossy floor, it blocks forward motion for far chairs); keep the floor clear, R1 is the only stop")
     ap.add_argument("--unresolved-bottom", type=float, default=None, help="an obstacle without a floor distance blocks forward motion when its box reaches below this fraction of the image height (default 0.55 of the Explorer; with the camera pitched up the horizon is near 0.58, so far chairs block: 0.75 keeps only what is within about 1 m)")
     ap.add_argument("--tower-avoid", action="store_true", help="the ESP32 tower (50 mm ArUco ids 10-13 on its faces, [tower] in config.toml): inside trigger_m turn 90 deg away, 0.8 m sideways, turn back, straight on until clear, then re-lock the target (sentry/nav/tower_avoid.py; the manoeuvre is open loop and UNTESTED with a person)")
@@ -419,6 +422,8 @@ def main():
     if a.range_source == "trunk":
         pose_fn = make_pose(a.pose_weights, load())
         pursuit.trunk_fn = lambda kxy, kconf: trunk_range(kxy, kconf, geom.undistort_points, geom.K, geom.pitch, trunk_m, trunk_conf)
+    if a.no_obstacles:
+        print("WARNING --no-obstacles: NO obstacle stop of any kind (pursuit override, forward lock, tower-avoid abort). R1 is the only stop: keep the floor clear.", flush=True)
     print("camera pose %s: pitch %.2f deg, lens %.3f m. Obstacle avoidance is UNTESTED on the robot (floor %s): keep the floor clear, hold R1, release at any problem." % (a.camera_pose, math.degrees(geom.pitch), geom.height_m, a.floor), flush=True)
 
     cmd, end, done = {"v": 0.0, "w": 0.0, "t": 0.0}, {"reason": None}, threading.Event()
@@ -437,6 +442,7 @@ def main():
                 v, w = out[0], out[1]
                 if time.time() - t0 > MAX_PROCESS_S:
                     v = w = 0.0
+                    tower_ta.cmd = (0.0, 0.0)                                  # the manoeuvre must not count wire time of a command that was not sent
                 pursuit.avoid_step(t, v, w, out[2])
                 cmd.update(v=v, w=w, t=time.time())
                 tower_state["pending"] = True
