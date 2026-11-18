@@ -1,0 +1,69 @@
+{
+  "pr113-final-approval": {
+    "number": 113,
+    "head_sha": "3114b0f222f24994df6b8488dc9f8f0610749dfe",
+    "action": "APPROVE",
+    "review_url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/pull/113#pullrequestreview-5959368696",
+    "state": "APPROVED",
+    "submitted_at": "2026-11-18T15:13:44Z"
+  },
+  "pr113-final-inspect": {
+    "number": 113,
+    "head_sha": "3114b0f222f24994df6b8488dc9f8f0610749dfe",
+    "action": "inspect",
+    "mergeable": true,
+    "mergeable_state": "blocked",
+    "statuses": [],
+    "checks": []
+  },
+  "pr113-final-rereview": {
+    "number": 113,
+    "head": "3114b0f222f24994df6b8488dc9f8f0610749dfe",
+    "comment": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/pull/113#issuecomment-6982675273",
+    "state": "open"
+  },
+  "pr130-approval": {
+    "number": 130,
+    "head_sha": "2b248e4adf9be6edb7f1e8d44ffc79e63ad6240b",
+    "action": "APPROVE",
+    "review_url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/pull/130#pullrequestreview-5959129026",
+    "state": "APPROVED",
+    "submitted_at": "2026-11-18T15:00:24Z"
+  },
+  "pr130-merge": {
+    "number": 130,
+    "head_sha": "2b248e4adf9be6edb7f1e8d44ffc79e63ad6240b",
+    "action": "merge",
+    "result": {
+      "sha": "0c0dfe996c2316f2f317727af6d484ad354d7689",
+      "merged": true,
+      "message": "Pull Request successfully merged"
+    },
+    "merged": true,
+    "merge_commit_sha": "0c0dfe996c2316f2f317727af6d484ad354d7689",
+    "merged_at": "2026-11-18T15:02:43Z"
+  },
+  "pr131-approval": {
+    "number": 131,
+    "head_sha": "ea80dd1b77372c6cf030801ce41e0bd05350599a",
+    "action": "APPROVE",
+    "review_url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/pull/131#pullrequestreview-5959258766",
+    "state": "APPROVED",
+    "submitted_at": "2026-11-18T15:07:40Z"
+  },
+  "pr131-merge": {
+    "number": 131,
+    "head_sha": "ea80dd1b77372c6cf030801ce41e0bd05350599a",
+    "action": "merge",
+    "result": {
+      "sha": "506bb6b896c0081dacdd5e1725e715b0ca8011ce",
+      "merged": true,
+      "message": "Pull Request successfully merged"
+    },
+    "merged": true,
+    "merge_commit_sha": "506bb6b896c0081dacdd5e1725e715b0ca8011ce",
+    "merged_at": "2026-11-18T15:08:25Z"
+  },
+  "main_after_merges": "506bb6b896c0081dacdd5e1725e715b0ca8011ce",
+  "date": "2026-11-18"
+}

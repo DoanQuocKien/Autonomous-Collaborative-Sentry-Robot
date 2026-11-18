@@ -1,0 +1,30 @@
+{
+  "zip": {
+    "commit": "3114b0f222f24994df6b8488dc9f8f0610749dfe",
+    "sha256": "581af436ee96b6541df9a2c0671446a39d9149f4b21b03a664abaccc0af69371",
+    "file_count": 1459,
+    "history_included": false,
+    "archive_name": "pr113-final-a.zip"
+  },
+  "identical_second_build": true,
+  "manifest_hashes_verified": true,
+  "datasets_excluded_from_export": true,
+  "render": {
+    "rendered_pages": 14,
+    "pdf_sha256": "a91bf3c9872682604649dea2a9ba02c05d7013aeec4966e7c146588cfbab5570",
+    "byte_identical_second_render": true,
+    "sources": {
+      "status": "PASS",
+      "source_files": 60,
+      "errors": []
+    },
+    "assets": 14,
+    "budget_status": "PASS"
+  },
+  "cpu": {
+    "passed": 951,
+    "skipped": 4,
+    "gpu_deselected": 4,
+    "seconds": 57.38
+  }
+}

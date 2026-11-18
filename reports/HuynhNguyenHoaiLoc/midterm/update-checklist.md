@@ -1,5 +1,7 @@
 # Checklist tiếp tục hoàn thiện giữa kỳ HNHL
 
+**Bổ sung 18/11 sau freeze** có thử tower bằng marker, cự ly khi dừng 1,64/1,23/1,07 m ở ba góc và motion fit thất bại. Pursuit-e có 13 triggers, 12 hoàn tất và một còn active khi hết giờ. Các hàng D3/D5 độc lập, map/world truth, full door T1 và general obstacle avoidance tiếp tục chờ dữ liệu. #113 chờ DQK review lại sau khi sửa. [Nguồn và phạm vi mới](update-2026-11-18.md).
+
 **Kiểm tra 17/11** PR #128 đã merge sau review DQK. KR có thể ghép Chương 5/7 từ bản 16/11 cho draft 18/11. Các bước ghi overlay, fold whitelist và nhãn entry cho 19/11 nằm trong [bàn giao hiện hành](update-2026-11-17.md).
 
 **Cập nhật 16/11** đã có nguồn deployment thứ 7, pursuit và F3/F17b. Draft vẫn 18/11. Cảnh Phase 2 cùng nhóm và các cảnh còn lại chuyển sang 19/11, dựng video 20–21/11 theo quyết định DQK. HNHL chuẩn bị overlay/whitelist theo fold cho cảnh cửa. Dữ liệu sau freeze ghi ngày bổ sung. [Nguồn và lịch chi tiết](update-2026-11-16.md).

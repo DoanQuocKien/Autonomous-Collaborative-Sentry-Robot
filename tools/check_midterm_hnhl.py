@@ -205,6 +205,14 @@ def check():
             assert hashlib.sha256(data).hexdigest() == expected, '16-Nov Markdown drift'
         assert not any(nov16['acceptance'].values())
         nov16_sources = len(nov16['sources'])
+    nov18_path = OUT/'update-2026-11-18.json'
+    nov18_sources = 0
+    if nov18_path.exists():
+        from tools.build_midterm_hnhl_nov18 import collect as collect_nov18
+        nov18 = read_json(nov18_path)
+        assert nov18 == collect_nov18(nov18['source_commit']), '18-Nov evidence differs from pinned sources'
+        assert not any(nov18['acceptance'].values())
+        nov18_sources = len(nov18['sources'])
     verification = read_json(OUT/'verification.json')
     word_sha = hashlib.sha256(word.read_bytes()).hexdigest()
     assert word_sha == verification['word']['sha256'], 'Word changed since visual review; render again'
@@ -239,7 +247,7 @@ def check():
             target = path.parent/unquote(url.split('#')[0])
             assert target.exists(), f'broken link: {path}: {url}'
             count += 1
-    snapshot_date = next(date for path,date in ((nov16_path,'2026-11-16'),(nov15_path,'2026-11-15'),(nov11_path,'2026-11-11'),(nov10_path,'2026-11-10'),
+    snapshot_date = next(date for path,date in ((nov18_path,'2026-11-18'),(nov16_path,'2026-11-16'),(nov15_path,'2026-11-15'),(nov11_path,'2026-11-11'),(nov10_path,'2026-11-10'),
         (nov09_path,'2026-11-09'),(team_path,'2026-11-07'),(recovery_path,'2026-11-06'),
         (latest_path,'2026-11-05'),(OUT/'update-2026-11-03.json','2026-11-03')) if path.exists())
     return dict(checked_snapshot_date=snapshot_date, evidence_sources_checked=len(update['evidence']),
@@ -253,6 +261,7 @@ def check():
                 nov11_sources_checked=nov11_sources,
                 nov15_sources_checked=nov15_sources,
                 nov16_sources_checked=nov16_sources,
+                nov18_sources_checked=nov18_sources,
                 source_hashes_match=True, both_saved_snapshots_match=True,
                 missing_acceptance_preserved=True, local_links_checked=count,
                 original_word_sha256=word_sha, original_word_visual_review_preserved=True,

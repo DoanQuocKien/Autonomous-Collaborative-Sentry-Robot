@@ -1,5 +1,7 @@
 # HNHL — Phase 2 live và cập nhật perception
 
+**Bổ sung sau freeze 18/11** HNHL đã review/merge #130/#131, sửa freshness/battery/video-IP/obstacle-trigger và tính lại dữ liệu tower của DQK. Pursuit-e đạt tracked 67,2%, trong dải 9,2%, căn tâm 40%, có 12 lượt tránh hoàn tất và một còn active. Detector vật cản tổng quát tắt. #113 đã sửa, chờ DQK review lại. [Nguồn và phạm vi](midterm/update-2026-11-18.md), [review](reviews/2026-11-18.md).
+
 **Cập nhật 16/11** ghi PR #124 đã merge sau review DQK. HNHL đã review/merge #125/#126/#127 và tính lại log pursuit của DQK với 32,2% thời gian trong dải cự ly, 91,1% căn tâm và 0 HOLD. Đã bổ sung deployment thứ 7, pose mới, F3/F17b và lịch video 19/11 vào phần giữa kỳ. [Nguồn và phạm vi đo](midterm/update-2026-11-16.md), [review](reviews/2026-11-16.md).
 
 **Cập nhật tiếp 15/11:** #115 đã được DQK approve/merge; phiên này đã review và merge #108/#122/#123, đưa #116/#119/#121 vào main. HNHL bổ sung shared queue/target-tracker handoff, TRACK_LOST và giữ timestamp 0. Full regression **881 passed,2 skipped,4 GPU deselected,60,06 s**; [log](week-07/integration-2026-11-15/tests_cpu.txt), [review/issue](reviews/followup-2026-11-15.md), [Chương 5/7 mới](midterm/update-2026-11-15.md). Chưa có phép đo recognition hoặc robot mới; #114 vẫn chờ nghiệm thu đầy đủ.

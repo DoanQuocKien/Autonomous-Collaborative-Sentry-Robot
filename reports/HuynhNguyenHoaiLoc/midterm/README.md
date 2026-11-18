@@ -1,5 +1,7 @@
 # Hồ sơ giữa kỳ HNHL
 
+**Bổ sung sau đóng băng, 18/11** đã có thử marker/tower, pursuit và motion check ở ký túc xá của DQK. HNHL tính lại CSV, giữ lượt tránh dang dở, detector vật cản tắt và các gate chưa đạt. #130/#131 đã merge, #113 đã sửa và đang chờ DQK review lại. [Bổ sung 18/11](update-2026-11-18.md).
+
 **Kiểm tra 17/11** xác nhận PR #128 đã được DQK approve và merge vào main. Bản bàn giao cho draft 18/11 cùng checklist Phase 2 ngày 19/11 đã bổ sung đường dẫn, lệnh ghi overlay và cách chấm entry. [Bàn giao 17/11](update-2026-11-17.md).
 
 **Hiện hành 16/11** đã bổ sung kết quả deployment thứ 7, pursuit, pose camera, F3/F17b và lịch video mới. PR #124 đã được DQK approve/merge. Bản Chương 5/7 hiện hành dùng các nguồn mới cùng lịch sử đo trước đó. [Bổ sung 16/11](update-2026-11-16.md).
