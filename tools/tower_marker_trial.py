@@ -8,7 +8,7 @@
 
 SEQUENCE as tools.speed_trial: start check -> 3 beeps -> HOLD R1 (the tool polls the robot's e-stop latch, starts after R1 held 0.5 s) -> drive -> stop -> 2 short beeps (then release R1) -> type the tape distance
 from the lens to the tower (Enter to skip). Armed e-stop and R1 are the real safety stop: this tool's stop adds the 30 Hz loop and the video delay (p95 128 ms on 11-12 = about 2.5 cm at v 0.5).
-HARD LIMIT: the drive time is capped so that the robot cannot get closer than --floor-m (0.40 m) in approach mode (modelled speed from calib/motion.json, +15 %), or go further than --back-m (1.5 m) from the start in reverse mode.
+MODEL-BASED TIME LIMIT: approach uses the travel budget to --floor-m (0.40 m), reverse uses --back-m (1.5 m), with speed from calib/motion.json and a 15 percent margin. Actual distance depends on the floor-specific gains.
 Wheels on the floor, ~2 m of clear floor along the path, operator next to the robot. Never --no-estop.
 OUTPUT: data/tower_runs/<label>_<mode>_<n>.csv per frame (t, seen, id, range_m, bearing_deg, side_px, cmd_v) and a row in data/tower_runs/summary.csv. The range is the PnP range with --marker-m (0.05):
 at 24 px the corner noise alone is a few percent, so compare with the tape at the stop point rather than trusting it to the centimetre.
@@ -52,7 +52,7 @@ def look(g, obj, raw):
 
 
 def drive_seconds(travel_m, v, gain, margin=1.15):
-    """Longest drive time (s) that keeps the robot inside `travel_m`, with the modelled speed `margin` times too low (the robot was 20 % SLOWER than the model on 11-18, so 1.0 is still a cap, not a target)."""
+    """Convert a travel budget to a nominal drive time with a speed margin."""
     return max(0.0, travel_m) / (gain * abs(v) * margin)
 
 
@@ -92,6 +92,8 @@ def main():
     ap.add_argument("--pose", default="calib/camera_pose_nowedge.json", help="only K and D are used here")
     ap.add_argument("--out", default="data/tower_runs")
     a = ap.parse_args()
+    if not math.isfinite(a.min_battery) or a.min_battery <= 0:
+        ap.error("min-battery must be positive and finite")
     if not 0.4 <= a.v <= 1 or not 0.2 <= a.start_m <= 3.0:
         ap.error("v in [0.4, 1], start_m in [0.2, 3.0]")
     fwd = a.mode in ("approach", "avoid")                  # drives forward at the tower; the others back away

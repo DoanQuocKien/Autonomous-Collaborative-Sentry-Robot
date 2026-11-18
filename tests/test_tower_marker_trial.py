@@ -28,6 +28,15 @@ def test_drive_seconds_keeps_the_floor():
     assert t * gain * v * 1.15 <= 1.4 + 1e-9 and drive_seconds(-1, v, gain) == 0.0
 
 
+def test_nonfinite_battery_limit_is_rejected_before_connecting(monkeypatch):
+    import sys
+    from tools import tower_marker_trial as trial
+    monkeypatch.setattr(sys, 'argv', ['tower_marker_trial', 'approach', '1.5', '--min-battery', 'nan'])
+    with pytest.raises(SystemExit) as exc:
+        trial.main()
+    assert exc.value.code == 2
+
+
 @pytest.mark.parametrize('v,w,expiry', [(0.5, 0.0, 0.26), (0.0, 0.5, 0.09)])
 def test_sender_expires_commands_without_another_video_frame(monkeypatch, v, w, expiry):
     import threading
