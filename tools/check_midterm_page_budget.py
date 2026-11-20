@@ -12,13 +12,14 @@ Usage:
     python -m tools.check_midterm_page_budget --file reports/midterm_report_draft.md
 """
 import argparse
+import hashlib
 import json
 from pathlib import Path
 import re
 from typing import Dict, List, Tuple
 
 
-def audit_midterm_report(report_path: Path) -> Dict:
+def audit_midterm_report(report_path: Path, pdf_path: Path = None) -> Dict:
     if not report_path.exists():
         raise FileNotFoundError(f"Report file not found: {report_path}")
 
@@ -124,7 +125,22 @@ def audit_midterm_report(report_path: Path) -> Dict:
     structure_pass = len(missing_chapters) == 0
     assets_pass = len(broken_assets) == 0
 
-    overall_pass = budget_pass and structure_pass and assets_pass
+    rendered_pages = None
+    rendered_verified = False
+    if pdf_path is not None:
+        from pypdf import PdfReader
+        pdf_path = Path(pdf_path)
+        rendered_pages = len(PdfReader(pdf_path).pages)
+        metadata_path = Path(str(pdf_path) + '.json')
+        if metadata_path.is_file():
+            metadata = json.loads(metadata_path.read_text(encoding='utf-8'))
+            rendered_verified = (
+                metadata.get('source_sha256') == hashlib.sha256(report_path.read_bytes()).hexdigest()
+                and metadata.get('pdf_sha256') == hashlib.sha256(pdf_path.read_bytes()).hexdigest()
+                and metadata.get('pages') == rendered_pages
+            )
+    rendered_budget_met = rendered_verified and 10 <= rendered_pages <= 15
+    overall_pass = (rendered_budget_met if pdf_path is not None else budget_pass) and structure_pass and assets_pass
 
     return {
         "status": "PASS" if overall_pass else "WARN",
@@ -142,18 +158,22 @@ def audit_midterm_report(report_path: Path) -> Dict:
         "figures_referenced": all_figures,
         "figures_count": len(all_figures),
         "chapter_breakdown": chapter_stats,
-        "rendered_layout_verified": False,
-        "rendered_layout_note": "Word count estimate only (~450 words/p); actual 10-15 rendered page compliance unverified until layout is rendered.",
+        "rendered_layout_verified": rendered_verified,
+        "rendered_pages": rendered_pages,
+        "rendered_page_budget_met": rendered_budget_met,
+        "rendered_layout_note": ("PDF page count and source/PDF hashes verified; visual review remains separate." if rendered_verified else "Word count estimate only; rendered page compliance unverified without a matching PDF and renderer metadata."),
     }
 
 
 def main():
     parser = argparse.ArgumentParser(description="Check page budget and structure of Mid-Term Report.")
     parser.add_argument("--file", type=Path, default=Path("reports/midterm_report_draft.md"), help="Path to merged report.")
+    parser.add_argument("--pdf", type=Path, help="count PDF pages and verify renderer source/PDF hashes")
     args = parser.parse_args()
 
-    summary = audit_midterm_report(args.file)
+    summary = audit_midterm_report(args.file, args.pdf)
     print(f"[MidTermAudit] Report: {summary['file']}")
+    print(f"  Rendered pages: {summary['rendered_pages']} (source/PDF linked: {summary['rendered_layout_verified']})")
     print(f"  Status: {summary['status']}")
     print(f"  Word count estimate: {summary['total_estimated_pages']} pages ({summary['total_word_count']} words, target 10-15 pages)")
     print(f"  Chapters present: {summary['chapter_count']}/9 (Missing: {summary['missing_chapters'] if summary['missing_chapters'] else 'None'})")
@@ -167,6 +187,8 @@ def main():
     for ch in summary["chapter_breakdown"]:
         print(f"  {ch['chapter'][:40]:<40} | Owner: {ch['owner']:<15} | Target: {ch['target_pages']} p | Est: {ch['estimated_pages']} p ({ch['words']} words) | Figs: {len(ch['figures'])}")
 
+    return int(summary["status"] != "PASS")
+
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

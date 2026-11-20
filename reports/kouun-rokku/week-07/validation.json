@@ -1,0 +1,50 @@
+{
+  "candidate_commit": "337ea5edc53ebf2b680585a2642090a2fd748cd9",
+  "candidate_tree": "d2eed629362a54af9e43e2580d58953f3683fc8c",
+  "base_commit": "506bb6b896c0081dacdd5e1725e715b0ca8011ce",
+  "package": {
+    "commit": "337ea5edc53ebf2b680585a2642090a2fd748cd9",
+    "archive": "/tmp/pr113-val-a.zip",
+    "sha256": "b78dbe48155d21e0593932e61744bba011ec7cd34d33233f71d052697bdef282",
+    "file_count": 1459,
+    "history_included": false
+  },
+  "identical_second_build": true,
+  "all_manifest_hashes_verified": true,
+  "source_registry": {
+    "status": "PASS",
+    "source_files": 60,
+    "errors": []
+  },
+  "d5_tracked_files": 797,
+  "d2_archive_tracked": true,
+  "pdf_committed": false,
+  "gpu_hardware_acceptance": false,
+  "cpu_tests": {
+    "passed": 947,
+    "skipped": 5,
+    "deselected": 4,
+    "exit_code": 0,
+    "selection": "not gpu and not hil",
+    "command": "PYTHONPATH=/tmp/pr113-report-deps <workspace>/.venv/bin/python -m tools.run_cpu_tests",
+    "clean_status_at_start": true
+  },
+  "report": {
+    "rendered_pages": 14,
+    "chapters": 9,
+    "images": 12,
+    "byte_identical_reproduction": true,
+    "pdf_sha256": "6c9d85b1ba8da10ae236ecdb9eaa28f0c1d0c6fe5fbce02d4c952023f9898c0d",
+    "source_sha256": "0bf0c8e373fd86756b23b62b300a3d4346e8182aad3962481a66a359d8c36cbc",
+    "visual_review": "Pages 1, 7, 10, 12, 13, 14 visually inspected at PNG render; all 14 pages pagebreak-aligned, source/page/hash check passed."
+  },
+  "environment": {
+    "check_env_exit_code": 1,
+    "missing_model_packages": [
+      "insightface",
+      "torchreid"
+    ],
+    "report_packages_target": "/tmp/pr113-report-deps"
+  },
+  "scope": "Evidence applies to candidate commit. Follow-up commit changes validation artifacts only; final submission/freeze needs its own validation."
+}

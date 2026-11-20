@@ -1,0 +1,3 @@
+# Optional report export and rendered page count; not needed for robot/runtime.
+reportlab==5.1.0
+pypdf==7.1.0

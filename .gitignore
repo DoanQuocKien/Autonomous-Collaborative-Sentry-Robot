@@ -36,3 +36,9 @@ esp32/lib_shared/
 
 # local session recaps (handoff notes for a new session)
 session_recaps/
+
+# Submission outputs
+dist/
+reports/midterm_report.pdf
+reports/midterm_report.pdf.json
+esp32/**/secrets.h
