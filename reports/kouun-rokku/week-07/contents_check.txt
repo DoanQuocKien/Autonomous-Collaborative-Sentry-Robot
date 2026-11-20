@@ -1,39 +1,39 @@
 [MidTermAudit] Report: reports/midterm_report_draft.md
   Rendered pages: 14 (source/PDF linked: True)
   Status: PASS
-  Word count estimate: 11.2 pages (5035 words, target 10-15 pages)
+  Word count estimate: 11.7 pages (5272 words, target 10-15 pages)
   Chapters present: 9/9 (Missing: None)
-  Referenced figures: 13 (F1, F10, F11, F12, F13, F14, F15, F16, F18, F19, F20, F4, F7)
-  Asset link integrity: PASS (all 11 images exist)
+  Referenced figures: 14 (F1, F10, F11, F12, F13, F14, F15, F16, F17, F18, F19, F20, F4, F7)
+  Asset link integrity: PASS (all 12 images exist)
   Rendered compliance note: PDF page count and source/PDF hashes verified; visual review remains separate.
 
 --- Chapter Breakdown ---
-  Chương 1: Giới thiệu                     | Owner: KR              | Target: 1.0 p | Est: 0.98 p (442 words) | Figs: 0
-  Chương 2: Kiến thức và phương pháp đã ng | Owner: KR              | Target: 1.5 p | Est: 0.96 p (432 words) | Figs: 0
-  Chương 3: Kiến trúc hệ thống             | Owner: DQK             | Target: 2.0 p | Est: 1.5 p (676 words) | Figs: 2
-  Chương 4: Robot, hiệu chuẩn và định vị   | Owner: DQK (+KR)       | Target: 1.5 p | Est: 0.91 p (410 words) | Figs: 2
-  Chương 5: Nhận thức thị giác và tối ưu   | Owner: HNHL (+KR, DQK) | Target: 3.5 p | Est: 2.73 p (1228 words) | Figs: 7
-  Chương 6: Hành vi và điều khiển          | Owner: KR (+DQK)       | Target: 1.5 p | Est: 0.84 p (379 words) | Figs: 1
-  Chương 7: Kiểm thử và kết quả            | Owner: KR (+HNHL, DQK) | Target: 1.5 p | Est: 1.67 p (751 words) | Figs: 2
-  Chương 8: Kết quả kỳ vọng và kế hoạch    | Owner: DQK             | Target: 1.0 p | Est: 0.87 p (390 words) | Figs: 0
-  Phụ lục A: Mã nguồn, tái hiện và nguồn   | Owner: KR (+HNHL, DQK) | Target: 1.0 p | Est: 0.73 p (327 words) | Figs: 0
+  Chương 1: Giới thiệu                     | Owner: KR              | Target: 1.0 p | Est: 1.02 p (459 words) | Figs: 0
+  Chương 2: Kiến thức và phương pháp đã ng | Owner: KR              | Target: 1.5 p | Est: 0.97 p (435 words) | Figs: 0
+  Chương 3: Kiến trúc hệ thống             | Owner: DQK             | Target: 2.0 p | Est: 1.51 p (681 words) | Figs: 2
+  Chương 4: Robot, hiệu chuẩn và định vị   | Owner: DQK (+KR)       | Target: 1.5 p | Est: 0.96 p (433 words) | Figs: 2
+  Chương 5: Nhận thức thị giác và tối ưu   | Owner: HNHL (+KR, DQK) | Target: 3.5 p | Est: 2.88 p (1295 words) | Figs: 7
+  Chương 6: Hành vi và điều khiển          | Owner: KR (+DQK)       | Target: 1.5 p | Est: 0.69 p (311 words) | Figs: 2
+  Chương 7: Kiểm thử và kết quả            | Owner: KR (+HNHL, DQK) | Target: 1.5 p | Est: 1.71 p (768 words) | Figs: 2
+  Chương 8: Kết quả kỳ vọng và kế hoạch    | Owner: DQK             | Target: 1.0 p | Est: 1.17 p (528 words) | Figs: 0
+  Phụ lục A: Mã nguồn, tái hiện và nguồn   | Owner: KR (+HNHL, DQK) | Target: 1.0 p | Est: 0.8 p (362 words) | Figs: 0
 
 {
-  "candidate_commit": "021181588d23c3ac830a5fb4194b8550806d8f3c",
-  "candidate_tree": "f14c2f6815d94a1ba541e5f52c012ce171e90c9a",
-  "base_commit": "692982665b65c3b573cb0be076a69e7d6c812bb5",
+  "candidate_commit": "337ea5edc53ebf2b680585a2642090a2fd748cd9",
+  "candidate_tree": "d2eed629362a54af9e43e2580d58953f3683fc8c",
+  "base_commit": "506bb6b896c0081dacdd5e1725e715b0ca8011ce",
   "package": {
-    "commit": "021181588d23c3ac830a5fb4194b8550806d8f3c",
-    "archive": "/tmp/pr113-final-a.zip",
-    "sha256": "6299f4e820af27eec2b1921a32d0087e1f4322cb73181d2a17ba3c21c25f0f5a",
-    "file_count": 1434,
+    "commit": "337ea5edc53ebf2b680585a2642090a2fd748cd9",
+    "archive": "/tmp/pr113-val-a.zip",
+    "sha256": "b78dbe48155d21e0593932e61744bba011ec7cd34d33233f71d052697bdef282",
+    "file_count": 1459,
     "history_included": false
   },
   "identical_second_build": true,
   "all_manifest_hashes_verified": true,
   "source_registry": {
     "status": "PASS",
-    "source_files": 52,
+    "source_files": 60,
     "errors": []
   },
   "d5_tracked_files": 797,
@@ -41,22 +41,22 @@
   "pdf_committed": false,
   "gpu_hardware_acceptance": false,
   "cpu_tests": {
-    "passed": 896,
-    "skipped": 3,
-    "deselected": 6,
+    "passed": 947,
+    "skipped": 5,
+    "deselected": 4,
     "exit_code": 0,
-    "selection": "not gpu and not hil and not replay",
-    "command": "PYTHONPATH=/tmp/pr113-report-deps <workspace>/.venv/bin/python -m tools.run_cpu_tests -m 'not gpu and not hil and not replay'",
+    "selection": "not gpu and not hil",
+    "command": "PYTHONPATH=/tmp/pr113-report-deps <workspace>/.venv/bin/python -m tools.run_cpu_tests",
     "clean_status_at_start": true
   },
   "report": {
     "rendered_pages": 14,
     "chapters": 9,
-    "images": 11,
+    "images": 12,
     "byte_identical_reproduction": true,
-    "pdf_sha256": "8bd6f5ef745d4b812c82e2b99ff6e983d3f7e9b84ab16599741697e9a508da63",
-    "source_sha256": "dd0e95db0799916b718beba16561fdd08539d0ae88ae4f55827937185eaa01c0",
-    "visual_review": "All 14 pages inspected at contact-sheet scale before final footer/ownership edits; final source/page/hash check passed."
+    "pdf_sha256": "6c9d85b1ba8da10ae236ecdb9eaa28f0c1d0c6fe5fbce02d4c952023f9898c0d",
+    "source_sha256": "0bf0c8e373fd86756b23b62b300a3d4346e8182aad3962481a66a359d8c36cbc",
+    "visual_review": "Pages 1, 7, 10, 12, 13, 14 visually inspected at PNG render; all 14 pages pagebreak-aligned, source/page/hash check passed."
   },
   "environment": {
     "check_env_exit_code": 1,
