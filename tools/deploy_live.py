@@ -223,13 +223,30 @@ def make_handshake(folder):
     return det
 
 
+def new_run_dir(out, label):
+    out = Path(out)
+    out.mkdir(parents=True, exist_ok=True)
+    numbers = [int(path.name[len(label) + 1:]) for path in out.glob(label + "_*")
+               if path.name[len(label) + 1:].isdigit()]
+    number = max(numbers, default=0) + 1
+    while True:
+        path = out / ("%s_%d" % (label, number))
+        try:
+            path.mkdir(exist_ok=False)
+            return path
+        except FileExistsError:
+            number += 1
+
+
 def main():
     import cv2
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--label", default="run")
     ap.add_argument("--vantage", type=float, nargs=2, default=None, metavar=("X", "Y"), help="the sweet spot typed in (manual mode); not needed with --door")
-    ap.add_argument("--find-door", action="store_true", help="no coordinates at all: scan in place with the robot-eye entrance detector (--entrance folder, default data/entrance/class_door) until the door is in view, face it, WAIT there for the tower (--tower-place) and the handshake, then reverse to STANDBY. The distance to the door is not controlled: start 1.8-3.2 m from it and measure with the tape")
-    ap.add_argument("--stand-off", type=float, default=None, help="--find-door: drive toward the door until the range estimate (the enrolment scale ref_range_m in entrance.json, tools.approach_door.reference_scale) reaches this (m); with --tower-place the tower will stand about 0.25 m closer to the door. Omit it to centre on the door without driving")
+    ap.add_argument("--find-door", action="store_true", help="find and centre the door, then drive to [find_door].stand_off_m (default 2.25 m) using the enrolment scale, wait for tower/handshake and reverse to STANDBY. Use --centre-only to centre in place")
+    approach_mode = ap.add_mutually_exclusive_group()
+    approach_mode.add_argument("--stand-off", type=float, default=None, help="--find-door: target distance in m, overriding [find_door].stand_off_m. Uses ref_range_m from entrance.json")
+    approach_mode.add_argument("--centre-only", action="store_true", help="--find-door: centre in place, then prompt/handshake/reverse without the forward approach")
     ap.add_argument("--area-exponent", type=float, default=2.0, help="--find-door: outline area ~ range^-exponent (see tools.approach_door)")
     ap.add_argument("--door", type=float, nargs=2, default=None, metavar=("X", "Y"), help="Phase 1 chain: the door position (tape, start frame); the sweet spot is chosen from the declared room")
     ap.add_argument("--box", type=float, nargs=4, default=None, metavar=("X0", "Y0", "X1", "Y1"), help="the cleared floor of the declared room (with --door)")
@@ -276,7 +293,7 @@ def main():
     tp_, fd_ = cfg_["tower_place"], cfg_["find_door"]
     ap.set_defaults(tower_range=tuple(tp_["range_m"]), tower_bearing=tp_["bearing_deg"], tower_hold=tp_["hold_s"], tower_offset=tp_["offset_m"], tower_window=tp_["prompt_window_s"], area_exponent=fd_["area_exponent"])
     a = ap.parse_args()
-    if a.find_door and a.stand_off is None:
+    if a.find_door and a.stand_off is None and not a.centre_only:
         a.stand_off = fd_["stand_off_m"]
     answers_file = None
     if a.answers:                                         # validate BEFORE the robot starts: a bad file must not cost a physical trial
@@ -294,6 +311,8 @@ def main():
         ap.error("--tower-range MIN MAX must satisfy 0.05 <= MIN < MAX <= 1.0 m")
     if a.stand_off is not None and not a.find_door:
         ap.error("--stand-off is only used with --find-door")
+    if a.centre_only and not a.find_door:
+        ap.error("--centre-only is only used with --find-door")
     if a.find_door and a.no_robot:
         ap.error("--find-door needs the robot's camera: it cannot run with --no-robot")
     if not a.find_door and a.centre is None:
@@ -615,9 +634,7 @@ def main():
     elif not a.dry_run:
         print("WARNING: the tape answers were NOT captured (no terminal, no --answers file). Add them now: python -m tools.tape_answers <run folder> --offset-x .. --offset-y ..", flush=True)
     out_dir = Path(a.out)
-    n = 1 + len(list(out_dir.glob(a.label + "_*"))) if out_dir.exists() else 1
-    run_dir = out_dir / ("%s_%d" % (a.label, n))
-    run_dir.mkdir(parents=True, exist_ok=True)
+    run_dir = new_run_dir(out_dir, a.label)
     with open(run_dir / "log.csv", "w", newline="") as fh:
         wr = csv.writer(fh)
         wr.writerow(("t", "x_m", "y_m", "yaw_rad", "cmd_v", "cmd_w", "state", "handshake_in_view"))

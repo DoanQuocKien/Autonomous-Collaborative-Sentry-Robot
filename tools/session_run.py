@@ -14,8 +14,11 @@ from pathlib import Path
 PY = [sys.executable, "-X", "utf8", "-u", "-m"]
 
 
-def newest_summary(root, label):
-    runs = sorted(Path(root).glob(label + "_*"), key=lambda p: p.stat().st_mtime)
+def newest_summary(root, label, previous=None):
+    runs = sorted((p for p in Path(root).glob(label + "_*") if previous is None or p not in previous),
+                  key=lambda p: p.stat().st_mtime)
+    if previous is not None and len(runs) != 1:
+        return None
     f = runs[-1] / "summary.json" if runs else None
     return json.loads(f.read_text(encoding="utf-8")) if f and f.exists() else None
 
@@ -39,11 +42,16 @@ def main():
     ap.add_argument("deploy_args", nargs=argparse.REMAINDER, help="after `--`: passed to tools.deploy_live")
     a = ap.parse_args()
     extra = [x for x in a.deploy_args if x != "--"]
-    d = PY + ["tools.deploy_live", "--label", a.label + "_a", "--find-door"] + (["--stand-off", str(a.stand_off)] if a.stand_off else []) + extra
+    d = PY + ["tools.deploy_live", "--label", a.label + "_a", "--find-door"] + (["--stand-off", str(a.stand_off)] if a.stand_off is not None else []) + extra
+    output_args = argparse.ArgumentParser(add_help=False, allow_abbrev=False)
+    output_args.add_argument("--label")
+    output_args.add_argument("--out", default="data/deploy")
+    output, _ = output_args.parse_known_args(d[len(PY) + 1:])
+    previous = set(Path(output.out).glob(output.label + "_*"))
     print("STAGE 1:", " ".join(d), flush=True)
     if subprocess.call(d) != 0:
         raise SystemExit("stage 1 exited with an error")
-    s = newest_summary("data/deploy", a.label + "_a")
+    s = newest_summary(output.out, output.label, previous=previous)
     if not s or not s.get("success"):
         raise SystemExit("stage 1 did not reach STANDBY (end_reason: %s): no pursuit" % (s or {}).get("end_reason"))
     if a.no_pursuit:

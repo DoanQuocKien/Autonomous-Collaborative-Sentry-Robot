@@ -1,5 +1,5 @@
 {
-  "snapshot": "2026-11-18",
+  "snapshot": "2026-11-21",
   "files": [
     {
       "label": "S0",
@@ -437,6 +437,188 @@
       "source_commit": "506bb6b896c0081dacdd5e1725e715b0ca8011ce",
       "sha256": "a9e59726e4c8b77593b3321b27b06b9427f30ac2d31c2cbc16d51b338bc70eab",
       "scope": "added after freeze, supervised dorm experiment with general obstacle detector disabled"
+    },
+    {
+      "label": "D20",
+      "path": "reports/DoanQuocKien/week-07/finddoor_1120/README.md",
+      "sha256": "abb8c14328d6fb2b947d903e8ce28398cc1fdc6bcf59c667ff1bfd638d1c6265",
+      "scope": "2026-11-20 diagnostic robot runs; operator tape after each run; no independent T2 or repeated acceptance claim",
+      "source_commit": "b95169a6a39f553b7e1d03d011d2f58039a1d60b"
+    },
+    {
+      "label": "D20",
+      "path": "reports/DoanQuocKien/week-07/finddoor_1120/approach_ap_chain_1120_1/log.csv",
+      "sha256": "c6ca34f0e6f6d51e187ccfb198a97aac13b57d06f7cac0eca932150858f352ef",
+      "scope": "2026-11-20 diagnostic robot runs; operator tape after each run; no independent T2 or repeated acceptance claim",
+      "source_commit": "b95169a6a39f553b7e1d03d011d2f58039a1d60b"
+    },
+    {
+      "label": "D20",
+      "path": "reports/DoanQuocKien/week-07/finddoor_1120/approach_ap_chain_1120_1/summary.json",
+      "sha256": "2290a30e471494a3ded336fa70b89068808e12b433dd2ce915d9e365367cd29a",
+      "scope": "2026-11-20 diagnostic robot runs; operator tape after each run; no independent T2 or repeated acceptance claim",
+      "source_commit": "b95169a6a39f553b7e1d03d011d2f58039a1d60b"
+    },
+    {
+      "label": "D20",
+      "path": "reports/DoanQuocKien/week-07/finddoor_1120/approach_ap_ref_1120_1/log.csv",
+      "sha256": "06afb784a3e8f5ac97415226558f3f6d9a8cf8759c33986aa5d40ee0e51e45a3",
+      "scope": "2026-11-20 diagnostic robot runs; operator tape after each run; no independent T2 or repeated acceptance claim",
+      "source_commit": "b95169a6a39f553b7e1d03d011d2f58039a1d60b"
+    },
+    {
+      "label": "D20",
+      "path": "reports/DoanQuocKien/week-07/finddoor_1120/approach_ap_ref_1120_1/summary.json",
+      "sha256": "9b2fe3c3f8aa02f03918dc6ab13ca4582f67a97cf741b4a98a31439beb3b4126",
+      "scope": "2026-11-20 diagnostic robot runs; operator tape after each run; no independent T2 or repeated acceptance claim",
+      "source_commit": "b95169a6a39f553b7e1d03d011d2f58039a1d60b"
+    },
+    {
+      "label": "D20",
+      "path": "reports/DoanQuocKien/week-07/finddoor_1120/earlier_runs/finddoor_1120_1/summary.json",
+      "sha256": "b16b10b8b035829734c6bde6139c5549d1362d119daa3acb53cad33b8b9d631e",
+      "scope": "2026-11-20 diagnostic robot runs; operator tape after each run; no independent T2 or repeated acceptance claim",
+      "source_commit": "b95169a6a39f553b7e1d03d011d2f58039a1d60b"
+    },
+    {
+      "label": "D20",
+      "path": "reports/DoanQuocKien/week-07/finddoor_1120/earlier_runs/finddoor_1120_2/summary.json",
+      "sha256": "db7916e147106ff1dd4674bdbfc0692d90a8c894426901ed7a5b39a638fce04e",
+      "scope": "2026-11-20 diagnostic robot runs; operator tape after each run; no independent T2 or repeated acceptance claim",
+      "source_commit": "b95169a6a39f553b7e1d03d011d2f58039a1d60b"
+    },
+    {
+      "label": "D20",
+      "path": "reports/DoanQuocKien/week-07/finddoor_1120/earlier_runs/finddoor_1120_3/summary.json",
+      "sha256": "4f6710045a9cdbbf3f7d7a3057aa77767c6cb12225c5e06a4dc03b2e0bf6e15b",
+      "scope": "2026-11-20 diagnostic robot runs; operator tape after each run; no independent T2 or repeated acceptance claim",
+      "source_commit": "b95169a6a39f553b7e1d03d011d2f58039a1d60b"
+    },
+    {
+      "label": "D20",
+      "path": "reports/DoanQuocKien/week-07/finddoor_1120/earlier_runs/tower_t2_1120_1/summary.json",
+      "sha256": "5441c1460bcdd23a20b17e5b7d1fb534297f1bf5fa651b53eb1d7476739ae923",
+      "scope": "2026-11-20 diagnostic robot runs; operator tape after each run; no independent T2 or repeated acceptance claim",
+      "source_commit": "b95169a6a39f553b7e1d03d011d2f58039a1d60b"
+    },
+    {
+      "label": "D20",
+      "path": "reports/DoanQuocKien/week-07/finddoor_1120/earlier_runs/tower_t2_1120_2/summary.json",
+      "sha256": "6258bb088181e85ac70dc42825e107e7e2165c14f9fddc9e1081da48a43fb897",
+      "scope": "2026-11-20 diagnostic robot runs; operator tape after each run; no independent T2 or repeated acceptance claim",
+      "source_commit": "b95169a6a39f553b7e1d03d011d2f58039a1d60b"
+    },
+    {
+      "label": "D20",
+      "path": "reports/DoanQuocKien/week-07/finddoor_1120/pursuit_take3_b_1/console.log",
+      "sha256": "0cff651df9df4b7648233f6db1722f1a07b3accb4d74d348116482ffab7b9c9b",
+      "scope": "2026-11-20 diagnostic robot runs; operator tape after each run; no independent T2 or repeated acceptance claim",
+      "source_commit": "b95169a6a39f553b7e1d03d011d2f58039a1d60b"
+    },
+    {
+      "label": "D20",
+      "path": "reports/DoanQuocKien/week-07/finddoor_1120/pursuit_take3_b_1/log.csv",
+      "sha256": "41e80636dabf805bd007ab66dfa1581a174ba5849f3c2f2c39581b3e33b186a3",
+      "scope": "2026-11-20 diagnostic robot runs; operator tape after each run; no independent T2 or repeated acceptance claim",
+      "source_commit": "b95169a6a39f553b7e1d03d011d2f58039a1d60b"
+    },
+    {
+      "label": "D20",
+      "path": "reports/DoanQuocKien/week-07/finddoor_1120/pursuit_take3_b_1/summary.json",
+      "sha256": "9df3a72874fec6cc579d5e7fbce6d4cc69dcfffdf4421e9afdba2e49ae86c542",
+      "scope": "2026-11-20 diagnostic robot runs; operator tape after each run; no independent T2 or repeated acceptance claim",
+      "source_commit": "b95169a6a39f553b7e1d03d011d2f58039a1d60b"
+    },
+    {
+      "label": "D20",
+      "path": "reports/DoanQuocKien/week-07/finddoor_1120/pursuit_take3_b_2/console.log",
+      "sha256": "f2a84d82189de19bcb3ee685f53a56461311e95a2eae24910aa5f43195eccd5f",
+      "scope": "2026-11-20 diagnostic robot runs; operator tape after each run; no independent T2 or repeated acceptance claim",
+      "source_commit": "b95169a6a39f553b7e1d03d011d2f58039a1d60b"
+    },
+    {
+      "label": "D20",
+      "path": "reports/DoanQuocKien/week-07/finddoor_1120/pursuit_take3_b_2/log.csv",
+      "sha256": "5160aefb9b2125adfc01ef5ba7b3f79b8dfc9c1eec66a72c094d98e5254621dc",
+      "scope": "2026-11-20 diagnostic robot runs; operator tape after each run; no independent T2 or repeated acceptance claim",
+      "source_commit": "b95169a6a39f553b7e1d03d011d2f58039a1d60b"
+    },
+    {
+      "label": "D20",
+      "path": "reports/DoanQuocKien/week-07/finddoor_1120/pursuit_take3_b_2/summary.json",
+      "sha256": "814b255889a479b75ab17d78ccde2b29c975e58ed1192340468085d59a4bba4f",
+      "scope": "2026-11-20 diagnostic robot runs; operator tape after each run; no independent T2 or repeated acceptance claim",
+      "source_commit": "b95169a6a39f553b7e1d03d011d2f58039a1d60b"
+    },
+    {
+      "label": "D20",
+      "path": "reports/DoanQuocKien/week-07/finddoor_1120/stage1_take3_a_1/console.log",
+      "sha256": "b66a951d8b9f0043289850d90b01ff290b0d7a6021f3e8fffabc2e61e463bba8",
+      "scope": "2026-11-20 diagnostic robot runs; operator tape after each run; no independent T2 or repeated acceptance claim",
+      "source_commit": "b95169a6a39f553b7e1d03d011d2f58039a1d60b"
+    },
+    {
+      "label": "D20",
+      "path": "reports/DoanQuocKien/week-07/finddoor_1120/stage1_take3_a_1/frames.csv",
+      "sha256": "dea6a5cff4f237737e2046963a7b479ecf329f16de66520ce1f59dc6151500f3",
+      "scope": "2026-11-20 diagnostic robot runs; operator tape after each run; no independent T2 or repeated acceptance claim",
+      "source_commit": "b95169a6a39f553b7e1d03d011d2f58039a1d60b"
+    },
+    {
+      "label": "D20",
+      "path": "reports/DoanQuocKien/week-07/finddoor_1120/stage1_take3_a_1/handshake.csv",
+      "sha256": "6caf8bffb77bbbe4a3dc28556eb55e058804c5d3d7a15385cdce945aaf8646aa",
+      "scope": "2026-11-20 diagnostic robot runs; operator tape after each run; no independent T2 or repeated acceptance claim",
+      "source_commit": "b95169a6a39f553b7e1d03d011d2f58039a1d60b"
+    },
+    {
+      "label": "D20",
+      "path": "reports/DoanQuocKien/week-07/finddoor_1120/stage1_take3_a_1/log.csv",
+      "sha256": "003e872890f5398400beaacb1fd21003d269e74e943d88b7c08e8c7e6b8b6b59",
+      "scope": "2026-11-20 diagnostic robot runs; operator tape after each run; no independent T2 or repeated acceptance claim",
+      "source_commit": "b95169a6a39f553b7e1d03d011d2f58039a1d60b"
+    },
+    {
+      "label": "D20",
+      "path": "reports/DoanQuocKien/week-07/finddoor_1120/stage1_take3_a_1/summary.json",
+      "sha256": "7653d37ac7b94c02dfcc7af522804aeadcd4e46402c27ebd6d182141e250417a",
+      "scope": "2026-11-20 diagnostic robot runs; operator tape after each run; no independent T2 or repeated acceptance claim",
+      "source_commit": "b95169a6a39f553b7e1d03d011d2f58039a1d60b"
+    },
+    {
+      "label": "D20",
+      "path": "reports/DoanQuocKien/week-07/finddoor_1120/stage1_take3_a_1/tape_note.json",
+      "sha256": "962abe89f9eda3a669fd05843808f19f2075694a52e3dc7326837f6f778a17d0",
+      "scope": "2026-11-20 diagnostic robot runs; operator tape after each run; no independent T2 or repeated acceptance claim",
+      "source_commit": "b95169a6a39f553b7e1d03d011d2f58039a1d60b"
+    },
+    {
+      "label": "D20",
+      "path": "reports/DoanQuocKien/week-07/finddoor_1120/tower_register/camera_pose_tower_1120_1.json",
+      "sha256": "6f83d936bad5e48bc103ea490bb2dfc06a2a92736c56e319c01e15c566b281e0",
+      "scope": "2026-11-20 diagnostic robot runs; operator tape after each run; no independent T2 or repeated acceptance claim",
+      "source_commit": "b95169a6a39f553b7e1d03d011d2f58039a1d60b"
+    },
+    {
+      "label": "D20",
+      "path": "reports/DoanQuocKien/week-07/finddoor_1120/tower_register/camera_pose_tower_1120_2.json",
+      "sha256": "19c9284e3f0223989f19b51c4f77ba62f63181522ff09d2634d794481e50fde2",
+      "scope": "2026-11-20 diagnostic robot runs; operator tape after each run; no independent T2 or repeated acceptance claim",
+      "source_commit": "b95169a6a39f553b7e1d03d011d2f58039a1d60b"
+    },
+    {
+      "label": "D20",
+      "path": "reports/DoanQuocKien/week-07/finddoor_1120/tower_register/tower_register_1120b_first_full_registration.log",
+      "sha256": "9bb5c3bf08a52a7c709612cffe8e3251ed3f4237560f5191ba63096726e20acc",
+      "scope": "2026-11-20 diagnostic robot runs; operator tape after each run; no independent T2 or repeated acceptance claim",
+      "source_commit": "b95169a6a39f553b7e1d03d011d2f58039a1d60b"
+    },
+    {
+      "label": "D20",
+      "path": "reports/DoanQuocKien/week-07/finddoor_1120/tower_register/tower_register_1120d.log",
+      "sha256": "b7563dae042943b420886b5e19722ef0897c26853bb46037ea1605334f081bdc",
+      "scope": "2026-11-20 diagnostic robot runs; operator tape after each run; no independent T2 or repeated acceptance claim",
+      "source_commit": "b95169a6a39f553b7e1d03d011d2f58039a1d60b"
     }
   ]
 }

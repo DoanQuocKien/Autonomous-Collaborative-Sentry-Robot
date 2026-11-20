@@ -77,8 +77,6 @@ Mô hình phân tách cho phép replay bằng cùng API logic mà không có mot
 
 **Nguồn:** cấu trúc mã đã tích hợp PR #101; chương 3 bản thảo ngày 13/11 [D13]. Các tool PR #108 đã được nhận qua main; bằng chứng vẫn giữ ngày và điều kiện đo gốc.
 
-<!-- pagebreak -->
-
 ## 3.3 Liên kết, timestamp và an toàn
 
 | Đường truyền | Cấu hình | Dữ liệu và giới hạn |
@@ -114,8 +112,6 @@ Một lượt có sửa ArUco đạt 14,5 cm sau khoảng 3 m, thuần DR lệch
 
 Pose camera ngày 20/11 được tự hiệu chuẩn trên bốn mặt tháp ESP32 (`tower_register`, marker 50 mm id 10–13, mỗi mặt 30 frame): pitch từ −11,09° đến −11,68°, median −11,29°, độ lệch chuẩn giữa các mặt 0,21° (chênh lớn nhất 0,59°). Lần đăng ký đầu trong ngày, đứng gần tháp 0,21–0,25 m, cho −11,67° (`camera_pose_tower_1120_1.json`, chênh 0,38° so với giá trị dùng); giá trị dùng là lần thứ hai. Mặt trước (id 11) gắn xoay 180° trong mặt phẳng, nên góc marker được sắp lại trước khi giải PnP. Pitch này thấp hơn 0,9° so với board 150 mm (−10,37°); chênh lệch chưa được giải thích và các độ cao tháp đã đo chưa được chỉnh lại. [D20]
 
-<!-- pagebreak -->
-
 # Chương 5 — Nhận thức thị giác và tối ưu
 
 ## 5.1 Vật cản, contact và bản đồ
@@ -134,8 +130,6 @@ ORG/SegFormer-B0: trên ruler D1 24 vật, configured tìm 1/24, obstacle-route 
 
 XFeat + RANSAC kiểm tra hình học; DINOv2 hỗ trợ reference khác camera. Ngưỡng phải được hiệu chuẩn bằng negative sweep theo cửa. F12 so baseline ORB với XFeat/DINOv2; kết quả nhận cửa không chứng minh door range hoặc bắt tay đủ 10/10 đặt lại camera. Cự ly cửa không do detector trả về mà suy ra từ diện tích khung viền khớp so với một mốc tham chiếu lưu cùng enrolment (`ref_range_m`, đo một lần mỗi phòng, 1,96 m cho cửa lớp): range = ref·(A_ref/A)^(1/2). Ở hai lượt `approach_door` ngày 20/11, ước lượng khi dừng là 2,21 và 2,12 m (tape ghi tay 2,25 và 2,11 m), nhưng ước lượng đầu lượt thấp khoảng 10% ở lần đo 2,91 m so với tape 3,23 m (một lần đo). [K1, D20]
 
-<!-- pagebreak -->
-
 ## 5.3 Whitelist, re-ID và tracking
 
 SCRFD/MobileFaceNet tạo face embedding 512D chuẩn hóa; so maximum cosine với whitelist, ngưỡng hiện hành 0,45. D2 cafe pilot có 125 face frames, 21 entries, ba người: TAR 82,99%, FAR 46,40%. Queries liên tiếp tương quan, nhãn tự động cần review; chưa đạt TAR≥95% tại FAR≤1%. [H1]
@@ -151,8 +145,6 @@ OSNet-AIN x1.0 và x0.25 đều chạy, nhưng 23 body crops hiện chưa tạo 
 ByteTrack dùng chuyển động/IoU và detection confidence thấp để nối track. Khóa/re-lock appearance cần cùng architecture, weight hash, preprocessing, cosine/margin và xác nhận qua hai frame. Vector/queue/tracker chạy trên laptop; JetBot nhận (v, w). Mất dấu/mơ hồ không được xem track ID là identity. [H1, K1]
 
 Vendor ByteTrack đạt 407/407 synthetic ID agreement với backend tham chiếu, là T0 parity. Replay 822 frame D2 chứng minh runtime, chưa có body-ID truth/timestamp chuẩn để nghiệm thu ≤1 ID-switch/phút trên D3 ≥60 s, hai người. [H1, K1]
-
-<!-- pagebreak -->
 
 ## 5.4 Ngân sách GPU trên laptop
 
@@ -170,8 +162,6 @@ Dòng RTX 4050 lấy từ file JSON đo ngày 13/11 đã merge trong main; commi
 ![F18 — Native PyTorch D5-640 trên RTX 5060; FP16 chưa tăng throughput.](HuynhNguyenHoaiLoc/midterm/figures/F18_d5_precision.png)
 
 Cùng 90 ảnh dev-val, batch 1, mỗi precision process riêng: FP32/FP16 đạt 123,59/107,38 FPS, p95 12,01/16,35 ms; Torch allocated 32,41/17,53 MiB; mAP50 81,071%/81,072%. FP16 giảm allocator nhưng chậm hơn lần này; không kết luận FP16 tốt hơn nói chung. Timing gồm predict/preprocess/NMS và kiểm tra dtype, không gồm disk/video/control; chưa TensorRT hay independent accuracy. [H1]
-
-<!-- pagebreak -->
 
 ## 5.5 Chuyển đổi và triển khai Jetson Nano
 
@@ -214,8 +204,6 @@ HOLD giữ v=0, chỉ yaw recenter. PURSUE nhắm 1,2 m và dùng estimate vật
 
 Mô phỏng scripted ghi HOLD 6,32 s, resume 8,26 s, v=0 trong HOLD, hai targets hoàn tất và lệnh hợp lệ. [K2]
 
-<!-- pagebreak -->
-
 # Chương 7 — Kiểm thử và kết quả
 
 ## 7.1 Tầng kiểm thử và tái hiện
@@ -235,8 +223,6 @@ Checkout sạch tuần 7 clone từ commit candidate được ghi riêng cùng t
 Checker gói nộp đọc **committed export** qua index tạm từ `git read-tree`, cùng pathspec với `git archive`. Dữ liệu phát triển vẫn tracked; data/team_data/recordings/weights chỉ bị loại khỏi ZIP. `--index` chỉ hỗ trợ pre-commit. Các path data/recordings/weights, secret filenames và model binaries bị từ chối. Checker theo tên file không phải kiểm toán nội dung hoặc lịch sử Git.
 
 Gói ZIP lấy từ `git archive` của đúng commit, không chứa `.git`; manifest lưu SHA256 từng file. Test xác nhận workspace bẩn không lọt vào ZIP, dữ liệu tracked không bị xóa khi tạo ZIP, secret ngoài vùng loại vẫn làm HEAD fail, file output cũ không bị ghi đè. [K3]
-
-<!-- pagebreak -->
 
 ## 7.2 Bảng đối soát nghiệm thu
 
@@ -265,8 +251,6 @@ Lượt 16/11: sàn glossy, 5 W (cuối buổi), code trước audit, gói unsig
 Lượt 20/11: sàn glossy (`--floor` unknown), pin 11,6 V, pose tháp `camera_pose_tower_1120_2.json`; gói điều khiển unsigned; lượt 1 tháp ở 0,56 m, 6,7° trước robot nên tower avoid kích hoạt ngay frame đầu, lượt 2 tháp ở 0,65 m, 53°; tower avoid chiếm 251/620 và 483/2088 frame; detector vật cản tổng quát bật (chặn 140 và 244 frame, khác dòng 18/11 tắt detector nên hai dòng không so sánh trực tiếp); lượt 2 đổi `--lost-end-s` 5→20 s và `--seconds` 90→105 s. Pursuit chạy ngay sau một lượt find-door đã STANDBY, không phải T2 độc lập. [D20]
 
 Không cộng frame liên tiếp thành lượt độc lập; không bỏ missed objects khi tính error. Các khối đã có mã và bằng chứng phát triển, nhưng các gate hệ thống chính vẫn pending. Nguồn: [registry](kouun-rokku/week-07/editor-sources.md), H1/H2/D13/D18/C1/C2/K2; D20 theo mục A.3.
-
-<!-- pagebreak -->
 
 # Chương 8 — Kết quả kỳ vọng và kế hoạch
 
@@ -337,4 +321,4 @@ Repo: https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot . Nh
 
 ## A.3 Chỉ mục bằng chứng
 
-S0: `docs/Implementation Plan.md`, `docs/Mid-Term Report Plan.md`. C1/C2: `calib/camera.json`, báo cáo dead-reckoning 24/10. K1/K2: tuần 4–6 (parity/hold/replay/review #101). K3: `reports/kouun-rokku/week-07/` (checkout sạch và package). H1/H2: `midterm/chapter-05-current.md`, addenda 05/11 và 11/11. E1: `docs/Edge Deployment.md`. D13: bằng chứng #108 đã merge (chapters/README/GPU/edge JSON và hình). D14: `t2_1114` và `heartbeat_dryrun_1114`; D16: `classroom_1116`; D18: `tower_avoid_1118` và `tower_marker_range_1118`; H7: pilot Phase 2 live (#115). D20: `reports/DoanQuocKien/week-07/finddoor_1120/` (find-door, pursuit, approach, tower_register; tape do vận hành ghi tay, không nằm trong summary). Registry kèm SHA256: `reports/kouun-rokku/week-07/editor-sources.md` (commit:path + SHA256).
+[Registry editor](kouun-rokku/week-07/editor-sources.md) ghi commit:path và SHA256 theo nhãn nguồn. S0 là kế hoạch; C1/C2 là hiệu chuẩn; K1/K2/K3 là parity, replay, review và package; H1/H2 là perception; E1 là edge; D13/D14/D16/D18 là các buổi đo DQK; H7 là pilot Phase 2. D20 ghim log find-door/pursuit/approach/tower_register ngày 20/11 trong `reports/DoanQuocKien/week-07/finddoor_1120/`, gồm tape do người vận hành nhập sau lượt chạy.

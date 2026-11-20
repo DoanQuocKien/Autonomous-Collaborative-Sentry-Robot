@@ -4,11 +4,12 @@
 
 BEEPS: ONE deep beep = put the tower on the floor about 30 cm in front of the robot, any face toward it. Each face that gives a steady pose (--frames frames with a spread under --max-spread-deg)
 beeps TWICE: turn the tower to another face. When all four faces are done: THREE beeps, and the median pitch of the four faces is written to a pose file (like tools.self_pose).
-A face that does not settle within --wait seconds is skipped with one low beep. --ref-pitch (a pitch from a 150 mm board in the same session): also print, per face, the lower-edge offset that would reconcile the face
+If a face does not settle within --wait seconds, registration stops with one low beep and saves the faces already accepted. --ref-pitch (a pitch from a 150 mm board in the same session): also print, per face, the lower-edge offset that would reconcile the face
 with it (the tower heights are the board's edge, the black square sits a paper margin higher; this finds the margin, it does not change the pose).
 The floor search, the 10 s placement windows and the reverse to STANDBY are the next steps (not in this tool)."""
 import argparse
 import json
+import math
 import time
 from pathlib import Path
 
@@ -54,13 +55,20 @@ def main():
     ap.add_argument("--ref-pitch", type=float, default=None)
     ap.add_argument("--out", default="calib")
     a = ap.parse_args()
+    if a.frames < 1 or not all(math.isfinite(v) and v > 0 for v in (a.wait, a.camera_h, a.max_spread_deg)):
+        ap.error("frames must be at least 1, wait/camera-h/max-spread-deg must be positive and finite")
     K, und = undistorter(json.load(open(a.camera)))
     done, buf, cur, t_face = {}, [], None, time.time()
     print("ONE deep beep: put the tower on the floor ~30 cm in front, any face toward the robot", flush=True)
     beep(300, 1200)
     with ZMQReceiver(ip=resolve(a.ip)) as rx:
         while len(done) < 4:
-            f = rx.read(timeout=3)
+            remaining = a.wait - (time.time() - t_face)
+            if remaining <= 0:
+                beep(300, 400)
+                print("no steady face for %.0f s: stopping with %d of 4" % (a.wait, len(done)), flush=True)
+                break
+            f = rx.read(timeout=min(3, remaining))
             if f is None:
                 continue
             seen = {i: c for i, c in detect_corners(und(f.frame_bgr)) if i in tm.TOWER and i not in done}
@@ -73,27 +81,34 @@ def main():
                 buf.append(tm.upright(i, c))                         # the front marker (id 11) is rotated 180 deg: corners reordered
             if len(buf) >= a.frames:
                 r = face_pitch(buf, K, tm.bottom_h(cur), a.camera_h)
-                print("id %d (%s): pitch %+.2f deg, spread %.2f, %d frames, distance %.2f m" % (cur, tm.TOWER[cur][0], r[0], r[1], r[2], r[3]), flush=True)
-                if r[1] <= a.max_spread_deg:
+                print("id %d (%s): %s" % (cur, tm.TOWER[cur][0], r), flush=True)
+                if r is not None and r[2] >= a.frames and r[1] <= a.max_spread_deg:
                     done[cur] = dict(pitch_deg=round(r[0], 2), spread_deg=round(r[1], 3), distance_m=round(r[3], 3),
                                      offset_to_ref_m=None if a.ref_pitch is None else round(implied_offset(buf, K, tm.bottom_h(cur), a.camera_h, a.ref_pitch), 4))
                     if a.ref_pitch is not None:
                         print("   lower edge would need %+.1f mm to match the reference pitch %.2f" % (1000 * done[cur]["offset_to_ref_m"], a.ref_pitch), flush=True)
                     beep(1000, 150); beep(1000, 150)
                     print("TWO beeps: turn the tower to another face (%d of 4 done)" % len(done), flush=True)
-                buf, cur, t_face = [], None, time.time()
-            if time.time() - t_face > a.wait and len(done) < 4:
-                beep(300, 400)
-                print("no steady face for %.0f s: stopping with %d of 4" % (a.wait, len(done)), flush=True)
-                break
+                    t_face = time.time()
+                buf, cur = [], None
     if done:
         pitches = [v["pitch_deg"] for v in done.values()]
         pose = make_pose(pitches, [0.0] * len(pitches), a.camera_h, "tower_" + time.strftime("%m%d"), min_frames=1, max_spread_deg=1.0,
                          extra={"tower_faces": done, "camera_roll_deg_note": "not measured by the tower registration (roll is noisy on the 50 mm markers)"})
         pose["method"] = "median pitch over the tower faces registered by tools/tower_register.py (position-based, H fixed %.3f m)" % a.camera_h
         out = Path(a.out)
-        path = out / ("camera_pose_tower_%s_%d.json" % (time.strftime("%m%d"), 1 + len(list(out.glob("camera_pose_tower_%s_*.json" % time.strftime("%m%d"))))))
-        path.write_text(json.dumps(pose, indent=1))
+        out.mkdir(parents=True, exist_ok=True)
+        prefix = "camera_pose_tower_%s_" % time.strftime("%m%d")
+        numbers = [int(p.stem[len(prefix):]) for p in out.glob(prefix + "*.json") if p.stem[len(prefix):].isdigit()]
+        number = max(numbers, default=0) + 1
+        while True:
+            path = out / (prefix + str(number) + ".json")
+            try:
+                with path.open("x", encoding="utf-8") as stream:
+                    stream.write(json.dumps(pose, indent=1))
+                break
+            except FileExistsError:
+                number += 1
         print("wrote", path, "| pitch %+.2f deg from %d faces (spread between faces %.2f deg)" % (float(np.median(pitches)), len(done), float(np.std(pitches))))
     if len(done) == 4:
         for _ in range(3):
