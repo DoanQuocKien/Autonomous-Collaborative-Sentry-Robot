@@ -1,5 +1,7 @@
 # HNHL — Phase 2 live và cập nhật perception
 
+**Cập nhật 21/11:** #113/#132/#133 đã merge; #114 đóng trên GitHub. Hồ sơ giữa kỳ bổ sung 38 nguồn pin cho find-door/pursuit/tower 20/11 và F7 đã có, trạng thái từng phần HNHL và checklist nộp 23/11. STANDBY 56,317 s ở một lượt find-door; hai pursuit diagnostics có distance-in-band 9,4%/18,1%, chưa đạt gate 80%. F7 raw CSV có thật nhưng chưa đạt FPS/p95. [Bổ sung hiện hành](midterm/update-2026-11-21.md), [review #133](reviews/PR-133-2026-11-21.md). Các ghi chú theo ngày bên dưới giữ trạng thái tại thời điểm đó.
+
 **Bổ sung sau freeze 18/11** HNHL đã review/merge #130/#131, sửa freshness/battery/video-IP/obstacle-trigger và tính lại dữ liệu tower của DQK. Pursuit-e đạt tracked 67,2%, trong dải 9,2%, căn tâm 40%, có 12 lượt tránh hoàn tất và một còn active. Detector vật cản tổng quát tắt. #113 đã sửa, chờ DQK review lại. [Nguồn và phạm vi](midterm/update-2026-11-18.md), [review](reviews/2026-11-18.md).
 
 **Cập nhật 16/11** ghi PR #124 đã merge sau review DQK. HNHL đã review/merge #125/#126/#127 và tính lại log pursuit của DQK với 32,2% thời gian trong dải cự ly, 91,1% căn tâm và 0 HOLD. Đã bổ sung deployment thứ 7, pose mới, F3/F17b và lịch video 19/11 vào phần giữa kỳ. [Nguồn và phạm vi đo](midterm/update-2026-11-16.md), [review](reviews/2026-11-16.md).

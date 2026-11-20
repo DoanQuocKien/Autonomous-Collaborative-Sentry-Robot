@@ -1,0 +1,593 @@
+{
+  "schema_version": 1,
+  "date": "2026-11-21",
+  "robot_diagnostic_date": "2026-11-20",
+  "timezone": "Asia/Bangkok",
+  "added_after_freeze": "2026-11-16",
+  "source_commit": "55ddfc845530cbae7ede5be3d5e25549da3785d5",
+  "sources": [
+    {
+      "commit": "55ddfc845530cbae7ede5be3d5e25549da3785d5",
+      "path": "reports/DoanQuocKien/week-07/finddoor_1120/README.md",
+      "sha256": "abb8c14328d6fb2b947d903e8ce28398cc1fdc6bcf59c667ff1bfd638d1c6265"
+    },
+    {
+      "commit": "55ddfc845530cbae7ede5be3d5e25549da3785d5",
+      "path": "reports/DoanQuocKien/week-07/finddoor_1120/approach_ap_chain_1120_1/log.csv",
+      "sha256": "c6ca34f0e6f6d51e187ccfb198a97aac13b57d06f7cac0eca932150858f352ef"
+    },
+    {
+      "commit": "55ddfc845530cbae7ede5be3d5e25549da3785d5",
+      "path": "reports/DoanQuocKien/week-07/finddoor_1120/approach_ap_chain_1120_1/summary.json",
+      "sha256": "2290a30e471494a3ded336fa70b89068808e12b433dd2ce915d9e365367cd29a"
+    },
+    {
+      "commit": "55ddfc845530cbae7ede5be3d5e25549da3785d5",
+      "path": "reports/DoanQuocKien/week-07/finddoor_1120/approach_ap_ref_1120_1/log.csv",
+      "sha256": "06afb784a3e8f5ac97415226558f3f6d9a8cf8759c33986aa5d40ee0e51e45a3"
+    },
+    {
+      "commit": "55ddfc845530cbae7ede5be3d5e25549da3785d5",
+      "path": "reports/DoanQuocKien/week-07/finddoor_1120/approach_ap_ref_1120_1/summary.json",
+      "sha256": "9b2fe3c3f8aa02f03918dc6ab13ca4582f67a97cf741b4a98a31439beb3b4126"
+    },
+    {
+      "commit": "55ddfc845530cbae7ede5be3d5e25549da3785d5",
+      "path": "reports/DoanQuocKien/week-07/finddoor_1120/earlier_runs/finddoor_1120_1/summary.json",
+      "sha256": "b16b10b8b035829734c6bde6139c5549d1362d119daa3acb53cad33b8b9d631e"
+    },
+    {
+      "commit": "55ddfc845530cbae7ede5be3d5e25549da3785d5",
+      "path": "reports/DoanQuocKien/week-07/finddoor_1120/earlier_runs/finddoor_1120_2/summary.json",
+      "sha256": "db7916e147106ff1dd4674bdbfc0692d90a8c894426901ed7a5b39a638fce04e"
+    },
+    {
+      "commit": "55ddfc845530cbae7ede5be3d5e25549da3785d5",
+      "path": "reports/DoanQuocKien/week-07/finddoor_1120/earlier_runs/finddoor_1120_3/summary.json",
+      "sha256": "4f6710045a9cdbbf3f7d7a3057aa77767c6cb12225c5e06a4dc03b2e0bf6e15b"
+    },
+    {
+      "commit": "55ddfc845530cbae7ede5be3d5e25549da3785d5",
+      "path": "reports/DoanQuocKien/week-07/finddoor_1120/earlier_runs/tower_t2_1120_1/summary.json",
+      "sha256": "5441c1460bcdd23a20b17e5b7d1fb534297f1bf5fa651b53eb1d7476739ae923"
+    },
+    {
+      "commit": "55ddfc845530cbae7ede5be3d5e25549da3785d5",
+      "path": "reports/DoanQuocKien/week-07/finddoor_1120/earlier_runs/tower_t2_1120_2/summary.json",
+      "sha256": "6258bb088181e85ac70dc42825e107e7e2165c14f9fddc9e1081da48a43fb897"
+    },
+    {
+      "commit": "55ddfc845530cbae7ede5be3d5e25549da3785d5",
+      "path": "reports/DoanQuocKien/week-07/finddoor_1120/pursuit_take3_b_1/console.log",
+      "sha256": "0cff651df9df4b7648233f6db1722f1a07b3accb4d74d348116482ffab7b9c9b"
+    },
+    {
+      "commit": "55ddfc845530cbae7ede5be3d5e25549da3785d5",
+      "path": "reports/DoanQuocKien/week-07/finddoor_1120/pursuit_take3_b_1/log.csv",
+      "sha256": "41e80636dabf805bd007ab66dfa1581a174ba5849f3c2f2c39581b3e33b186a3"
+    },
+    {
+      "commit": "55ddfc845530cbae7ede5be3d5e25549da3785d5",
+      "path": "reports/DoanQuocKien/week-07/finddoor_1120/pursuit_take3_b_1/summary.json",
+      "sha256": "9df3a72874fec6cc579d5e7fbce6d4cc69dcfffdf4421e9afdba2e49ae86c542"
+    },
+    {
+      "commit": "55ddfc845530cbae7ede5be3d5e25549da3785d5",
+      "path": "reports/DoanQuocKien/week-07/finddoor_1120/pursuit_take3_b_2/console.log",
+      "sha256": "f2a84d82189de19bcb3ee685f53a56461311e95a2eae24910aa5f43195eccd5f"
+    },
+    {
+      "commit": "55ddfc845530cbae7ede5be3d5e25549da3785d5",
+      "path": "reports/DoanQuocKien/week-07/finddoor_1120/pursuit_take3_b_2/log.csv",
+      "sha256": "5160aefb9b2125adfc01ef5ba7b3f79b8dfc9c1eec66a72c094d98e5254621dc"
+    },
+    {
+      "commit": "55ddfc845530cbae7ede5be3d5e25549da3785d5",
+      "path": "reports/DoanQuocKien/week-07/finddoor_1120/pursuit_take3_b_2/summary.json",
+      "sha256": "814b255889a479b75ab17d78ccde2b29c975e58ed1192340468085d59a4bba4f"
+    },
+    {
+      "commit": "55ddfc845530cbae7ede5be3d5e25549da3785d5",
+      "path": "reports/DoanQuocKien/week-07/finddoor_1120/stage1_take3_a_1/console.log",
+      "sha256": "b66a951d8b9f0043289850d90b01ff290b0d7a6021f3e8fffabc2e61e463bba8"
+    },
+    {
+      "commit": "55ddfc845530cbae7ede5be3d5e25549da3785d5",
+      "path": "reports/DoanQuocKien/week-07/finddoor_1120/stage1_take3_a_1/frames.csv",
+      "sha256": "dea6a5cff4f237737e2046963a7b479ecf329f16de66520ce1f59dc6151500f3"
+    },
+    {
+      "commit": "55ddfc845530cbae7ede5be3d5e25549da3785d5",
+      "path": "reports/DoanQuocKien/week-07/finddoor_1120/stage1_take3_a_1/handshake.csv",
+      "sha256": "6caf8bffb77bbbe4a3dc28556eb55e058804c5d3d7a15385cdce945aaf8646aa"
+    },
+    {
+      "commit": "55ddfc845530cbae7ede5be3d5e25549da3785d5",
+      "path": "reports/DoanQuocKien/week-07/finddoor_1120/stage1_take3_a_1/log.csv",
+      "sha256": "003e872890f5398400beaacb1fd21003d269e74e943d88b7c08e8c7e6b8b6b59"
+    },
+    {
+      "commit": "55ddfc845530cbae7ede5be3d5e25549da3785d5",
+      "path": "reports/DoanQuocKien/week-07/finddoor_1120/stage1_take3_a_1/summary.json",
+      "sha256": "7653d37ac7b94c02dfcc7af522804aeadcd4e46402c27ebd6d182141e250417a"
+    },
+    {
+      "commit": "55ddfc845530cbae7ede5be3d5e25549da3785d5",
+      "path": "reports/DoanQuocKien/week-07/finddoor_1120/stage1_take3_a_1/tape_note.json",
+      "sha256": "962abe89f9eda3a669fd05843808f19f2075694a52e3dc7326837f6f778a17d0"
+    },
+    {
+      "commit": "55ddfc845530cbae7ede5be3d5e25549da3785d5",
+      "path": "reports/DoanQuocKien/week-07/finddoor_1120/tower_register/camera_pose_tower_1120_1.json",
+      "sha256": "6f83d936bad5e48bc103ea490bb2dfc06a2a92736c56e319c01e15c566b281e0"
+    },
+    {
+      "commit": "55ddfc845530cbae7ede5be3d5e25549da3785d5",
+      "path": "reports/DoanQuocKien/week-07/finddoor_1120/tower_register/camera_pose_tower_1120_2.json",
+      "sha256": "19c9284e3f0223989f19b51c4f77ba62f63181522ff09d2634d794481e50fde2"
+    },
+    {
+      "commit": "55ddfc845530cbae7ede5be3d5e25549da3785d5",
+      "path": "reports/DoanQuocKien/week-07/finddoor_1120/tower_register/tower_register_1120b_first_full_registration.log",
+      "sha256": "9bb5c3bf08a52a7c709612cffe8e3251ed3f4237560f5191ba63096726e20acc"
+    },
+    {
+      "commit": "55ddfc845530cbae7ede5be3d5e25549da3785d5",
+      "path": "reports/DoanQuocKien/week-07/finddoor_1120/tower_register/tower_register_1120d.log",
+      "sha256": "b7563dae042943b420886b5e19722ef0897c26853bb46037ea1605334f081bdc"
+    },
+    {
+      "commit": "55ddfc845530cbae7ede5be3d5e25549da3785d5",
+      "path": "reports/DoanQuocKien/week-06/latency_1111/video_latency_1111.json",
+      "sha256": "06dd2e067f10a5fe382e4f466f72c11fe1e666107e19d6a31f80585db3ec851f"
+    },
+    {
+      "commit": "55ddfc845530cbae7ede5be3d5e25549da3785d5",
+      "path": "reports/DoanQuocKien/week-06/latency_1111/video_latency_1111.csv",
+      "sha256": "1af32deb2e403ea61e21520e5add980545bd331330f39bafb28ea824ad03142b"
+    },
+    {
+      "commit": "55ddfc845530cbae7ede5be3d5e25549da3785d5",
+      "path": "reports/DoanQuocKien/week-06/latency_1111/video_latency_1111_settled.json",
+      "sha256": "a94564fda893064188ed7b9b61c4b9899628ae63ffdb89bb1ad0b405e7ff934a"
+    },
+    {
+      "commit": "55ddfc845530cbae7ede5be3d5e25549da3785d5",
+      "path": "reports/DoanQuocKien/week-06/latency_1111/video_latency_1111_settled.csv",
+      "sha256": "5e381d34488c73defec83c5dc479bca8b34500cf640414894820c0b6a450e52b"
+    },
+    {
+      "commit": "55ddfc845530cbae7ede5be3d5e25549da3785d5",
+      "path": "reports/DoanQuocKien/week-06/classroom_1111_pm/README.md",
+      "sha256": "a0e0499367ab1351613aba16aa8244612ad3fd65ae56b30034a4ccbb952e516b"
+    },
+    {
+      "commit": "55ddfc845530cbae7ede5be3d5e25549da3785d5",
+      "path": "reports/DoanQuocKien/week-06/figures/F7_video_latency.png",
+      "sha256": "06ccc17b6e23f88678510b168c09209f67a296da8fa08082d756ebfa2b3c06f9"
+    },
+    {
+      "commit": "55ddfc845530cbae7ede5be3d5e25549da3785d5",
+      "path": "docs/Mid-Term Report Plan.md",
+      "sha256": "3b2981d35390bb5e96b80b7ac2b53496d74524900062042813f72598f2812e76"
+    },
+    {
+      "commit": "55ddfc845530cbae7ede5be3d5e25549da3785d5",
+      "path": "docs/Implementation Plan.md",
+      "sha256": "340bdac2291a7ea8146c12513cf5775edff052865dc2115cf2dbfaf408117de0"
+    },
+    {
+      "commit": "55ddfc845530cbae7ede5be3d5e25549da3785d5",
+      "path": "reports/midterm_report_draft.md",
+      "sha256": "7631fb02ae95af673400b5e3cb32cfb57aae480cc16ab8139e3fc370e19181d9"
+    },
+    {
+      "commit": "55ddfc845530cbae7ede5be3d5e25549da3785d5",
+      "path": "reports/kouun-rokku/week-07/editor-source-registry.json",
+      "sha256": "2463a3f24c4a7ab60d3f8913c23b8a1ff8a34ca533dc28500f2e6ae61a4dcb97"
+    },
+    {
+      "commit": "55ddfc845530cbae7ede5be3d5e25549da3785d5",
+      "path": "reports/HuynhNguyenHoaiLoc/reviews/PR-133-2026-11-21.json",
+      "sha256": "2c78a6a7d7076fa38b4b0d72f6e71a7a897159f89c7c232887ef48243fdd3ad7"
+    },
+    {
+      "commit": "55ddfc845530cbae7ede5be3d5e25549da3785d5",
+      "path": "reports/HuynhNguyenHoaiLoc/reviews/PR-133-2026-11-21.md",
+      "sha256": "3706e3e065053b3af6e13615bf3fbafb6b43eb39d2005eb5de848bfcb308b40d"
+    }
+  ],
+  "github_snapshot": {
+    "date": "2026-11-21",
+    "timezone": "Asia/Bangkok",
+    "scope": "GitHub state snapshot; issue closure does not certify physical acceptance",
+    "pull_requests": [
+      {
+        "number": 113,
+        "url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/pull/113",
+        "title": "Week 7: refreshed midterm report and deterministic submission export",
+        "state": "closed",
+        "merged": true,
+        "head_sha": "3102e33ae508b7998b97094a1c6fb26578d51655",
+        "merge_commit_sha": "1bf0b131c9261eadbc754a68c34dcbdd5d44be54",
+        "merged_at": "2026-11-20T08:02:36Z"
+      },
+      {
+        "number": 132,
+        "url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/pull/132",
+        "title": "HNHL W7: add post-freeze tower evidence and review records",
+        "state": "closed",
+        "merged": true,
+        "head_sha": "b33f99c0998e29194cabca6a6251973790a60c49",
+        "merge_commit_sha": "cf0d427e66bad9bb3cd9c96c20718afee9a0f788",
+        "merged_at": "2026-11-20T08:03:56Z"
+      },
+      {
+        "number": 133,
+        "url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/pull/133",
+        "title": "Find-door run, tower placement gate and one-take session",
+        "state": "closed",
+        "merged": true,
+        "head_sha": "5f40e2889dc548d195db58bb20fdaa03448582cb",
+        "merge_commit_sha": "55ddfc845530cbae7ede5be3d5e25549da3785d5",
+        "merged_at": "2026-11-20T18:09:17Z"
+      }
+    ],
+    "issues": [
+      {
+        "number": 111,
+        "url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/issues/111",
+        "title": "Project snapshot, perception side (HNHL)",
+        "state": "open",
+        "state_reason": null,
+        "closed_at": null,
+        "updated_at": "2026-11-15T08:32:34Z"
+      },
+      {
+        "number": 114,
+        "url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/issues/114",
+        "title": "Phase 2 live: description of the work (HNHL, agreed 2026-11-14)",
+        "state": "closed",
+        "state_reason": "completed",
+        "closed_at": "2026-11-16T13:32:52Z",
+        "updated_at": "2026-11-16T13:32:52Z"
+      }
+    ],
+    "submission_tag": {
+      "name": "midterm",
+      "present_on_remote": false,
+      "check": "git ls-remote --tags origin midterm refs/tags/midterm",
+      "checked_date": "2026-11-21"
+    }
+  },
+  "github_snapshot_sha256_lf": "e0c4ad8899583aaea82b7916289d55d8f3fa32ad69a9d29792255871e454757c",
+  "deployment": {
+    "mode": "find_door",
+    "runner_success": true,
+    "standby_s": 56.317,
+    "state_changes": [
+      [
+        35.816290616989136,
+        "APPROACH_VANTAGE"
+      ],
+      [
+        35.850345849990845,
+        "WAIT_CAMERA"
+      ],
+      [
+        54.28822565078735,
+        "RETRACT"
+      ],
+      [
+        56.31661009788513,
+        "STANDBY"
+      ]
+    ],
+    "log_rows": 1670,
+    "measurements": 18,
+    "first_estimate_m": 3.45,
+    "last_estimate_m": 2.21,
+    "handshake": {
+      "frames": 194,
+      "in_view_frames": 25,
+      "last_inliers": 53,
+      "max_inliers": 62,
+      "rule": {
+        "span_s": 5.0,
+        "min_frames": 6,
+        "fraction": 0.7
+      }
+    },
+    "tower_gate": {
+      "range_m": [
+        0.2,
+        0.3
+      ],
+      "bearing_deg": 15.0,
+      "hold_s": 1.0,
+      "frames": 756,
+      "frames_in_window": 140,
+      "last": [
+        0.563,
+        6.7
+      ],
+      "offset_m": null,
+      "prompts_window_s": 10.0
+    },
+    "operator_tape": {
+      "date": "2026-11-20",
+      "source": "operator tape, entered after the run (the interactive tape questions were left blank)",
+      "tower_esp32_to_door_m": 1.9,
+      "robot_to_door_m_range": [
+        2.1,
+        2.2
+      ],
+      "robot_to_door_note": "given or take, not a precise tape reading",
+      "runner_final_range_estimate_m": 2.21,
+      "stand_off_m": 2.25,
+      "entrance_window_m": [
+        1.5,
+        3.0
+      ],
+      "tower_in_window": true
+    },
+    "tape_position_attribution": "DQK README: stop point before reverse, approximate",
+    "independent_t2": false,
+    "automatic_map_vantage": false
+  },
+  "pursuit": {
+    "pursuit_take3_b_1": {
+      "metrics": {
+        "frames": 620,
+        "frames_with_distance": 214,
+        "run_span_s": 31.32,
+        "observed_time_s": 31.32,
+        "tracked_time_s": 10.75,
+        "coverage_tracked_fraction": 0.343,
+        "time_fraction_distance_in_band_of_run": 0.094,
+        "time_fraction_centred_of_run": 0.237,
+        "frames_obstacle_blocked": 140,
+        "reacquires": 0,
+        "hold_frames": 0
+      },
+      "tower_events": {
+        "TRIGGER": 4,
+        "DONE": 4,
+        "ABORT": 0
+      },
+      "tower_frames": 251,
+      "hold_events": [],
+      "general_obstacle_detector_enabled": true,
+      "range_source": "foot",
+      "end_reason": "target lost for 5.0 s",
+      "battery_v_start": 11.616,
+      "distance_fraction_meets_08": false,
+      "centred_fraction_meets_08": false,
+      "independent_t2": false,
+      "identity_accuracy_measured": false
+    },
+    "pursuit_take3_b_2": {
+      "metrics": {
+        "frames": 2088,
+        "frames_with_distance": 1186,
+        "run_span_s": 105.08,
+        "observed_time_s": 105.08,
+        "tracked_time_s": 62.61,
+        "coverage_tracked_fraction": 0.596,
+        "time_fraction_distance_in_band_of_run": 0.181,
+        "time_fraction_centred_of_run": 0.476,
+        "frames_obstacle_blocked": 244,
+        "reacquires": 0,
+        "hold_frames": 0
+      },
+      "tower_events": {
+        "TRIGGER": 9,
+        "DONE": 9,
+        "ABORT": 0
+      },
+      "tower_frames": 483,
+      "hold_events": [],
+      "general_obstacle_detector_enabled": true,
+      "range_source": "foot",
+      "end_reason": "time limit",
+      "battery_v_start": 11.612,
+      "distance_fraction_meets_08": false,
+      "centred_fraction_meets_08": false,
+      "independent_t2": false,
+      "identity_accuracy_measured": false
+    }
+  },
+  "approach": {
+    "approach_ap_ref_1120_1": {
+      "end_reason": "stand-off reached",
+      "steps": 10,
+      "bursts": 5,
+      "last_range_est_m": 2.21,
+      "door_range_m_input": null,
+      "ref_scale": [
+        58464.0,
+        1.96
+      ],
+      "first_range_est_m": 2.91,
+      "area_exponent": 2.0,
+      "stand_off_m": 2.25,
+      "camera_pose_file": "calib/camera_pose_self_1120_1.json",
+      "battery_v_start": 11.632,
+      "date": "2026-11-20 15:49"
+    },
+    "approach_ap_chain_1120_1": {
+      "end_reason": "stand-off reached",
+      "steps": 14,
+      "bursts": 8,
+      "last_range_est_m": 2.12,
+      "door_range_m_input": null,
+      "ref_scale": [
+        58464.0,
+        1.96
+      ],
+      "first_range_est_m": 3.44,
+      "area_exponent": 2.0,
+      "stand_off_m": 2.25,
+      "camera_pose_file": "calib/camera_pose_self_1120_1.json",
+      "battery_v_start": 11.492,
+      "date": "2026-11-20 16:02"
+    }
+  },
+  "existing_f7_latency": {
+    "video_latency_1111": {
+      "frames": 2351,
+      "observed_duration_s": 119.9716436000308,
+      "delivered_fps": 19.587962034050157,
+      "decoded_latency_p50_ms": 46.431169961579144,
+      "decoded_latency_p95_ms": 127.92290601646528,
+      "negative_latency_frames": 0,
+      "sequence_resets": 0,
+      "sequence_gaps": 46,
+      "run_fps": 19.589980997769477,
+      "clock_samples": 20,
+      "clock_rtt_s": 0.003464000066742301,
+      "clock_uncertainty_ms": 1.7320000333711505,
+      "session_label": "latency_1111; classroom_1111_pm README late addition",
+      "source_owner": "DQK",
+      "exposure_included": false,
+      "packet_loss_measured": false,
+      "fps_20_met": false,
+      "decoded_p95_50ms_met": false
+    },
+    "video_latency_1111_settled": {
+      "frames": 2325,
+      "observed_duration_s": 119.84826949995477,
+      "delivered_fps": 19.391185285331776,
+      "decoded_latency_p50_ms": 46.39131505973637,
+      "decoded_latency_p95_ms": 127.75451017077987,
+      "negative_latency_frames": 0,
+      "sequence_resets": 0,
+      "sequence_gaps": 74,
+      "run_fps": 19.373026469801538,
+      "clock_samples": 20,
+      "clock_rtt_s": 0.0036257999017834663,
+      "clock_uncertainty_ms": 1.8128999508917332,
+      "session_label": "latency_1111; classroom_1111_pm README late addition",
+      "source_owner": "DQK",
+      "exposure_included": false,
+      "packet_loss_measured": false,
+      "fps_20_met": false,
+      "decoded_p95_50ms_met": false
+    }
+  },
+  "camera_pose": {
+    "pose": {
+      "tag": "tower_1120",
+      "H_cam_m": 0.1,
+      "H_tape_m": 0.1,
+      "pitch_down_deg": -11.29,
+      "camera_roll_deg": 0.0,
+      "passed": true,
+      "pitch_spread_deg": 0.215,
+      "marker_frames": 4,
+      "method": "median pitch over the tower faces registered by tools/tower_register.py (position-based, H fixed 0.100 m)",
+      "tower_faces": {
+        "13": {
+          "pitch_deg": -11.09,
+          "spread_deg": 0.033,
+          "distance_m": 0.311,
+          "offset_to_ref_m": -0.004
+        },
+        "11": {
+          "pitch_deg": -11.28,
+          "spread_deg": 0.093,
+          "distance_m": 0.325,
+          "offset_to_ref_m": -0.0055
+        },
+        "12": {
+          "pitch_deg": -11.68,
+          "spread_deg": 0.059,
+          "distance_m": 0.307,
+          "offset_to_ref_m": -0.0075
+        },
+        "10": {
+          "pitch_deg": -11.29,
+          "spread_deg": 0.188,
+          "distance_m": 0.322,
+          "offset_to_ref_m": -0.0055
+        }
+      },
+      "camera_roll_deg_note": "not measured by the tower registration (roll is noisy on the 50 mm markers)"
+    },
+    "face_pitch_range_deg": 0.59,
+    "face_pitch_std_deg": 0.215,
+    "previous_pitch_deg": -11.67,
+    "roll_measured": false
+  },
+  "review_validation": {
+    "date": "2026-11-21",
+    "timezone": "Asia/Bangkok",
+    "pull_request": 133,
+    "original_head": "b95169a6a39f553b7e1d03d011d2f58039a1d60b",
+    "base": "cf0d427e66bad9bb3cd9c96c20718afee9a0f788",
+    "python": "3.12.15 (main, Oct  3 2026, 01:05:37) [MSC v.1944 64 bit (AMD64)]",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "command": [
+      "C:\\Users\\Hoai Loc\\Desktop\\ROBOT\\Autonomous-Collaborative-Sentry-Robot\\.venv\\Scripts\\python.exe",
+      "-m",
+      "pytest",
+      "-m",
+      "not gpu and not hil",
+      "--basetemp=data/pytest-review133-final",
+      "-p",
+      "no:cacheprovider",
+      "-q",
+      "-rs"
+    ],
+    "cpu": {
+      "passed": 973,
+      "skipped": 4,
+      "deselected": 4,
+      "seconds": 68.7,
+      "log_sha256": "b8ff4162f499cfd5b760dba490339014d73ab2eb51810ee4ab0bd41c790b8545"
+    },
+    "pdf": {
+      "rendered_pages": 15,
+      "pdf_sha256": "58ef757c791bf74b92faa4a90aba53498ed1e0a0941bd0be7899c372ea7a141a",
+      "byte_identical_second_render": true,
+      "sources": {
+        "status": "PASS",
+        "source_files": 86,
+        "errors": []
+      },
+      "assets": 14,
+      "budget_status": "PASS"
+    },
+    "reviewed_code_sha256": {
+      "tests/test_deploy_live.py": "e18ecf7666fc3a54845c92f15b6497029b28be4fddca938e576959fd83adb1ff",
+      "tests/test_session_run.py": "d421ba6fd3397f763db1323d93533b7fd9b8f3dba71904725fc5792b4d7cbec1",
+      "tools/deploy_live.py": "f11d9ddeb7662f33c45bbbaf8986de7843cabc87571bac3051f648f7d7177c2d",
+      "tools/render_midterm_report.py": "448a483e584d1218047f8e1c7d5a4f29d71d72176e00eb57bd0f08e58def1d19",
+      "tools/session_run.py": "19ad7d23d7c3f0ce5ae5a3f94d72f2859a8712930164dfb02803a393e50a6bfd",
+      "tools/tower_register.py": "3014fbc3cb36856fa34f583835db0cf8fa3b32d8a99a51691a5122d2243ebe1c",
+      "tests/test_tower_register.py": "79c12e4f2e557160b59b6e4554e7c4bfbfde45a35fd2ffb8afe3f315424cd25d"
+    },
+    "hil_performed": false
+  },
+  "scope": {
+    "measurement_owner": "DQK",
+    "review_and_report_owner": "HNHL",
+    "new_inference": false,
+    "new_hardware_trials": false,
+    "raw_frames_committed": false,
+    "workflow_closure_is_acceptance": false
+  },
+  "acceptance": {
+    "door_t1": false,
+    "automatic_map_vantage": false,
+    "pursuit_pd": false,
+    "hold_protocol": false,
+    "independent_d5": false,
+    "d3_identity_accuracy": false,
+    "reid_gallery_rank1": false,
+    "rtx4050_precision_accuracy": false,
+    "jetbot_video_latency": false,
+    "jetbot_video_fps": false,
+    "full_loop": false
+  }
+}

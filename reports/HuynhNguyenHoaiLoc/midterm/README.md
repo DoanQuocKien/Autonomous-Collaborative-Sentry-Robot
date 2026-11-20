@@ -1,6 +1,8 @@
 # Hồ sơ giữa kỳ HNHL
 
-**Bổ sung sau đóng băng, 18/11** đã có thử marker/tower, pursuit và motion check ở ký túc xá của DQK. HNHL tính lại CSV, giữ lượt tránh dang dở, detector vật cản tắt và các gate chưa đạt. #130/#131 đã merge, #113 đã sửa và đang chờ DQK review lại. [Bổ sung 18/11](update-2026-11-18.md).
+**Hiện hành 21/11:** #113/#132/#133 đã merge; issue #114 đã đóng, #111 còn là snapshot thông tin. Đã bổ sung find-door và hai pursuit diagnostics ngày 20/11, đưa F7 raw CSV đã có vào checklist, tổng 38 nguồn Git pin. [Bản bổ sung cho editor và việc cần chốt trước nộp 23/11](update-2026-11-21.md), [snapshot GitHub](github-2026-11-21.json). Các mục ngày cũ bên dưới là lịch sử; Chương 5/7 ngày 16/11 và Word gốc giữ phạm vi snapshot của chúng.
+
+**Snapshot sau đóng băng, 18/11** đã có thử marker/tower, pursuit và motion check ở ký túc xá của DQK. HNHL tính lại CSV, giữ lượt tránh dang dở, detector vật cản tắt và các gate chưa đạt. #130/#131 đã merge, #113 đã sửa và đang chờ DQK review lại. [Bổ sung 18/11](update-2026-11-18.md).
 
 **Kiểm tra 17/11** xác nhận PR #128 đã được DQK approve và merge vào main. Bản bàn giao cho draft 18/11 cùng checklist Phase 2 ngày 19/11 đã bổ sung đường dẫn, lệnh ghi overlay và cách chấm entry. [Bàn giao 17/11](update-2026-11-17.md).
 
@@ -36,7 +38,8 @@ Snapshot **01/11/2026**, dựa trên code/evidence hiện có. Hồ sơ này là
 
 ## Tài liệu để ghép báo cáo
 
-- [Chương 5 hiện hành, Markdown 16/11](chapter-05-current.md) hợp nhất kết quả HNHL, dữ liệu lớp học mới và giới hạn nghiệm thu.
+- [Bổ sung ngày 21/11 cho Chương 5/7 và bàn giao](update-2026-11-21.md) cập nhật trạng thái merge, bằng chứng 20/11 và những hàng chưa nghiệm thu.
+- [Chương 5 đóng băng ngày 16/11](chapter-05-current.md) hợp nhất kết quả HNHL và dữ liệu lớp học tới mốc đó.
 - [Chương 5 dạng Word](HNHL-Chuong-5.docx): bản ngắn, có F9/F10/F13 và nguồn E01–E12, chỉnh sửa được.
 - [Chương 5 dạng Markdown](chapter-05.md): cùng nội dung, dễ review trong Git.
 - [Các dòng kết quả cho Chương 7](chapter-07-rows.md): có trạng thái và giới hạn nghiệm thu.
@@ -55,7 +58,7 @@ Bản Word dài 3 trang là bản đóng góp để editor chọn/rút gọn. Kh
 | [F10](figures/F10_distance.png) | Scatter median Z theo ID, thống kê error; 8/9 ID có distance; held-out tách riêng | Đã dựng từ E01; thiếu full T1/floor controls |
 | [F10 bổ sung09/11](figures/F10_availability_1109.png) | Ghế lớp học: detection/accepted distance theo marker phía đầu robot | 4/36 detection,0/36 distance; không cùng gốc với lens-forward truth, không error scatter |
 | [F13](figures/F13_face_roc.png) | ROC D2 thật tại threshold0,45 | Pilot, nhãn tự động cần review; chưa đạt target |
-| F7 | Video latency CDF JetBot thật | Chờ raw CSV clock-synced; không dùng localhost CDF thay thế |
+| [F7 của DQK](../../DoanQuocKien/week-06/figures/F7_video_latency.png) | Hai lượt video JetBot thật khoảng 120 s, raw timestamps và clock sync đã có | Đã tính lại 2.351/2.325 frame: 19,588/19,391 FPS, p95 127,923/127,755 ms; chưa đạt ≥20 FPS/≤50 ms |
 | F11 | Map và sweet spot trên sweep thật | Chờ pose, door range/world truth và map artifacts |
 | F14 | OSNet rank-1/CMC/ROC hợp lệ | Chờ gallery body crops và D2/D3 protocol |
 | [F17 bổ sung](figures/F17_home_pilot.png) | DQK home_4_1: estimated distance/centre và logged HOLD | Một người, endpoint tape chưa time-aligned; chưa full pursuit/HOLD T2 |
@@ -67,7 +70,7 @@ F12 và phần nhận diện cửa do KR/DQK xác nhận, F20/F21 do DQK hoàn t
 
 Phần phương pháp, code, các so sánh đã chạy, thất bại hiện tại và hướng tiếp theo đã được viết để có thể bắt đầu ghép báo cáo. Kết quả chưa đạt được giữ nguyên: Wire, face pilot, các mode GPU mỗi-frame và các tiêu chí chưa đo. Bộ kiểm thử tuần5: 584 CPU/4 GPU passed, không phải chứng nhận D3 hoặc robot.
 
-Không tự xác nhận timesheet, số liệu đối tác hay tag nộp bài. Hồ sơ chưa được gửi qua email/chat cho KR. Raw D1/D2, embeddings, predictions, weights và bản render QA nằm ngoài Git trong data/.
+Không tự xác nhận timesheet hoặc tag nộp bài. Hồ sơ bàn giao qua PR; chưa gửi email/chat cho KR. Ảnh/video nhận diện riêng của phiên HNHL, embeddings, predictions, weights và bản render QA nằm ngoài Git trong data/. Dataset D5 và archive D2 chung của nhóm vẫn được tracked theo #113; export nộp bài bỏ qua dữ liệu bằng pathspec.
 
 ## Cách tạo lại
 
@@ -81,6 +84,7 @@ Không tự xác nhận timesheet, số liệu đối tác hay tag nộp bài. H
 .venv/Scripts/python.exe -m tools.build_midterm_hnhl_pr101_followup
 .venv/Scripts/python.exe -m tools.build_midterm_hnhl_nov10
 .venv/Scripts/python.exe -m tools.build_midterm_hnhl_nov11
+.venv/Scripts/python.exe -m tools.build_midterm_hnhl_nov21
 .venv/Scripts/python.exe -m tools.check_midterm_hnhl --out reports/HuynhNguyenHoaiLoc/midterm/update-verification.json
 # Dùng document-authoring runtime có python-docx, không dùng Python robot:
 <document-python> tools/export_midterm_hnhl_doc.py
