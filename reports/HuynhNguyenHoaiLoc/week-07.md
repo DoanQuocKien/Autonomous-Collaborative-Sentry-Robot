@@ -11,6 +11,8 @@ Tuần 7 là **16–22/11/2026** theo mục Week 7 của [Implementation Plan](.
 | Perception và handoff tuần 5–6 | #115/#124 đã merge: lịch 5 Hz, counters unresolved, shared queue/Phase3/target-tracker, TRACK_LOST và timestamp 0. Ngưỡng và chính sách unresolved giữ theo quyết định nhóm |
 | Review, sửa lỗi và kiểm chứng | #133 đã merge; #134 bổ sung hồ sơ, checker và bản chốt tuần 7 để DQK/KR review |
 
+Kiểm chứng cuối trên clone Git sạch của candidate `a798f43`: **983 passed, 4 skipped, 4 GPU deselected**, 73,07 s. Dùng `.venv` HNHL đã có, không cài mới môi trường; clone không nhận private data/weights local. Các ca skip cần checkerboard, XFeat weights và ReportLab trong môi trường pytest. PDF được render riêng bằng bộ dependencies báo cáo: bản nhóm 15 trang, Chương 5 riêng 4 trang, đã xem toàn bộ; hai lần render cùng bytes. 91 nguồn registry đạt và hai ZIP từ candidate có cùng hash. [Log checkout sạch](week-07/review-2026-11-21/clean_checkout_pytest.log), [validation và phạm vi](week-07/review-2026-11-21/w7-final-validation.json).
+
 Các tiêu chí chưa đạt như D3/gallery, D5 per-class/independent session, F11 và full door T1 được viết thành giới hạn và kế hoạch tiếp theo. Không dùng việc chốt Chương 5 để xác nhận các hàng T1/T2 này. Tag `midterm`, gói nộp và owner sign-off toàn nhóm theo KR/DQK ở kế hoạch nộp 23/11.
 
 Các mục ngày cũ bên dưới là bằng chứng lịch sử của từng phiên.
