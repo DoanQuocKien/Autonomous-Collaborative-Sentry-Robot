@@ -49,6 +49,21 @@ def range_from_area(area, area0, range0, exponent=2.0):
     return range0 * (area0 / area) ** (1.0 / exponent)
 
 
+def reference_scale(folder):
+    """(area_px2, range_m) of the enrolment's door box, or None: the area scale stored WITH the enrolment, so the run needs no tape. entrance.json holds `ref_range_m` (the camera-to-door distance when
+    robot_00.jpg was taken, measured once at enrolment) and the door ROI of that photo; the matched outline in a live frame is the same box projected, so range = ref_range * (ROI area / area)^(1/exponent)."""
+    with open(str(Path(folder) / "entrance.json")) as fh:
+        d = json.load(fh)
+    rng, robot = d.get("ref_range_m"), d.get("robot") or []
+    roi = robot[0].get("roi") if robot else None
+    if isinstance(rng, bool) or not isinstance(rng, (int, float)) or not 0 < rng < 10 or not roi or len(roi) != 4:
+        return None
+    x0, y0, x1, y1 = roi
+    if not (x1 > x0 and y1 > y0):
+        return None
+    return float((x1 - x0) * (y1 - y0)), float(rng)
+
+
 def next_action(bearing_deg, range_m, stand_off_m, tol_deg, aim_offset_deg=0.0):
     """-> 'done' | 'turn_left' | 'turn_right' | 'drive'. Bearing positive = door to the LEFT. aim_offset_deg: the bearing treated as "centred" (feed-forward for a known veer: the robot veered
     left about 5.5 deg per 0.6 s burst on 2026-11-11, which moves the door to the right, so +2.75 centres the door after the burst)."""
@@ -67,7 +82,7 @@ def main():
     ap.add_argument("--label", required=True)
     ap.add_argument("--camera-pose", required=True)
     ap.add_argument("--entrance", required=True)
-    ap.add_argument("--door-range-m", type=float, required=True, help="tape distance from the robot to the door NOW (calibrates the area scale)")
+    ap.add_argument("--door-range-m", type=float, default=None, help="tape distance from the robot to the door NOW (calibrates the area scale). Omit it when the enrolment stores ref_range_m (entrance.json): then no tape is needed")
     ap.add_argument("--stand-off", type=float, default=2.0)
     ap.add_argument("--area-exponent", type=float, default=1.6, help="outline area ~ range^-exponent (2 = ideal flat target). 1.6: fitted on two taped runs (1.55-1.7) and confirmed on a third from another start (error 0.00 m): this door, this floor, starts 2.6-3.4 m")
     ap.add_argument("--center-tol-deg", type=float, default=8.0, help="drive when the door bearing is within +/- this of the aim (the shortest turn pulse turns about 14 deg: a window under about 7 makes the robot hunt, see classroom_1111_pm)")
@@ -98,7 +113,12 @@ def main():
     check_args(a, dict(door_range_m=(1.0, 8.0), stand_off=(1.5, 3.0), area_exponent=(1.0, 2.5), drive_v=(0.3, 1.0), burst_s=(0.1, 1.0), spin_s=(0.05, 0.5),
                        small_spin_s=(0.05, 0.5), center_tol_deg=(1.0, 15.0), aim_offset_deg=(-8.0, 8.0), hold=(0.05, 5.0), samples=(1, 30), max_bursts=(1, 100),
                        max_steps=(1, 300), search_pulses=(1, 40), lost_max=(1, 20), stop_range=(0.3, 1.5), wait=(1.0, 600.0), min_battery=(10.5, 13.0)))
-    if not (a.door_range_m > a.stand_off - 0.5 and a.small_spin_s <= a.spin_s):
+    ref = None
+    if a.door_range_m is None:
+        ref = reference_scale(a.entrance)
+        if ref is None:
+            raise SystemExit("ABORT: give --door-range-m (tape) or store ref_range_m with the enrolment (%s/entrance.json)" % a.entrance)
+    if not ((a.door_range_m is None or a.door_range_m > a.stand_off - 0.5) and a.small_spin_s <= a.spin_s):
         raise SystemExit("ABORT: --door-range-m must exceed --stand-off - 0.5 and --small-spin-s must not exceed --spin-s")
 
     from sentry.config import load
@@ -186,7 +206,7 @@ def main():
                     raise SystemExit("ABORT: R1 not held in time")
                 time.sleep(0.2)
             sender = UDPSender(a.ip, port, 30)
-        area0, lost, bursts, searched, end = None, 0, 0, 0, "max steps"
+        area0, range0, start_m, lost, bursts, searched, end = None, None, None, 0, 0, 0, "max steps"
         for step in range(a.max_steps):
             if not a.dry_run and not r1_held():
                 end = "R1 released"
@@ -210,9 +230,10 @@ def main():
                 continue
             lost = 0
             if area0 is None:
-                area0 = area
-                print("first sighting: area %.0f px2 taken as %.2f m" % (area0, a.door_range_m), flush=True)
-            rng = range_from_area(area, area0, a.door_range_m, a.area_exponent)
+                area0, range0 = ref if ref else (area, a.door_range_m)
+                print("first sighting: area %.0f px2; scale %.0f px2 = %.2f m (%s)" % (area, area0, range0, "enrolment" if ref else "tape"), flush=True)
+            rng = range_from_area(area, area0, range0, a.area_exponent)
+            start_m = start_m or rng
             act = next_action(bearing, rng, a.stand_off, a.center_tol_deg, a.aim_offset_deg)
             if act == "drive" and ahead is not None and ahead < a.stop_range:
                 act, end = "done", "board ahead %.2f m" % ahead
@@ -226,16 +247,18 @@ def main():
                 break
             if act == "drive":
                 bursts += 1
+                if ref and bursts == 1:
+                    start_m = min(rng, 3.5)      # enrolment scale: the first CENTRED estimate, capped (the first sighting can be at the fisheye edge and overestimate)
                 if bursts > a.max_bursts:
                     end = "max bursts"
                     break
-                if drive_distance_m(a.drive_v, a.burst_s) * bursts >= a.door_range_m - a.stand_off + DISTANCE_BOUND_MARGIN_M:      # audit 2026-11-12: the range estimate alone can stay above the stand-off (outline cut by the frame edge) and the robot would keep driving
+                if drive_distance_m(a.drive_v, a.burst_s) * bursts >= start_m - a.stand_off + DISTANCE_BOUND_MARGIN_M:      # audit 2026-11-12: the range estimate alone can stay above the stand-off (outline cut by the frame edge) and the robot would keep driving
                     end = "distance bound: driven about %.1f m at the worst-case speed" % (drive_distance_m(a.drive_v, a.burst_s) * bursts)
                     break
                 command(a.drive_v, 0.0, a.burst_s)
             else:
                 command(0.0, SPIN_W if act == "turn_left" else -SPIN_W, a.spin_s if abs(bearing - a.aim_offset_deg) > 16 else a.small_spin_s)
-        summary = dict(end_reason=end, steps=len(rows), bursts=bursts, last_range_est_m=rows[-1].get("range_m") if rows else None, door_range_m_input=a.door_range_m, stand_off_m=a.stand_off)
+        summary = dict(end_reason=end, steps=len(rows), bursts=bursts, last_range_est_m=rows[-1].get("range_m") if rows else None, door_range_m_input=a.door_range_m, ref_scale=ref, first_range_est_m=None if start_m is None else round(start_m, 2), area_exponent=a.area_exponent, stand_off_m=a.stand_off)
     finally:
         try:
             if sender is not None:

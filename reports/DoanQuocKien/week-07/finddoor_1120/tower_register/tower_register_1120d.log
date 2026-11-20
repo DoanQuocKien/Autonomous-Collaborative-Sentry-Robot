@@ -1,0 +1,16 @@
+ONE deep beep: put the tower on the floor ~30 cm in front, any face toward the robot
+JetBot found at 10.99.58.160
+id 13 (left): pitch -11.09 deg, spread 0.03, 30 frames, distance 0.31 m
+   lower edge would need -4.0 mm to match the reference pitch -10.37
+TWO beeps: turn the tower to another face (1 of 4 done)
+id 11 (front): pitch -11.28 deg, spread 0.09, 30 frames, distance 0.33 m
+   lower edge would need -5.5 mm to match the reference pitch -10.37
+TWO beeps: turn the tower to another face (2 of 4 done)
+id 12 (right): pitch -11.68 deg, spread 0.06, 30 frames, distance 0.31 m
+   lower edge would need -7.5 mm to match the reference pitch -10.37
+TWO beeps: turn the tower to another face (3 of 4 done)
+id 10 (back): pitch -11.29 deg, spread 0.19, 30 frames, distance 0.32 m
+   lower edge would need -5.5 mm to match the reference pitch -10.37
+TWO beeps: turn the tower to another face (4 of 4 done)
+wrote calib\camera_pose_tower_1120_2.json | pitch -11.29 deg from 4 faces (spread between faces 0.21 deg)
+THREE beeps: all four faces registered. Next: put it on the floor / floor search (not in this tool)

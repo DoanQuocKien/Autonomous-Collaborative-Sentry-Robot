@@ -22,20 +22,21 @@ def render(source: Path, out: Path, font_dir: Path) -> None:
     from reportlab.pdfbase import pdfmetrics
     from reportlab.pdfbase.ttfonts import TTFont
     from reportlab.platypus import (SimpleDocTemplate, Paragraph, Spacer, Table,
-                                   TableStyle, Image, PageBreak)
+                                   TableStyle, Image, PageBreak, KeepTogether)
 
     for name, filename in [('VN', 'DejaVuSans.ttf'), ('VN-Bold', 'DejaVuSans-Bold.ttf')]:
         pdfmetrics.registerFont(TTFont(name, str(font_dir / filename)))
     pdfmetrics.registerFontFamily('VN', normal='VN', bold='VN-Bold', italic='VN', boldItalic='VN-Bold')
     navy = colors.HexColor('#16324f')
     styles = getSampleStyleSheet()
-    styles.add(ParagraphStyle('BodyVN', fontName='VN', fontSize=9.3, leading=14.2, spaceAfter=7))
+    styles.add(ParagraphStyle('BodyVN', fontName='VN', fontSize=9.3, leading=12.8, spaceAfter=5,
+                             allowWidows=0, allowOrphans=0))
     styles.add(ParagraphStyle('SmallVN', parent=styles['BodyVN'], fontSize=7.7, leading=11))
-    styles.add(ParagraphStyle('CellVN', parent=styles['BodyVN'], fontSize=8.1, leading=11.6, spaceAfter=0))
+    styles.add(ParagraphStyle('CellVN', parent=styles['BodyVN'], fontSize=8.1, leading=10.5, spaceAfter=0))
     styles.add(ParagraphStyle('CaptionVN', parent=styles['SmallVN'], textColor=navy, alignment=TA_CENTER))
     for name, size in [('TitleVN', 19), ('H1VN', 15), ('H2VN', 11.3)]:
         styles.add(ParagraphStyle(name, fontName='VN-Bold', fontSize=size, leading=size+5,
-                                  textColor=navy, spaceBefore=6, spaceAfter=10))
+                                  textColor=navy, spaceBefore=6, spaceAfter=10, keepWithNext=True))
     source = Path(source)
     out = Path(out)
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -93,8 +94,8 @@ def render(source: Path, out: Path, font_dir: Path) -> None:
                 ('LINEBELOW', (0, 1), (-1, -1), .25, colors.HexColor('#cad4dd')),
                 ('LEFTPADDING', (0, 0), (-1, -1), 6),
                 ('RIGHTPADDING', (0, 0), (-1, -1), 6),
-                ('TOPPADDING', (0, 0), (-1, -1), 5),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+                ('TOPPADDING', (0, 0), (-1, -1), 4),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
             ]))
             story += [table, Spacer(1, 8)]
             continue
@@ -106,8 +107,8 @@ def render(source: Path, out: Path, font_dir: Path) -> None:
             path = source.parent / match.group(2)
             iw, ih = ImageReader(str(path)).getSize()
             scale = min(width/iw, 183/ih)
-            story += [Image(str(path), width=iw*scale, height=ih*scale),
-                      Paragraph(markup(match.group(1)), styles['CaptionVN']), Spacer(1, 6)]
+            story.append(KeepTogether([Image(str(path), width=iw*scale, height=ih*scale),
+                         Paragraph(markup(match.group(1)), styles['CaptionVN']), Spacer(1, 6)]))
         elif line.startswith('- '):
             flush(); story.append(Paragraph('• ' + markup(line[2:]), styles['BodyVN']))
         else:

@@ -310,3 +310,16 @@ min_face_width = 80.0
 hold_s = 0.8
 turn_min = 0.20
 turn_max = 0.45
+
+[tower_place]
+# Tower placement gate (sentry/perception/tower_markers.PlacementGate, tools/deploy_live --tower-place); PnP range read 0.23 m for a tape 0.20 m on 2026-11-20
+range_m = [0.2, 0.3]
+bearing_deg = 15.0
+hold_s = 1.0
+offset_m = 0.25                  # --door only: the robot stops this far beyond the tower
+prompt_window_s = 10.0
+
+[find_door]
+# tools/deploy_live --find-door (sentry/app/find_door_runner.py); range = ref_range_m (entrance.json, measured once per room) * (ref_area / area)^(1/exponent)
+stand_off_m = 2.25               # the robot is 2.0-2.5 m from the door: the tower stands 0.25 m closer, inside the 1.5-3.0 m entrance window
+area_exponent = 2.0              # 2026-11-20 data 2.0-2.4; the older fit (tools.approach_door default) is 1.6

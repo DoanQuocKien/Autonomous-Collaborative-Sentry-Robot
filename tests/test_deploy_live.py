@@ -2,7 +2,50 @@ from sentry.app.deploy_runner import DeployRunner
 from sentry.app.state_machine import StateMachine, StateMachineConfig
 from sentry.nav.explore import Command, ExploreSettings, legal
 from sentry.nav.wheel_model import WheelModel
-from tools.deploy_live import control_loop, fresh_flag
+from tools.deploy_live import control_loop, fresh_flag, new_run_dir
+
+
+def test_run_output_preserves_existing_evidence_with_gaps_and_concurrent_claims(tmp_path):
+    from concurrent.futures import ThreadPoolExecutor
+    for number in (1, 3):
+        run = tmp_path / ('take_' + str(number))
+        run.mkdir()
+        (run / 'summary.json').write_text('original evidence')
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        paths = list(pool.map(lambda _: new_run_dir(tmp_path, 'take'), range(8)))
+    assert len(set(paths)) == 8
+    assert all(int(path.name.split('_')[-1]) > 3 for path in paths)
+    assert (tmp_path / 'take_3/summary.json').read_text() == 'original evidence'
+
+
+def test_centre_only_and_stand_off_are_exclusive(monkeypatch):
+    import sys
+    import pytest
+    from tools import deploy_live
+    monkeypatch.setattr(sys, 'argv', ['deploy_live', '--find-door', '--centre-only', '--stand-off', '2.0'])
+    with pytest.raises(SystemExit) as exc:
+        deploy_live.main()
+    assert exc.value.code == 2
+
+
+def test_cli_find_door_modes_reach_the_runner_with_the_expected_distance(monkeypatch):
+    import sys
+    import pytest
+    from sentry.app import find_door_runner
+    from tools import approach_door, deploy_live
+    captured = []
+
+    def runner(*args, **kwargs):
+        captured.append(kwargs['stand_off_m'])
+        raise RuntimeError('fixture stops before hardware startup')
+
+    monkeypatch.setattr(find_door_runner, 'FindDoorRunner', runner)
+    monkeypatch.setattr(approach_door, 'reference_scale', lambda folder: (10000.0, 2.0))
+    for flags in ([], ['--centre-only']):
+        monkeypatch.setattr(sys, 'argv', ['deploy_live', '--find-door', '--no-audio'] + flags)
+        with pytest.raises(RuntimeError, match='fixture stops before hardware startup'):
+            deploy_live.main()
+    assert captured == [2.25, None]
 
 
 class Speaker:

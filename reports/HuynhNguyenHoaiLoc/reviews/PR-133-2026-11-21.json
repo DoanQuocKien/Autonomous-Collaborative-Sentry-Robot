@@ -1,0 +1,50 @@
+{
+  "date": "2026-11-21",
+  "timezone": "Asia/Bangkok",
+  "pull_request": 133,
+  "original_head": "b95169a6a39f553b7e1d03d011d2f58039a1d60b",
+  "base": "cf0d427e66bad9bb3cd9c96c20718afee9a0f788",
+  "python": "3.12.15 (main, Oct  3 2026, 01:05:37) [MSC v.1944 64 bit (AMD64)]",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "command": [
+    "C:\\Users\\Hoai Loc\\Desktop\\ROBOT\\Autonomous-Collaborative-Sentry-Robot\\.venv\\Scripts\\python.exe",
+    "-m",
+    "pytest",
+    "-m",
+    "not gpu and not hil",
+    "--basetemp=data/pytest-review133-final",
+    "-p",
+    "no:cacheprovider",
+    "-q",
+    "-rs"
+  ],
+  "cpu": {
+    "passed": 973,
+    "skipped": 4,
+    "deselected": 4,
+    "seconds": 68.7,
+    "log_sha256": "b8ff4162f499cfd5b760dba490339014d73ab2eb51810ee4ab0bd41c790b8545"
+  },
+  "pdf": {
+    "rendered_pages": 15,
+    "pdf_sha256": "58ef757c791bf74b92faa4a90aba53498ed1e0a0941bd0be7899c372ea7a141a",
+    "byte_identical_second_render": true,
+    "sources": {
+      "status": "PASS",
+      "source_files": 86,
+      "errors": []
+    },
+    "assets": 14,
+    "budget_status": "PASS"
+  },
+  "reviewed_code_sha256": {
+    "tests/test_deploy_live.py": "e18ecf7666fc3a54845c92f15b6497029b28be4fddca938e576959fd83adb1ff",
+    "tests/test_session_run.py": "d421ba6fd3397f763db1323d93533b7fd9b8f3dba71904725fc5792b4d7cbec1",
+    "tools/deploy_live.py": "f11d9ddeb7662f33c45bbbaf8986de7843cabc87571bac3051f648f7d7177c2d",
+    "tools/render_midterm_report.py": "448a483e584d1218047f8e1c7d5a4f29d71d72176e00eb57bd0f08e58def1d19",
+    "tools/session_run.py": "19ad7d23d7c3f0ce5ae5a3f94d72f2859a8712930164dfb02803a393e50a6bfd",
+    "tools/tower_register.py": "3014fbc3cb36856fa34f583835db0cf8fa3b32d8a99a51691a5122d2243ebe1c",
+    "tests/test_tower_register.py": "79c12e4f2e557160b59b6e4554e7c4bfbfde45a35fd2ffb8afe3f315424cd25d"
+  },
+  "hil_performed": false
+}

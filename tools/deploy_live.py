@@ -122,7 +122,7 @@ def blend_fix(pose, fix, gain):
     return (x + gain * (fix[0] - x), y + gain * (fix[1] - y), math.atan2(math.sin(yaw + gain * math.atan2(math.sin(fix[2] - yaw), math.cos(fix[2] - yaw))), math.cos(yaw + gain * math.atan2(math.sin(fix[2] - yaw), math.cos(fix[2] - yaw)))))
 
 
-def control_loop(runner, model, cmd, end, get_flag, get_link, seconds, clock=time.time, sleep=time.sleep, rate_hz=30.0, key=lambda: None, pose_cb=None, get_fix=None):
+def control_loop(runner, model, cmd, end, get_flag, get_link, seconds, clock=time.time, sleep=time.sleep, rate_hz=30.0, key=lambda: None, pose_cb=None, get_fix=None, gate=None):
     """The 30 Hz loop: dead-reckon the pose from the command the robot was given, step the runner, publish the command, check the safety conditions.
     get_link(now) -> None (no robot) or dict(stale=bool, blocked=bool). Returns (rows, final pose, dead-reckoned path length). Ends by setting end['reason']."""
     x = y = yaw = 0.0
@@ -163,6 +163,8 @@ def control_loop(runner, model, cmd, end, get_flag, get_link, seconds, clock=tim
         if k == "v":
             manual_until = now + 0.5                          # the key latches for 0.5 s: the runner needs 3 consecutive in-view ticks
         flag = get_flag(now) or now < manual_until
+        if gate is not None and not gate(now):
+            flag = False                                      # the tower gate also covers the manual key (--handshake manual)
         v, w = runner.step(t, (x, y, yaw), flag)
         reset = getattr(runner, "pose_reset", None)
         if reset is not None:
@@ -221,18 +223,38 @@ def make_handshake(folder):
     return det
 
 
+def new_run_dir(out, label):
+    out = Path(out)
+    out.mkdir(parents=True, exist_ok=True)
+    numbers = [int(path.name[len(label) + 1:]) for path in out.glob(label + "_*")
+               if path.name[len(label) + 1:].isdigit()]
+    number = max(numbers, default=0) + 1
+    while True:
+        path = out / ("%s_%d" % (label, number))
+        try:
+            path.mkdir(exist_ok=False)
+            return path
+        except FileExistsError:
+            number += 1
+
+
 def main():
     import cv2
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--label", default="run")
     ap.add_argument("--vantage", type=float, nargs=2, default=None, metavar=("X", "Y"), help="the sweet spot typed in (manual mode); not needed with --door")
+    ap.add_argument("--find-door", action="store_true", help="find and centre the door, then drive to [find_door].stand_off_m (default 2.25 m) using the enrolment scale, wait for tower/handshake and reverse to STANDBY. Use --centre-only to centre in place")
+    approach_mode = ap.add_mutually_exclusive_group()
+    approach_mode.add_argument("--stand-off", type=float, default=None, help="--find-door: target distance in m, overriding [find_door].stand_off_m. Uses ref_range_m from entrance.json")
+    approach_mode.add_argument("--centre-only", action="store_true", help="--find-door: centre in place, then prompt/handshake/reverse without the forward approach")
+    ap.add_argument("--area-exponent", type=float, default=2.0, help="--find-door: outline area ~ range^-exponent (see tools.approach_door)")
     ap.add_argument("--door", type=float, nargs=2, default=None, metavar=("X", "Y"), help="Phase 1 chain: the door position (tape, start frame); the sweet spot is chosen from the declared room")
     ap.add_argument("--box", type=float, nargs=4, default=None, metavar=("X0", "Y0", "X1", "Y1"), help="the cleared floor of the declared room (with --door)")
     ap.add_argument("--wall", type=float, nargs=4, action="append", default=[], metavar=("X0", "Y0", "X1", "Y1"), help="a wall segment of the declared room (repeat); the door must lie on one")
-    ap.add_argument("--entrance", default="manual", help="with --door: a folder from tools.enroll_entrance (the robot's own camera), 'sim' (simulated from the pose) or 'manual' (key e)")
+    ap.add_argument("--entrance", default=None, help="with --door: a folder from tools.enroll_entrance (the robot's own camera), 'sim' (simulated from the pose) or 'manual' (key e)")
     ap.add_argument("--scan-hold", type=float, default=0.8, help="with --door: seconds to hold still between scan pulses; the robot-eye entrance detector runs at about 4 fps (233 ms per frame), and the filter needs 3 in-view results in a row")
     ap.add_argument("--distance-margin", type=float, default=0.3, help="with --door: shrink the 1.5-3.0 m window by this on each side (dead reckoning error)")
-    ap.add_argument("--centre", type=float, nargs=2, required=True, metavar=("X", "Y"))
+    ap.add_argument("--centre", type=float, nargs=2, default=None, metavar=("X", "Y"), help="the room centre the robot turns to face (not with --find-door: it faces the door)")
     ap.add_argument("--handshake", default="manual", help="folder with ref/ and sweep/ from tools.handshake_test, or 'manual' (press v)")
     ap.add_argument("--esp-ip", default="auto", help="the ESP32-CAM address, or auto (found on the network: the hotspot hands out a new subnet on some days)")
     ap.add_argument("--camera-pose", default=None, help="camera pose JSON of the CURRENT mount: enables the obstacle stop (and the start check)")
@@ -258,8 +280,21 @@ def main():
     ap.add_argument("--hs-frames", type=int, default=6, help="handshake rule: at least this many detector answers in the window")
     ap.add_argument("--hs-frac", type=float, default=0.7, help="handshake rule: at least this fraction of them in view (the camera is placed still: a real placement gives a steady majority)")
     ap.add_argument("--answers", default=None, help="JSON file with the tape answers (keys as in summary.json tape_answers); without it they are asked at the end when a terminal is attached, else add them with tools.tape_answers")
+    ap.add_argument("--tower-place", action="store_true", help="the ESP32 sits on the tower: after the robot stops, the tower must be PLACED in front of it, back marker (id 10) toward the robot, within --tower-range and --tower-bearing for --tower-hold s, BEFORE the handshake counts; with --door the stop is moved --tower-offset farther from the door (the tower, not the robot, must be in the 1.5-3.0 m window)")
+    ap.add_argument("--tower-pose", default="calib/camera_pose_self_1120_1.json", help="--tower-place: camera pose JSON for the marker detector (only the lens model is used)")
+    ap.add_argument("--tower-range", type=float, nargs=2, default=(0.2, 0.3), metavar=("MIN", "MAX"), help="--tower-place: camera-to-tower distance window (m, PnP; read 0.23 for a tape 0.20 on 2026-11-20)")
+    ap.add_argument("--tower-bearing", type=float, default=15.0, help="--tower-place: |bearing| limit of the tower (deg)")
+    ap.add_argument("--tower-hold", type=float, default=1.0, help="--tower-place: seconds the tower must stay in the window")
+    ap.add_argument("--tower-offset", type=float, default=0.25, help="--tower-place with --door: the robot stops this much (m) farther from the door than the tower will stand (middle of --tower-range)")
+    ap.add_argument("--tower-window", type=float, default=10.0, help="--tower-place: seconds between the placement prompts (a beep) while the tower is not in place")
     ap.add_argument("--no-audio", action="store_true", help="do not speak (rehearsal in a quiet room); the prompts are still logged")
+    from sentry.config import load as load_cfg
+    cfg_ = load_cfg()
+    tp_, fd_ = cfg_["tower_place"], cfg_["find_door"]
+    ap.set_defaults(tower_range=tuple(tp_["range_m"]), tower_bearing=tp_["bearing_deg"], tower_hold=tp_["hold_s"], tower_offset=tp_["offset_m"], tower_window=tp_["prompt_window_s"], area_exponent=fd_["area_exponent"])
     a = ap.parse_args()
+    if a.find_door and a.stand_off is None and not a.centre_only:
+        a.stand_off = fd_["stand_off_m"]
     answers_file = None
     if a.answers:                                         # validate BEFORE the robot starts: a bad file must not cost a physical trial
         from tools.tape_answers import load_answers_file
@@ -270,8 +305,30 @@ def main():
     a.dry_run = a.dry_run or a.no_robot
     if not 10 <= a.seconds <= 300:
         ap.error("seconds in [10, 300]")
-    if (a.vantage is None) == (a.door is None):
-        ap.error("give exactly one of --vantage (manual sweet spot) and --door (Phase 1 chain)")
+    from tools.scan_boards import check_args
+    check_args(a, dict(stand_off=(1.5, 3.0), area_exponent=(1.0, 2.5), tower_hold=(0.1, 10.0), tower_window=(2.0, 60.0), tower_bearing=(1.0, 45.0), tower_offset=(0.0, 1.0)))
+    if a.tower_place and not 0.05 <= a.tower_range[0] < a.tower_range[1] <= 1.0:
+        ap.error("--tower-range MIN MAX must satisfy 0.05 <= MIN < MAX <= 1.0 m")
+    if a.stand_off is not None and not a.find_door:
+        ap.error("--stand-off is only used with --find-door")
+    if a.centre_only and not a.find_door:
+        ap.error("--centre-only is only used with --find-door")
+    if a.find_door and a.no_robot:
+        ap.error("--find-door needs the robot's camera: it cannot run with --no-robot")
+    if not a.find_door and a.centre is None:
+        ap.error("--centre is required (except with --find-door)")
+    if a.find_door:
+        if a.vantage is not None or a.door is not None:
+            ap.error("--find-door replaces --vantage and --door")
+        a.entrance = a.entrance or "data/entrance/class_door"
+        if a.entrance in ("sim", "manual"):
+            ap.error("--find-door needs an --entrance folder (the robot-eye detector)")
+    else:
+        a.entrance = a.entrance or "manual"
+        if (a.vantage is None) == (a.door is None):
+            ap.error("give exactly one of --vantage (manual sweet spot), --door (Phase 1 chain) and --find-door")
+    if a.tower_place and a.vantage is not None:
+        print("NOTE --tower-place with --vantage: the stop point is used as typed (give the ROBOT's stop, tower offset %.2f m behind the ESP32's sweet spot)" % a.tower_offset, flush=True)
     if a.door is not None and (a.box is None or not a.wall):
         ap.error("--door needs --box and at least one --wall (the declared room)")
 
@@ -281,6 +338,16 @@ def main():
     r1 = {"held": True, "fail": 0}
     link = {"t": time.time(), "blocked": False}
     esp = {"in_view": False, "t": None, "frames": 0, "in_view_frames": 0, "inliers": 0}
+    gate = None
+    if a.tower_place:
+        import numpy as np
+        from sentry.perception.camera import CameraGeometry
+        from sentry.perception.camera_pose import detect_corners
+        from sentry.perception.tower_markers import MARKER_M, PlacementGate
+        from tools.speed_trial import marker_range
+        gate = PlacementGate(tuple(a.tower_range), a.tower_bearing, a.tower_hold)
+        tgeom, s_ = CameraGeometry.from_files("calib/camera.json", a.tower_pose), MARKER_M / 2.0
+        tobj = np.array([[-s_, s_, 0], [s_, s_, 0], [s_, -s_, 0], [-s_, -s_, 0]], np.float64)
     window = WindowedHandshake(a.hs_span, a.hs_frames, a.hs_frac)       # defaults 5 s / 6 answers / 70 %: measured live on 2026-10-30 (negative 3 % in view, 0 of 1337 ticks; positive verified 8.4 s after the prompt)
     threads, ssh, rx, volts0, volts1, password = [], None, None, None, None, None
     speaker = AudioPromptPlayer(sender=LocalSpeaker(backend=(lambda path: None) if a.no_audio else None))
@@ -309,13 +376,25 @@ def main():
         fixer = MarkerFix(a.anchors, max_range_m=a.fix_range)
     manual = {"until": 0.0}
     grid = entrance_det = None
-    if a.door is not None:
+    if a.find_door:
+        from sentry.app.find_door_runner import FindDoorRunner
+        from sentry.app.phase1_runner import Phase1Settings
+        from sentry.perception.entrance import Camera, EntranceDetector
+        from tools.approach_door import reference_scale
+        fd_ref = reference_scale(a.entrance)
+        if a.stand_off is not None and fd_ref is None:
+            raise SystemExit("ABORT: --stand-off needs ref_range_m in %s/entrance.json (the one-time enrolment scale)" % a.entrance)
+        runner = FindDoorRunner(sm, speaker, ref=fd_ref, stand_off_m=a.stand_off, exponent=a.area_exponent)
+        entrance_det = EntranceDetector.load(a.entrance, camera=Camera.from_json("calib/camera.json"))
+        print("entrance detector loaded from %s; the robot measures the door, centres on it%s, no coordinates" % (a.entrance, "" if a.stand_off is None else " and drives to a %.2f m stand-off" % a.stand_off), flush=True)
+    elif a.door is not None:
         from sentry.config import load as load_config
         from sentry.nav.declared_room import declared_grid
         from sentry.nav.vantage import VantageSelector
         from sentry.app.phase1_runner import Phase1Runner, Phase1Settings
         cfg = load_config()
-        selector = VantageSelector(cfg["thresholds"]["entrance_min_m"] + a.distance_margin, cfg["thresholds"]["entrance_max_m"] - a.distance_margin,
+        off = a.tower_offset if a.tower_place else 0.0
+        selector = VantageSelector(cfg["thresholds"]["entrance_min_m"] + a.distance_margin + off, cfg["thresholds"]["entrance_max_m"] - a.distance_margin + off,
                                    cfg["vantage"]["robot_radius_m"], cfg["vantage"]["boundary_weight"], cfg["vantage"]["distance_weight"])
         grid = declared_grid(a.box, a.wall, a.door)
         runner = Phase1Runner(sm, speaker, grid, selector, a.door, a.centre, settings=Phase1Settings(hold_s=a.scan_hold))
@@ -431,6 +510,12 @@ def main():
                     ok_, jpg = cv2.imencode(".jpg", f.frame_bgr, [cv2.IMWRITE_JPEG_QUALITY, 80])
                     if ok_:
                         frames_buf.append((time.time(), jpg.tobytes()))
+                if gate is not None:
+                    try:
+                        found = [m for m in detect_corners(f.frame_bgr) if m[0] == 10][:1]
+                        gate.update(time.time(), marker_range(tgeom, tobj, f.frame_bgr, found) if found else None)
+                    except Exception as exc:
+                        print("tower gate error: %r" % (exc,), flush=True)           # the gate stays closed; the other detectors keep running
                 if servo_tr is not None:
                     for d in servo_tr.detect_markers(f.frame_bgr):
                         if d.marker_id == a.servo_marker:
@@ -486,6 +571,19 @@ def main():
         threads.extend([threading.Thread(target=sender), threading.Thread(target=watcher), threading.Thread(target=frames)])
     if detector is not None:
         threads.append(threading.Thread(target=esp_reader))
+    if gate is not None:
+        def tower_prompt():
+            while not done.is_set():
+                if sm.state == State.WAIT_CAMERA and not gate.ok(time.time()):
+                    print("PLACE THE TOWER %.2f-%.2f m in front of the robot, back marker toward it (now: %s)" % (a.tower_range[0], a.tower_range[1], gate.last and [round(gate.last[0], 2), round(gate.last[1], 1)]), flush=True)
+                    if not a.no_audio:
+                        beep(600, 300)
+                    t_next = time.time() + a.tower_window
+                    while time.time() < t_next and not done.is_set() and not gate.ok(time.time()):
+                        time.sleep(0.2)
+                else:
+                    time.sleep(0.2)
+        threads.append(threading.Thread(target=tower_prompt))
     if a.door is not None and a.entrance in ("sim", "manual"):
         threads.append(threading.Thread(target=entrance_feeder))
     link["t"] = time.time() + LINK_GRACE_S      # the watchdog counts from now: link["t"] was set at start-up, before the models and the SSH link, so the first tick looked stale (found by the dry run on 2026-10-30)
@@ -503,7 +601,8 @@ def main():
             if k == "e":                                          # manual entrance: in view for 0.5 s
                 manual["until"] = time.time() + 0.5
             return k
-        rows, final, path = control_loop(runner, model, cmd, end, make_flag(esp, window, sm), get_link, a.seconds, key=key,
+        base_flag = make_flag(esp, window, sm)
+        rows, final, path = control_loop(runner, model, cmd, end, base_flag, get_link, a.seconds, gate=None if gate is None else gate.ok, key=key,
                                          pose_cb=lambda p: pose_now.__setitem__("p", p), get_fix=(lambda: fixed["m"]) if fixer is not None else ((lambda: None) if servo_tr is not None else None))
     finally:
         cmd.update(v=0.0, w=0.0, t=time.time())            # the sender then repeats zero; its close() sends a final stop
@@ -535,9 +634,7 @@ def main():
     elif not a.dry_run:
         print("WARNING: the tape answers were NOT captured (no terminal, no --answers file). Add them now: python -m tools.tape_answers <run folder> --offset-x .. --offset-y ..", flush=True)
     out_dir = Path(a.out)
-    n = 1 + len(list(out_dir.glob(a.label + "_*"))) if out_dir.exists() else 1
-    run_dir = out_dir / ("%s_%d" % (a.label, n))
-    run_dir.mkdir(parents=True, exist_ok=True)
+    run_dir = new_run_dir(out_dir, a.label)
     with open(run_dir / "log.csv", "w", newline="") as fh:
         wr = csv.writer(fh)
         wr.writerow(("t", "x_m", "y_m", "yaw_rad", "cmd_v", "cmd_w", "state", "handshake_in_view"))
@@ -547,7 +644,7 @@ def main():
     target = (chosen.x_m, chosen.y_m) if chosen is not None else a.vantage
     if grid is not None:
         grid.save(run_dir / "grid.npz")
-    summary = {"mode": "declared_room" if a.door is not None else "manual_vantage", "door": a.door, "box": a.box, "walls": a.wall, "entrance_mode": a.entrance if a.door is not None else None,
+    summary = {"mode": "find_door" if a.find_door else "declared_room" if a.door is not None else "manual_vantage", "found_pose": getattr(runner, "found_pose", None), "find_door_measures": getattr(runner, "measures", None), "door": a.door, "box": a.box, "walls": a.wall, "entrance_mode": a.entrance if (a.door is not None or a.find_door) else None,
                "chosen_vantage": None if chosen is None else {"x": round(float(chosen.x_m), 3), "y": round(float(chosen.y_m), 3), "door_distance_m": round(float(chosen.door_distance_m), 3),
                                                               "boundary_distance_m": round(float(chosen.boundary_distance_m), 3)},
                "phase1_notes": getattr(runner, "notes", []), "door_bearing_error_deg": getattr(runner, "door_bearing_error_deg", None),
@@ -557,6 +654,7 @@ def main():
                "state_changes": runner.log, "events": [(round(t, 2), name) for t, name, _ in runner.events], "prompts": runner.prompts,
                "handshake": {"mode": a.handshake, "rule": {"span_s": a.hs_span, "min_frames": a.hs_frames, "fraction": a.hs_frac}, "frames": esp["frames"], "in_view_frames": esp["in_view_frames"], "last_inliers": esp["inliers"], "error": esp.get("error")},
                "marker_fixes": end.get("fixes"), "marker_fix_calls": fix_n["calls"], "marker_fix_results": fix_n["hits"], "servo_sightings": len(servo_log), "anchors": a.anchors, "dr_path_m": round(path, 2), "dr_final_pose": [round(v, 3) for v in final], "battery_v_start": volts0, "battery_v_end": volts1,
+               "tower_place": None if gate is None else dict(gate.summary(), offset_m=a.tower_offset if a.door is not None else None, prompts_window_s=a.tower_window),
                "camera_pose_file": a.camera_pose, "obstacle_check": bool(a.camera_pose), "tape_answers": answers, "date": time.strftime("%Y-%m-%d %H:%M")}
     (run_dir / "summary.json").write_text(json.dumps(summary, indent=1))
     for name, head, data in (("handshake.csv", ("t", "in_view", "inliers"), hs_log), ("frames.csv", ("t_wall", "seq", "t_cap"), frame_log)):

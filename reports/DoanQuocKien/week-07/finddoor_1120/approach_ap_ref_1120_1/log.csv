@@ -1,0 +1,11 @@
+step,action,bearing_deg,range_m,frames,area_px2,board_ahead_m
+0,turn_left,8.5,2.91,5,26607,
+1,drive,-4.0,2.86,5,27473,
+2,turn_right,-13.4,2.77,5,29273,
+3,drive,-0.7,2.79,5,28845,
+4,turn_right,-8.3,2.64,5,32243,
+5,drive,4.2,2.63,5,32503,
+6,drive,-3.4,2.48,5,36650,
+7,turn_right,-11.1,2.35,5,40785,
+8,drive,6.2,2.38,5,39770,
+9,done,-1.9,2.21,5,46160,

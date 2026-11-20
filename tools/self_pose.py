@@ -64,6 +64,7 @@ def main():
     ap.add_argument("--marker-m", type=float, default=0.15, help="side of the printed black square (m)")
     ap.add_argument("--page-bottom-h", type=float, default=None, help="height of the A4 page's bottom edge above the floor (m); default config aruco_page_bottom_h_m (0.0: the page stands on the floor)")
     ap.add_argument("--bottom-h", type=float, default=None, help="height of the black square's LOWER edge above the floor (m); default = page bottom + 0.132 (config aruco_square_above_page_m)")
+    ap.add_argument("--tower", action="store_true", help="the marker is a face of the ESP32 tower (needs --id 10-13): 50 mm marker and the lower-edge height measured for that face (sentry/perception/tower_markers.py)")
     ap.add_argument("--camera-h", type=float, default=0.100)
     ap.add_argument("--id", type=int, default=None)
     ap.add_argument("--frames", type=int, default=45, help="frames to read from the robot")
@@ -76,6 +77,14 @@ def main():
     a = ap.parse_args()
     from sentry.config import load
     cfg = load()
+    if a.tower:
+        from sentry.perception import tower_markers as tm
+        if a.id not in tm.TOWER:
+            raise SystemExit("--tower needs --id 10, 11, 12 or 13")
+        a.marker_m, a.bottom_h = tm.MARKER_M, tm.bottom_h(a.id)
+        if a.id in tm.ROTATED_180:
+            raise SystemExit("the tower's front marker (id %d) is rotated 180 deg: use python -m tools.tower_register for it (corners are reordered there)" % a.id)
+        print("tower %s face (id %d): lower edge %.4f m, marker tilt %+.1f deg" % (tm.TOWER[a.id][0], a.id, a.bottom_h, tm.tilt_deg(a.id)), flush=True)
     square_above = _cfg_value(cfg, "aruco_square_above_page_m", 0.132)
     page_bottom = a.page_bottom_h if a.page_bottom_h is not None else _cfg_value(cfg, "aruco_page_bottom_h_m", 0.0)
     if a.bottom_h is None:

@@ -41,3 +41,15 @@ def test_distance_bound_cuts_a_runaway_but_not_the_real_runs():
     for r0, bursts in ((3.42, 10), (3.13, 8), (2.63, 4), (2.50, 3)):          # ap_1, ap2_2, ap3_1, ap4_1: none may be cut short
         assert per_burst * bursts < r0 - 2.0 + DISTANCE_BOUND_MARGIN_M, (r0, bursts)
     assert per_burst * 20 >= 3.42 - 2.0 + DISTANCE_BOUND_MARGIN_M              # 20 bursts (the old only limit) are about 4.2 m: the bound stops it first
+
+
+def test_reference_scale_reads_the_enrolment_and_needs_both_values(tmp_path):
+    import json
+    from tools.approach_door import range_from_area, reference_scale
+    f = tmp_path / "entrance.json"
+    f.write_text(json.dumps({"robot": [{"file": "robot_00.jpg", "roi": [178, 0, 410, 252]}], "ref_range_m": 1.96}))
+    area, rng = reference_scale(tmp_path)
+    assert (area, rng) == (232 * 252, 1.96)
+    assert abs(range_from_area(area / 4.0, area, rng, 2.0) - 3.92) < 1e-9          # a quarter of the area = twice the range
+    f.write_text(json.dumps({"robot": [{"file": "robot_00.jpg", "roi": [178, 0, 410, 252]}]}))
+    assert reference_scale(tmp_path) is None                                         # no stored range: the tape is needed
