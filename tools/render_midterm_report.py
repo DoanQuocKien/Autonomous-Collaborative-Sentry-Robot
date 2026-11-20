@@ -37,9 +37,11 @@ def render(source: Path, out: Path, font_dir: Path) -> None:
         styles.add(ParagraphStyle(name, fontName='VN-Bold', fontSize=size, leading=size+5,
                                   textColor=navy, spaceBefore=6, spaceAfter=10))
     source = Path(source)
+    out = Path(out)
+    out.parent.mkdir(parents=True, exist_ok=True)
     doc = SimpleDocTemplate(str(out), pagesize=A4, rightMargin=43, leftMargin=43,
                             topMargin=47, bottomMargin=40, title='Báo cáo giữa kỳ — Sentry Robot',
-                            author='DQK / HNHL / KR', invariant=1)
+                            author='Đoàn Quốc Kiên, Huỳnh Nguyễn Hoài Lộc, Huỳnh Hữu Lộc', invariant=1)
     width = A4[0] - 86
 
     def markup(text):
@@ -117,14 +119,14 @@ def render(source: Path, out: Path, font_dir: Path) -> None:
         canvas.saveState()
         canvas.setFont('VN', 7.4); canvas.setFillColor(navy)
         canvas.drawString(43, A4[1]-28, 'CS532  /  AUTONOMOUS COLLABORATIVE SENTRY ROBOT')
-        canvas.drawRightString(A4[0]-43, 23, f'KR editor • source hash in metadata  |  {doc.page}')
+        canvas.drawRightString(A4[0]-43, 23, f'Huỳnh Hữu Lộc (Editor) • source hash in metadata  |  {doc.page}')
         canvas.restoreState()
     doc.build(story, onFirstPage=page, onLaterPages=page)
     from pypdf import PdfReader
     metadata = dict(source_sha256=hashlib.sha256(source.read_bytes()).hexdigest(),
-                    pdf_sha256=hashlib.sha256(Path(out).read_bytes()).hexdigest(),
+                    pdf_sha256=hashlib.sha256(out.read_bytes()).hexdigest(),
                     pages=len(PdfReader(out).pages), renderer='reportlab; DejaVu Sans')
-    Path(str(out)+'.json').write_text(json.dumps(metadata, indent=2)+'\n')
+    Path(str(out)+'.json').write_text(json.dumps(metadata, indent=2)+'\n', encoding='utf-8', newline='\n')
 
 
 def main():

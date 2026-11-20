@@ -27,7 +27,7 @@ def test_rendered_budget_requires_pdf_matching_current_source(tmp_path):
     pages += ['# Phụ lục A — Code\nCác module.']
     pages += ['## Tiếp\nNội dung.']*5
     report.write_text('\n<!-- pagebreak -->\n'.join(pages), encoding='utf-8')
-    pdf = tmp_path/'draft.pdf'
+    pdf = tmp_path/'nested'/'draft.pdf'
     render(report, pdf, font_dir)
     result = audit_midterm_report(report, pdf)
     assert result['rendered_pages'] == 14

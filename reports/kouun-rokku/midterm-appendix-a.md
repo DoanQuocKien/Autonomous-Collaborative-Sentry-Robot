@@ -1,21 +1,21 @@
-# Phụ lục A — Bàn giao mã nguồn (KR, 18/11/2026)
+# Phụ lục A — Bàn giao mã nguồn (Huỳnh Hữu Lộc, 18/11/2026)
 
 Render `python -m tools.render_midterm_report` để tạo PDF 14 trang; chỉ commit PDF tại freeze tag.
 Bảng dưới là chỉ mục chi tiết cho reviewer, không cộng thêm vào số trang PDF.
 
 | Module | Owner | Tests / bằng chứng |
 | :-- | :-- | :-- |
-| `sentry/app/state_machine.py`, `target_queue.py` | KR | `tests/test_state_machine.py`, `tests/test_target_queue.py` |
-| `sentry/app/phase3_runner.py` | KR | `tests/test_phase3_runner.py`; freshness, handoff, stall recovery, nonfinite commands |
-| `sentry/nav/hold_detector.py`, `controllers.py` | KR / DQK | `tests/test_hold_detector.py`, `tests/test_controllers.py`; T0/simulation |
-| `sentry/nav/localization.py` | KR / DQK | `tests/test_localization.py`; real T2 chưa đủ lượt |
-| `sentry/perception/entrance.py`, `sector.py` | KR / DQK | `tests/test_entrance.py`, `tests/test_sector.py` |
-| `sentry/perception/{obstacle,face,reid,tracker}.py` | HNHL | các test module tương ứng; T1/T2 theo protocol riêng |
-| Phase 2 live / door monitor | HNHL; KR nối queue/Phase3 | phase2_live, phase2_reid, phase2_replay |
-| `sentry/net/`, ESP32 receivers | HNHL / KR | camera/clock/mjpeg/espcam tests |
-| `jetson/`, `esp32/` | DQK / KR | compatibility, e-stop và HIL theo điều kiện thật |
-| `tools/{check_midterm_package,build_midterm_package}.py` | KR | `tests/test_midterm_package.py`; committed-tree/ZIP/hash guards |
-| report renderer / audit / sources | KR | `tests/test_midterm_page_budget.py`; PDF source hash và 10–15 trang |
+| `sentry/app/state_machine.py`, `target_queue.py` | Huỳnh Hữu Lộc | `tests/test_state_machine.py`, `tests/test_target_queue.py` |
+| `sentry/app/phase3_runner.py` | Huỳnh Hữu Lộc | `tests/test_phase3_runner.py`; freshness, handoff, stall recovery, nonfinite commands |
+| `sentry/nav/hold_detector.py`, `controllers.py`, `tower_avoid.py` | Huỳnh Hữu Lộc / Đoàn Quốc Kiên | `tests/test_hold_detector.py`, `tests/test_controllers.py`, `tests/test_tower_avoid.py`; T0/simulation |
+| `sentry/nav/localization.py` | Huỳnh Hữu Lộc / Đoàn Quốc Kiên | `tests/test_localization.py`; real T2 chưa đủ lượt |
+| `sentry/perception/entrance.py`, `sector.py` | Huỳnh Hữu Lộc / Đoàn Quốc Kiên | `tests/test_entrance.py`, `tests/test_sector.py` |
+| `sentry/perception/{obstacle,face,reid,tracker}.py` | Huỳnh Nguyễn Hoài Lộc | các test module tương ứng; T1/T2 theo protocol riêng |
+| Phase 2 live / door monitor | Huỳnh Nguyễn Hoài Lộc; Huỳnh Hữu Lộc nối queue/Phase3 | phase2_live, phase2_reid, phase2_replay |
+| `sentry/net/`, ESP32 receivers | Huỳnh Nguyễn Hoài Lộc / Huỳnh Hữu Lộc | camera/clock/mjpeg/espcam tests |
+| `jetson/`, `esp32/` | Đoàn Quốc Kiên / Huỳnh Hữu Lộc | compatibility, e-stop và HIL theo điều kiện thật |
+| `tools/{check_midterm_package,build_midterm_package}.py` | Huỳnh Hữu Lộc | `tests/test_midterm_package.py`; committed-tree/ZIP/hash guards |
+| report renderer / audit / sources | Huỳnh Hữu Lộc | `tests/test_midterm_page_budget.py`; PDF source hash và 10–15 trang |
 
 ## Cài đặt và tái hiện
 
@@ -58,11 +58,11 @@ Checker chỉ kiểm path, không tuyên bố đã audit mọi byte hoặc làm 
 
 | Shot | Chủ trì | Nguồn / trạng thái |
 | :-- | :-- | :-- |
-| Phần cứng JetBot/gamepad/ESP32 | DQK / KR | Chờ cut cuối và URL do DQK bàn giao |
-| Phase 1: cửa, sweet spot, prompt, handshake | DQK / KR | Chỉ dùng clip thật có nguồn; ghi rõ pilot |
-| Phase 2: whitelist, intruder queue | HNHL / KR | HNHL chủ trì live pilot #115; replay ghi REPLAY |
-| Phase 3: pursuit, HOLD, queue handoff | DQK / KR | Tách clip robot có giám sát với SIMULATION |
-| Edge/FP16 | DQK / HNHL | Ghi thiết bị, có/không người, scope timing |
+| Phần cứng JetBot/gamepad/ESP32 | Đoàn Quốc Kiên / Huỳnh Hữu Lộc | Chờ cut cuối và URL video |
+| Phase 1: cửa, sweet spot, prompt, handshake | Đoàn Quốc Kiên / Huỳnh Hữu Lộc | Chỉ dùng clip thật có nguồn; ghi rõ pilot |
+| Phase 2: whitelist, intruder queue | Huỳnh Nguyễn Hoài Lộc / Huỳnh Hữu Lộc | Phase 2 live do Huỳnh Nguyễn Hoài Lộc chủ trì (#115); replay ghi REPLAY |
+| Phase 3: pursuit, HOLD, queue handoff | Đoàn Quốc Kiên / Huỳnh Hữu Lộc | Tách clip robot có giám sát với SIMULATION |
+| Edge/FP16 | Đoàn Quốc Kiên / Huỳnh Nguyễn Hoài Lộc | Ghi thiết bị, có/không người, scope timing |
 
 Chưa có link video cuối trong nguồn; không tự tạo URL giả. Video là optional
 theo report plan, vẫn là mốc nội bộ của nhóm. Pin/consent/blur và người giữ R1
