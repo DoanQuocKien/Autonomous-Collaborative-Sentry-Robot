@@ -1,4 +1,4 @@
-"""Tower registration + self-pose, prompted by beeps (the robot does not move). The ESP32 tower carries ArUco ids 10 (back), 11 (front, upside down), 12 (right), 13 (left); heights in sentry/perception/tower_markers.py.
+"""Tower registration + self-pose, prompted by beeps (the robot does not move). The ESP32 tower carries ArUco ids 10 (back), 11 (front, ROTATED 180 DEG: its corners are reordered with tower_markers.upright), 12 (right), 13 (left); heights in sentry/perception/tower_markers.py.
 
   python -m tools.tower_register [--ref-pitch -10.37]
 
@@ -70,7 +70,7 @@ def main():
                 (i, c), = seen.items()
                 if i != cur:
                     buf, cur = [], i
-                buf.append(c)
+                buf.append(tm.upright(i, c))                         # the front marker (id 11) is rotated 180 deg: corners reordered
             if len(buf) >= a.frames:
                 r = face_pitch(buf, K, tm.bottom_h(cur), a.camera_h)
                 print("id %d (%s): pitch %+.2f deg, spread %.2f, %d frames, distance %.2f m" % (cur, tm.TOWER[cur][0], r[0], r[1], r[2], r[3]), flush=True)

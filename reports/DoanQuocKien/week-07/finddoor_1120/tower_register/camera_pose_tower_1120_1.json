@@ -1,0 +1,38 @@
+{
+ "tag": "tower_1120",
+ "H_cam_m": 0.1,
+ "H_tape_m": 0.1,
+ "pitch_down_deg": -11.67,
+ "camera_roll_deg": 0.0,
+ "passed": true,
+ "pitch_spread_deg": 0.277,
+ "marker_frames": 4,
+ "method": "median pitch over the tower faces registered by tools/tower_register.py (position-based, H fixed 0.100 m)",
+ "tower_faces": {
+  "11": {
+   "pitch_deg": -11.73,
+   "spread_deg": 0.023,
+   "distance_m": 0.251,
+   "offset_to_ref_m": -0.006
+  },
+  "12": {
+   "pitch_deg": -11.99,
+   "spread_deg": 0.131,
+   "distance_m": 0.233,
+   "offset_to_ref_m": -0.007
+  },
+  "10": {
+   "pitch_deg": -11.61,
+   "spread_deg": 0.087,
+   "distance_m": 0.242,
+   "offset_to_ref_m": -0.0055
+  },
+  "13": {
+   "pitch_deg": -11.22,
+   "spread_deg": 0.232,
+   "distance_m": 0.212,
+   "offset_to_ref_m": -0.0035
+  }
+ },
+ "camera_roll_deg_note": "not measured by the tower registration (roll is noisy on the 50 mm markers)"
+}

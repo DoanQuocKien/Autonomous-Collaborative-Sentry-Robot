@@ -1,0 +1,17 @@
+STAGE 1: C:\Users\admin\miniconda3\envs\sentry\python.exe -X utf8 -u -m tools.deploy_live --label take3_a --find-door --handshake data/handshake/class_door_1120 --tower-place --tower-pose calib/camera_pose_tower_1120_2.json --wait 120 --seconds 150
+ESP32 found at 10.99.58.9
+handshake detector: 5 reference frames, XFeat threshold 27
+entrance detector loaded from data/entrance/class_door; the robot measures the door, centres on it and drives to a 2.25 m stand-off, no coordinates
+JetBot found at 10.99.58.160
+battery 11.63 V
+NO OBSTACLE CHECK (no --camera-pose): the floor must be cleared and you must hold R1
+start checks passed: battery, frames
+HOLD R1 now (within 120 s). Stop any time: release R1 or press q here.
+R1 held: driving
+no control key at D:\CS532\Autonomous Collaborative Sentry Robot\data\control.key: sending UNSIGNED control packets
+PLACE THE TOWER 0.20-0.30 m in front of the robot, back marker toward it (now: None)
+PLACE THE ESP32 and keep HOLDING R1 until the 2 beeps (at least 10 s): verification takes 1-2 s after the camera is aimed
+STANDBY: release R1 now
+ENDED: STANDBY reached | 58.6 s | DR path 2.0 m | final DR pose (1.25, 0.28, -27 deg) | prompts ['place_camera', 'camera_verified']
+Distance from the robot to the entrance door (m, tape): Clear line of sight to the entrance (y/n): Adjacent wall or furniture within 1 m (y/n): Distance to that wall or furniture (m, tape; blank if none): Tape offset from the sweet spot along x (forward from the START, m, + ahead): Tape offset along y (left of the START, m, + left): Collisions or touches (number): saved 756 video frames
+saved data\deploy\take3_a_1

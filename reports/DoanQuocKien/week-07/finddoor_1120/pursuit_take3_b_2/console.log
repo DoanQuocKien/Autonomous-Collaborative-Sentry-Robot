@@ -1,0 +1,11 @@
+tower avoidance ON: TowerAvoidConfig(trigger_m=0.9, confirm_frames=2, window=6, side_m=0.8, clear_m=0.4, max_clear_s=10.0, turn_w=0.5, drive_v=0.5, turn_scale=1.0, drive_scale=1.0, abort_obstacle_m=0.35, default_side=-1, ahead_deg=3.0, fresh_s=0.25, yaw_pulse_s=0.08, max_gap_s=1.0, strategy='steer', clearance_m=0.35, margin_deg=10.0, steer_v=0.6, steer_w_max=0.18, steer_gain=0.6, stop_m=0.3, pivot_w=0.5, lost_s=0.5, pass_clear_m=0.25, max_total_s=12.0)
+camera pose calib/camera_pose_tower_1120_2.json: pitch -11.29 deg, lens 0.100 m. Obstacle avoidance is UNTESTED on the robot (floor unknown): keep the floor clear, hold R1, release at any problem.
+JetBot found at 10.99.58.160
+battery 11.61 V
+warming up the person detector (first frame is slow, done before R1 is needed)...
+start checks passed: battery, video
+ARM the e-stop (hold Start 1.5 s) and HOLD R1 within 120 s. Release R1 at any problem.
+R1 held: pursuing for up to 105 s (q = stop)
+no control key at D:\CS532\Autonomous Collaborative Sentry Robot\data\control.key: sending UNSIGNED control packets
+ENDED: time limit | {"frames": 2088, "run_span_s": 105.08, "unobserved_time_s": 0.0, "coverage_tracked_fraction": 0.596, "time_fraction_distance_in_band_of_run": 0.181, "time_fraction_centred_of_run": 0.476, "hold_events": []}
+saved data\pursuit\take3_b_2

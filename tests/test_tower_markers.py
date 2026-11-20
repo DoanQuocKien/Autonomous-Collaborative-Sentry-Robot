@@ -29,3 +29,9 @@ def test_placement_gate_needs_a_steady_in_window_marker():
     assert g4.ok(1.2)
     g4.update(1.3, (0.6, 40.0))                           # seen, but knocked out of the window: revoked at once
     assert not g4.ok(1.3)
+
+
+def test_the_front_marker_is_rotated_180_and_its_corners_are_reordered():
+    c = [(0, 0), (1, 0), (1, 1), (0, 1)]
+    assert tm.upright(10, c).tolist() == [list(p) for p in c]                 # upright faces are untouched
+    assert tm.upright(11, c).tolist() == [[1, 1], [0, 1], [0, 0], [1, 0]]    # id 11: rotated by two

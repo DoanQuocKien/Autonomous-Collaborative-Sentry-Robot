@@ -6,8 +6,18 @@ Remeasure and edit here if a marker is re-taped."""
 import math
 
 MARKER_M = 0.05
-# id: (side, le_m, re_m); the back is id 10, the front id 11 (printed upside down), right id 12, left id 13 (sides as seen looking from the back to the front)
+# id: (side, le_m, re_m); the back is id 10, the front id 11, right id 12, left id 13 (sides as seen looking from the back to the front).
+# NOTE: the FRONT marker (id 11) is mounted ROTATED 180 DEGREES in its plane (upside down). `le` / `re` are measured as seen facing the face, so they are physical (the lower edge is still the one nearest the floor),
+# but the detector returns its corners in the marker's own order: pass them through `upright()` before any pose or height computation, or the roll undo and the marker's up axis are flipped.
+ROTATED_180 = (11,)
 TOWER = {10: ("back", 0.006, 0.005), 11: ("front", 0.005, 0.004), 12: ("right", 0.006, 0.010), 13: ("left", 0.005, 0.005)}
+
+
+def upright(marker_id, corners):
+    """Corners (4x2, ArUco order) as an UPRIGHT square would give them: the front marker (id 11) is rotated 180 deg, so its corner list is rotated by two (TL,TR,BR,BL -> BR,BL,TL,TR)."""
+    import numpy as np
+    c = np.asarray(corners, np.float64).reshape(4, 2)
+    return c[[2, 3, 0, 1]] if marker_id in ROTATED_180 else c
 
 
 def bottom_h(marker_id):

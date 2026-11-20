@@ -82,6 +82,8 @@ def main():
         if a.id not in tm.TOWER:
             raise SystemExit("--tower needs --id 10, 11, 12 or 13")
         a.marker_m, a.bottom_h = tm.MARKER_M, tm.bottom_h(a.id)
+        if a.id in tm.ROTATED_180:
+            raise SystemExit("the tower's front marker (id %d) is rotated 180 deg: use python -m tools.tower_register for it (corners are reordered there)" % a.id)
         print("tower %s face (id %d): lower edge %.4f m, marker tilt %+.1f deg" % (tm.TOWER[a.id][0], a.id, a.bottom_h, tm.tilt_deg(a.id)), flush=True)
     square_above = _cfg_value(cfg, "aruco_square_above_page_m", 0.132)
     page_bottom = a.page_bottom_h if a.page_bottom_h is not None else _cfg_value(cfg, "aruco_page_bottom_h_m", 0.0)

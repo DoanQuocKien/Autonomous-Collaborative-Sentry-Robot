@@ -2,7 +2,7 @@
 
 **Autonomous Collaborative Sentry Robot — CS532**
 
-Báo cáo giữa kỳ • Đoàn Quốc Kiên, Huỳnh Nguyễn Hoài Lộc, Huỳnh Hữu Lộc • Bản tổng hợp ngày 18/11/2026
+Báo cáo giữa kỳ • Đoàn Quốc Kiên, Huỳnh Nguyễn Hoài Lộc, Huỳnh Hữu Lộc • Bản tổng hợp ngày 18/11/2026, bổ sung 20/11
 
 **Mục tiêu:** phối hợp một robot di động và một camera cố định tại cửa để phát hiện người chưa được cho phép, tiếp cận họ ở cự ly an toàn và giữ cảnh giới khi họ đứng yên. Ứng dụng hướng tới phòng học hoặc phòng làm việc có một cửa vào, với người vận hành giám sát và quyền dừng robot bằng tay cầm.
 
@@ -110,7 +110,9 @@ Robot không encoder; IMU đã lắp nhưng hỏng, đang sửa và chưa dự k
 
 ![F15 — Các endpoint đo được của lượt thật; không vẽ quỹ đạo ArUco giả lập.](DoanQuocKien/week-05/f15/F15_dead_reckoning.png)
 
-Một lượt có sửa ArUco đạt 14,5 cm sau khoảng 3 m, thuần DR lệch 98,3 cm. Đây là thử định vị riêng; thuần DR chưa đạt ngưỡng 40 cm. T2 tiếp cận cửa có 7 lượt được tính: 4 ngày 30/10, 2 ngày 14/11 và 1 ngày 16/11. Lượt 16/11 STANDBY sau 30,7 s, tape door 2,93 m, 0 va chạm; DR tại vantage lệch 0,593 m nên pass dựa tape, không chứng nhận DR. Handshake rehearsal chỉ 1 accept và 1 reject hợp lệ, chưa 10/10. [D14, D16] Kết quả tiếp cận cửa hiện tại chỉ trên một cửa/ngày và còn phụ thuộc đo thước, không chứng minh tự định vị toàn phòng. [C2, D13]
+Một lượt có sửa ArUco đạt 14,5 cm sau khoảng 3 m, thuần DR lệch 98,3 cm. Đây là thử định vị riêng; thuần DR chưa đạt ngưỡng 40 cm. T2 tiếp cận cửa có 7 lượt được tính: 4 ngày 30/10, 2 ngày 14/11 và 1 ngày 16/11 (lượt find-door 20/11 không được tính vào đó: các câu hỏi tape để trống; cự ly cửa nay không cần đo thước mỗi lượt). Lượt 16/11 STANDBY sau 30,7 s, tape door 2,93 m, 0 va chạm; DR tại vantage lệch 0,593 m nên pass dựa tape, không chứng nhận DR. Handshake rehearsal chỉ 1 accept và 1 reject hợp lệ, chưa 10/10. [D14, D16] Kết quả tiếp cận cửa hiện tại chỉ trên một cửa/ngày và còn phụ thuộc đo thước, không chứng minh tự định vị toàn phòng. [C2, D13]
+
+Pose camera ngày 20/11 được tự hiệu chuẩn trên bốn mặt tháp ESP32 (`tower_register`, marker 50 mm id 10–13, mỗi mặt 30 frame): pitch từ −11,09° đến −11,68°, median −11,29°, độ lệch chuẩn giữa các mặt 0,21° (chênh lớn nhất 0,59°). Lần đăng ký đầu trong ngày, đứng gần tháp 0,21–0,25 m, cho −11,67° (`camera_pose_tower_1120_1.json`, chênh 0,38° so với giá trị dùng); giá trị dùng là lần thứ hai. Mặt trước (id 11) gắn xoay 180° trong mặt phẳng, nên góc marker được sắp lại trước khi giải PnP. Pitch này thấp hơn 0,9° so với board 150 mm (−10,37°); chênh lệch chưa được giải thích và các độ cao tháp đã đo chưa được chỉnh lại. [D20]
 
 <!-- pagebreak -->
 
@@ -130,7 +132,7 @@ ORG/SegFormer-B0: trên ruler D1 24 vật, configured tìm 1/24, obstacle-route 
 
 ## 5.2 Nhận diện cửa
 
-XFeat + RANSAC kiểm tra hình học; DINOv2 hỗ trợ reference khác camera. Ngưỡng phải được hiệu chuẩn bằng negative sweep theo cửa. F12 so baseline ORB với XFeat/DINOv2; kết quả nhận cửa không chứng minh door range hoặc bắt tay đủ 10/10 đặt lại camera. [K1]
+XFeat + RANSAC kiểm tra hình học; DINOv2 hỗ trợ reference khác camera. Ngưỡng phải được hiệu chuẩn bằng negative sweep theo cửa. F12 so baseline ORB với XFeat/DINOv2; kết quả nhận cửa không chứng minh door range hoặc bắt tay đủ 10/10 đặt lại camera. Cự ly cửa không do detector trả về mà suy ra từ diện tích khung viền khớp so với một mốc tham chiếu lưu cùng enrolment (`ref_range_m`, đo một lần mỗi phòng, 1,96 m cho cửa lớp): range = ref·(A_ref/A)^(1/2). Ở hai lượt `approach_door` ngày 20/11, ước lượng khi dừng là 2,21 và 2,12 m (tape ghi tay 2,25 và 2,11 m), nhưng ước lượng đầu lượt thấp khoảng 10% ở lần đo 2,91 m so với tape 3,23 m (một lần đo). [K1, D20]
 
 <!-- pagebreak -->
 
@@ -200,7 +202,9 @@ TargetQueue giữ FIFO và vector chuẩn hóa. TARGET_EXITED hoàn tất ngư�
 
 HoldDetector chiếu target sang world theo pose robot, vào HOLD khi speed<0,1 m/s đủ 2 s và thoát khi >0,2 m/s. Bù pose giảm sai lệch do robot xoay, còn chịu drift odometry.
 
-Live 16/11: tracked 99,7%, cự ly 1,2±0,2 m chỉ 32% (gate 80%, chưa đạt), centred 91%, 0 HOLD event. Điều kiện: glossy, 5 W giả định từ lần đọc cuối buổi, mã robot trước audit, gói điều khiển unsigned. Tower camera chưa được né như vật cản. [D16]
+**Find-door (20/11).** `FindDoorRunner` không dùng toạ độ cửa: robot đứng yên đo bearing và diện tích khung cửa (median), quay theo bearing đo được (±8°) và chỉ tiến từng nhịp khi cự ly ước lượng lớn hơn stand-off 2,25 m; ngưỡng quãng đường theo tốc độ xấu nhất chặn việc tiến vô hạn. Cổng đặt tháp (`PlacementGate`) chỉ cho handshake tính khi marker lưng (id 10) nằm trong 0,20–0,30 m và ±15° liên tục 1 s. Lượt thật (lần thứ tư trong ngày; ba lượt trước dùng bản runner quét cũ, một không tìm thấy cửa sau 45 s, một dừng vì R1 bị nhả khi đang quét, chưa thấy cửa, một dừng vì R1 bị nhả khi chờ đặt tháp; ngoài ra hai lượt T2 `--tower-place` với vantage thủ công cũng dừng vì R1 bị nhả ở 14,1 và 17,2 s): ước lượng ban đầu 3,45 m, quay trái 32°, 18 lần đo trong 35,8 s, dừng khi ước lượng còn 2,21 m; cổng mở (140 frame trong vùng cho phép, trên 756 frame cả lượt), handshake đạt ở 54,3 s (25/194 frame thấy cửa, inliers cuối 53, tối đa 62, ngưỡng 27), STANDBY ở 56,3 s, tổng 58,6 s. Tape ghi tay sau lượt: tháp–cửa 1,9 m; robot–cửa 2,1–2,2 m (xấp xỉ, vị trí đo không được ghi: khớp điểm dừng; sau khi lùi khoảng 0,3 m theo DR, robot còn xa cửa hơn, khoảng 2,4 m nếu tháp–cửa 1,9 m). Chưa có tìm kiếm tịnh tiến: cửa không vào khung khi xoay tại chỗ thì runner báo không tìm thấy. [D20]
+
+Live 16/11: tracked 99,7%, cự ly 1,2±0,2 m chỉ 32% (gate 80%, chưa đạt), centred 91%, 0 HOLD event. Điều kiện: glossy, 5 W giả định từ lần đọc cuối buổi, mã robot trước audit, gói điều khiển unsigned. Ngày 16/11 tháp chưa được né như vật cản (thử né tháp ngày 18/11 và 20/11: mục 7.2). [D16]
 
 ![F17b — Pursuit 16/11, khoảng cách dưới yêu cầu 80%, chưa nghiệm thu.](DoanQuocKien/week-07/figures/F17b_pursuit_1116.png)
 
@@ -247,6 +251,8 @@ Gói ZIP lấy từ `git archive` của đúng commit, không chứa `.git`; man
 | Face whitelist | 14/11: 822/877 genuine; 0/1754 impostor | 3 người; FAR đạt, TAR 95% chưa đạt |
 | Re-ID/tracking | Parity/replay; Sector 99,7% (T0) | Chưa gallery≥5/D3≥60 s/truth |
 | Pursuit/HOLD | 16/11: tracked 99,7%, dải 32%, tâm 91%, 0 HOLD | Không PASS: dải <80%; chưa HOLD |
+| Pursuit + tháp 20/11 | 31 s: tracked 34,3%, dải 9,4%, tâm 23,7% (mất mục tiêu 5 s); 105 s: 59,6%, 18,1%, 47,6%; 0 HOLD; tower avoid 4 và 9 lần, không abort | Không PASS: dải <80%; chẩn đoán (D20) |
+| Find-door + handshake | 20/11: STANDBY 56,3 s (tổng 58,6 s); ước lượng dừng 2,21 m (tape ghi tay robot–cửa 2,1–2,2 m, tháp–cửa 1,9 m); 25/194 frame thấy cửa, inliers cuối 53 | 1 lượt thật, chưa lặp; tape xấp xỉ; chưa 10/10 |
 | Né tháp ESP32 | Steer ~0,4 m; bám 120 s: 13 triggers (12 xong), 67,2%/9,2%/40% | 18/11 (`tower_avoid_1118/`); tắt det. |
 | GPU laptop | Scheduled 5060 19,65; 4050 19,23 FPS | Door Hz<5; chưa dual-stream T1 |
 | Edge live | 14,45 FPS/p95 153 ms ở 600 s | Chưa ≥20 FPS/≤100 ms/15 phút |
@@ -256,7 +262,9 @@ Gói ZIP lấy từ `git archive` của đúng commit, không chứa `.git`; man
 
 Lượt 16/11: sàn glossy, 5 W (cuối buổi), code trước audit, gói unsigned, chưa tower avoidance; bổ sung 18/11 thử `TowerSteer` theo marker khi tắt detector tổng quát [D18]; gains DR vẫn tuần 2. Phase 2 live do Huỳnh Nguyễn Hoài Lộc chủ trì; pilot #115 gồm 3 authorized/3 queued, coverage 50%, chưa T1. [D16, H7]
 
-Không cộng frame liên tiếp thành lượt độc lập; không bỏ missed objects khi tính error. Các khối đã có mã và bằng chứng phát triển, nhưng các gate hệ thống chính vẫn pending. Nguồn: [registry](kouun-rokku/week-07/editor-sources.md), H1/H2/D13/D18/C1/C2/K2.
+Lượt 20/11: sàn glossy (`--floor` unknown), pin 11,6 V, pose tháp `camera_pose_tower_1120_2.json`; gói điều khiển unsigned; lượt 1 tháp ở 0,56 m, 6,7° trước robot nên tower avoid kích hoạt ngay frame đầu, lượt 2 tháp ở 0,65 m, 53°; tower avoid chiếm 251/620 và 483/2088 frame; detector vật cản tổng quát bật (chặn 140 và 244 frame, khác dòng 18/11 tắt detector nên hai dòng không so sánh trực tiếp); lượt 2 đổi `--lost-end-s` 5→20 s và `--seconds` 90→105 s. Pursuit chạy ngay sau một lượt find-door đã STANDBY, không phải T2 độc lập. [D20]
+
+Không cộng frame liên tiếp thành lượt độc lập; không bỏ missed objects khi tính error. Các khối đã có mã và bằng chứng phát triển, nhưng các gate hệ thống chính vẫn pending. Nguồn: [registry](kouun-rokku/week-07/editor-sources.md), H1/H2/D13/D18/C1/C2/K2; D20 theo mục A.3.
 
 <!-- pagebreak -->
 
@@ -284,6 +292,7 @@ Kỳ vọng vòng đầy đủ ≥4/5 không can thiệp, tìm T2 ≥4/5, search
 - **Pose/motion:** camera gá xê dịch, drift đổi theo sàn/pin/lệnh; mỗi lượt đo lại pose, giữ phạm vi thử có giám sát và kiểm pin.
 - **Face/re-ID:** guided enrollment cải thiện genuine scores nhưng còn impostors, gallery/body-ID truth; quyết định ngưỡng/model thuộc perception owner.
 - **Video/edge:** latency và FPS chưa đạt trong điều kiện mới; cần đo đủ protocol, không lấy benchmark không người để thay thế.
+- **Find-door:** chưa có tìm kiếm tịnh tiến (tiến–lùi) nên nếu cửa không lọt vào khung hình khi robot xoay tại chỗ thì lượt chạy thất bại (giới hạn đã biết); cần một `ref_range_m` mỗi phòng và sai số khoảng −10% ở một lần đo 3,23 m; khi tiến không có kiểm tra vật cản (chỉ R1 và ngưỡng quãng đường); mới một lượt thật thành công, chưa lặp. [D20]
 - **Tích hợp:** Phase 2 live và graded T2 chưa đủ; dùng replay có nhãn trong video khi thiếu cảnh thật, không trình bày như robot đã chạy.
 - **Bàn giao mã:** D5, ZIP D2 và default password được giữ theo quyết định nhóm. Chỉ ZIP nộp bài loại data/team_data/recordings/weights; không chứa lịch sử. Tag `midterm` trên main chờ freeze/review.
 
@@ -306,6 +315,7 @@ Bản tuần 7 hoàn thiện công việc editor và gói review từ những ng
 | Net / clock / streams | Huỳnh Nguyễn Hoài Lộc / Huỳnh Hữu Lộc | camera_pub, clock_sync, mjpeg_rx |
 | Jetson / ESP32 / motor interlocks | Đoàn Quốc Kiên / Huỳnh Hữu Lộc | estop, jetson_espcam; HIL riêng |
 | Report / package tools | Huỳnh Hữu Lộc | midterm_package, page audit, PDF pages |
+| FindDoorRunner, PlacementGate, session_run | Đoàn Quốc Kiên | phase1_runner (find-door), tower_markers, approach_door, deploy_live, session_run |
 
 ## A.2 Tái hiện
 
@@ -317,6 +327,9 @@ python -m tools.run_cpu_tests
 python -m tools.render_midterm_report
 python -m tools.check_midterm_page_budget --pdf reports/midterm_report.pdf
 python -m tools.check_midterm_package --ref HEAD
+python -m tools.tower_register
+python -m tools.deploy_live --label x --find-door --handshake <thư mục> --tower-place
+python -m tools.session_run --label x --camera-pose <pose> -- --handshake <thư mục> --tower-place
 python -m tools.build_midterm_package --ref HEAD --out /tmp/submission.zip
 ```
 
@@ -324,4 +337,4 @@ Repo: https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot . Nh
 
 ## A.3 Chỉ mục bằng chứng
 
-S0: `docs/Implementation Plan.md`, `docs/Mid-Term Report Plan.md`. C1/C2: `calib/camera.json`, báo cáo dead-reckoning 24/10. K1/K2: tuần 4–6 (parity/hold/replay/review #101). K3: `reports/kouun-rokku/week-07/` (checkout sạch và package). H1/H2: `midterm/chapter-05-current.md`, addenda 05/11 và 11/11. E1: `docs/Edge Deployment.md`. D13: bằng chứng #108 đã merge (chapters/README/GPU/edge JSON và hình). D14: `t2_1114` và `heartbeat_dryrun_1114`; D16: `classroom_1116`; D18: `tower_avoid_1118` và `tower_marker_range_1118`; H7: pilot Phase 2 live (#115). Registry kèm SHA256: `reports/kouun-rokku/week-07/editor-sources.md` (commit:path + SHA256).
+S0: `docs/Implementation Plan.md`, `docs/Mid-Term Report Plan.md`. C1/C2: `calib/camera.json`, báo cáo dead-reckoning 24/10. K1/K2: tuần 4–6 (parity/hold/replay/review #101). K3: `reports/kouun-rokku/week-07/` (checkout sạch và package). H1/H2: `midterm/chapter-05-current.md`, addenda 05/11 và 11/11. E1: `docs/Edge Deployment.md`. D13: bằng chứng #108 đã merge (chapters/README/GPU/edge JSON và hình). D14: `t2_1114` và `heartbeat_dryrun_1114`; D16: `classroom_1116`; D18: `tower_avoid_1118` và `tower_marker_range_1118`; H7: pilot Phase 2 live (#115). D20: `reports/DoanQuocKien/week-07/finddoor_1120/` (find-door, pursuit, approach, tower_register; tape do vận hành ghi tay, không nằm trong summary). Registry kèm SHA256: `reports/kouun-rokku/week-07/editor-sources.md` (commit:path + SHA256).
