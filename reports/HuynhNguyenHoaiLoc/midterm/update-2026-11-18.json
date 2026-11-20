@@ -1,0 +1,184 @@
+{
+  "date": "2026-11-18",
+  "timezone": "Asia/Bangkok",
+  "source_commit": "506bb6b896c0081dacdd5e1725e715b0ca8011ce",
+  "added_after_freeze": "2026-11-16",
+  "sources": [
+    {
+      "commit": "506bb6b896c0081dacdd5e1725e715b0ca8011ce",
+      "path": "reports/DoanQuocKien/week-07/tower_marker_range_1118/summary.csv",
+      "sha256": "489b7e1c36daa9e01098816e99154e24b5c977c96c863df6800cde9a5746ebd2"
+    },
+    {
+      "commit": "506bb6b896c0081dacdd5e1725e715b0ca8011ce",
+      "path": "reports/DoanQuocKien/week-07/tower_marker_range_1118/README.md",
+      "sha256": "6f2e81893abe455643243b80707ba27a1be43e794b1b94ba106cd565be5f387a"
+    },
+    {
+      "commit": "506bb6b896c0081dacdd5e1725e715b0ca8011ce",
+      "path": "reports/DoanQuocKien/week-07/tower_marker_range_1118/tower_a_reverse_2.csv",
+      "sha256": "cd93db730d7906dc61ebe7362b44fd955f048bc1fee2d4893e293bf3f45d0f94"
+    },
+    {
+      "commit": "506bb6b896c0081dacdd5e1725e715b0ca8011ce",
+      "path": "reports/DoanQuocKien/week-07/tower_marker_range_1118/tower_b_reverse_2.csv",
+      "sha256": "e9f57a1c4021be38daf6a232b1edd01dcc0fa96baaa1f83aa0cd230b38219a74"
+    },
+    {
+      "commit": "506bb6b896c0081dacdd5e1725e715b0ca8011ce",
+      "path": "reports/DoanQuocKien/week-07/tower_marker_range_1118/tower_c_reverse_2.csv",
+      "sha256": "df5562da3f1a7a0ba70b4bd4b613838169e047bed61e55d44ca486f51e30c639"
+    },
+    {
+      "commit": "506bb6b896c0081dacdd5e1725e715b0ca8011ce",
+      "path": "reports/DoanQuocKien/week-07/tower_avoid_1118/README.md",
+      "sha256": "f824ccff84e3bef0af9530a4d72e77476bf2981739489bf311daccc23634846e"
+    },
+    {
+      "commit": "506bb6b896c0081dacdd5e1725e715b0ca8011ce",
+      "path": "reports/DoanQuocKien/week-07/tower_avoid_1118/pursuit_e_summary.json",
+      "sha256": "4196223246538c23c914782a5a61a8eab59898c53542be1a1425ef03953b1a38"
+    },
+    {
+      "commit": "506bb6b896c0081dacdd5e1725e715b0ca8011ce",
+      "path": "reports/DoanQuocKien/week-07/tower_avoid_1118/pursuit_e_log.csv",
+      "sha256": "68ddb4cc5119c8e3e9ab2437b8a5a7e19f381427686bed0d91f43bc1cb15d77a"
+    },
+    {
+      "commit": "506bb6b896c0081dacdd5e1725e715b0ca8011ce",
+      "path": "reports/DoanQuocKien/week-07/tower_avoid_1118/pursuit_d_summary.json",
+      "sha256": "f69393c7d1fbbb652332e31e21939209f2ca5b47c26e807d9bc6b18f5d35d7f8"
+    },
+    {
+      "commit": "506bb6b896c0081dacdd5e1725e715b0ca8011ce",
+      "path": "reports/DoanQuocKien/week-07/tower_avoid_1118/motion_check_dorm_2.txt",
+      "sha256": "cafbb755fc6148a6873c73b1cd96bd23209e1179bae7083c6c7ccf182bf56cee"
+    },
+    {
+      "commit": "506bb6b896c0081dacdd5e1725e715b0ca8011ce",
+      "path": "reports/DoanQuocKien/week-07/tower_avoid_1118/camera_pose_self_1118_1.json",
+      "sha256": "a9e59726e4c8b77593b3321b27b06b9427f30ac2d31c2cbc16d51b338bc70eab"
+    },
+    {
+      "commit": "506bb6b896c0081dacdd5e1725e715b0ca8011ce",
+      "path": "reports/DoanQuocKien/week-07/tower_avoid_1118/tower_runs_summary.csv",
+      "sha256": "2d8ef1d4d2ff48d8db6ef85d67fe182215d4511b3478f1031a963ca3f9933276"
+    }
+  ],
+  "marker_range": [
+    {
+      "yaw_deg": 0.0,
+      "tape_end_m": 1.64,
+      "last_pnp_m": 1.325,
+      "last_side_px": 9.0
+    },
+    {
+      "yaw_deg": 30.0,
+      "tape_end_m": 1.23,
+      "last_pnp_m": 1.236,
+      "last_side_px": 11.0
+    },
+    {
+      "yaw_deg": 45.0,
+      "tape_end_m": 1.07,
+      "last_pnp_m": 1.028,
+      "last_side_px": 13.0
+    }
+  ],
+  "pursuit_e": {
+    "metrics": {
+      "frames": 2384,
+      "frames_with_distance": 1600,
+      "run_span_s": 120.07,
+      "observed_time_s": 120.06,
+      "tracked_time_s": 80.74,
+      "coverage_tracked_fraction": 0.672,
+      "time_fraction_distance_in_band_of_run": 0.092,
+      "time_fraction_centred_of_run": 0.4,
+      "frames_obstacle_blocked": 0,
+      "reacquires": 0,
+      "hold_frames": 3
+    },
+    "tower_events": {
+      "TRIGGER": 13,
+      "DONE": 12,
+      "ABORT": 0
+    },
+    "tower_frames": 672,
+    "unfinished_avoids": 1,
+    "hold_events": [
+      [
+        106.53,
+        "TARGET_STATIONARY"
+      ],
+      [
+        106.67,
+        "TARGET_MOVING"
+      ]
+    ],
+    "search_episodes": [
+      {
+        "start_s": 5.725,
+        "duration_s": 1.25,
+        "frames": 25
+      },
+      {
+        "start_s": 19.937,
+        "duration_s": 2.105,
+        "frames": 41
+      },
+      {
+        "start_s": 61.974,
+        "duration_s": 0.05,
+        "frames": 1
+      },
+      {
+        "start_s": 78.969,
+        "duration_s": 1.205,
+        "frames": 24
+      }
+    ],
+    "general_obstacle_detector_enabled": false,
+    "range_source": "foot"
+  },
+  "pursuit_d": {
+    "frames": 731,
+    "run_span_s": 36.72,
+    "completed_avoids": 3,
+    "csv_available": false
+  },
+  "camera_pose": {
+    "tag": "self_1118",
+    "H_cam_m": 0.1,
+    "H_tape_m": 0.1,
+    "pitch_down_deg": -6.9,
+    "camera_roll_deg": -1.54,
+    "passed": true,
+    "pitch_spread_deg": 0.041,
+    "marker_frames": 45,
+    "method": "self-calibration from one ArUco marker on a vertical surface (tools/self_pose.py): H fixed at the mechanical 0.100 m, pitch = median of the marker position estimates"
+  },
+  "motion": {
+    "measured_ratios": [
+      0.565,
+      0.684,
+      0.556,
+      0.872
+    ],
+    "fit_written": false,
+    "check_failed": true
+  },
+  "scope": {
+    "operator_tape_attribution": "DQK",
+    "physical_contact_independently_verified": false,
+    "robot_verification_after_review_fixes": false
+  },
+  "acceptance": {
+    "pursuit_pd": false,
+    "hold_protocol": false,
+    "obstacle_avoidance": false,
+    "d3_identity": false,
+    "independent_d5": false,
+    "automatic_map_vantage": false
+  }
+}
