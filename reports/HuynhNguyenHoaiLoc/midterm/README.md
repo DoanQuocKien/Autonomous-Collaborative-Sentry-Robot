@@ -1,5 +1,7 @@
 # Hồ sơ giữa kỳ HNHL
 
+**Chốt đóng góp tuần 7, 21/11:** [Chương 5 hoàn chỉnh để DQK/KR review](chapter-05-final-2026-11-21.md) có đủ hình khoảng cách, ROC cửa, GPU và tối ưu, cùng phần Nano phối hợp DQK. [Manifest nguồn/hình](chapter-05-final-2026-11-21.json), [đối chiếu nhiệm vụ tuần 7](../week-07.md). Số liệu đồng nhất với bản ghép nhóm; các gate thiếu dữ liệu tiếp tục được ghi rõ.
+
 **Hiện hành 21/11:** #113/#132/#133 đã merge; issue #114 đã đóng, #111 còn là snapshot thông tin. Đã bổ sung find-door và hai pursuit diagnostics ngày 20/11, đưa F7 raw CSV đã có vào checklist, tổng 38 nguồn Git pin. [Bản bổ sung cho editor và việc cần chốt trước nộp 23/11](update-2026-11-21.md), [snapshot GitHub](github-2026-11-21.json). Các mục ngày cũ bên dưới là lịch sử; Chương 5/7 ngày 16/11 và Word gốc giữ phạm vi snapshot của chúng.
 
 **Snapshot sau đóng băng, 18/11** đã có thử marker/tower, pursuit và motion check ở ký túc xá của DQK. HNHL tính lại CSV, giữ lượt tránh dang dở, detector vật cản tắt và các gate chưa đạt. #130/#131 đã merge, #113 đã sửa và đang chờ DQK review lại. [Bổ sung 18/11](update-2026-11-18.md).
@@ -38,6 +40,7 @@ Snapshot **01/11/2026**, dựa trên code/evidence hiện có. Hồ sơ này là
 
 ## Tài liệu để ghép báo cáo
 
+- [Chương 5 chốt đóng góp tuần 7 ngày 21/11](chapter-05-final-2026-11-21.md) là bản bàn giao mới nhất cho DQK/KR review.
 - [Bổ sung ngày 21/11 cho Chương 5/7 và bàn giao](update-2026-11-21.md) cập nhật trạng thái merge, bằng chứng 20/11 và những hàng chưa nghiệm thu.
 - [Chương 5 đóng băng ngày 16/11](chapter-05-current.md) hợp nhất kết quả HNHL và dữ liệu lớp học tới mốc đó.
 - [Chương 5 dạng Word](HNHL-Chuong-5.docx): bản ngắn, có F9/F10/F13 và nguồn E01–E12, chỉnh sửa được.

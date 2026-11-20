@@ -222,6 +222,16 @@ def check():
         assert not any(nov21['acceptance'].values())
         assert not nov21['scope']['new_hardware_trials']
         nov21_sources = len(nov21['sources'])
+    final_manifest_path = OUT/'chapter-05-final-2026-11-21.json'
+    final_chapter_checked = False
+    if final_manifest_path.exists():
+        final_manifest = read_json(final_manifest_path)
+        chapter = (ROOT/final_manifest['markdown']).read_bytes().replace(b'\r\n', b'\n')
+        assert hashlib.sha256(chapter).hexdigest() == final_manifest['markdown_sha256_lf'], 'W7 final chapter changed since review'
+        for figure in final_manifest['figures']:
+            assert hashlib.sha256((ROOT/figure['path']).read_bytes()).hexdigest() == figure['sha256'], 'W7 final figure changed since review'
+        assert len(final_manifest['figures']) == 5
+        final_chapter_checked = True
     verification = read_json(OUT/'verification.json')
     word_sha = hashlib.sha256(word.read_bytes()).hexdigest()
     assert word_sha == verification['word']['sha256'], 'Word changed since visual review; render again'
@@ -272,6 +282,7 @@ def check():
                 nov16_sources_checked=nov16_sources,
                 nov18_sources_checked=nov18_sources,
                 nov21_sources_checked=nov21_sources,
+                w7_final_chapter_checked=final_chapter_checked,
                 source_hashes_match=True, both_saved_snapshots_match=True,
                 missing_acceptance_preserved=True, local_links_checked=count,
                 original_word_sha256=word_sha, original_word_visual_review_preserved=True,

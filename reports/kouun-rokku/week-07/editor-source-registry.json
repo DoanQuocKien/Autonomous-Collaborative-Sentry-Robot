@@ -619,6 +619,41 @@
       "sha256": "b7563dae042943b420886b5e19722ef0897c26853bb46037ea1605334f081bdc",
       "scope": "2026-11-20 diagnostic robot runs; operator tape after each run; no independent T2 or repeated acceptance claim",
       "source_commit": "b95169a6a39f553b7e1d03d011d2f58039a1d60b"
+    },
+    {
+      "label": "H7",
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/figures/F9_gpu.png",
+      "sha256": "805cc38703acdc8fd1464dcd18a11ee0c450fef042f8c44964c80c1f771767e6",
+      "scope": "HNHL W7 final Chapter 5: RTX5060 workload figure and 14-Nov door-camera descriptive ROC; no new acceptance",
+      "source_commit": "55ddfc845530cbae7ede5be3d5e25549da3785d5"
+    },
+    {
+      "label": "H7",
+      "path": "reports/HuynhNguyenHoaiLoc/week-07/threshold-118-2026-11-15/roc.png",
+      "sha256": "683c5d42c71c756a125c93c919f298e5925ac650c29d28dd3ddfca0a1c0f6996",
+      "scope": "HNHL W7 final Chapter 5: RTX5060 workload figure and 14-Nov door-camera descriptive ROC; no new acceptance",
+      "source_commit": "55ddfc845530cbae7ede5be3d5e25549da3785d5"
+    },
+    {
+      "label": "H7",
+      "path": "reports/HuynhNguyenHoaiLoc/week-07/threshold-118-2026-11-15/roc.csv",
+      "sha256": "656acce229e264226d6d17ac620d46132d928718e6b954225c381ea6425e5a4d",
+      "scope": "HNHL W7 final Chapter 5: RTX5060 workload figure and 14-Nov door-camera descriptive ROC; no new acceptance",
+      "source_commit": "55ddfc845530cbae7ede5be3d5e25549da3785d5"
+    },
+    {
+      "label": "H7",
+      "path": "reports/HuynhNguyenHoaiLoc/week-07/threshold-118-2026-11-15/summary.json",
+      "sha256": "785746c346342763967c1c5327a3c8111eee99318fb64f8c66e91ffdd5d2a094",
+      "scope": "HNHL W7 final Chapter 5: RTX5060 workload figure and 14-Nov door-camera descriptive ROC; no new acceptance",
+      "source_commit": "55ddfc845530cbae7ede5be3d5e25549da3785d5"
+    },
+    {
+      "label": "H7",
+      "path": "reports/HuynhNguyenHoaiLoc/week-07/threshold-118-2026-11-15/reproduce.py",
+      "sha256": "4fca72a14242f085bd9a2db770b90e9b0dac63ff6e7a5c8f597382712e27890b",
+      "scope": "HNHL W7 final Chapter 5: RTX5060 workload figure and 14-Nov door-camera descriptive ROC; no new acceptance",
+      "source_commit": "55ddfc845530cbae7ede5be3d5e25549da3785d5"
     }
   ]
 }

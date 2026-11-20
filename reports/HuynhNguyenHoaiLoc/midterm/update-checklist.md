@@ -1,5 +1,7 @@
 # Checklist tiếp tục hoàn thiện giữa kỳ HNHL
 
+**Chốt phần viết tuần 7:** [Chương 5 ngày 21/11](chapter-05-final-2026-11-21.md) có đủ hình theo phân công, nguồn và giới hạn; đã đưa vào PR #134 để DQK/KR review. Các mục dữ liệu bên dưới phục vụ nghiệm thu sau, không ngăn việc báo cáo trung thực kết quả hiện có trong tuần 7.
+
 **Hiện hành 21/11:** #113/#132/#133 đã merge. Đã tính lại find-door và pursuit 20/11; issue #114 đóng nhưng full T1 còn thiếu. F7 đã có raw CSV của DQK, không còn thiếu nguồn; số đo chưa đạt FPS/p95. Việc có thể chốt ngay là kiểm tra nội dung Chương 5/7, PDF cuối, source/export và phần overlay/video nếu nhóm thực hiện. D3/gallery, D5 độc lập, F11/world truth và RTX4050 precision accuracy vẫn cần dữ liệu phù hợp. [Trạng thái và checklist nộp bài 23/11](update-2026-11-21.md), [snapshot GitHub](github-2026-11-21.json). Các mục ngày cũ dưới đây là lịch sử.
 
 **Snapshot 18/11 sau freeze** có thử tower bằng marker, cự ly khi dừng 1,64/1,23/1,07 m ở ba góc và motion fit thất bại. Pursuit-e có 13 triggers, 12 hoàn tất và một còn active khi hết giờ. Các hàng D3/D5 độc lập, map/world truth, full door T1 và general obstacle avoidance tiếp tục chờ dữ liệu. #113 chờ DQK review lại sau khi sửa. [Nguồn và phạm vi mới](update-2026-11-18.md).
