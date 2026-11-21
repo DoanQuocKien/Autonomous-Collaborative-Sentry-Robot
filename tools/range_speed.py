@@ -58,6 +58,8 @@ def main():
     ap.add_argument("--user", default="jetbot")
     ap.add_argument("--password", default=os.environ.get("JETBOT_PASSWORD"))
     a = ap.parse_args()
+    if not 10.5 <= a.min_battery <= 13.0:                       # NaN fails the comparison too
+        ap.error("--min-battery must be between 10.5 and 13.0 V")
     if any(not 0.3 <= v <= 1.0 for v in a.fwd_v) or not -1.0 <= a.rev_v <= -0.3:
         raise SystemExit("forward v in [0.3, 1], reverse v in [-1, -0.3] (above the motor dead zone)")
 

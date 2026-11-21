@@ -216,7 +216,7 @@ Mô phỏng scripted ghi HOLD 6,32 s, resume 8,26 s, v=0 trong HOLD, hai targets
 | T1 | Replay có nhãn/truth và protocol định trước | Accuracy/latency theo bộ dữ liệu và thiết bị ghi rõ |
 | T2 | Robot/ESP32 thật, pin và điều kiện có kiểm soát | Hành vi vật lý đủ số lượt, không suy từ T0 |
 
-Checkout sạch trên nhánh sau tích hợp `#130` và `#131` (commit, tree, command và dependency versions ghi trong `week-07/clean_checkout_pytest.log` và `week-07/validation.json`): bộ CPU/replay pass không có lỗi ngoài các mục skip thiếu dữ liệu/weights/tùy chọn và 4 ca GPU/HIL bị loại trừ. Số test chỉ áp dụng cho đúng commit được log, không chứng nhận model/GPU hoặc phần cứng. Kết quả cũ 754/773 không dùng để chứng nhận bản sửa này. [K3]
+Checkout sạch trên nhánh sau tích hợp `#130` và `#131` (commit, tree, command và dependency versions ghi trong `week-07/clean_checkout_pytest.log` và `week-07/validation.json`): bộ CPU/replay pass không có lỗi ngoài các mục skip thiếu dữ liệu/weights/tùy chọn và 4 ca GPU/HIL bị loại trừ. Số test chỉ áp dụng cho đúng commit được log, không chứng nhận model/GPU hoặc phần cứng. Kết quả cũ 754/773 không dùng để chứng nhận bản sửa này. Lần chạy mới nhất trên commit a798f43 (983 passed, 4 skipped, 4 GPU deselected) nằm ở `HuynhNguyenHoaiLoc/week-07/review-2026-11-21/clean_checkout_pytest.log`; chưa chạy lại trên clone của tag. [K3]
 
 Checkout sạch tuần 7 clone từ commit candidate được ghi riêng cùng tree SHA, Python/dependency versions, command, exit code và pytest output. Chỉ dùng môi trường package đã cài của máy; D5 và ZIP D2 vẫn tracked theo quyết định nhóm; không copy dữ liệu local bổ sung, weights hoặc `.venv` vào clone. Model/GPU environment được ghi riêng nếu thiếu; CPU/replay không chứng nhận full inference setup. [K3]
 
@@ -319,10 +319,8 @@ python -m tools.session_run --label x --camera-pose <pose> -- --handshake <thư 
 python -m tools.build_midterm_package --ref HEAD --out /tmp/submission.zip
 ```
 
-Repo: https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot . Nhánh review: `kouun-rokku/w07-midterm-package`, gồm fix #101. Tag `midterm` trên main chờ freeze/review theo lịch; gói có thể xây từ commit đã ghi trong manifest. Video: chưa có URL cuối; [shot list và cách quay replay](kouun-rokku/midterm-appendix-a.md).
+Repo: https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot . Tag `midterm` trên main ([liên kết](https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/tree/midterm)) được gắn tại freeze; gói có thể xây từ commit đã ghi trong manifest. Video demo (tùy chọn, không nằm trong git): [DEMO_VIDEO.mp4](https://drive.google.com/file/d/1vzN8MM-Eqlog4NTn8Ap4_7F7AqkGI8Cb/view?usp=sharing); [shot list và cách quay replay](kouun-rokku/midterm-appendix-a.md).
 
 ## A.3 Chỉ mục bằng chứng
 
 [Registry editor](kouun-rokku/week-07/editor-sources.md) ghi commit:path và SHA256 theo nhãn nguồn. S0 là kế hoạch; C1/C2 là hiệu chuẩn; K1/K2/K3 là parity, replay, review và package; H1/H2 là perception; E1 là edge; D13/D14/D16/D18 là các buổi đo DQK; H7 là pilot Phase 2. D20 ghim log find-door/pursuit/approach/tower_register ngày 20/11 trong `reports/DoanQuocKien/week-07/finddoor_1120/`, gồm tape do người vận hành nhập sau lượt chạy.
-
-Video demo (tùy chọn, không nằm trong git): [DEMO_VIDEO.mp4](https://drive.google.com/file/d/1vzN8MM-Eqlog4NTn8Ap4_7F7AqkGI8Cb/view?usp=sharing).

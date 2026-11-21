@@ -38,7 +38,8 @@ from tools.calibrate_motion import _sh
 from tools.jetbot_status import ina219_bus_volts
 
 ESTOP_LATCH = "/home/jetbot/sentry/ESTOP"
-MIN_BATTERY_V = 11.3
+from sentry.config import load as _load_cfg
+MIN_BATTERY_V = _load_cfg()["safety"]["min_battery_live_v"]       # config.toml [safety]
 START_CLEAR_EXTRA_M = 0.25      # at the start nothing may be nearer than stop_m + this
 
 

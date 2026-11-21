@@ -38,7 +38,8 @@ from sentry.perception.body_range import iou, trunk_range
 from sentry.perception.camera import GroundPoint
 
 ESTOP_LATCH = "/home/jetbot/sentry/ESTOP"
-MIN_BATTERY_V = 11.4
+from sentry.config import load as _load_cfg
+MIN_BATTERY_V = _load_cfg()["safety"]["min_battery_live_v"]       # config.toml [safety]
 LINK_STALE_S = 0.5
 OBS_STALE_S = 0.6
 YAW_PULSE_S = 0.08                            # a yaw-only pulse is sent for at most this long (wall clock, enforced by the sender)

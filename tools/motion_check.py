@@ -299,6 +299,8 @@ def main():
     ap.add_argument("--replay-only", action="store_true")
     ap.add_argument("--out", default="calib")
     a = ap.parse_args()
+    if not 10.5 <= a.min_battery <= 13.0:                       # NaN fails the comparison too
+        ap.error("--min-battery must be between 10.5 and 13.0 V")
     run = Path("data/motion_check") / a.label
     if a.replay_only:
         cmds, frames, segments, rest_s = load_run(run)
