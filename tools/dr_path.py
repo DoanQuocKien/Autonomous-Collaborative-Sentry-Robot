@@ -201,6 +201,8 @@ def main():
     ap.add_argument("--lateral", type=float)
     ap.add_argument("--heading", type=float)
     a = ap.parse_args()
+    if not 10.5 <= a.min_battery <= 13.0:                       # NaN fails the comparison too
+        ap.error("--min-battery must be between 10.5 and 13.0 V")
     out = Path("data/dr_path") / a.label
     if a.replay_only:
         cmds, frames = load_run(out)

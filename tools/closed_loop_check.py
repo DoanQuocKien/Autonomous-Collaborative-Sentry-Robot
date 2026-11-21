@@ -64,6 +64,8 @@ def main():
     ap.add_argument("--user", default="jetbot")
     ap.add_argument("--password", default=os.environ.get("JETBOT_PASSWORD"))
     a = ap.parse_args()
+    if not 10.5 <= a.min_battery <= 13.0:                       # NaN fails the comparison too
+        ap.error("--min-battery must be between 10.5 and 13.0 V")
     if a.repeats < 1 or a.drive_m <= 0 or not 0 < abs(a.turn_deg) <= 70:
         raise SystemExit("repeats >= 1, drive-m > 0 and 0 < turn-deg <= 70 (the board must stay in view)")
 

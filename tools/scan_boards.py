@@ -26,7 +26,8 @@ CALIBRATED_SPIN_S = 0.2                           # the pulse length PRIOR_PULSE
 PRIOR_PULSE_RAD = 0.438                           # turn per 0.2 s pulse measured on 2026-10-30 and 2026-11-11 (25 deg); only used until a board gives a measurement
 MAX_VIDEO_AGE_S = 0.5
 ESTOP_LATCH = "/home/jetbot/sentry/ESTOP"
-MIN_BATTERY_V = 11.4
+from sentry.config import load as _load_cfg
+MIN_BATTERY_V = _load_cfg()["safety"]["min_battery_live_v"]       # config.toml [safety]
 
 
 def beep(freq, ms):

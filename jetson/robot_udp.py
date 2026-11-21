@@ -146,6 +146,8 @@ def main():
     ap.add_argument("--estop-dir", default=".", help="folder with ESTOP and ESTOP_ALIVE written by jetson/estop.py")
     ap.add_argument("--no-estop", action="store_true", help="DANGEROUS: ignore the gamepad e-stop (only for dry-run development)")
     args = ap.parse_args()
+    if args.no_estop and not args.dry_run:
+        ap.error("--no-estop is only allowed with --dry-run (never with real motors)")
 
     calib = {}
     if os.path.exists(args.calib):

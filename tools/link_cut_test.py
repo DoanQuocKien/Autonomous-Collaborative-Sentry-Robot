@@ -85,6 +85,8 @@ def main():
     ap.add_argument("--wheels-on-ground-ack", action="store_true", help="confirm the exception to the wheels-off rule: in-place spin, R1 held, 0.3 m of clear floor")
     ap.add_argument("--out", default="data/link_safety")
     a = ap.parse_args()
+    if not 10.5 <= a.min_battery <= 13.0:                       # NaN fails the comparison too
+        ap.error("--min-battery must be between 10.5 and 13.0 V")
     if not a.wheels_on_ground_ack:
         raise SystemExit("ABORT: this test spins the robot with its wheels ON the floor (exception to the wheels-off rule, see the docstring): pass --wheels-on-ground-ack to confirm")
     if not (1 <= a.trials <= 20 and 0.5 <= a.spin_s <= 5 and 0.1 <= a.rest_s <= 10 and 0.2 <= a.post_s <= 5 and 0 <= a.pause <= 30 and 1 <= a.wait <= 600):

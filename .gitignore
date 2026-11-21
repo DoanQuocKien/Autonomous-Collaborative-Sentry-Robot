@@ -34,6 +34,15 @@ esp32/lib_shared/
 # local secrets
 .env
 
+# local scratch: editor settings, run logs, one-off json, calibration photos (the tracked camera_pose_nowedge*.jpg stay), the demo video (a Drive link goes in the report)
+.vscode/
+/*.log
+/st.json
+calib/*.jpg
+!calib/camera_pose_nowedge*.jpg
+assets/mid-term demo video/
+*.mp4
+
 # local session recaps (handoff notes for a new session)
 session_recaps/
 
