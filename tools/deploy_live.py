@@ -38,7 +38,8 @@ from sentry.nav.explore import ExploreSettings, Explorer, fresh_command
 from sentry.nav.wheel_model import WheelModel
 
 ESTOP_LATCH = "/home/jetbot/sentry/ESTOP"
-MIN_BATTERY_V = 11.4        # graded runs: the speed model is fitted at 11.28-11.70 V and the 2026-10-30 blind runs were all at 11.28-11.36 V
+from sentry.config import load as _load_cfg
+MIN_BATTERY_V = _load_cfg()["safety"]["min_battery_live_v"]        # config.toml [safety]; graded runs: the speed model is fitted at 11.28-11.70 V and the 2026-10-30 blind runs were all at 11.28-11.36 V
 ESP_FRESH_S = 1.0           # a handshake result older than this counts as "not in view"
 LINK_STALE_S = 0.5          # no robot frame for this long: stop
 LINK_GRACE_S = 1.0          # extra time for the first frame after the threads start
@@ -306,7 +307,7 @@ def main():
     if not 10 <= a.seconds <= 300:
         ap.error("seconds in [10, 300]")
     from tools.scan_boards import check_args
-    check_args(a, dict(stand_off=(1.5, 3.0), area_exponent=(1.0, 2.5), tower_hold=(0.1, 10.0), tower_window=(2.0, 60.0), tower_bearing=(1.0, 45.0), tower_offset=(0.0, 1.0)))
+    check_args(a, dict(min_battery=(10.5, 13.0), stand_off=(1.5, 3.0), area_exponent=(1.0, 2.5), tower_hold=(0.1, 10.0), tower_window=(2.0, 60.0), tower_bearing=(1.0, 45.0), tower_offset=(0.0, 1.0)))
     if a.tower_place and not 0.05 <= a.tower_range[0] < a.tower_range[1] <= 1.0:
         ap.error("--tower-range MIN MAX must satisfy 0.05 <= MIN < MAX <= 1.0 m")
     if a.stand_off is not None and not a.find_door:

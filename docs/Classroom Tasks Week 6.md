@@ -48,7 +48,7 @@ Remaining tool work in section 3 of the home checklist (check what is already me
 
 ## Bring list (check the evening before)
 - **Robot** fully charged (>= 12.2 V; the 11.4 V gate stops a run), the charger and a second charge slot if any; **gamepad** with its receiver (arm: hold Start 1.5 s, move: hold R1); the robot's Wi-Fi profile is `DoanQuocKien` only.
-- **Laptop** + charger, the conda `sentry` environment and a clean checkout of `main`, `JETBOT_PASSWORD=jetbot` set; **phone hotspot on MOBILE DATA** (with the uplink shared the robot video fell to 2.5-5 fps on 10-30; with mobile data it was 19.5 fps), robot, ESP32 and laptop on it.
+- **Laptop** + charger, the conda `sentry` environment and a clean checkout of `main`, `JETBOT_PASSWORD=...` (the image default) set; **phone hotspot on MOBILE DATA** (with the uplink shared the robot video fell to 2.5-5 fps on 10-30; with mobile data it was 19.5 fps), robot, ESP32 and laptop on it.
 - **ArUco boards** 150 mm (`assets/print/aruco_4x4_50_ids0-5_150mm.pdf`, 7 pages, matte paper) mounted flat on foam board or a book, plus something to stand them upright (the page bottom edge ON the floor for `self_pose`); **tape measure** (5 m), masking tape, a pen, the printed answers sheet for `--answers`, a plumb weight or any weight on a string (the spot under the lens).
 - **ESP32-CAM** + power bank + cable (OV2640 MJPEG firmware), and for the handshake the glazed-partition negative.
 - **People:** the three team members if possible (Phase 2 needs the one not enrolled); consenting people only.
