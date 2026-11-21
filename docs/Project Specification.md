@@ -163,4 +163,4 @@ The calendar was restructured on 2026-10-12 (team lead): 13 weeks from Mon 2026-
 
 **Milestones:** the **Mid-Term Report is due Mon 2026-11-23** (10-15 pages, includes the code, with an optional demo video; internal draft Wed Nov 18; plan in `Mid-Term Report Plan.md`). This replaces the earlier "15-20 page report in Week 4". The **final submission** window is 2026-12-28 to 2027-01-02, target Mon Dec 28.
 
-*Extension schedule (Implementation Plan section 5): agreed by the team on 2026-10-17 (G0); work from Week 3 with gates at the Monday sessions after Weeks 3, 5, 8 and 9. It does not change the core deliverables above.*
+*Extension schedule (Implementation Plan section 5): agreed by the team on 2026-10-17 (G0); work from Week 3 with gates G1 Mon Oct 26, G2 Sun Nov 29, G3 Sun Dec 6 and G4 Sun Dec 13 (re-timed 2026-11-21, see the Implementation Plan gate table). It does not change the core deliverables above.*
