@@ -1,0 +1,82 @@
+{
+  "date": "2026-11-21",
+  "timezone": "Asia/Bangkok",
+  "candidate": "a798f43e8331bdd5fae53e5dafc38413af27d903",
+  "tree": "68e7ab20177208b88b38dcd63ec36b8938999beb",
+  "scope": "Fresh Git clone with existing HNHL .venv; no copied local data/weights; no new environment installation or hardware trials",
+  "python": "3.12.15 (main, Oct  3 2026, 01:05:37) [MSC v.1944 64 bit (AMD64)]",
+  "command": [
+    "C:\\Users\\Hoai Loc\\Desktop\\ROBOT\\Autonomous-Collaborative-Sentry-Robot\\.venv\\Scripts\\python.exe",
+    "-m",
+    "pytest",
+    "-m",
+    "not gpu and not hil",
+    "--basetemp=data/pytest-w7-clean-1121",
+    "-p",
+    "no:cacheprovider",
+    "-q",
+    "-rs"
+  ],
+  "tests": {
+    "passed": 983,
+    "skipped": 4,
+    "deselected": 4,
+    "seconds": 73.07,
+    "log_sha256": "3feeb22e6ed4f2add5c36ac9f923f70d827855fccede563f5caf2219acb78f28"
+  },
+  "full_report": {
+    "rendered_pages": 15,
+    "pdf_sha256": "bb64749f116306af307ec080a45c73c41607005e5a6a2848ab38989a5751d6ed",
+    "byte_identical_second_render": true,
+    "sources": {
+      "status": "PASS",
+      "source_files": 91,
+      "errors": []
+    },
+    "assets": 15,
+    "budget_status": "PASS"
+  },
+  "chapter5": {
+    "pages": 4,
+    "pdf_sha256": "b89a45b78c1817747984829958f6e43718de531253c7d1e4a15a8759786e6123",
+    "byte_identical_second_render": true
+  },
+  "visual_review": {
+    "full_report_pages": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "chapter_pages": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  "package": {
+    "file_count": 1520,
+    "sha256": "f3f3ccbc4c2a710a4b1bbb286f6ac42900c2464a448f66bdb8f6a8cdf1135efc",
+    "repeated_archive_byte_identical": true,
+    "audit": {
+      "scope": "committed export",
+      "ref": "a798f43e8331bdd5fae53e5dafc38413af27d903",
+      "tracked_files": 1520,
+      "violations": [],
+      "history_verified": false,
+      "note": "Path check only. Data stays tracked; export pathspecs omit datasets. History is not audited."
+    }
+  }
+}
