@@ -213,6 +213,25 @@ def check():
         assert nov18 == collect_nov18(nov18['source_commit']), '18-Nov evidence differs from pinned sources'
         assert not any(nov18['acceptance'].values())
         nov18_sources = len(nov18['sources'])
+    nov21_path = OUT/'update-2026-11-21.json'
+    nov21_sources = 0
+    if nov21_path.exists():
+        from tools.build_midterm_hnhl_nov21 import collect as collect_nov21
+        nov21 = read_json(nov21_path)
+        assert nov21 == collect_nov21(nov21['source_commit']), '21-Nov evidence differs from pinned sources or GitHub snapshot'
+        assert not any(nov21['acceptance'].values())
+        assert not nov21['scope']['new_hardware_trials']
+        nov21_sources = len(nov21['sources'])
+    final_manifest_path = OUT/'chapter-05-final-2026-11-21.json'
+    final_chapter_checked = False
+    if final_manifest_path.exists():
+        final_manifest = read_json(final_manifest_path)
+        chapter = (ROOT/final_manifest['markdown']).read_bytes().replace(b'\r\n', b'\n')
+        assert hashlib.sha256(chapter).hexdigest() == final_manifest['markdown_sha256_lf'], 'W7 final chapter changed since review'
+        for figure in final_manifest['figures']:
+            assert hashlib.sha256((ROOT/figure['path']).read_bytes()).hexdigest() == figure['sha256'], 'W7 final figure changed since review'
+        assert len(final_manifest['figures']) == 5
+        final_chapter_checked = True
     verification = read_json(OUT/'verification.json')
     word_sha = hashlib.sha256(word.read_bytes()).hexdigest()
     assert word_sha == verification['word']['sha256'], 'Word changed since visual review; render again'
@@ -239,7 +258,7 @@ def check():
     assert len(doc.findall('.//w:tbl', ns)) == 2
     count = 0
     docs = (list(OUT.glob('*.md')) + list((OUT.parent/'week-06').glob('*.md'))
-            + [OUT.parent/'week-05.md', OUT.parent/'midterm-chapter-05.md'])
+            + [OUT.parent/'week-05.md', OUT.parent/'week-07.md', OUT.parent/'midterm-chapter-05.md'])
     for path in docs:
         for url in re.findall(r'!?\[[^\]]*\]\(([^)]+)\)', path.read_text(encoding='utf-8')):
             if '://' in url or url.startswith('#'):
@@ -247,7 +266,7 @@ def check():
             target = path.parent/unquote(url.split('#')[0])
             assert target.exists(), f'broken link: {path}: {url}'
             count += 1
-    snapshot_date = next(date for path,date in ((nov18_path,'2026-11-18'),(nov16_path,'2026-11-16'),(nov15_path,'2026-11-15'),(nov11_path,'2026-11-11'),(nov10_path,'2026-11-10'),
+    snapshot_date = next(date for path,date in ((nov21_path,'2026-11-21'),(nov18_path,'2026-11-18'),(nov16_path,'2026-11-16'),(nov15_path,'2026-11-15'),(nov11_path,'2026-11-11'),(nov10_path,'2026-11-10'),
         (nov09_path,'2026-11-09'),(team_path,'2026-11-07'),(recovery_path,'2026-11-06'),
         (latest_path,'2026-11-05'),(OUT/'update-2026-11-03.json','2026-11-03')) if path.exists())
     return dict(checked_snapshot_date=snapshot_date, evidence_sources_checked=len(update['evidence']),
@@ -262,6 +281,8 @@ def check():
                 nov15_sources_checked=nov15_sources,
                 nov16_sources_checked=nov16_sources,
                 nov18_sources_checked=nov18_sources,
+                nov21_sources_checked=nov21_sources,
+                w7_final_chapter_checked=final_chapter_checked,
                 source_hashes_match=True, both_saved_snapshots_match=True,
                 missing_acceptance_preserved=True, local_links_checked=count,
                 original_word_sha256=word_sha, original_word_visual_review_preserved=True,

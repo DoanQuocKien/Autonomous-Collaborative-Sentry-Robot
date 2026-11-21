@@ -1,0 +1,32 @@
+{
+  "date": "2026-11-21",
+  "timezone": "Asia/Bangkok",
+  "owner": "HNHL",
+  "scope": "Chapter 5 author handoff; group sign-off remains with reviewers",
+  "source_base_commit": "55ddfc845530cbae7ede5be3d5e25549da3785d5",
+  "source": "reports/midterm_report_draft.md, Chapter 5 with updated F9/F13",
+  "markdown": "reports/HuynhNguyenHoaiLoc/midterm/chapter-05-final-2026-11-21.md",
+  "markdown_sha256_lf": "5959d68ba393f13836b1f7807bc703d797724af6cb9dc0a723c125833daa4056",
+  "figures": [
+    {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/figures/F10_distance.png",
+      "sha256": "5db5684210b6fb990892281969678631e4851cbd23338926be8f2e32fe120073"
+    },
+    {
+      "path": "reports/HuynhNguyenHoaiLoc/week-07/threshold-118-2026-11-15/roc.png",
+      "sha256": "683c5d42c71c756a125c93c919f298e5925ac650c29d28dd3ddfca0a1c0f6996"
+    },
+    {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/figures/F9_gpu.png",
+      "sha256": "805cc38703acdc8fd1464dcd18a11ee0c450fef042f8c44964c80c1f771767e6"
+    },
+    {
+      "path": "reports/HuynhNguyenHoaiLoc/midterm/figures/F18_d5_precision.png",
+      "sha256": "f73f50782687024cccc5e0156dfb3a73beb49d131c8fef0835da9b8239bbc333"
+    },
+    {
+      "path": "reports/DoanQuocKien/week-05/figures/F20_edge_engines.png",
+      "sha256": "b4cb68ca42f71a5129c4a80fc8fda8f2edac5950116ad45c81a1f2270e8aa6a8"
+    }
+  ]
+}

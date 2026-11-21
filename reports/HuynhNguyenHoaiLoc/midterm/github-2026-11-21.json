@@ -1,0 +1,63 @@
+{
+  "date": "2026-11-21",
+  "timezone": "Asia/Bangkok",
+  "scope": "GitHub state snapshot; issue closure does not certify physical acceptance",
+  "pull_requests": [
+    {
+      "number": 113,
+      "url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/pull/113",
+      "title": "Week 7: refreshed midterm report and deterministic submission export",
+      "state": "closed",
+      "merged": true,
+      "head_sha": "3102e33ae508b7998b97094a1c6fb26578d51655",
+      "merge_commit_sha": "1bf0b131c9261eadbc754a68c34dcbdd5d44be54",
+      "merged_at": "2026-11-20T08:02:36Z"
+    },
+    {
+      "number": 132,
+      "url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/pull/132",
+      "title": "HNHL W7: add post-freeze tower evidence and review records",
+      "state": "closed",
+      "merged": true,
+      "head_sha": "b33f99c0998e29194cabca6a6251973790a60c49",
+      "merge_commit_sha": "cf0d427e66bad9bb3cd9c96c20718afee9a0f788",
+      "merged_at": "2026-11-20T08:03:56Z"
+    },
+    {
+      "number": 133,
+      "url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/pull/133",
+      "title": "Find-door run, tower placement gate and one-take session",
+      "state": "closed",
+      "merged": true,
+      "head_sha": "5f40e2889dc548d195db58bb20fdaa03448582cb",
+      "merge_commit_sha": "55ddfc845530cbae7ede5be3d5e25549da3785d5",
+      "merged_at": "2026-11-20T18:09:17Z"
+    }
+  ],
+  "issues": [
+    {
+      "number": 111,
+      "url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/issues/111",
+      "title": "Project snapshot, perception side (HNHL)",
+      "state": "open",
+      "state_reason": null,
+      "closed_at": null,
+      "updated_at": "2026-11-15T08:32:34Z"
+    },
+    {
+      "number": 114,
+      "url": "https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot/issues/114",
+      "title": "Phase 2 live: description of the work (HNHL, agreed 2026-11-14)",
+      "state": "closed",
+      "state_reason": "completed",
+      "closed_at": "2026-11-16T13:32:52Z",
+      "updated_at": "2026-11-16T13:32:52Z"
+    }
+  ],
+  "submission_tag": {
+    "name": "midterm",
+    "present_on_remote": false,
+    "check": "git ls-remote --tags origin midterm refs/tags/midterm",
+    "checked_date": "2026-11-21"
+  }
+}

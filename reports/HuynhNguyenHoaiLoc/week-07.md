@@ -1,5 +1,24 @@
 # HNHL — Phase 2 live và cập nhật perception
 
+## Chốt công việc tuần 7 ngày 21 tháng 11
+
+Tuần 7 là **16–22/11/2026** theo mục Week 7 của [Implementation Plan](../../docs/Implementation%20Plan.md). HNHL chốt Chương 5 cùng các hình ROC, sai số khoảng cách, GPU/tối ưu và sửa lỗi còn sót tuần 5–6 qua PR. Tuần này không giao tính năng perception mới.
+
+| Phần việc HNHL | Bàn giao |
+| :-- | :-- |
+| Chương 5 chốt theo bằng chứng hiện có | [Bản Chương 5 ngày 21/11](midterm/chapter-05-final-2026-11-21.md), đồng nhất số liệu với Chương 5 trong [bản ghép nhóm](../midterm_report_draft.md) |
+| Hình theo nhiệm vụ | F10 error/coverage; F13 ROC cửa 14/11; F9 GPU RTX5060 với bảng RTX4050 của DQK; F18 FP32/FP16; F20 Nano của DQK, đều có nguồn/hash |
+| Perception và handoff tuần 5–6 | #115/#124 đã merge: lịch 5 Hz, counters unresolved, shared queue/Phase3/target-tracker, TRACK_LOST và timestamp 0. Ngưỡng và chính sách unresolved giữ theo quyết định nhóm |
+| Review, sửa lỗi và kiểm chứng | #133 đã merge; #134 bổ sung hồ sơ, checker và bản chốt tuần 7 để DQK/KR review |
+
+Kiểm chứng cuối trên clone Git sạch của candidate `a798f43`: **983 passed, 4 skipped, 4 GPU deselected**, 73,07 s. Dùng `.venv` HNHL đã có, không cài mới môi trường; clone không nhận private data/weights local. Các ca skip cần checkerboard, XFeat weights và ReportLab trong môi trường pytest. PDF được render riêng bằng bộ dependencies báo cáo: bản nhóm 15 trang, Chương 5 riêng 4 trang, đã xem toàn bộ; hai lần render cùng bytes. 91 nguồn registry đạt và hai ZIP từ candidate có cùng hash. [Log checkout sạch](week-07/review-2026-11-21/clean_checkout_pytest.log), [validation và phạm vi](week-07/review-2026-11-21/w7-final-validation.json).
+
+Các tiêu chí chưa đạt như D3/gallery, D5 per-class/independent session, F11 và full door T1 được viết thành giới hạn và kế hoạch tiếp theo. Không dùng việc chốt Chương 5 để xác nhận các hàng T1/T2 này. Tag `midterm`, gói nộp và owner sign-off toàn nhóm theo KR/DQK ở kế hoạch nộp 23/11.
+
+Các mục ngày cũ bên dưới là bằng chứng lịch sử của từng phiên.
+
+**Cập nhật 21/11:** #113/#132/#133 đã merge; #114 đóng trên GitHub. Hồ sơ giữa kỳ bổ sung 38 nguồn pin cho find-door/pursuit/tower 20/11 và F7 đã có, trạng thái từng phần HNHL và checklist nộp 23/11. STANDBY 56,317 s ở một lượt find-door; hai pursuit diagnostics có distance-in-band 9,4%/18,1%, chưa đạt gate 80%. F7 raw CSV có thật nhưng chưa đạt FPS/p95. [Bổ sung hiện hành](midterm/update-2026-11-21.md), [review #133](reviews/PR-133-2026-11-21.md). Các ghi chú theo ngày bên dưới giữ trạng thái tại thời điểm đó.
+
 **Bổ sung sau freeze 18/11** HNHL đã review/merge #130/#131, sửa freshness/battery/video-IP/obstacle-trigger và tính lại dữ liệu tower của DQK. Pursuit-e đạt tracked 67,2%, trong dải 9,2%, căn tâm 40%, có 12 lượt tránh hoàn tất và một còn active. Detector vật cản tổng quát tắt. #113 đã sửa, chờ DQK review lại. [Nguồn và phạm vi](midterm/update-2026-11-18.md), [review](reviews/2026-11-18.md).
 
 **Cập nhật 16/11** ghi PR #124 đã merge sau review DQK. HNHL đã review/merge #125/#126/#127 và tính lại log pursuit của DQK với 32,2% thời gian trong dải cự ly, 91,1% căn tâm và 0 HOLD. Đã bổ sung deployment thứ 7, pose mới, F3/F17b và lịch video 19/11 vào phần giữa kỳ. [Nguồn và phạm vi đo](midterm/update-2026-11-16.md), [review](reviews/2026-11-16.md).
@@ -54,7 +73,7 @@ $env:YOLO_AUTOINSTALL = 'false'
 
 Người thao tác xác nhận camera đã hướng ra cửa ở lượt live 2, tức lượt P01 đầu trong thứ tự chạy của phiên. Ảnh chẩn đoán hướng trần được chụp sau lượt đó. Nhận định trước đây gán góc hướng trần cho cả lượt chạy đã được rút lại. Log của lượt này ghi 0 mẫu mặt hợp lệ trong các segment, nhưng chưa đủ thông tin để xác định nguyên nhân thiếu bằng chứng. Các kết quả số của từng lượt được giữ nguyên.
 
-## Trạng thái issue và phối hợp
+## Trạng thái issue và phối hợp tại snapshot 14 tháng 11
 
 - #114 đã có code, enrol ESP32, pilot genuine/impostor, event/queue thật và latency. Cần protocol đủ thành viên, nhãn entry/attempt đầy đủ và dữ liệu calibration độc lập để chốt ngưỡng. T1 còn mở.
 - Crop `visible_body` hiện là mặt/thân trên. DQK cung cấp phép đo body visibility, camera geometry và buổi cửa nhóm. Cross-camera re-ID còn cần dữ liệu robot.

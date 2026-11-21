@@ -1,5 +1,9 @@
 # Chương 5 — Nhận thức thị giác, tối ưu và triển khai
 
+**Bản chốt tuần 7 ngày 21/11:** [Chương 5 để DQK/KR review](midterm/chapter-05-final-2026-11-21.md), đủ hình ROC, khoảng cách, GPU và tối ưu. Các bản 01/11 và 16/11 dưới đây là snapshot theo ngày.
+
+**Trạng thái bổ sung 21/11:** đọc [bàn giao Chương 5/7 và bằng chứng 20/11](midterm/update-2026-11-21.md) cùng [Chương 5 đóng băng 16/11](midterm/chapter-05-current.md). Các đoạn ngày 01/11 dưới đây và Word gốc là snapshot lịch sử, không thay trạng thái mới nhất.
+
 **Bản rút gọn để ghép báo cáo:** [Word Chương5](midterm/HNHL-Chuong-5.docx), [Markdown cùng nội dung](midterm/chapter-05.md). Hồ sơ có F9/F10/F13, evidence catalog, các dòng Ch7 và phụ lục: [midterm/README.md](midterm/README.md). Phần dưới giữ diễn giải chi tiết để tham khảo khi chỉnh sửa.
 
 **Bản thảo HNHL, 2026-11-01.** Ngân sách chung chương khoảng 3,5 trang sau dàn trang; KR bổ sung nhận diện cửa, DQK hoàn thiện phần Jetson. Đây chưa phải bản nộp: các vị trí thiếu hình hoặc chưa đo được giữ trạng thái rõ ràng. Hình và số liệu chốt trước 16/11 theo kế hoạch nhóm.

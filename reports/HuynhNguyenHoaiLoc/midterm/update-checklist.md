@@ -1,6 +1,10 @@
 # Checklist tiếp tục hoàn thiện giữa kỳ HNHL
 
-**Bổ sung 18/11 sau freeze** có thử tower bằng marker, cự ly khi dừng 1,64/1,23/1,07 m ở ba góc và motion fit thất bại. Pursuit-e có 13 triggers, 12 hoàn tất và một còn active khi hết giờ. Các hàng D3/D5 độc lập, map/world truth, full door T1 và general obstacle avoidance tiếp tục chờ dữ liệu. #113 chờ DQK review lại sau khi sửa. [Nguồn và phạm vi mới](update-2026-11-18.md).
+**Chốt phần viết tuần 7:** [Chương 5 ngày 21/11](chapter-05-final-2026-11-21.md) có đủ hình theo phân công, nguồn và giới hạn; đã đưa vào PR #134 để DQK/KR review. Các mục dữ liệu bên dưới phục vụ nghiệm thu sau, không ngăn việc báo cáo trung thực kết quả hiện có trong tuần 7.
+
+**Hiện hành 21/11:** #113/#132/#133 đã merge. Đã tính lại find-door và pursuit 20/11; issue #114 đóng nhưng full T1 còn thiếu. F7 đã có raw CSV của DQK, không còn thiếu nguồn; số đo chưa đạt FPS/p95. Việc có thể chốt ngay là kiểm tra nội dung Chương 5/7, PDF cuối, source/export và phần overlay/video nếu nhóm thực hiện. D3/gallery, D5 độc lập, F11/world truth và RTX4050 precision accuracy vẫn cần dữ liệu phù hợp. [Trạng thái và checklist nộp bài 23/11](update-2026-11-21.md), [snapshot GitHub](github-2026-11-21.json). Các mục ngày cũ dưới đây là lịch sử.
+
+**Snapshot 18/11 sau freeze** có thử tower bằng marker, cự ly khi dừng 1,64/1,23/1,07 m ở ba góc và motion fit thất bại. Pursuit-e có 13 triggers, 12 hoàn tất và một còn active khi hết giờ. Các hàng D3/D5 độc lập, map/world truth, full door T1 và general obstacle avoidance tiếp tục chờ dữ liệu. #113 chờ DQK review lại sau khi sửa. [Nguồn và phạm vi mới](update-2026-11-18.md).
 
 **Kiểm tra 17/11** PR #128 đã merge sau review DQK. KR có thể ghép Chương 5/7 từ bản 16/11 cho draft 18/11. Các bước ghi overlay, fold whitelist và nhãn entry cho 19/11 nằm trong [bàn giao hiện hành](update-2026-11-17.md).
 
@@ -35,11 +39,11 @@ Snapshot tiếp sau đó: [#93/#95/#96 đã merge](session-followup-2026-11-03.m
 | 1 | D1 sweep có robot poses/world truth/door range và camera offset | Sinh map/vantage bằng API thực, đối chiếu vị trí vật và điều kiện vị trí quan sát | F11, map/T1/T2 |
 | 2 | Paired prediction/tape mới hoặc pose session sửa có bằng chứng | Dùng đúng session pose; báo cả missed IDs, tách development/held-out/floor; không fit pitch bằng chính tape đang chấm | F10 và error summary |
 | 2 | Thêm wire masks/labels hoặc D5 session/floor khác | QA labels; freeze split/protocol; train mới vào run mới; báo recall/precision và empty-floor alarms ở operating point đã chốt | D5/Wire, giới hạn tổng quát |
-| 2 | RTX4050 hoặc paired FP32/FP16 runs | Cùng input, workload/cadence và accuracy set; tách NVML/allocator; không dùng cosine conversion thay accuracy | F9/F18, GPU/optimization |
+| 2 | Paired FP32/FP16 accuracy RTX4050 hoặc dual-stream runtime | Giữ baseline RTX4050 đã có; cùng input, workload/cadence và accuracy set; tách NVML/allocator; không dùng cosine conversion thay accuracy | F9/F18, GPU/optimization |
 | 3 | Robot T2 hoặc evidence Jetson mới của DQK | Nhận log và các câu trả lời tape; xác nhận owner, devices, load, freshness; không coi review code là HIL pass | F20/F21 và Ch7 |
-| 3 | Raw clock-synced latency CSV JetBot + watchdog/e-stop logs | CDF/FPS có clock/seq flags, công bố sample count; tách localhost synthetic khỏi robot | F7 cùng DQK |
+| 3 | Nguồn F7 JetBot đã có; raw logs cho điều kiện link/safety khác nếu đo thêm | Dùng hai CSV latency_1111 và CDF DQK, giữ trạng thái chưa đạt; chỉ đo lại khi protocol/điều kiện đổi; tách motor/mechanical stop và packet loss | F7 cùng DQK |
 
-Khi camera sửa xong: DQK đo lại mount/self-pose; nếu thay module thì cần fisheye calibration mới. HNHL gắn đúng camera/calibration/session cho data mới, giữ calibration cũ cho D1/D2/D5 cũ. Nếu không đủ dữ liệu trước 16/11, chuyển các kết quả còn thiếu sang chưa đo/giới hạn và dùng replay/simulation có nhãn nguồn cho demo.
+Trước mỗi session mới, DQK đo lại mount/self-pose; nếu thay module thì cần fisheye calibration mới. HNHL gắn đúng camera/calibration/session cho data mới, giữ calibration cũ cho D1/D2/D5 cũ. Những dữ liệu sau 16/11 ghi ngày bổ sung sau freeze; mục chưa đo giữ trong giới hạn/kế hoạch sau giữa kỳ. Replay/simulation trong demo cần caption đúng nguồn.
 
 ## Lệnh sau khi có D3 thật
 

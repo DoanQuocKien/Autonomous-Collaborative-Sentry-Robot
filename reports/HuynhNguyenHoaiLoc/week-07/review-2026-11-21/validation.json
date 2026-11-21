@@ -1,0 +1,20 @@
+{
+  "date": "2026-11-21",
+  "timezone": "Asia/Bangkok",
+  "base_commit": "55ddfc845530cbae7ede5be3d5e25549da3785d5",
+  "scope": "HNHL report and source-validation tooling; no inference or robot trial",
+  "python": "3.12.15 (main, Oct  3 2026, 01:05:37) [MSC v.1944 64 bit (AMD64)]",
+  "targeted_tests": {
+    "passed": 12,
+    "seconds": 4.12,
+    "command": "python -m pytest tests/test_midterm_nov21.py tests/test_midterm_source_revision.py -p no:cacheprovider --basetemp=data/pytest-midterm-1121-final -q",
+    "log_sha256": "614ef6d82d05331fc3c3475a038484fdd64e36a43159a772cc63ee26a734a4a1"
+  },
+  "snapshot_byte_identical_on_rebuild": true,
+  "snapshot_sha256": "dee431f61176dca547a79247d6e14cb9e28ba94572196ab333b7664556c2227b",
+  "new_sources": 38,
+  "historical_and_new_source_records": 265,
+  "local_links": 326,
+  "word_original_hash_verified": "bd1e5bf03bdf6d22120434d1a078858e6d2a4d57635e24881be5c15bd290cc90",
+  "missing_acceptance_preserved": true
+}
