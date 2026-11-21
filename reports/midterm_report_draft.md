@@ -63,7 +63,7 @@ ID của ByteTrack chỉ là một track, không phải danh tính người. Bac
 
 Cấu hình mục tiêu là laptop Windows 11 có RTX 4050 6 GB. Máy RTX 5060 8 GB chạy song song để phát triển, số đo được ghi riêng. Laptop chạy detector, pose, face, OSNet, XFeat/DINOv2, hàng đợi và máy trạng thái. Lời nhắc phát qua loa laptop. Robot hiện không có loa.
 
-JetBot dùng Jetson Nano 4 GB, Ubuntu 18.04/Python 3.6. Ở chế độ chính, robot chỉ chụp, nén ảnh và chạy theo vận tốc từ laptop. `common/` và `jetson/` giữ tương thích Python 3.6, tách khỏi môi trường laptop. TensorRT trên robot là phần mở rộng: đã benchmark riêng nhưng chưa thay kiến trúc chính.
+JetBot dùng Jetson Nano 4 GB, Ubuntu 18.04/Python 3.6. Ở chế độ chính, robot chỉ chụp, nén ảnh và chạy theo vận tốc từ laptop. `common/` và `jetson/` giữ tương thích Python 3.6, tách khỏi môi trường laptop. TensorRT trên robot mới là benchmark riêng, chưa thay kiến trúc. Dự kiến từ 23/11 các model lên Jetson dần (ONNX rồi TensorRT FP16). Laptop giữ app đồng hành, dự phòng khi Nano không chạy được. Đây mới là kế hoạch, chưa thực hiện.
 
 ESP32-CAM đặt ở cửa. OV2640 có JPEG phần cứng và HTTP MJPEG, còn GC2145 dùng luồng ô ảnh UDP. Ảnh từ bo nào cũng được xử lý trên laptop, và handoff appearance không gửi vector sang JetBot.
 
@@ -275,8 +275,8 @@ Frame liên tiếp không cộng thành lượt độc lập, missed objects cũ
 | 19/11 | Quay các cảnh còn lại tại lớp, gồm Phase 2 | Cả nhóm |
 | 20–22/11 | Review/PR freeze 20/11; dựng 20–21/11, chốt video 22/11 | Cả nhóm |
 | 21–23/11 | Tag main sau review, PDF/video final, nộp 23/11 | Cả nhóm |
-| Tuần 8–9 | Evasion, reaction-time, coverage path theo gate | Chủ sở hữu từng module |
-| Tuần 10–13 | Search trên robot, loop nhiều người, stress và buffer | Cả nhóm |
+| Tuần 8–9 | Evasion, reaction-time, coverage path theo gate; Stage A (lớp né vật cản chạy trên robot) thêm vào tuần 8 vì gate G2 (mốc 9/11) chưa đạt; Stage B sang tuần 9 | Chủ sở hữu từng module |
+| Tuần 10–13 | Search trên robot, loop nhiều người, stress và buffer; phần model còn lại lên robot đến 13/12, model nào không đạt kiểm tra thì giữ ở laptop | Cả nhóm |
 
 Kỳ vọng vòng đầy đủ đạt ≥4/5 không can thiệp, tìm T2 ≥4/5 và search exhaustion 3/3 không va chạm. Đó là mục tiêu, chưa phải kết quả. `r_det` 3,0 m vẫn là placeholder, cần đo. Phần nào chưa ổn lúc freeze đều được ghi in progress, không hạ ngưỡng cho kịp báo cáo. [S0]
 

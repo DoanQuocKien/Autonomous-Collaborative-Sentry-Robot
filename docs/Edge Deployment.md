@@ -1,6 +1,6 @@
 # Edge deployment on the Jetson Nano (measured 2026-10-16)
 
-What was measured on the robot, what broke, and how to repeat it. The staged plan that builds on these numbers is `docs/Edge Feasibility.md` (a desk study with thin sources: treat its budgets as a plan to test). The spec still keeps all models on the laptop (`Project Specification.md` section 5); this is evidence for the "optimise and deploy on the robot" part of the Mid-Term report, not a spec change.
+What was measured on the robot, what broke, and how to repeat it. The staged plan that builds on these numbers is `docs/Edge Feasibility.md` (a desk study with thin sources: treat its budgets as a plan to test). Until the Mid-Term submission the spec keeps all models on the laptop (`Project Specification.md` section 5); from 2026-11-23 the decision of 2026-11-21 migrates all models to the Jetson, with the laptop as the backup (Implementation Plan section 5), and these numbers are its starting evidence.
 
 ## Environment (robot)
 - Jetson Nano 4GB B01, L4T R32.5.0 (JetPack 4.5), CUDA 10.2, cuDNN 8.0, **TensorRT 7.1.3**, Python 3.6.9, MAXN.
