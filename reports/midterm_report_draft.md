@@ -323,4 +323,4 @@ Repo: https://github.com/DoanQuocKien/Autonomous-Collaborative-Sentry-Robot . Nh
 
 [Registry editor](kouun-rokku/week-07/editor-sources.md) ghi commit:path và SHA256 theo nhãn nguồn. S0 là kế hoạch; C1/C2 là hiệu chuẩn; K1/K2/K3 là parity, replay, review và package; H1/H2 là perception; E1 là edge; D13/D14/D16/D18 là các buổi đo DQK; H7 là pilot Phase 2. D20 ghim log find-door/pursuit/approach/tower_register ngày 20/11 trong `reports/DoanQuocKien/week-07/finddoor_1120/`, gồm tape do người vận hành nhập sau lượt chạy.
 
-Video demo (tùy chọn, không nằm trong git): [DEMO_VIDEO.mp4](https://drive.google.com/file/d/1vzN8MM-Eqlog4NTn8Ap4_7F7AqkGI8Cb/view?usp=sharing), quay 19–20/11 và dựng 20–21/11; chưa kiểm tra độ dài và nội dung từng cảnh so với danh sách shot.
+Video demo (tùy chọn, không nằm trong git): [DEMO_VIDEO.mp4](https://drive.google.com/file/d/1vzN8MM-Eqlog4NTn8Ap4_7F7AqkGI8Cb/view?usp=sharing); chưa kiểm tra độ dài và nội dung từng cảnh so với danh sách shot.
