@@ -7,6 +7,11 @@ What was measured on the robot, what broke, and how to repeat it. The staged pla
 - The JetBot container (`jetbot_jupyter`) already has numpy 1.19.4, OpenCV 4.1.1, pyzmq, **tensorrt 7.1.3 and pycuda**; the host Python has numpy 1.13 and tensorrt only. Run robot code inside the container (`docker exec -w /workspace/sentry jetbot_jupyter python3 ...`).
 - Root filesystem grown to 58 GB (34 GB free) on 2026-10-16, see `JetBot Notes.md`.
 
+## Power mode and CPU cores (checked 2026-11-23)
+- The robot idles in **5 W mode** (`sudo nvpmodel -q`): cores 2 and 3 are **offline** (`/sys/devices/system/cpu/online` = `0-1`, `nproc` = 2), CPU capped at 918 MHz, GPU at 640 MHz. This is the power-saver setting from `JetBot Notes.md`, not a fault. The mode is saved in `/var/lib/nvpmodel/status` and restored at every boot.
+- **MAXN (`sudo nvpmodel -m 0`)** brings all 4 cores online, CPU up to 1479 MHz (it scales between 921 and 1479 at idle). The numbers in this file (Stage B/C FPS, latency, power) are MAXN numbers. `nvpmodel -m 0` prints two harmless `NVPM ERROR ... emc_iso_cap` lines on this L4T (missing sysfs file, memory clock still 1600 MHz); `nvpmodel -m 1` prints `NVPM WARN: fan mode is not set!` (status file `fmode:fanNull`).
+- **For the migration of the models to the Jetson (Stage A/B):** run every build, parity check and latency bench in MAXN, state the mode in the log, and put the robot back to 5 W afterwards. Decide before G2 (Sun 29/11) which mode the robot runs in during a session: 2 cores at 918 MHz may not carry the control service, the camera publisher, JPEG encoding and the obstacle model together, so measure the real pursuit loop in both modes and note the difference. Power in MAXN is higher (see the battery section), which matters while the boot crashes of 2026-11-23 are not explained.
+
 ## Engines built on the robot (`trtexec --onnx ... --fp16`, batch 1, fixed shapes)
 Mean GPU compute, network only (no pre/post-processing, no copies beyond trtexec's own), camera and control services running.
 

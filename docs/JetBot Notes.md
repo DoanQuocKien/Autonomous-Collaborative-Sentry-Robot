@@ -31,6 +31,8 @@ Our kit is the Waveshare JetBot AI Kit; what its SD image actually ships was che
 - Defaults: output 224x224, capture 816x616, 30 fps. **Too small for us**; we set our own resolution (target 640x480).
 - Fisheye field of view depends on the sensor mode and crop, so **calibration must use exactly the mode we run in**.
 - `jetbot.image.bgr8_to_jpeg(value, quality=75)` is `cv2.imencode('.jpg', ...)`; we call it with quality 60.
+- **Camera slot (2026-11-23): keep the camera on the CAM1 connector.** On CAM0 (`imx219 7-0010`) the sensor probes but delivers no frames (vi fence timeouts, CSI lane errors, `No cameras available`), also after reseating and a reboot; on CAM1 (`imx219 8-0010`) it streams at about 20 FPS with no code change (Argus calls it camera 0). Cause of the CAM0 fault not established (cable end or connector); tell the supervisor. If frames stop, check `dmesg | grep imx219` first.
+- **Power mode (2026-11-23): the robot idles in 5 W mode** (nvpmodel ID 1: 2 cores, CPU 918 MHz, GPU 640 MHz). `sudo nvpmodel -m 0` gives MAXN (4 cores) for benches; see `docs/Edge Deployment.md`.
 
 ## Decisions for our code (apply in `jetson/robot_udp.py`)
 
@@ -116,6 +118,7 @@ Record the outputs in `reports/DoanQuocKien/week-01/`.
 | Our code in `/home/jetbot/sentry/` (some `__pycache__` folders are owned by root) | `sudo rm -rf /home/jetbot/sentry` |
 | `/home/jetbot/sentry/` also holds `ESTOP`, `ESTOP_ALIVE`, `estop.log` while the e-stop runs. **systemd units** (`jetson/systemd/`, installed 2026-10-11 or later): `/etc/systemd/system/sentry-estop.service`, `sentry-camera.service`, optionally `sentry-control.service` and `/etc/default/sentry-control`; since 2026-11-15 `install.sh` also writes `/etc/logrotate.d/sentry`, and a control key may be in `/home/jetbot/sentry/control.key` | **Return checklist:** `sudo systemctl disable --now sentry-estop sentry-camera sentry-control; sudo rm -f /etc/systemd/system/sentry-*.service /etc/default/sentry-control /etc/logrotate.d/sentry; sudo systemctl daemon-reload`, then `sudo rm -rf /home/jetbot/sentry` (removes everything) |
 | Wi-Fi power save: permanent fix file `/etc/modprobe.d/8822ce-sentry.conf` (2026-10-06) | `sudo rm /etc/modprobe.d/8822ce-sentry.conf` and reboot restores the driver default |
+| Boot logger (2026-11-23, diagnostic): `sentry-bootlog.service` in `/etc/systemd/system/` and `/home/jetbot/sentry/bootlog.log` | `sudo systemctl disable --now sentry-bootlog && sudo rm /etc/systemd/system/sentry-bootlog.service /home/jetbot/sentry/bootlog.log` |
 | Docker containers `jetbot_jupyter` / `jetbot_display` | Not modified; our scripts only ran inside the jupyter container and are stopped |
 | 2026-11-20 classroom session (find-door, handshake, pursuit) | No file on the robot was changed; the ESP32 tower is a separate device in front of the robot. The robot was switched off after the last run (battery 11.56 V) and charged; nothing to undo |
 | Antenna 0 missing (not caused by us as far as we know) | Tell the professor; replacement is cheap |

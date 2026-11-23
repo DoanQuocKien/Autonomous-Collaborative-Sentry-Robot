@@ -1,0 +1,12 @@
+{
+ "scale": 1.254,
+ "w_scale_left": 0.8676,
+ "w_scale_right": 0.7002,
+ "drift_rad_per_m": 0.2275,
+ "segments": 6,
+ "measurable": 3,
+ "label": "class_1123c",
+ "battery_v": 12.156,
+ "method": "marker-measured turns and drive against the wheel model (tools/motion_check.py)",
+ "based_on": "calib defaults"
+}

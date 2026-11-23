@@ -44,6 +44,28 @@ def implied_offset(corner_sets, K, bottom_h, camera_h, ref_pitch):
     return float(best)
 
 
+def save_pose(done, camera_h, out_dir):
+    """faces accepted -> writes calib/camera_pose_tower_<date>_<n>.json; returns (path, pitches). Shared with tools/sentry_ui.py."""
+    pitches = [v["pitch_deg"] for v in done.values()]
+    pose = make_pose(pitches, [0.0] * len(pitches), camera_h, "tower_" + time.strftime("%m%d"), min_frames=1, max_spread_deg=1.0,
+                     extra={"tower_faces": done, "camera_roll_deg_note": "not measured by the tower registration (roll is noisy on the 50 mm markers)"})
+    pose["method"] = "median pitch over the tower faces registered by tools/tower_register.py (position-based, H fixed %.3f m)" % camera_h
+    out = Path(out_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    prefix = "camera_pose_tower_%s_" % time.strftime("%m%d")
+    numbers = [int(p.stem[len(prefix):]) for p in out.glob(prefix + "*.json") if p.stem[len(prefix):].isdigit()]
+    number = max(numbers, default=0) + 1
+    while True:
+        path = out / (prefix + str(number) + ".json")
+        try:
+            with path.open("x", encoding="utf-8") as stream:
+                stream.write(json.dumps(pose, indent=1))
+            break
+        except FileExistsError:
+            number += 1
+    return path, pitches
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--frames", type=int, default=30, help="consecutive frames of one face per measurement")
@@ -92,23 +114,7 @@ def main():
                     t_face = time.time()
                 buf, cur = [], None
     if done:
-        pitches = [v["pitch_deg"] for v in done.values()]
-        pose = make_pose(pitches, [0.0] * len(pitches), a.camera_h, "tower_" + time.strftime("%m%d"), min_frames=1, max_spread_deg=1.0,
-                         extra={"tower_faces": done, "camera_roll_deg_note": "not measured by the tower registration (roll is noisy on the 50 mm markers)"})
-        pose["method"] = "median pitch over the tower faces registered by tools/tower_register.py (position-based, H fixed %.3f m)" % a.camera_h
-        out = Path(a.out)
-        out.mkdir(parents=True, exist_ok=True)
-        prefix = "camera_pose_tower_%s_" % time.strftime("%m%d")
-        numbers = [int(p.stem[len(prefix):]) for p in out.glob(prefix + "*.json") if p.stem[len(prefix):].isdigit()]
-        number = max(numbers, default=0) + 1
-        while True:
-            path = out / (prefix + str(number) + ".json")
-            try:
-                with path.open("x", encoding="utf-8") as stream:
-                    stream.write(json.dumps(pose, indent=1))
-                break
-            except FileExistsError:
-                number += 1
+        path, pitches = save_pose(done, a.camera_h, a.out)
         print("wrote", path, "| pitch %+.2f deg from %d faces (spread between faces %.2f deg)" % (float(np.median(pitches)), len(done), float(np.std(pitches))))
     if len(done) == 4:
         for _ in range(3):
