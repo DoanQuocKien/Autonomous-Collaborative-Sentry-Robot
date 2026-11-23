@@ -26,9 +26,10 @@ import numpy as np
 class FlashWindow:
     """White while a pulse is on, black otherwise; its own thread owns the OpenCV window."""
 
-    def __init__(self, title="STRIKE flash"):
+    def __init__(self, title="STRIKE flash", size=(360, 240), margin=(8, 90)):
         import cv2
         self._cv2, self._title, self._until = cv2, title, 0.0
+        self._size, self._margin = size, margin        # margin: px kept free at the right and bottom (task bar)
         self._stop = threading.Event()
         self._thread = threading.Thread(target=self._run, daemon=True)
         self._thread.start()
@@ -41,10 +42,26 @@ class FlashWindow:
         black = np.zeros((300, 400, 3), np.uint8)
         white = black + 255
         cv2.namedWindow(self._title, cv2.WINDOW_NORMAL)
+        cv2.resizeWindow(self._title, *self._size)
+        cv2.moveWindow(self._title, *self._corner())
+        try:
+            cv2.setWindowProperty(self._title, cv2.WND_PROP_TOPMOST, 1)
+        except cv2.error:
+            pass
         while not self._stop.is_set():
             cv2.imshow(self._title, white if time.perf_counter() < self._until else black)
             cv2.waitKey(1)
         cv2.destroyWindow(self._title)
+
+    def _corner(self):
+        """Top-left of a window that sits in the bottom RIGHT corner of the screen (the phone aims there)."""
+        try:
+            import ctypes
+            ctypes.windll.user32.SetProcessDPIAware()      # real pixels, so the corner is the real corner
+            sw, sh = ctypes.windll.user32.GetSystemMetrics(0), ctypes.windll.user32.GetSystemMetrics(1)
+        except (AttributeError, OSError):
+            sw, sh = 1920, 1080
+        return sw - self._size[0] - self._margin[0], sh - self._size[1] - self._margin[1]
 
     def close(self):
         self._stop.set()
