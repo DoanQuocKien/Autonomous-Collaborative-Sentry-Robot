@@ -384,6 +384,7 @@ def main():
     ap.add_argument("--evade", action="store_true", help="strike evasion override (sentry/nav/evasion.py): key e injects a STRIKE for the wheels-off T2 test (v, w and times from config.toml); the automatic strike detector is not wired yet, and the dead-reckoned pose does not include the 0.4 s pulse")
     ap.add_argument("--flash", action="store_true", help="with --evade: a window turns white while a STRIKE is on, so a phone filming the wheel and this window gives the time zero (tools.pulse_video)")
     ap.add_argument("--evade-auto", type=int, default=0, help="with --evade: inject this many STRIKEs by itself (first after --evade-first s, then every --evade-every s) so nobody has to press e; for the wheels-off trials")
+    ap.add_argument("--evade-only", action="store_true", help="with --evade: send ONLY the STRIKE pulses and zero between them (pursuit commands are dropped), so a wheel video shows nothing but the pulses; for the wheels-off trials")
     ap.add_argument("--evade-first", type=float, default=8.0)
     ap.add_argument("--evade-every", type=float, default=5.0, help="must exceed the pulse plus the cooldown (config.toml), else the STRIKE is ignored")
     ap.add_argument("--no-obstacles", action="store_true", help="no obstacle detector at all (2026-11-18: unresolved on the glossy floor, it blocks forward motion for far chairs); keep the floor clear, R1 is the only stop")
@@ -558,7 +559,7 @@ def main():
                     if s is not None:
                         now_s = time.time()
                         ov = evasion.step(now_s) if evasion is not None else None   # the strike pulse outranks pursuit, hold and the obstacle override; the robot cap and the e-stop still apply
-                        s.send(*(ov if ov is not None else command_to_send(cmd, now_s)))
+                        s.send(*(ov if ov is not None else (0.0, 0.0) if a.evade_only else command_to_send(cmd, now_s)))
                     time.sleep(1 / 30.0)
             finally:
                 if s is not None:
