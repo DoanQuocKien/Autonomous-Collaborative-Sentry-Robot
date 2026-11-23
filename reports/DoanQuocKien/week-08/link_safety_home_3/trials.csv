@@ -1,0 +1,3 @@
+trial,valid,invalid_reason,spin_median_motion,still_noise,threshold,stop_seen_after_s,r1_held_at_cut,r1_held_after,frames_rest,frames_spin,frames_post
+1,1,,21.46,3.18,7.75,0.557,1,1,39,42,31
+2,1,,21.2,3.18,7.68,0.541,1,1,39,42,31

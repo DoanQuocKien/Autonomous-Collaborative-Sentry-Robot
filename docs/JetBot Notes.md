@@ -32,6 +32,7 @@ Our kit is the Waveshare JetBot AI Kit; what its SD image actually ships was che
 - Fisheye field of view depends on the sensor mode and crop, so **calibration must use exactly the mode we run in**.
 - `jetbot.image.bgr8_to_jpeg(value, quality=75)` is `cv2.imencode('.jpg', ...)`; we call it with quality 60.
 - **Camera slot (2026-11-23): keep the camera on the CAM1 connector.** On CAM0 (`imx219 7-0010`) the sensor probes but delivers no frames (vi fence timeouts, CSI lane errors, `No cameras available`), also after reseating and a reboot; on CAM1 (`imx219 8-0010`) it streams at about 20 FPS with no code change (Argus calls it camera 0). Cause of the CAM0 fault not established (cable end or connector); tell the supervisor. If frames stop, check `dmesg | grep imx219` first.
+- **No frames after a power-up (2026-11-23):** `camera_pub.log` shows `Connecting to nvargus-daemon failed: Connection refused`. Fix: `sudo systemctl stop sentry-camera; sudo docker restart jetbot_jupyter; sudo systemctl start sentry-camera` (restarting only `nvargus-daemon` did not help). Cause not established.
 - **Power mode (2026-11-23): the robot idles in 5 W mode** (nvpmodel ID 1: 2 cores, CPU 918 MHz, GPU 640 MHz). `sudo nvpmodel -m 0` gives MAXN (4 cores) for benches; see `docs/Edge Deployment.md`.
 
 ## Decisions for our code (apply in `jetson/robot_udp.py`)
