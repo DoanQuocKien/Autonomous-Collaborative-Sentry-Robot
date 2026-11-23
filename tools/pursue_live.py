@@ -382,6 +382,7 @@ def main():
     ap.add_argument("--floor", choices=("glossy", "matte", "unknown"), default="unknown", help="floor type for the obstacle detector; unknown -> every obstacle is unresolved (then low boxes only stop forward motion)")
     ap.add_argument("--search", action="store_true", help="target lost for 0.6 s: spin on the spot (pulses, towards the side it was last seen) until a person within the lock range is found; --lost-end-s then counts the whole search (set 30). It also spins from the start and after a tower avoid until a person is found")
     ap.add_argument("--evade", action="store_true", help="strike evasion override (sentry/nav/evasion.py): key e injects a STRIKE for the wheels-off T2 test (v, w and times from config.toml); the automatic strike detector is not wired yet, and the dead-reckoned pose does not include the 0.4 s pulse")
+    ap.add_argument("--flash", action="store_true", help="with --evade: a window turns white while a STRIKE is on, so a phone filming the wheel and this window gives the time zero (tools.pulse_video)")
     ap.add_argument("--no-obstacles", action="store_true", help="no obstacle detector at all (2026-11-18: unresolved on the glossy floor, it blocks forward motion for far chairs); keep the floor clear, R1 is the only stop")
     ap.add_argument("--unresolved-bottom", type=float, default=None, help="an obstacle without a floor distance blocks forward motion when its box reaches below this fraction of the image height (default 0.55 of the Explorer; with the camera pitched up the horizon is near 0.58, so far chairs block: 0.75 keeps only what is within about 1 m)")
     ap.add_argument("--tower-avoid", action="store_true", help="the ESP32 tower (50 mm ArUco ids 10-13 on its faces, [tower] in config.toml): inside trigger_m turn 90 deg away, 0.8 m sideways, turn back, straight on until clear, then re-lock the target (sentry/nav/tower_avoid.py; the manoeuvre is open loop and UNTESTED with a person)")
@@ -417,10 +418,13 @@ def main():
         tm = float(load()["tower"]["marker_m"]) / 2
         tower_obj = np.array([[-tm, tm, 0], [tm, tm, 0], [tm, -tm, 0], [-tm, -tm, 0]], np.float64)
         print("tower avoidance ON: %s" % (tower_ta.cfg,), flush=True)
-    evasion, last_bearing = None, {"v": None}
+    evasion, last_bearing, flash = None, {"v": None}, None
     if a.evade:
         from sentry.nav.evasion import EvasionOverride
         evasion = EvasionOverride.from_toml()
+        if a.flash:
+            from tools.pulse_video import FlashWindow
+            flash = FlashWindow()
         print("strike evasion override ON (key e = inject a STRIKE): v=%s w=+-%s for %.2f s, cooldown %.1f s" % (evasion.v, evasion.w, evasion.duration_s, evasion.cooldown_s), flush=True)
     perceive = make_perception()
     from sentry.perception.obstacle import ObstacleDetector
@@ -594,7 +598,10 @@ def main():
                         if key == "q":
                             end["reason"] = "operator pressed q"
                         elif key == "e" and evasion is not None:
-                            print("STRIKE injected: %s" % ("evading" if evasion.trigger(time.time(), last_bearing["v"]) else "ignored (pulse or cooldown)"), flush=True)
+                            hit = evasion.trigger(time.time(), last_bearing["v"])
+                            if hit and flash is not None:
+                                flash.pulse(evasion.duration_s)
+                            print("STRIKE injected: %s" % ("evading" if hit else "ignored (pulse or cooldown)"), flush=True)
                 except ImportError:
                     pass
         except BaseException as e:                                            # inference error, Ctrl+C, ...: keep the reason in the evidence
@@ -603,6 +610,8 @@ def main():
             raise
         finally:
             cmd.update(v=0.0, w=0.0, t=time.time())
+            if flash is not None:
+                flash.close()
             time.sleep(0.4)
             done.set()
             # Finish sender cleanup before returning/re-raising to the caller.
