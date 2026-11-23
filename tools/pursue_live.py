@@ -544,7 +544,7 @@ def main():
                 while not done.is_set():
                     if s is not None:
                         now_s = time.time()
-                        ov = evasion.step(now_s) if evasion is not None else None   # the strike pulse outranks pursuit, hold and the obstacle override; the robot cap and the e-stop still apply
+                        ov = evasion.step(now_s) if (evasion is not None and end["reason"] is None) else None   # the strike pulse outranks pursuit, hold and the obstacle override; the robot cap and the e-stop still apply
                         s.send(*(ov if ov is not None else command_to_send(cmd, now_s)))
                     time.sleep(1 / 30.0)
             finally:

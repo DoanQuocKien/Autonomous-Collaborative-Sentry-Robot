@@ -216,6 +216,8 @@ class Phase3Runner:
         if self.sm.state != prev:
             self.log.append((t, self.sm.state.value))
             logger.info("Phase 3 transition at t=%.3f: %s -> %s (event: %s)", t, prev.value, self.sm.state.value, name)
+            if self.sm.state == State.EVADE:
+                self.controller.reset()
         self._sync_active_target()
         return res
 
@@ -312,7 +314,7 @@ class Phase3Runner:
         if turn_sign is not None:
             data["turn_sign"] = turn_sign
         res = self._dispatch_event("STRIKE", t, data=data)
-        if res.command and abs(res.command.w) > 1e-3:
+        if not res.ignored and res.transitioned and res.command and abs(res.command.w) > 1e-3:
             self._evade_w = res.command.w
         return res
 

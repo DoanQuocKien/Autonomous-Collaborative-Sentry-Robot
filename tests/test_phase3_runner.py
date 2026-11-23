@@ -509,3 +509,42 @@ def test_search_timeout_tick_advances_record_queue_and_clears_target_cache(runne
     assert runner.active_target == runner.queue.active.id == "B"
     assert [r.id for r in runner.queue.all_dropped()] == ["A"]
     assert runner._last_target_obs is None and len(runner.queue.all_history()) == 2
+
+
+def test_strike_preempts_hold_resets_controller_and_enforces_cooldown(runner, explore_settings):
+    """STRIKE during HOLD enters EVADE, resets HoldDetector, resumes PURSUE after 0.4 s, and enforces 1.0 s cooldown."""
+    runner.enqueue_intruder("T1", t=0.0)
+    t = 0.0
+    for _ in range(50):  # 2.5 s stationary -> HOLD
+        t = round(t + 0.05, 3)
+        runner.step(t=t, robot_pose=(0.0, 0.0, 0.0), target_pos=(1.5, 0.0))
+    assert runner.state == State.HOLD and runner.mode == "HOLD"
+
+    # Strike from HOLD with obstacle on left -> yaw right (w < 0)
+    t_strike = round(t + 0.05, 3)
+    res1 = runner.trigger_strike(t=t_strike, obstacle_side="left")
+    assert res1.state == State.EVADE and not res1.ignored
+
+    # Ignored strike during EVADE (with opposite side) must NOT flip _evade_w or extend EVADE
+    res_mid = runner.trigger_strike(t=round(t_strike + 0.15, 3), obstacle_side="right")
+    assert res_mid.ignored and res_mid.state == State.EVADE
+    v_ev, w_ev = runner.step(t=round(t_strike + 0.25, 3), robot_pose=(0.0, 0.0, 0.0))
+    assert v_ev == -1.0 and w_ev < 0.0
+    assert legal(NavCommand(v_ev, w_ev, "", ""), explore_settings)
+
+    # Complete 0.40 s evade pulse -> PURSUE with reset controller (not stuck in HOLD)
+    t_end = round(t_strike + 0.45, 3)
+    v_res, w_res = runner.step(t=t_end, robot_pose=(0.0, 0.0, 0.0), target_pos=(2.2, 0.0))
+    assert runner.state == State.PURSUE and runner.mode == "PURSUE"
+    assert v_res > 0.40
+    assert legal(NavCommand(v_res, w_res, "", ""), explore_settings)
+
+    # Strike inside 1.0 s cooldown is ignored and leaves PURSUE uninterrupted
+    res_cool = runner.trigger_strike(t=round(t_end + 0.50, 3), obstacle_side="right")
+    assert res_cool.ignored and runner.state == State.PURSUE
+
+    # Strike after 1.0 s cooldown succeeds
+    res_ok = runner.trigger_strike(t=round(t_end + 1.05, 3), obstacle_side="right")
+    assert not res_ok.ignored and runner.state == State.EVADE
+    v_ev2, w_ev2 = runner.step(t=round(t_end + 1.10, 3), robot_pose=(0.0, 0.0, 0.0))
+    assert v_ev2 == -1.0 and w_ev2 > 0.0
