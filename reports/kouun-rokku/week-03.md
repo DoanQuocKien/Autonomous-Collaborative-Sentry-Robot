@@ -15,8 +15,8 @@
   - Updated `tools/enroll_entrance.py` to accept `--camera none` when enrolling ESP32 doorway references.
 - **Offline Audio Prompts & Playback Dispatch (`sentry/app/audio.py`, `sentry/net/udp_tx.py`, `assets/audio/*.wav`, `tests/test_audio.py`):**
   - Implemented `sentry/app/audio.py` with offline TTS rendering (`pyttsx3` / `espeak-ng` / `espeak` with a deterministic pure-Python formant + earcon speech synthesizer fallback) and WAV validation (`verify_wav`).
-  - Generated and committed 7 compact 16-bit mono 8 kHz PCM WAV clips in `assets/audio/` (`place_camera.wav`, `guard_ready.wav`, `camera_verified.wav`, `standby.wav`, `intruder_detected.wav`, `hold_position.wav`, `alarm.wav`, 19–35 KB each) compatible with `jetson/robot_udp.py` `play_clip` (`aplay -q`).
-  - Added `UDPSender.play(clip)` in `sentry/net/udp_tx.py` to send validated `{"seq": int, "play": "<clip>"}` packets on UDP port 5556 sharing the monotonic sequence counter with motor commands.
+  - Generated and committed 7 compact 16-bit mono 8 kHz PCM WAV clips in `assets/audio/` (`place_camera.wav`, `guard_ready.wav`, `camera_verified.wav`, `standby.wav`, `intruder_detected.wav`, `hold_position.wav`, `alarm.wav`, 19–35 KB each) originally for `jetson/robot_udp.py` `play_clip` (`aplay -q`); that Jetson playback was removed when the robot speaker was dropped (2026-10-26, PR #70) and the laptop now plays the clips.
+  - Added `UDPSender.play(clip)` in `sentry/net/udp_tx.py` to send validated `{"seq": int, "play": "<clip>"}` packets on UDP port 5556 (removed with the Jetson speaker on 2026-10-26, PR #70; see issue #136).
 - **Phase 1–3 State Machine Skeleton (`sentry/app/state_machine.py`, `tests/test_state_machine.py`):**
   - Implemented `StateMachine`, `StateMachineConfig`, `Phase`, `State`, `Event`, `Command`, and `TransitionResult` as pure CPU logic (events in, commands out; zero socket or model dependencies).
   - Covers all Phase 1–3 states and transitions:
