@@ -381,6 +381,7 @@ def main():
     ap.add_argument("--pose-weights", default=None, help="YOLOv8-pose weights for --range-source trunk (default [reid] pose_weights, else yolov8n-pose.pt in the repo root)")
     ap.add_argument("--floor", choices=("glossy", "matte", "unknown"), default="unknown", help="floor type for the obstacle detector; unknown -> every obstacle is unresolved (then low boxes only stop forward motion)")
     ap.add_argument("--search", action="store_true", help="target lost for 0.6 s: spin on the spot (pulses, towards the side it was last seen) until a person within the lock range is found; --lost-end-s then counts the whole search (set 30). It also spins from the start and after a tower avoid until a person is found")
+    ap.add_argument("--evade", action="store_true", help="strike evasion override (sentry/nav/evasion.py): key e injects a STRIKE for the wheels-off T2 test (v, w and times from config.toml); the automatic strike detector is not wired yet, and the dead-reckoned pose does not include the 0.4 s pulse")
     ap.add_argument("--no-obstacles", action="store_true", help="no obstacle detector at all (2026-11-18: unresolved on the glossy floor, it blocks forward motion for far chairs); keep the floor clear, R1 is the only stop")
     ap.add_argument("--unresolved-bottom", type=float, default=None, help="an obstacle without a floor distance blocks forward motion when its box reaches below this fraction of the image height (default 0.55 of the Explorer; with the camera pitched up the horizon is near 0.58, so far chairs block: 0.75 keeps only what is within about 1 m)")
     ap.add_argument("--tower-avoid", action="store_true", help="the ESP32 tower (50 mm ArUco ids 10-13 on its faces, [tower] in config.toml): inside trigger_m turn 90 deg away, 0.8 m sideways, turn back, straight on until clear, then re-lock the target (sentry/nav/tower_avoid.py; the manoeuvre is open loop and UNTESTED with a person)")
@@ -416,6 +417,11 @@ def main():
         tm = float(load()["tower"]["marker_m"]) / 2
         tower_obj = np.array([[-tm, tm, 0], [tm, tm, 0], [tm, -tm, 0], [-tm, -tm, 0]], np.float64)
         print("tower avoidance ON: %s" % (tower_ta.cfg,), flush=True)
+    evasion, last_bearing = None, {"v": None}
+    if a.evade:
+        from sentry.nav.evasion import EvasionOverride
+        evasion = EvasionOverride.from_toml()
+        print("strike evasion override ON (key e = inject a STRIKE): v=%s w=+-%s for %.2f s, cooldown %.1f s" % (evasion.v, evasion.w, evasion.duration_s, evasion.cooldown_s), flush=True)
     perceive = make_perception()
     from sentry.perception.obstacle import ObstacleDetector
     detect_obstacles = ObstacleDetector.from_config(camera_pose_path=a.camera_pose, camera_path=a.camera, floor_type=a.floor)
@@ -436,6 +442,7 @@ def main():
         t0 = time.time()
         tracks = perceive(frame)
         obstacles = None if a.no_obstacles else obstacle_input(detect_obstacles(frame, t, mode="pursuit"), detect_obstacles.geometry.size, a.unresolved_bottom)
+        last_bearing["v"] = obstacles[1] if obstacles is not None and obstacles[0] is not None else None
         if tower_ta is not None:
             tw = look(geom, tower_obj, frame)
             out = tower_ta.step(t, (tw[1], tw[2]) if tw else None, None if obstacles is None else obstacles[0])
@@ -469,7 +476,8 @@ def main():
         written["done"] = True
         summary = dict(pursuit.summary(), label=a.label, dry_run=a.dry_run, replay=a.replay, end_reason=end["reason"], camera_pose_file=a.camera_pose, pitch_down_deg=round(math.degrees(geom.pitch), 2),
                        feet_row_offset_px=pursuit.feet_row_offset_px, range_source=a.range_source, trunk_length_m=trunk_m, trunk_conf_min=trunk_conf, trunk_frames=sum(1 for r in pursuit.rows if r.get("range_src") == "trunk"), config=effective_config, battery_v_start=volts0, battery_v_end=volts1, seconds=round(time.time() - t_wall, 1), date=time.strftime("%Y-%m-%d %H:%M"), obstacle_avoidance=not a.no_obstacles, floor=a.floor,
-                       tower_avoid=None if tower_ta is None else dict(count=tower_ta.count, aborted=tower_ta.aborted, events=tower_ta.events, config=dataclasses.asdict(tower_ta.cfg)))
+                       tower_avoid=None if tower_ta is None else dict(count=tower_ta.count, aborted=tower_ta.aborted, events=tower_ta.events, config=dataclasses.asdict(tower_ta.cfg)),
+                       evasion=None if evasion is None else dict(count=evasion.count, rejected=evasion.rejected, v=evasion.v, w=evasion.w, duration_s=evasion.duration_s, cooldown_s=evasion.cooldown_s))
         run_dir = save_run(a.out, a.label, pursuit.rows, summary, saved)
         print("ENDED: %s | %s" % (end["reason"], json.dumps({k: summary[k] for k in ("frames", "run_span_s", "unobserved_time_s", "coverage_tracked_fraction", "time_fraction_distance_in_band_of_run", "time_fraction_centred_of_run", "hold_events")})), flush=True)
         print("saved", run_dir, flush=True)
@@ -535,7 +543,9 @@ def main():
             try:
                 while not done.is_set():
                     if s is not None:
-                        s.send(*command_to_send(cmd, time.time()))
+                        now_s = time.time()
+                        ov = evasion.step(now_s) if evasion is not None else None   # the strike pulse outranks pursuit, hold and the obstacle override; the robot cap and the e-stop still apply
+                        s.send(*(ov if ov is not None else command_to_send(cmd, now_s)))
                     time.sleep(1 / 30.0)
             finally:
                 if s is not None:
@@ -579,8 +589,12 @@ def main():
                     end["reason"] = "time limit"
                 try:
                     import msvcrt
-                    if msvcrt.kbhit() and msvcrt.getwch().lower() == "q":
-                        end["reason"] = "operator pressed q"
+                    if msvcrt.kbhit():
+                        key = msvcrt.getwch().lower()
+                        if key == "q":
+                            end["reason"] = "operator pressed q"
+                        elif key == "e" and evasion is not None:
+                            print("STRIKE injected: %s" % ("evading" if evasion.trigger(time.time(), last_bearing["v"]) else "ignored (pulse or cooldown)"), flush=True)
                 except ImportError:
                     pass
         except BaseException as e:                                            # inference error, Ctrl+C, ...: keep the reason in the evidence
