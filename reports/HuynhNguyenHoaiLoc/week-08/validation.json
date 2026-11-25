@@ -6,12 +6,12 @@
   "python": "3.12.15 (main, Oct  3 2026, 01:05:37) [MSC v.1944 64 bit (AMD64)]",
   "platform": "Windows-11-10.0.26200-SP0",
   "tests": {
-    "passed": 1025,
+    "passed": 1045,
     "skipped": 3,
     "deselected": 4,
-    "seconds": 66.5,
-    "command": "python -m pytest -m \"not gpu and not hil\" --basetemp=data/pytest-w8-issue139-final -p no:cacheprovider -q -rs",
-    "log_sha256": "3f04a0821392411d20e30501eeb6b10758c7d9e70706b544ba8c3873db16ebfb"
+    "seconds": 70.29,
+    "command": "python -m pytest -m \"not gpu and not hil\" --basetemp=data/pytest-w8-stagea-release -p no:cacheprovider -q -rs",
+    "log_sha256": "39d82b9da3d13b755c00facaa046fc7cb5d63c2f308becee87c4d60a6daf2718"
   },
   "code_sha256_lf": {
     "sentry/perception/pose.py": "27fd634fc8564f08270d8642fd0b9731a05671d329ca1c11b7d7ad114d0192dd",
@@ -20,12 +20,19 @@
     "config.toml": "605238f8b242975c7e834237a9e7c40b7d23f4f6c33379229b8cae03328dfc67",
     "tests/test_pose.py": "812d0c16c1e851ba64689dd6ac0bb37e4c8a8860ba20ab6cd3dd7000570db471",
     "tests/test_detect_lunges.py": "0308d8834215803577fef5a6c78246d4b5376b1d1669d54dc19b3e710c30be08",
-    "tests/test_export_edge_onnx.py": "51a6f9ecedc7076d0917fb52cb80f5de0e1c620ae0cb69eec53227aa66230cdf"
+    "tests/test_export_edge_onnx.py": "51a6f9ecedc7076d0917fb52cb80f5de0e1c620ae0cb69eec53227aa66230cdf",
+    "tools/stage_a_parity.py": "15b617ce60c75d2b2c9c8989194fcef8477ef383b735d2aaee8dd8989aa0e74a",
+    "jetson/stage_a_parity_run.py": "f62bbcfdf207e153b981c331eca0293759fe67c0b124c4715d7a1d18758f3945",
+    "tests/test_stage_a_parity.py": "78d96a23d167e61f991dd23a3fc83906c00e600ca517e2f1918ab0905c9d0ef5"
   },
   "runtime_smoke": "pose_runtime_smoke.json",
   "onnx_delivery": "onnx_delivery.json",
   "motor_commands_sent": 0,
   "d4_accuracy_measured": false,
   "d3_recorded": false,
-  "tensorrt_engine_built": false
+  "tensorrt_engine_built": false,
+  "stage_a_d1_report": "stage_a_onnx_d1_release.json",
+  "stage_a_handoff": "stage_a_handoff.json",
+  "stage_a_tensorrt_executed": false,
+  "stage_a_distance_gate_assessable": false
 }

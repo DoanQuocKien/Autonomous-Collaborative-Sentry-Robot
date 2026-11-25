@@ -22,6 +22,8 @@ DQK dùng lệnh hiện có trong [Edge Deployment](../../docs/Edge%20Deployment
 
 Nhờ DQK bàn giao build log, phiên bản TensorRT/JetPack, hash engine và outputs trên cùng D1 parity inputs để HNHL chấm cosine/distance. Chưa có engine Nano trong phiên này, nên G2 và distance-error comparison của đường robot tiếp tục chờ. Exporter hiện trả exit code khác 0 khi job lỗi và từ chối ghi đè file YOLO đã có.
 
+Bổ sung phần tuần 8: đã chạy PyTorch/ONNX trên 200 D1 frames, có gói input và Nano runner/comparator. Xem [W8-STAGE-A-PARITY.md](W8-STAGE-A-PARITY.md) để lấy gói, lệnh và giới hạn distance coverage. Không dùng số parity TensorRT cũ thay cho gói ONNX mới.
+
 ## Detector và đầu vào cho KR
 
 `sentry.perception.pose.LungeDetector` hỗ trợ `update(t, bbox, track_id=..., epoch=...)` và callable `(t, sample) -> bool`, khớp interface pluggable của PR #142. Bbox dùng raw pixel xyxy. So sánh mọi baseline trong cửa sổ capture **100 ms** với ngưỡng strict **dA/A > 0,40** từ config; không thay bằng số frame. Duplicate timestamp, clock reset, target/epoch/resize, mất box, box nhỏ hoặc cắt mép làm mất baseline. Sai số làm tròn timestamp tại biên cho phép 1 microsecond.
