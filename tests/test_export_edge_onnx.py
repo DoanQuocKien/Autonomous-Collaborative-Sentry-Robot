@@ -28,3 +28,29 @@ def test_nearest_2x_resize_becomes_an_identical_grouped_deconv():
     assert [n.op_type for n in out.graph.node] == ["ConvTranspose"]
     got = ort.InferenceSession(out.SerializeToString(), providers=["CPUExecutionProvider"]).run(None, {"x": x})[0]
     assert np.array_equal(got, ref) and got.shape == (1, 3, 8, 12)
+
+
+def test_cli_failure_is_nonzero_and_later_jobs_still_run(monkeypatch, tmp_path):
+    from tools import export_edge_onnx as exporter
+    called = []
+    def fail():
+        raise ValueError('fixture export failed')
+    monkeypatch.setattr(exporter, 'ROOT', tmp_path)
+    monkeypatch.setattr(exporter, 'OUT', tmp_path/'original')
+    monkeypatch.setattr(exporter, 'JOBS', {'bad': fail, 'good': lambda: called.append('good')})
+    monkeypatch.chdir(tmp_path)
+    assert exporter.main(['--only', 'bad', 'good', '--out', str(tmp_path/'failed')]) == 1
+    assert called == ['good']
+    assert exporter.main(['--only', 'good', '--out', str(tmp_path/'ok')]) == 0
+
+
+def test_yolo_export_refuses_to_replace_existing_evidence(monkeypatch, tmp_path):
+    from tools import export_edge_onnx as exporter
+    monkeypatch.setattr(exporter, 'ROOT', tmp_path)
+    monkeypatch.setattr(exporter, 'OUT', tmp_path)
+    (tmp_path/'model.pt').write_bytes(b'fixture')
+    target = tmp_path/'model.onnx'
+    target.write_bytes(b'existing export')
+    with pytest.raises(FileExistsError):
+        exporter.yolo('model.pt', 'model')
+    assert target.read_bytes() == b'existing export'

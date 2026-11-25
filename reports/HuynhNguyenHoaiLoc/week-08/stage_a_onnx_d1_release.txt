@@ -1,0 +1,59 @@
+D1 frames: 25/200
+D1 frames: 50/200
+D1 frames: 75/200
+D1 frames: 100/200
+D1 frames: 125/200
+D1 frames: 150/200
+D1 frames: 175/200
+D1 frames: 200/200
+{
+  "backend": "pytorch-fp32-vs-onnxruntime-cpu-fp32",
+  "frames": 200,
+  "raw": {
+    "min_cosine": 0.9999999999998935,
+    "frames_below_0999": 0,
+    "max_abs_diff": 0.002288818359375
+  },
+  "boxes": {
+    "reference": 919,
+    "candidate": 919,
+    "matched_at_iou_09": 919,
+    "matched_fraction": 1.0,
+    "count_mismatch_frames": 0
+  },
+  "distance_against_laptop_640": {
+    "annotated_ids": 9,
+    "reference_distance_ids": 0,
+    "candidate_distance_ids": 3,
+    "paired_distance_ids": 0,
+    "reference_missing_ids": [
+      "21",
+      "22",
+      "23",
+      "24",
+      "25",
+      "26",
+      "27",
+      "28",
+      "29"
+    ],
+    "candidate_missing_ids": [
+      "21",
+      "22",
+      "23",
+      "25",
+      "26",
+      "27"
+    ],
+    "paired_reference_median_error": null,
+    "paired_candidate_median_error": null,
+    "reference_median_error_on_available_ids": null,
+    "candidate_median_error_on_available_ids": 0.4167479888363349,
+    "reference_p90_error_on_available_ids": null,
+    "candidate_p90_error_on_available_ids": 1.0657073920572109,
+    "candidate_minus_reference_percentage_points": null,
+    "diagnostic_within_2_percentage_points": null,
+    "sufficient_coverage_for_gate": false,
+    "passed": null
+  }
+}
