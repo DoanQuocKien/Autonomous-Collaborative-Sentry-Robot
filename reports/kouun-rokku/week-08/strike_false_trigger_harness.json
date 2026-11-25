@@ -1,0 +1,50 @@
+{
+  "evaluation_tier": "T0_SYNTHETIC_HARNESS",
+  "detector_used": "BboxStrikeBaseline(dA/A > 0.40 in 0.10s)",
+  "config": {
+    "strike_area_growth": 0.4,
+    "strike_window_s": 0.1,
+    "evade_duration_s": 0.4,
+    "evade_cooldown_s": 1.0,
+    "max_false_triggers_per_5min": 1.0
+  },
+  "normal_walking_10min": {
+    "samples_total": 12001,
+    "samples_evaluated": 12001,
+    "duration_s": 600.0,
+    "duration_min": 10.0,
+    "raw_strike_frames": 0,
+    "false_trigger_episodes": 0,
+    "evade_entries": 0,
+    "cooldown_suppressed": 0,
+    "raw_episodes_per_min": 0.0,
+    "false_triggers_per_min": 0.0,
+    "false_triggers_per_5min": 0.0,
+    "max_allowed_per_5min": 1.0,
+    "limit_met": true,
+    "protocol_complete": true,
+    "t1_passed": true,
+    "trigger_timestamps": []
+  },
+  "lunge_burst_sanity": {
+    "total_onsets": 3,
+    "matched_onsets": 3,
+    "missed_onsets": 0,
+    "recall": 1.0,
+    "recall_met": true,
+    "delays_ms": [
+      100.0,
+      100.0,
+      100.0
+    ],
+    "median_delay_ms": 100.0,
+    "p95_delay_ms": 100.0
+  },
+  "cooldown_gating_sanity": {
+    "raw_strike_frames": 4,
+    "evade_entries": 2,
+    "cooldown_suppressed": 2
+  },
+  "t0_harness_passed": true,
+  "note": "T0 synthetic benchmark only; does NOT establish D4 T1 acceptance until run on recorded D4 video with HNHL's pose/lunge detector."
+}

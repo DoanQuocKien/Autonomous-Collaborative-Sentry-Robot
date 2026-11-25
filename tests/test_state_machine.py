@@ -268,3 +268,43 @@ def test_history_is_bounded():
     for i in range(HISTORY_LEN + 10):
         sm.tick(i * 0.033)
     assert len(sm.history) == HISTORY_LEN
+
+
+def test_evade_preempts_pursue_via_tick_and_enforces_cooldown():
+    """STRIKE preempts PURSUE -> EVADE, tick() finishes pulse at evade_duration_s, cooldown blocks repeat STRIKE."""
+    sm = StateMachine(initial_state=State.STANDBY, t0=0.0)
+    sm.handle_event("INTRUDER_QUEUED", {"id": "T1"}, t=1.0)
+    assert sm.state == State.PURSUE
+
+    r_strike = sm.handle_event("STRIKE", {"obstacle_side": "left"}, t=2.0)
+    assert r_strike.state == State.EVADE and r_strike.transitioned
+    assert r_strike.command.v == -1.0 and r_strike.command.w == -0.8 and r_strike.command.play == "alarm"
+
+    # Second STRIKE while still in EVADE is ignored and does not extend the pulse
+    r_mid = sm.handle_event("STRIKE", {"obstacle_side": "right"}, t=2.2)
+    assert r_mid.ignored and r_mid.state == State.EVADE
+    assert sm.tick(2.39).state == State.EVADE
+
+    # Exact duration boundary (0.4 s): tick transitions back to PURSUE and starts cooldown
+    r_done = sm.tick(2.4)
+    assert r_done.state == State.PURSUE and r_done.timed_out
+    assert sm.last_evade_end_t == pytest.approx(2.4)
+
+    # STRIKE inside 1.0 s cooldown is ignored; after 1.0 s cooldown it succeeds
+    r_cool = sm.handle_event("STRIKE", t=3.3)
+    assert r_cool.ignored and r_cool.state == State.PURSUE
+    assert "cooldown" in sm.ignored_events[-1].reason
+    r_ok = sm.handle_event("STRIKE", {"obstacle_side": "right"}, t=3.4)
+    assert not r_ok.ignored and r_ok.state == State.EVADE and r_ok.command.w == 0.8
+
+
+def test_target_exited_during_evade_with_queued_target_starts_search_and_sets_cooldown():
+    sm = StateMachine(initial_state=State.STANDBY, t0=0.0)
+    sm.handle_event("INTRUDER_QUEUED", "T1", t=1.0)
+    sm.handle_event("INTRUDER_QUEUED", "T2", t=1.5)
+    sm.handle_event("STRIKE", t=2.0)
+    assert sm.state == State.EVADE
+
+    r_exit = sm.handle_event("TARGET_EXITED", t=2.15)
+    assert r_exit.state == State.SEARCH and sm.active_target == "T2"
+    assert sm.last_evade_end_t == pytest.approx(2.15)

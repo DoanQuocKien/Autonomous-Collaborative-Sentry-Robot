@@ -36,7 +36,20 @@ def test_stalled_video_cannot_stretch_the_pulse():
     assert e.step(7.0) is None                        # the next call, a long time later, is already over
 
 
-@pytest.mark.parametrize("kw", [dict(v=0.5), dict(v=-1.5), dict(w=0.0), dict(w=1.5), dict(duration_s=0.0), dict(duration_s=2.0), dict(cooldown_s=-1.0)])
+@pytest.mark.parametrize("kw", [
+    dict(v=0.5),
+    dict(v=-1.5),
+    dict(v=float("nan")),
+    dict(w=0.0),
+    dict(w=1.5),
+    dict(w=float("inf")),
+    dict(duration_s=0.0),
+    dict(duration_s=2.0),
+    dict(duration_s=float("nan")),
+    dict(cooldown_s=-1.0),
+    dict(cooldown_s=float("nan")),
+    dict(cooldown_s=float("inf")),
+])
 def test_illegal_values_are_refused(kw):
     with pytest.raises(ValueError):
         EvasionOverride(**kw)
