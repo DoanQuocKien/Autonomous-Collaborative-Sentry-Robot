@@ -1,22 +1,15 @@
 {
-  "timestamp_utc": "2026-11-23T18:45:38.990230+00:00",
+  "timestamp_utc": "2026-11-25T15:48:28.302675+00:00",
   "cwd": "/home/hl/Documents/^project_hoc_ky/Autonomous-Collaborative-Sentry-Robot",
-  "commit": "fbe9c532cde007f8dea842d720d88f521a900518",
-  "tree": "fa877469f5767a382c37a3fda800adf42ff9af50",
+  "commit": "b4eef103254c20011c5ba936a8576db0d79efb0b",
+  "tree": "7193b2b210244b08f475ed44abae4e36aef6b3a8",
   "status": [
+    " M reports/kouun-rokku/week-08.md",
+    " M reports/kouun-rokku/week-08/cpu_tests.log",
     " M requirements-base.txt",
-    " M sentry/app/phase3_runner.py",
-    " M sentry/nav/evasion.py",
-    " M tests/test_evasion.py",
-    " M tests/test_phase3_runner.py",
-    " M tests/test_state_machine.py",
-    " M tools/pursue_live.py",
-    "?? reports/kouun-rokku/week-08/",
-    "?? sentry/app/strike_eval.py",
-    "?? tests/test_label_events.py",
-    "?? tests/test_strike_false_triggers.py",
-    "?? tools/evaluate_strike_false_triggers.py",
-    "?? tools/label_events.py"
+    "?? jetson/obstacle_layer.py",
+    "?? sentry/app/edge_fallback.py",
+    "?? tests/test_jetson_obstacle_layer.py"
   ],
   "interpreter": "/home/hl/Documents/^project_hoc_ky/Autonomous-Collaborative-Sentry-Robot/.venv/bin/python",
   "python": "3.12.16",
@@ -39,13 +32,13 @@
 .....................s.................................................. [ 28%]
 ........................................................................ [ 35%]
 ........................................................................ [ 42%]
-........................................s............................... [ 49%]
+..............................................s......................... [ 49%]
 ........................................................................ [ 56%]
 ........................................................................ [ 63%]
 ........................................................................ [ 70%]
 ........................................................................ [ 77%]
 ........................................................................ [ 84%]
-........................................................................ [ 92%]
-........................................................................ [ 99%]
-.........                                                                [100%]
-1014 passed, 3 skipped, 4 deselected in 50.83s
+........................................................................ [ 91%]
+........................................................................ [ 98%]
+...............                                                          [100%]
+1020 passed, 3 skipped, 4 deselected in 51.21s

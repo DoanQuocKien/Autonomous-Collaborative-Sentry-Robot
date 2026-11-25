@@ -21,12 +21,17 @@
   - `tools/pursue_live.py`: bypassed `evasion.step()` once `end["reason"]` is set during shutdown.
   - Added T0 tests in `tests/test_state_machine.py`, `tests/test_phase3_runner.py`, and `tests/test_evasion.py`.
 
+- **Stage A CPU-Only Obstacle Layer & Laptop Fallback Switch (`jetson/obstacle_layer.py`, `sentry/app/edge_fallback.py`, `tests/test_jetson_obstacle_layer.py`):**
+  - Implemented `EdgeCameraModel`, `repulsive_w`, `EdgeObstacleLayer`, `FallbackSwitch`, and edge status wire helpers in Python 3.6 using **stdlib and numpy only** (AST-verified `feature_version=(3, 6)`, zero `cv2` / `sentry` imports).
+  - Equidistant fisheye Newton-Raphson undistortion and ground-plane projection match OpenCV `CameraGeometry` within `< 1e-4` relative distance error (`calib/camera.json` + `calib/camera_pose_nowedge.json`), well inside the 2 percentage-point Stage A parity target.
+  - `FallbackSwitch` + `EdgeFallbackController` enforce laptop takeover within `<= 1.0 s` (`timeout_s = 0.5 s`) on edge switch-off, error, non-finite command, or silence, while keeping all motor commands dead-zone-legal.
+
 ## Tests & Evidence Run
 
 | Tier | Command | Result | Evidence |
 | :--- | :--- | :--- | :--- |
-| T0 | `.venv/bin/python -m pytest -q tests/test_label_events.py tests/test_strike_false_triggers.py tests/test_evasion.py tests/test_state_machine.py tests/test_phase3_runner.py` | **81 passed** | `reports/kouun-rokku/week-08/cpu_tests.log` |
+| T0 | `.venv/bin/python -m pytest -q tests/test_label_events.py tests/test_strike_false_triggers.py tests/test_evasion.py tests/test_state_machine.py tests/test_phase3_runner.py tests/test_jetson_obstacle_layer.py` | **87 passed** | `reports/kouun-rokku/week-08/cpu_tests.log` |
 | T0 | `.venv/bin/python -m tools.evaluate_strike_false_triggers --synthetic --out reports/kouun-rokku/week-08/strike_false_trigger_harness.json` | **PASS** (10 min synthetic walking: 0 false triggers/5 min; cooldown gating: 2/4 accepted, 2 suppressed; synthetic burst recall 3/3) | `reports/kouun-rokku/week-08/strike_false_trigger_harness.json` |
-| T0 | `.venv/bin/python -m tools.run_cpu_tests` | **1014 passed, 3 skipped, 4 deselected** in 50.83 s | `reports/kouun-rokku/week-08/cpu_tests.log` |
+| T0 | `.venv/bin/python -m tools.run_cpu_tests` | **1020 passed, 3 skipped, 4 deselected** | `reports/kouun-rokku/week-08/cpu_tests.log` |
 
-*Scope note: all results above are T0 CPU/synthetic checks. Real D4 T1 false-trigger rate, recall, and reaction-time measurements await the Thu 2026-11-26 classroom recording and HNHL's `sentry/perception/pose.py`.*
+*Scope note: all results above are T0 CPU/synthetic checks. Real D4 T1 false-trigger rate, recall, and reaction-time measurements await the Thu 2026-11-26 classroom recording and HNHL's `sentry/perception/pose.py`; Stage A T2 on-robot engine integration and disconnect safety tests await DQK on the robot before Gate G2 (Sun 2026-11-29).*
