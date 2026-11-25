@@ -1,0 +1,17 @@
+{
+ "trials": 2,
+ "valid_trials": 2,
+ "invalid_trials": [],
+ "upper_bound_s": [
+  0.541,
+  0.557
+ ],
+ "max_s": 0.557,
+ "median_s": 0.557,
+ "end_reason": "completed",
+ "battery_v_start": 12.248,
+ "battery_v_end": 12.24,
+ "date": "2026-11-23 21:29",
+ "wheels_on_ground_ack": true,
+ "note": "upper bound from the video: includes the video delay (< 0.16 s measured only on 2026-10-30) and the frame period; spin in place at w = 0.45 with the wheels on the floor (exception to the wheels-off rule); laptop path only, NOT the on-robot Edge safety pass; the plan limit of 0.35 s is not verified by this tool"
+}

@@ -31,6 +31,9 @@ Our kit is the Waveshare JetBot AI Kit; what its SD image actually ships was che
 - Defaults: output 224x224, capture 816x616, 30 fps. **Too small for us**; we set our own resolution (target 640x480).
 - Fisheye field of view depends on the sensor mode and crop, so **calibration must use exactly the mode we run in**.
 - `jetbot.image.bgr8_to_jpeg(value, quality=75)` is `cv2.imencode('.jpg', ...)`; we call it with quality 60.
+- **Camera slot (2026-11-23): keep the camera on the CAM1 connector.** On CAM0 (`imx219 7-0010`) the sensor probes but delivers no frames (vi fence timeouts, CSI lane errors, `No cameras available`), also after reseating and a reboot; on CAM1 (`imx219 8-0010`) it streams at about 20 FPS with no code change (Argus calls it camera 0). Cause of the CAM0 fault not established (cable end or connector); tell the supervisor. If frames stop, check `dmesg | grep imx219` first.
+- **No frames after a power-up (2026-11-23):** `camera_pub.log` shows `Connecting to nvargus-daemon failed: Connection refused`. Fix: `sudo systemctl stop sentry-camera; sudo docker restart jetbot_jupyter; sudo systemctl start sentry-camera` (restarting only `nvargus-daemon` did not help). Cause not established.
+- **Power mode (2026-11-23): the robot idles in 5 W mode** (nvpmodel ID 1: 2 cores, CPU 918 MHz, GPU 640 MHz). `sudo nvpmodel -m 0` gives MAXN (4 cores) for benches; see `docs/Edge Deployment.md`.
 
 ## Decisions for our code (apply in `jetson/robot_udp.py`)
 
@@ -116,6 +119,7 @@ Record the outputs in `reports/DoanQuocKien/week-01/`.
 | Our code in `/home/jetbot/sentry/` (some `__pycache__` folders are owned by root) | `sudo rm -rf /home/jetbot/sentry` |
 | `/home/jetbot/sentry/` also holds `ESTOP`, `ESTOP_ALIVE`, `estop.log` while the e-stop runs. **systemd units** (`jetson/systemd/`, installed 2026-10-11 or later): `/etc/systemd/system/sentry-estop.service`, `sentry-camera.service`, optionally `sentry-control.service` and `/etc/default/sentry-control`; since 2026-11-15 `install.sh` also writes `/etc/logrotate.d/sentry`, and a control key may be in `/home/jetbot/sentry/control.key` | **Return checklist:** `sudo systemctl disable --now sentry-estop sentry-camera sentry-control; sudo rm -f /etc/systemd/system/sentry-*.service /etc/default/sentry-control /etc/logrotate.d/sentry; sudo systemctl daemon-reload`, then `sudo rm -rf /home/jetbot/sentry` (removes everything) |
 | Wi-Fi power save: permanent fix file `/etc/modprobe.d/8822ce-sentry.conf` (2026-10-06) | `sudo rm /etc/modprobe.d/8822ce-sentry.conf` and reboot restores the driver default |
+| Boot logger (2026-11-23, diagnostic): `sentry-bootlog.service` in `/etc/systemd/system/` and `/home/jetbot/sentry/bootlog.log` | `sudo systemctl disable --now sentry-bootlog && sudo rm /etc/systemd/system/sentry-bootlog.service /home/jetbot/sentry/bootlog.log` |
 | Docker containers `jetbot_jupyter` / `jetbot_display` | Not modified; our scripts only ran inside the jupyter container and are stopped |
 | 2026-11-20 classroom session (find-door, handshake, pursuit) | No file on the robot was changed; the ESP32 tower is a separate device in front of the robot. The robot was switched off after the last run (battery 11.56 V) and charged; nothing to undo |
 | Antenna 0 missing (not caused by us as far as we know) | Tell the professor; replacement is cheap |
@@ -136,3 +140,7 @@ Record the outputs in `reports/DoanQuocKien/week-01/`.
 - **Result:** the filesystem was repaired (`e2fsck -fy`, mostly regenerable caches: the GPU JIT cache and a pip cache in the container layer), the partition was grown to the whole 58 GB card from the laptop, and `resize2fs` finished online on the robot: **58 GB, 34 GB free** (was 24 GB, 1.5 GB free).
 - **Rules:** shut down with `sudo shutdown now` and wait for the lights to go out before removing the card or the power; do not repair or write the card through the laptop reader; read-only inspection (`debugfs`, `dumpe2fs`, `e2fsck -n`) is fine. A second card flashed from the same JetBot image showed far more filesystem errors (check before use, re-flash with verification).
 - **Edge deployment results** (TensorRT engines, bench, parity): `docs/Edge Deployment.md`.
+
+## Notice for the supervisor (draft of 2026-11-23, NOT sent yet; the robot is school property)
+
+> Hello, a few things about the JetBot we borrowed. (1) On 2026-11-23 the camera gave no images when plugged into the Jetson's CAM0 connector (also after reseating it and rebooting). The same camera works on the CAM1 connector, so we use that one; we do not know whether the CAM0 connector or the cable end is damaged. (2) The camera board's flat-cable socket tore off on 2026-11-05 (details in the return checklist above). (3) The robot rebooted by itself several times on 2026-11-23, with no motor running; the 6-pin cable and the battery voltage tested fine, and we are logging it to find the cause. We list all of this in our return checklist and will hand the robot back in working order, or tell you what is broken. Please tell us if you want to inspect it.

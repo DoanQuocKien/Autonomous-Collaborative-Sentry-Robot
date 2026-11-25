@@ -1,0 +1,79 @@
+{
+ "label": "class_1123c",
+ "battery_v": 12.156,
+ "model": "calib defaults",
+ "rows": [
+  {
+   "name": "spin_left_1",
+   "kind": "spin_left",
+   "measurable": false
+  },
+  {
+   "name": "spin_right_1",
+   "kind": "spin_right",
+   "measurable": false
+  },
+  {
+   "name": "forward_1",
+   "kind": "forward",
+   "measurable": false
+  },
+  {
+   "name": "spin_left_2",
+   "kind": "spin_left",
+   "measurable": true,
+   "measured_forward_m": -0.017,
+   "measured_left_m": 0.047,
+   "measured_turn_deg": 54.4,
+   "predicted_forward_m": 0.0,
+   "predicted_turn_deg": 50.0,
+   "ratio": 1.088
+  },
+  {
+   "name": "spin_right_2",
+   "kind": "spin_right",
+   "measurable": true,
+   "measured_forward_m": -0.066,
+   "measured_left_m": -0.101,
+   "measured_turn_deg": -43.5,
+   "predicted_forward_m": 0.0,
+   "predicted_turn_deg": -49.6,
+   "ratio": 0.878
+  },
+  {
+   "name": "forward_2",
+   "kind": "forward",
+   "measurable": true,
+   "measured_forward_m": 0.516,
+   "measured_left_m": -0.08,
+   "measured_turn_deg": 6.7,
+   "predicted_forward_m": 0.411,
+   "predicted_turn_deg": 0.0,
+   "ratio": 1.254,
+   "drift_rad_per_m": 0.2275
+  }
+ ],
+ "check_passed": false,
+ "check_failures": [
+  "spin_left_1 has no finite measurement",
+  "spin_right_1 has no finite measurement",
+  "forward_1 has no finite measurement",
+  "spin_right_2 ratio 0.88",
+  "forward_2 ratio 1.25",
+  "forward_2 drift +0.228 rad/m"
+ ],
+ "fit": {
+  "scale": 1.254,
+  "w_scale_left": 0.8676,
+  "w_scale_right": 0.7002,
+  "drift_rad_per_m": 0.2275,
+  "segments": 6,
+  "measurable": 3
+ },
+ "fit_problems": [],
+ "limits": {
+  "ratio": 0.1,
+  "drift_rad_per_m": 0.05,
+  "scatter": 0.15
+ }
+}

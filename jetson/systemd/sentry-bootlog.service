@@ -1,0 +1,12 @@
+[Unit]
+Description=Sentry boot power/health logger (diagnostic: 12 h of battery V, tegrastats and load, fsynced per second)
+After=local-fs.target
+
+[Service]
+Type=simple
+# Host process (needs root for i2cget). Writes /home/jetbot/sentry/bootlog.log itself (fsync each line; rotated by sentry-logrotate). Runs once per boot, no restart.
+ExecStart=/usr/bin/python3 /home/jetbot/sentry/jetson/boot_log.py --seconds 43200
+Restart=no
+
+[Install]
+WantedBy=multi-user.target
