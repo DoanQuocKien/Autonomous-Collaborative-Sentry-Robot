@@ -1,0 +1,23 @@
+{
+  "date": "2026-11-25",
+  "weights_sha256": "c6fa93dd1ee4a2c18c900a45c1d864a1c6f7aba75d84f91648a30b7fb641d212",
+  "actual_device": "cuda:0",
+  "samples": [
+    {
+      "source": "synthetic_blank",
+      "image_sha256": null,
+      "people": 0,
+      "keypoint_shapes": [],
+      "elapsed_ms": 1688.1532999977935
+    },
+    {
+      "source": "existing_D2_runtime_only",
+      "image_sha256": "62055c8e649f5a7116d88923d14592de8b9a8b80d137a1a2d0c676ee78343f4a",
+      "people": 0,
+      "keypoint_shapes": [],
+      "elapsed_ms": 17.788600001949817
+    }
+  ],
+  "scope": "runtime smoke only; includes cold start; no D4 truth, recall, latency-to-command or T1 acceptance",
+  "motor_commands_sent": 0
+}

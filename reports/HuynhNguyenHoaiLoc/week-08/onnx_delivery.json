@@ -1,0 +1,65 @@
+{
+  "date": "2026-11-25",
+  "archive": "team_data/HNHL_yolov8n_320_op11_2026-11-25.zip",
+  "archive_sha256": "b6e4ba02f9eec8e82364841c3fcad7b10cbaa92adc76516f18de970f136b2335",
+  "archive_bytes": 11059599,
+  "files": {
+    "README.txt": "dd5f903a824ed498453d1e2e83870d12e7d4a94d4ffe0cd008891adafc0ae631",
+    "yolov8n_320_op11.json": "3a997e7f78ab4bf56147359c5087815d877785ced84d6711c8f3b2f0a3091adb",
+    "yolov8n_320_op11.onnx": "4905b828a5ab1da5dcb4d0bd2cf12fad75b83cd91d7cb0ff71ccad1bd9c216eb"
+  },
+  "export": {
+    "model": "yolov8n_320_op11",
+    "task": "detect",
+    "opset": 11,
+    "input_name": "images",
+    "input_shape": [
+      1,
+      3,
+      320,
+      320
+    ],
+    "output_shapes": [
+      [
+        1,
+        84,
+        2100
+      ]
+    ],
+    "dtype": "float32",
+    "dynamic": false,
+    "embedded_nms": false,
+    "weights_sha256": "f59b3d833e2ff32e194b5bb8e08d211dc7c5bdf144b90d2c8412c47ccfc83b36",
+    "onnx_sha256": "4905b828a5ab1da5dcb4d0bd2cf12fad75b83cd91d7cb0ff71ccad1bd9c216eb",
+    "versions": {
+      "torch": "2.9.1+cu128",
+      "ultralytics": "8.4.172",
+      "onnx": "1.23.1",
+      "onnxruntime": "1.23.2"
+    },
+    "parity": {
+      "provider": [
+        "CPUExecutionProvider"
+      ],
+      "seed": 532,
+      "probes": [
+        {
+          "max_abs_diff": 0.000457763671875,
+          "cosine": 0.9999999999999557
+        },
+        {
+          "max_abs_diff": 0.0004119873046875,
+          "cosine": 0.9999999999999634
+        },
+        {
+          "max_abs_diff": 0.0003814697265625,
+          "cosine": 0.9999999999999774
+        }
+      ],
+      "scope": "three synthetic input tensors; not D1 accuracy or TensorRT parity"
+    },
+    "tensorrt_built": false,
+    "edge_g2_accepted": false
+  },
+  "archive_readback_verified": true
+}
