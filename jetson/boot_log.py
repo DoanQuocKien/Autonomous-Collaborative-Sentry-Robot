@@ -7,9 +7,11 @@ Read it after a crash:  tail -40 /home/jetbot/sentry/bootlog.log   ('BOOT' lines
 import argparse
 import os
 import subprocess
+import threading
 import time
 
 LOG = "/home/jetbot/sentry/bootlog.log"
+FAST_LOG = "/home/jetbot/sentry/bootlog_v.log"      # battery only, --fast-hz samples per second, every line fsynced: a short dip right before a crash is not lost
 
 
 def battery_volts(i2cget_output):
@@ -34,10 +36,19 @@ def battery():
         return "ERR(%s)" % type(e).__name__
 
 
+def sample_loop(read_battery, emit, hz, stop):
+    """Battery voltage `hz` times per second until `stop` is set; one line per sample (uptime in s, volts or ERR)."""
+    while not stop.is_set():
+        emit("%s | up %s | %s V" % (time.strftime("%H:%M:%S"), read("/proc/uptime").split()[0], read_battery()))
+        stop.wait(1.0 / hz)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--seconds", type=float, default=900.0)
     ap.add_argument("--log", default=LOG)
+    ap.add_argument("--fast-hz", type=float, default=10.0, help="battery samples per second in --fast-log (0 = off); i2cget is forked per sample, about 1-2 %% CPU at 10 Hz")
+    ap.add_argument("--fast-log", default=FAST_LOG)
     a = ap.parse_args()
     out = open(a.log, "a")
 
@@ -46,6 +57,17 @@ def main():
         out.flush()
         os.fsync(out.fileno())
 
+    stop = threading.Event()
+    if a.fast_hz > 0:
+        fast = open(a.fast_log, "a")
+
+        def emit_fast(s):
+            fast.write(s + "\n")
+            fast.flush()
+            os.fsync(fast.fileno())
+
+        emit_fast("BOOT %s" % time.strftime("%Y-%m-%d %H:%M:%S"))
+        threading.Thread(target=sample_loop, args=(battery, emit_fast, a.fast_hz, stop), daemon=True).start()
     emit("BOOT %s boot_id=%s uptime=%s" % (time.strftime("%Y-%m-%d %H:%M:%S"), read("/proc/sys/kernel/random/boot_id")[:8], read("/proc/uptime").split()[0]))
     t_end = time.time() + a.seconds
     try:
@@ -57,6 +79,7 @@ def main():
         emit("%s | up %s | %s V | %s | load %s" % (time.strftime("%H:%M:%S"), read("/proc/uptime").split()[0], battery(), line.strip(), read("/proc/loadavg")[:14]))
         if time.time() > t_end:
             break
+    stop.set()
     if proc:
         proc.terminate()
     emit("END %s" % time.strftime("%H:%M:%S"))

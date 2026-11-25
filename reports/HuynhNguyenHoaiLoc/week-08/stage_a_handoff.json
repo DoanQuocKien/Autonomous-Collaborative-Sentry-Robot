@@ -1,0 +1,24 @@
+{
+  "date": "2026-11-25",
+  "timezone": "Asia/Bangkok",
+  "frames": 200,
+  "archive": "data/stage_a_nano_handoff_1125.zip",
+  "published_to_github": false,
+  "bytes": 22240078,
+  "archive_sha256": "ade9b55194a123406e1bf8f0bb3be394b58b5e088edb497cdc87924c4e487eb3",
+  "manifest_sha256": "512128523d725b373a4bf8e08204ea4f5c4f85eb7ac7f787561fbc8e97dce1cd",
+  "inputs_sha256": "5e57434a6c2e77f01c7d16a001856ea10fdccf044beb9f69f35fce6a147f1117",
+  "contents": {
+    "inputs.npz": {
+      "bytes": 22294572,
+      "sha256": "5e57434a6c2e77f01c7d16a001856ea10fdccf044beb9f69f35fce6a147f1117"
+    },
+    "manifest.json": {
+      "bytes": 62428,
+      "sha256": "512128523d725b373a4bf8e08204ea4f5c4f85eb7ac7f787561fbc8e97dce1cd"
+    }
+  },
+  "scope": "encrypted deterministic D1 chair canvases and manifest, no human images; raw predictions stay private",
+  "verified_decrypt_and_hash": true,
+  "tensorrt_executed": false
+}

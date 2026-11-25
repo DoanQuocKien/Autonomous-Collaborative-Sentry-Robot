@@ -57,6 +57,12 @@ evade_v = -1.0
 evade_w = 0.8
 evade_duration_s = 0.4
 
+[strike]
+# Timestamped bbox cue uses thresholds.strike_area_growth/window_s.
+min_bbox_area_px2 = 400.0
+keypoint_confidence = 0.5
+ankle_rise_fraction = 0.0        # disabled until an explicit D4 calibration
+
 [calibration]
 checkerboard_inner_corners = [9, 6]   # columns, rows (10 x 7 squares)
 checkerboard_square_m = 0.025         # MEASURE the printed board and update this

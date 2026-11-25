@@ -15,9 +15,12 @@ Constraints of TensorRT 7.1 that shape the exports (found 2026-10-16, docs/Edge 
 Each export is checked against PyTorch with ONNX Runtime (max |diff|); engines are built ON the robot with trtexec, never copied.
 """
 import argparse
+import hashlib
+import json
 import os
 import shutil
 import sys
+import tempfile
 import warnings
 from pathlib import Path
 
@@ -50,10 +53,73 @@ def _export(name, model, x, out_names):
 
 
 def yolo(weights, name, size=320):
+    """Fixed FP32 opset-11 export, checked with real ONNX Runtime inference.
+
+    Export beside a temporary copy of the weights so Ultralytics cannot replace
+    an earlier sibling ONNX. Refuse existing delivery files.
+    """
+    import numpy as np
+    import onnx
+    import onnxruntime as ort
+    import torch
     from ultralytics import YOLO
-    p = YOLO(str(ROOT / weights)).export(format="onnx", imgsz=size, opset=OPSET, simplify=False, dynamic=False, batch=1, verbose=False)
-    shutil.move(p, str(OUT / (name + ".onnx")))
-    print("  %-34s %6.1f MB" % (name + ".onnx", (OUT / (name + ".onnx")).stat().st_size / 1e6))
+    import ultralytics
+    source = ROOT / weights
+    if not source.is_file():
+        raise FileNotFoundError(source)
+    OUT.mkdir(parents=True, exist_ok=True)
+    target, metadata = OUT / (name + '.onnx'), OUT / (name + '.json')
+    if target.exists() or metadata.exists():
+        raise FileExistsError('choose a fresh --out directory; export already exists: ' + str(target))
+    with tempfile.TemporaryDirectory(prefix='.yolo-export-', dir=OUT) as directory:
+        staged = Path(directory) / source.name
+        shutil.copyfile(source, staged)
+        model = YOLO(str(staged))
+        exported = Path(model.export(format='onnx', imgsz=size, opset=OPSET,
+            simplify=False, dynamic=False, batch=1, half=False, nms=False, device='cpu', verbose=False))
+        graph = onnx.load(str(exported))
+        onnx.checker.check_model(graph)
+        if {item.domain: item.version for item in graph.opset_import}.get('') != OPSET:
+            raise ValueError('wrong ONNX opset')
+        session = ort.InferenceSession(str(exported), providers=['CPUExecutionProvider'])
+        inp = session.get_inputs()[0]
+        if inp.shape != [1, 3, size, size] or inp.type != 'tensor(float)':
+            raise ValueError('export must have fixed FP32 1x3xSxS input')
+        random = np.random.RandomState(532)
+        probes = [np.zeros(inp.shape, np.float32), random.rand(*inp.shape).astype(np.float32),
+                  np.linspace(0, 1, np.prod(inp.shape), dtype=np.float32).reshape(inp.shape)]
+        checks = []
+        for x in probes:
+            with torch.no_grad():
+                expected = model.model(torch.from_numpy(x))
+            if isinstance(expected, (list, tuple)):
+                expected = expected[0]
+            expected = expected.detach().cpu().numpy()
+            got = session.run(None, {inp.name: x})[0]
+            if got.shape != expected.shape or not np.isfinite(got).all():
+                raise ValueError('invalid ONNX output')
+            a, b = got.ravel().astype(np.float64), expected.ravel().astype(np.float64)
+            denominator = np.linalg.norm(a) * np.linalg.norm(b)
+            cosine = float(a @ b / denominator) if denominator else 0.0
+            if cosine < .999 or not np.allclose(got, expected, rtol=1e-3, atol=1e-3):
+                raise ValueError('ONNX output parity failed')
+            checks.append(dict(max_abs_diff=float(np.max(np.abs(got - expected))), cosine=cosine))
+        info = dict(model=name, task=model.task, opset=OPSET, input_name=inp.name,
+            input_shape=inp.shape, output_shapes=[o.shape for o in session.get_outputs()],
+            dtype='float32', dynamic=False, embedded_nms=False,
+            weights_sha256=hashlib.sha256(source.read_bytes()).hexdigest(),
+            onnx_sha256=hashlib.sha256(exported.read_bytes()).hexdigest(),
+            versions=dict(torch=torch.__version__, ultralytics=ultralytics.__version__,
+                          onnx=onnx.__version__, onnxruntime=ort.__version__),
+            parity=dict(provider=session.get_providers(), seed=532, probes=checks,
+                        scope='three synthetic input tensors; not D1 accuracy or TensorRT parity'),
+            tensorrt_built=False, edge_g2_accepted=False)
+        with target.open('xb') as stream, exported.open('rb') as source_stream:
+            shutil.copyfileobj(source_stream, stream)
+        with metadata.open('x', encoding='utf-8', newline='\n') as stream:
+            stream.write(json.dumps(info, indent=2, allow_nan=False) + '\n')
+    print('  %s %.1f MB; ONNX Runtime parity verified' % (target.name, target.stat().st_size / 1e6))
+    return info
 
 
 def osnet(arch, weights):
@@ -156,19 +222,26 @@ JOBS = {
 
 
 def main(argv=None):
+    global OUT
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--only", nargs="*", choices=sorted(JOBS), help="default: all")
+    ap.add_argument("--only", nargs="+", choices=sorted(JOBS), help="default: all")
+    ap.add_argument('--out', type=Path, default=OUT, help='output directory; YOLO delivery files must not exist')
     a = ap.parse_args(argv)
     warnings.filterwarnings("ignore")
+    OUT = a.out.resolve()
     OUT.mkdir(parents=True, exist_ok=True)
     os.chdir(str(ROOT))
+    failed = False
     for name in (a.only or sorted(JOBS)):
         print(name)
         try:
             JOBS[name]()
         except Exception as e:   # keep going: one model failing must not hide the others
-            print("  FAILED: %s: %s" % (type(e).__name__, str(e).strip().splitlines()[-1][:160]))
+            failed = True
+            detail = (str(e).strip().splitlines() or ['no detail'])[-1][:160]
+            print("  FAILED: %s: %s" % (type(e).__name__, detail))
+    return int(failed)
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
