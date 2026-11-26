@@ -45,7 +45,7 @@ Spec section 2 is the source for the original list; where this file disagrees wi
 
 Rough total for the table: about **$40-60** (my estimate).
 
-**Borrow, don't buy:** an HDMI monitor + cable and a USB keyboard for the first Jetson login (Wi-Fi setup); a phone that records 120/240 fps video for measuring evasion reaction time (W8). The kit's gamepad is the hardware e-stop.
+**Borrow, don't buy:** an HDMI monitor + cable and a USB keyboard for the first Jetson login (Wi-Fi setup); The kit's gamepad is the hardware e-stop.
 
 ## 2. Conditional: buy only if the gate triggers
 

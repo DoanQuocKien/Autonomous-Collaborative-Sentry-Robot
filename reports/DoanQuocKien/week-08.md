@@ -31,7 +31,7 @@ An earlier run (class_1123, boards at 2.4 m, 18 px wide) measured nothing usable
 
 ## Next week
 - Stage A and the engine build wait for HNHL's ONNX; D3 and D4 need all three people.
-- Evasion on the floor (Thu 11-26 session, phone at 240 fps on a tripod): wheel angle and start delay per strike (not measured wheels-off), and decide the pivot design of the strike (C12: at the 0.3 cap it drives one wheel only).
+- Evasion on the floor (Thu 11-26, tape and ruler, no video): back-up distance and turn angle per strike (not measured wheels-off), and decide the pivot design of the strike (C12: at the 0.3 cap it drives one wheel only).
 - Decide whether to run the tape-measure forward test.
 - Commit the uncommitted files (sentry_ui, boot logger, notes, calibration files) after the user says which ones.
 

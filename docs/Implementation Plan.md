@@ -404,7 +404,6 @@ An audit of the plan, the spec and the code on 2026-11-21 found rows that are PA
 - **Mon Nov 23: submit the Mid-Term Report** (PDF + video link + `midterm` tag).
 - **DQK**
   - Evasion override in the control path with the highest priority: v = -1.0, w = +/-0.8 for 400 ms, yawing away from the nearer obstacle side, then a cooldown.
-  - Measure end-to-end reaction time with a high-FPS phone camera.
   - Tests: T2 evasion wheels-off and at the 0.3 cap; record **D4** (moved from W6).
   - Stage A, robot-only part (about 1 person-day, proposed split of 2026-11-21): build the YOLOv8n engine on the robot from HNHL's ONNX, put KR's module into the control loop behind the laptop fallback switch, run the 'Edge safety' disconnect row.
 - **HNHL**
