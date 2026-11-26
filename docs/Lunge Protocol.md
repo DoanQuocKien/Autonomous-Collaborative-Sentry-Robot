@@ -18,12 +18,11 @@ D4 is the dataset to tune and test the lunge detector (`dA/A > 0.40` within 100 
 | :-- | :-- | :-- |
 | Thruster | HNHL, then KR | performs the lunges and the walking |
 | Labeller | KR | presses the key at each onset with `tools/label_events.py` (must exist before the session) |
-| Operator | DQK | runs `python -m tools.record D4`, robot and battery, phone side-view video, calls "stop" |
+| Operator | DQK | runs `python -m tools.record D4`, robot and battery, calls "stop" |
 
 ## 4. Set-up
 - Robot standing still in the lane, camera facing the thruster, laptop recording with `python -m tools.record D4 --no-esp32` (JetBot frames plus both clocks).
 - Floor tape on the 0.6 m tiles at **3.0, 2.4, 1.8, 1.2 m** from the robot, plus a stop line at **0.8 m**. Mark the lane centre; add a second lane 0.6 m to the left and right for off-axis lunges.
-- Phone on a tripod to the side at 240 fps if available (also used for the reaction-time measurement); record a clap or a held-up clock at the start so phone and laptop clocks can be aligned.
 - Lighting: classroom lights as normal; do one set with the window brighter if time allows.
 
 ## 5. Positives: 24 lunges (minimum 20 valid)
@@ -51,12 +50,12 @@ Continuous recording, thruster not holding the prop unless stated.
 5. Hard negatives (2 min): fast walking or a quick step toward the robot with no thrust, holding the prop still, handing the prop to another person.
 
 ## 7. After recording
-- Labels: `tools/label_events.py` writes onset timestamps; refine against the phone video if the key press lags (human delay is about 0.2 to 0.3 s, so keep the raw press time and the refined time as two columns).
+- Labels: `tools/label_events.py` writes onset timestamps; the raw key-press time is the label (human delay is about 0.2 to 0.3 s: a known bias, reported with the results; no video is used to correct it).
 - Evidence and data: recordings stay in `data/D4/` (gitignored); counts, label file and the detector metrics go to `reports/<handle>/week-NN/`.
 - Detector check (offline): recall on the 24 positives, false triggers per minute on the negatives, latency from frame time to command (acceptance row above).
-- Evasion with the robot moving (separate session, wheels off first): `python -m tools.pursue_live --evade`, key `e` injects a STRIKE; then a few real padded lunges at low cap. Only with R1 held, e-stop armed, never `--no-estop`. Measure the reaction time with the 240 fps phone.
+- Evasion with the robot moving (separate session, wheels off first): `python -m tools.pursue_live --evade`, key `e` injects a STRIKE; then a few real padded lunges at low cap. Only with R1 held, e-stop armed, never `--no-estop`. Latency is read from the logged frame and command timestamps.
 
 ## 8. Open items (to confirm Thursday)
-- Thruster speeds are defined by feel (fast, medium); if time allows, time one lunge on the phone video and record the closing speed in the evidence.
+- Thruster speeds are defined by feel (fast, medium).
 - 24 positives assume about 30 min; the negatives take about 12 min. Plan D3 (re-ID, three people) for the second half of the 08:00 to 12:00 slot.
 - Consent: every person recorded must agree (privacy rules, section 4.2); recordings are not shared outside the team.
