@@ -26,7 +26,7 @@ The system operates across three distinct phases:
   * USB programmer for firmware flashing: the ESP32-CAM-MB base the team has (CH340) replaces the FTDI USB-to-TTL adapter first listed; the firmware is built with PlatformIO (`docs/ESP32-CAM.md`).  
   * Minimal enclosure or stand to position the module on the floor or a shelf.  
 * **Audio Feedback:** no speaker on the robot (dropped 2026-10-26 to cut cost). The laptop plays pre-generated WAV prompts (offline TTS) and the alarm sound through its own speakers for setup prompts and deterrent alarms.  
-* **Localization Markers:** Cardstock ArUco markers (150 mm, `aruco_marker_m` in `config.toml`) as position anchors (the kit has no encoders or IMU; an MPU6050 added by the team on 2026-11-01 does not work yet and is not used), plus a printed checkerboard for one-time fisheye camera calibration.
+* **Localization Markers:** Cardstock ArUco markers (150 mm, `aruco_marker_m` in `config.toml`) as position anchors (the kit has no encoders or IMU; an MPU6050 tried on the old robot was dropped on 2026-11-26), plus a printed checkerboard for one-time fisheye camera calibration.
 
 ### **Optional External Hardware**
 
