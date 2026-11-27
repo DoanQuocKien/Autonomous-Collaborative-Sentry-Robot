@@ -7,6 +7,11 @@ from pathlib import Path
 from sentry.config import load as load_config
 from sentry.net.zmq_rx import ZMQReceiver
 
+def strictly_after(prev, now):
+    """Wall-clock stamp for the label clock: the Windows clock ticks in about 1 ms steps, so two frames received in one tick would share a t_local and tools.detect_lunges rejects that."""
+    return now if prev is None or now > prev else prev + 1e-6
+
+
 def record_jetbot(ip, port, out_dir, stop_event=None):
     """Record complete multipart frames; retain JPEG bytes and both clock domains."""
     out_dir = Path(out_dir)
@@ -16,7 +21,7 @@ def record_jetbot(ip, port, out_dir, stop_event=None):
     meta_path = out_dir / "jetbot_meta.jsonl"
     print(f"[JetBot] Recording to {out_dir}/jetbot, connecting to tcp://{ip}:{port}")
     
-    index = 0
+    index, last_local = 0, None
     with ZMQReceiver(ip, port) as receiver, meta_path.open("a", encoding="utf-8") as meta_f:
         while not stop_event.is_set():
             frame = receiver.read(timeout=timeout)
@@ -25,11 +30,12 @@ def record_jetbot(ip, port, out_dir, stop_event=None):
             # File numbering is independent of source seq, which may reset.
             while (out_dir / "jetbot" / f"{index:06d}.jpg").exists():
                 index += 1
+            last_local = strictly_after(last_local, time.time())
             filename = f"{index:06d}.jpg"
             (out_dir / "jetbot" / filename).write_bytes(frame.jpeg)
             msg = {"seq": frame.seq, "t_cap": frame.t_cap, "w": frame.w, "h": frame.h,
                    "t_rx": frame.t_rx, "t_decode": frame.t_decode,
-                   "laptop_clock": "perf_counter", "t_local": time.time(), "file": filename}
+                   "laptop_clock": "perf_counter", "t_local": last_local, "file": filename}
             meta_f.write(json.dumps(msg) + "\n")
             meta_f.flush()
             index += 1
