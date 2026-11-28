@@ -8,7 +8,7 @@ Live keypress controls (single key, no Enter required on TTY/Windows):
     c                  : record `clap` (phone/laptop clock alignment marker)
     n                  : toggle `neg_start` / `neg_end` (normal walking segment)
     h                  : toggle `hard_neg_start` / `hard_neg_end` (hard-negative segment)
-    1..6 or a..f       : switch active lunge set (A..F)
+    1..6 or a,b,d,e,f,C : switch active lunge set (A..F; lowercase c is clap)
     x / u              : mark the most recent `lunge` event invalid (`valid=false`)
     q                  : quit and print summary counts
 

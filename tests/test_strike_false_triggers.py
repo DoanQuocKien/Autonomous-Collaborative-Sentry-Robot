@@ -115,3 +115,42 @@ def test_lunge_onset_matching_and_invalid_inputs(tmp_path):
     out_syn = tmp_path / "syn.json"
     assert main(["--synthetic", "--out", str(out_syn)]) == 0
     assert json.loads(out_syn.read_text(encoding="utf-8"))["t0_harness_passed"] is True
+
+
+def test_integration_with_hnhl_lunge_detector_pose_jsonl_contract(tmp_path):
+    """Cross-PR #142/#143 check: CLI evaluates tools.detect_lunges pose/strikes JSONL with sentry.perception.pose:LungeDetector."""
+    events_csv = tmp_path / "events.csv"
+    save_events(events_csv, [
+        EventRow(1, "lunge", "A", 100.06, "2026-11-26 08:10:00.060", 1.06, valid=True),
+        EventRow(2, "neg_start", "", 101.00, "2026-11-26 08:10:01.000", 2.00, valid=True),
+        EventRow(3, "neg_end", "", 104.00, "2026-11-26 08:10:04.000", 5.00, valid=True),
+    ])
+
+    # Simulate pose.jsonl rows as written by tools/detect_lunges.py:
+    # epoch 0: t_cap jumps cleanly on lunge at t_local=100.06 (dA/A = 1.77 / 1.0 = +77% in 60 ms)
+    # epoch 1: missing bbox frame + slow steady walking (no false trigger; pre-existing bogus strike=True overridden by --detector)
+    rows = [
+        {"t": 100.00, "t_cap": 10.00, "epoch": 0, "frame_size": [640, 480], "bbox": [250, 120, 350, 320], "keypoints_xy": None, "keypoints_conf": None, "strike": False},
+        {"t": 100.06, "t_cap": 10.06, "epoch": 0, "frame_size": [640, 480], "bbox": [220, 100, 360, 360], "keypoints_xy": None, "keypoints_conf": None, "strike": False},
+        {"t": 101.00, "t_cap": 0.00, "epoch": 1, "frame_size": [640, 480], "bbox": None, "keypoints_xy": None, "keypoints_conf": None, "strike": True},
+        {"t": 102.00, "t_cap": 1.00, "epoch": 1, "frame_size": [640, 480], "bbox": [260, 130, 340, 310], "keypoints_xy": None, "keypoints_conf": None, "strike": True},
+        {"t": 103.00, "t_cap": 2.00, "epoch": 1, "frame_size": [640, 480], "bbox": [258, 128, 342, 312], "keypoints_xy": None, "keypoints_conf": None, "strike": False},
+        {"t": 104.00, "t_cap": 3.00, "epoch": 1, "frame_size": [640, 480], "bbox": [256, 126, 344, 314], "keypoints_xy": None, "keypoints_conf": None, "strike": False},
+    ]
+    pred_path = tmp_path / "pose_or_strikes.jsonl"
+    pred_path.write_text("\n".join(json.dumps(r) for r in rows) + "\n", encoding="utf-8")
+
+    out_json = tmp_path / "eval_pose.json"
+    rc = main([
+        "--predictions", str(pred_path),
+        "--events", str(events_csv),
+        "--detector", "sentry.perception.pose:LungeDetector",
+        "--out", str(out_json),
+    ])
+    assert rc == 1  # duration_s = 3.0 s < 600 s protocol minimum
+    data = json.loads(out_json.read_text(encoding="utf-8"))
+    assert data["false_triggers"]["evade_entries"] == 0
+    assert data["false_triggers"]["raw_strike_frames"] == 0
+    assert data["onset_recall"]["matched_onsets"] == 1
+    assert data["onset_recall"]["recall"] == 1.0
+

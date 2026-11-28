@@ -229,6 +229,76 @@ def _mix_legal(v, w, dead, k=1.0):
     return abs(left) >= dead - 1e-9 and abs(right) >= dead - 1e-9
 
 
+def nms_boxes(boxes, scores, iou_thr=0.7):
+    """Pure-numpy NMS over (N, 4) xyxy boxes -> kept indices ordered by descending score."""
+    if not len(boxes):
+        return []
+    order = np.argsort(-scores)
+    keep = []
+    while order.size:
+        i = int(order[0])
+        keep.append(i)
+        if order.size == 1:
+            break
+        rest = order[1:]
+        xx1 = np.maximum(boxes[i, 0], boxes[rest, 0])
+        yy1 = np.maximum(boxes[i, 1], boxes[rest, 1])
+        xx2 = np.minimum(boxes[i, 2], boxes[rest, 2])
+        yy2 = np.minimum(boxes[i, 3], boxes[rest, 3])
+        inter = np.clip(xx2 - xx1, 0.0, None) * np.clip(yy2 - yy1, 0.0, None)
+        area_i = (boxes[i, 2] - boxes[i, 0]) * (boxes[i, 3] - boxes[i, 1])
+        area_r = (boxes[rest, 2] - boxes[rest, 0]) * (boxes[rest, 3] - boxes[rest, 1])
+        iou = inter / (area_i + area_r - inter + 1e-9)
+        order = rest[iou <= iou_thr]
+    return keep
+
+
+def decode_raw_yolo(raw, scale, px, py, image_size, conf=0.25, iou=0.7, classes=DEFAULT_CLASS_IDS, max_det=300):
+    """Decode raw YOLOv8 (1, 84, N) or (84, N) output with class-aware NMS & clipping.
+
+    Matches `tools.stage_a_parity.decode` / Ultralytics NMS (unlike legacy `yolo_post.decode`
+    which uses class-agnostic NMS). Returns a list of detection dicts for `EdgeObstacleLayer`.
+    """
+    arr = np.asarray(raw, dtype=np.float64)
+    if arr.ndim == 3:
+        if arr.shape[0] != 1:
+            raise ValueError("expected batch size 1 raw output, got %r" % (arr.shape,))
+        arr = arr[0]
+    if arr.ndim != 2 or arr.shape[0] < 5 or not np.isfinite(arr).all():
+        raise ValueError("expected finite raw (4+nc, N) output, got %r" % (arr.shape,))
+    pred = arr.T
+    cls = pred[:, 4:].argmax(axis=1)
+    scores = pred[np.arange(len(pred)), cls + 4]
+    mask = scores > float(conf)
+    if classes is not None:
+        mask = mask & np.isin(cls, list(classes))
+    pred, cls, scores = pred[mask], cls[mask], scores[mask]
+    if not len(pred):
+        return []
+    boxes = np.concatenate((pred[:, :2] - pred[:, 2:4] / 2.0, pred[:, :2] + pred[:, 2:4] / 2.0), axis=1)
+    kept = []
+    for label in sorted(set(int(c) for c in cls)):
+        ids = np.flatnonzero(cls == label)
+        for idx in nms_boxes(boxes[ids], scores[ids], iou_thr=float(iou)):
+            kept.append(int(ids[idx]))
+    kept = sorted(kept, key=lambda i: (-float(scores[i]), i))[:int(max_det)]
+
+    width, height = int(image_size[0]), int(image_size[1])
+    out = []
+    for i in kept:
+        b = boxes[i]
+        x1 = max(0.0, min(float(width), (float(b[0]) - float(px)) / float(scale)))
+        y1 = max(0.0, min(float(height), (float(b[1]) - float(py)) / float(scale)))
+        x2 = max(0.0, min(float(width), (float(b[2]) - float(px)) / float(scale)))
+        y2 = max(0.0, min(float(height), (float(b[3]) - float(py)) / float(scale)))
+        out.append({
+            "class_id": int(cls[i]),
+            "confidence": float(scores[i]),
+            "xyxy": (x1, y1, x2, y2),
+        })
+    return out
+
+
 def _normalize_detections(detections):
     """Accept yolo_post.decode tuple (boxes, scores, cls[, kpts]) or list of tuples/dicts."""
     if detections is None:
@@ -472,6 +542,38 @@ class EdgeObstacleLayer(object):
 
         w = max(-self._w_forward_max, min(self._w_forward_max, res["repulsive_w"]))
         return self._out(res, self.v_forward, w, "FORWARD", "clear" if w == 0.0 else "steer")
+
+    def process_raw(self, raw, letterbox, t, mode="explore", rectified=False, floor_type=None, iou=0.7):
+        """Decode raw TensorRT `(1, 84, N)` / `(84, N)` output with class-aware NMS and process."""
+        scale, px, py = letterbox
+        dets = decode_raw_yolo(
+            raw,
+            scale=scale,
+            px=px,
+            py=py,
+            image_size=self.camera.size,
+            conf=self.confidence,
+            iou=iou,
+            classes=self.class_ids,
+        )
+        return self.process_detections(dets, t, mode=mode, rectified=rectified, floor_type=floor_type)
+
+    def step_raw(self, raw, letterbox, t, dt, mode="explore", rectified=False, floor_type=None, iou=0.7):
+        """Decode raw TensorRT output with class-aware NMS and return `(v, w)` decision."""
+        if raw is None:
+            return self.step(None, t, dt, mode=mode, rectified=rectified, floor_type=floor_type)
+        scale, px, py = letterbox
+        dets = decode_raw_yolo(
+            raw,
+            scale=scale,
+            px=px,
+            py=py,
+            image_size=self.camera.size,
+            conf=self.confidence,
+            iou=iou,
+            classes=self.class_ids,
+        )
+        return self.step(dets, t, dt, mode=mode, rectified=rectified, floor_type=floor_type)
 
     def _out(self, res, v, w, state, reason):
         is_legal = _mix_legal(v, w, self._dead)
