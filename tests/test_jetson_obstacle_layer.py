@@ -209,3 +209,32 @@ def test_laptop_fallback_controller_seamless_handover_with_real_explorer():
     assert r2["source"] == "laptop" and r2["fallback_active"] is True
     assert r2["takeover_latency_s"] <= 1.0
     assert r2["state"] == "TURN" and r2["v"] == 0.0 and r2["w"] < 0.0
+
+
+def test_decode_raw_yolo_matches_stage_a_parity_class_aware_nms():
+    """Verify jetson.obstacle_layer.decode_raw_yolo matches tools.stage_a_parity.decode (class-aware NMS, clipping)."""
+    from tools import stage_a_parity as stage
+
+    raw = np.zeros((84, 2100), np.float32)
+    raw[:4, :3] = np.array([[160, 160, 160], [160, 160, 160], [50, 50, 50], [80, 80, 80]])
+    raw[4 + 56, 0] = 0.90  # chair
+    raw[4 + 56, 1] = 0.80  # duplicate chair -> suppressed by NMS
+    raw[4 + 57, 2] = 0.70  # overlapping couch -> must survive class-aware NMS
+
+    frame = {"letterbox": [0.5, 0, 40], "size": [640, 480]}
+    settings = {"confidence": 0.25, "class_ids": [56, 57], "nms_iou": 0.7}
+    expected = stage.decode(raw, frame, settings)
+    actual = edge_obs.decode_raw_yolo(raw[None], scale=0.5, px=0, py=40, image_size=(640, 480), classes=[56, 57])
+
+    assert [d["class_id"] for d in actual] == [d.class_id for d in expected] == [56, 57]
+    for a, e in zip(actual, expected):
+        assert a["xyxy"] == pytest.approx(e.xyxy)
+        assert a["confidence"] == pytest.approx(e.confidence)
+
+    # step_raw consumes raw TensorRT (1, 84, 2100) end-to-end and outputs legal commands
+    cam_path = ROOT / "calib" / "camera.json"
+    pose_path = ROOT / "calib" / "camera_pose_nowedge.json"
+    layer = edge_obs.EdgeObstacleLayer(edge_obs.EdgeCameraModel.from_files(str(cam_path), str(pose_path)), {"floor_type": "unknown"})
+    out = layer.step_raw(raw[None], (0.5, 0, 40), t=1.0, dt=0.05)
+    assert out["legal"] is True and out["blocked"] is True and out["state"] == "TURN"
+

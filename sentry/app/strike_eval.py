@@ -73,13 +73,26 @@ class BboxStrikeBaseline:
         self.window_s = float(window_s)
         self.min_area_px2 = float(min_area_px2)
         self._hist: deque = deque()
+        self._last_t: Optional[float] = None
+        self._last_epoch: Optional[Any] = None
 
     def reset(self) -> None:
         self._hist.clear()
+        self._last_t = None
+        self._last_epoch = None
 
     def __call__(self, t: float, sample: Dict[str, Any]) -> bool:
+        epoch = sample.get("epoch", 0)
+        if self._last_epoch is not None and epoch != self._last_epoch:
+            self._hist.clear()
+        if self._last_t is not None and t <= self._last_t:
+            self._hist.clear()
+        self._last_t = t
+        self._last_epoch = epoch
+
         area = bbox_area(sample.get("bbox"))
         if area < self.min_area_px2:
+            self._hist.clear()
             return False
         cutoff = t - self.window_s
         while self._hist and self._hist[0][0] < cutoff:
@@ -208,7 +221,9 @@ def evaluate_false_triggers(
             continue
         evaluated_samples += 1
 
-        if "strike" in s:
+        if detector is not None:
+            is_strike = bool(det(t, s))
+        elif "strike" in s:
             is_strike = bool(s["strike"])
         else:
             is_strike = bool(det(t, s))
@@ -276,7 +291,12 @@ def evaluate_onsets(
     for item in samples:
         s = _normalize_sample(item)
         t = s["t"]
-        hit = bool(s["strike"]) if "strike" in s else bool(det(t, s))
+        if detector is not None:
+            hit = bool(det(t, s))
+        elif "strike" in s:
+            hit = bool(s["strike"])
+        else:
+            hit = bool(det(t, s))
         if hit:
             triggers.append(t)
 
